@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --font-family-sans: 'Poppins', system-ui, -apple-system, sans-serif;
+
+  --color-primary: #003E49;
+  --color-primary-dark: #002A32;
+  --color-primary-light: #0D646D;
+
+  --color-secondary: #0D646D;
+  --color-secondary-dark: #064852;
+  --color-secondary-light: #1A7A88;
+
+  --color-accent: #FF7B55;
+  --color-accent-dark: #E65A35;
+  --color-accent-light: #FFAB97;
+}
+
+html {
+  font-family: var(--font-family-sans);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

@@ -1,0 +1,552 @@
+from rest_framework import serializers
+from .models import (
+    Skill,
+    Industry,
+    Technology,
+    CandidateProfile,
+    Experience,
+    Education,
+    Seniority,
+    WorkPreference,
+    Currency,
+    ProfileVisibility,
+    SkillCategory,
+    TechnologyCategory,
+    CompanySize,
+)
+
+
+class SkillSerializer(serializers.ModelSerializer):
+    """Serializer for Skill model."""
+
+    class Meta:
+        model = Skill
+        fields = ['id', 'name', 'slug', 'category']
+        read_only_fields = ['id', 'slug']
+
+
+class IndustrySerializer(serializers.ModelSerializer):
+    """Serializer for Industry model."""
+
+    class Meta:
+        model = Industry
+        fields = ['id', 'name', 'slug']
+        read_only_fields = ['id', 'slug']
+
+
+class TechnologySerializer(serializers.ModelSerializer):
+    """Serializer for Technology model."""
+
+    class Meta:
+        model = Technology
+        fields = ['id', 'name', 'slug', 'category']
+        read_only_fields = ['id', 'slug']
+
+
+class CandidateProfileSerializer(serializers.ModelSerializer):
+    """
+    Full serializer for CandidateProfile - used for authenticated users
+    viewing their own profile or profiles of users who set visibility to public.
+    """
+    skills = SkillSerializer(many=True, read_only=True)
+    industries = IndustrySerializer(many=True, read_only=True)
+    full_name = serializers.CharField(read_only=True)
+    email = serializers.CharField(read_only=True)
+    location = serializers.CharField(read_only=True)
+    avatar = serializers.SerializerMethodField()
+
+    # Nested user info
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name = serializers.CharField(source='user.last_name', read_only=True)
+    phone = serializers.CharField(source='user.phone', read_only=True)
+
+    class Meta:
+        model = CandidateProfile
+        fields = [
+            'id',
+            'slug',
+            'first_name',
+            'last_name',
+            'full_name',
+            'email',
+            'phone',
+            'avatar',
+            'professional_title',
+            'headline',
+            'seniority',
+            'professional_summary',
+            'years_of_experience',
+            'city',
+            'country',
+            'region',
+            'location',
+            'work_preference',
+            'willing_to_relocate',
+            'preferred_locations',
+            'salary_expectation_min',
+            'salary_expectation_max',
+            'salary_currency',
+            'notice_period_days',
+            'portfolio_links',
+            'resume_url',
+            'skills',
+            'industries',
+            'visibility',
+            'profile_completeness',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'slug', 'profile_completeness', 'created_at', 'updated_at']
+
+    def get_avatar(self, obj):
+        if obj.user.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.user.avatar.url)
+            return obj.user.avatar.url
+        return None
+
+
+class CandidateProfileSanitizedSerializer(serializers.ModelSerializer):
+    """
+    Sanitized serializer for CandidateProfile - hides sensitive information
+    like exact name, email, phone, and salary expectations.
+    Used for public directory listings.
+    """
+    skills = SkillSerializer(many=True, read_only=True)
+    industries = IndustrySerializer(many=True, read_only=True)
+    location = serializers.CharField(read_only=True)
+
+    # Display initials instead of full name
+    initials = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CandidateProfile
+        fields = [
+            'id',
+            'slug',
+            'initials',
+            'professional_title',
+            'headline',
+            'seniority',
+            'professional_summary',
+            'years_of_experience',
+            'city',
+            'country',
+            'location',
+            'work_preference',
+            'willing_to_relocate',
+            'skills',
+            'industries',
+            'profile_completeness',
+        ]
+        read_only_fields = fields
+
+    def get_initials(self, obj):
+        first_initial = obj.user.first_name[0].upper() if obj.user.first_name else ''
+        last_initial = obj.user.last_name[0].upper() if obj.user.last_name else ''
+        return f"{first_initial}{last_initial}"
+
+
+class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating candidate profile.
+    Handles both profile fields and M2M relationships.
+    """
+    skill_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Skill.objects.filter(is_active=True),
+        many=True,
+        write_only=True,
+        required=False,
+    )
+    industry_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Industry.objects.filter(is_active=True),
+        many=True,
+        write_only=True,
+        required=False,
+    )
+
+    # User fields that can be updated through profile
+    first_name = serializers.CharField(required=False, write_only=True)
+    last_name = serializers.CharField(required=False, write_only=True)
+    phone = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
+    class Meta:
+        model = CandidateProfile
+        fields = [
+            'first_name',
+            'last_name',
+            'phone',
+            'professional_title',
+            'headline',
+            'seniority',
+            'professional_summary',
+            'years_of_experience',
+            'city',
+            'country',
+            'region',
+            'work_preference',
+            'willing_to_relocate',
+            'preferred_locations',
+            'salary_expectation_min',
+            'salary_expectation_max',
+            'salary_currency',
+            'notice_period_days',
+            'portfolio_links',
+            'resume_url',
+            'skill_ids',
+            'industry_ids',
+            'visibility',
+        ]
+
+    def validate_salary_expectation_max(self, value):
+        """Ensure max salary is greater than min salary."""
+        min_salary = self.initial_data.get('salary_expectation_min')
+        if min_salary and value and int(value) < int(min_salary):
+            raise serializers.ValidationError(
+                "Maximum salary must be greater than minimum salary."
+            )
+        return value
+
+    def validate_years_of_experience(self, value):
+        """Validate years of experience is reasonable."""
+        if value is not None and value > 60:
+            raise serializers.ValidationError(
+                "Years of experience cannot exceed 60."
+            )
+        return value
+
+    def update(self, instance, validated_data):
+        # Handle user fields
+        user = instance.user
+        if 'first_name' in validated_data:
+            user.first_name = validated_data.pop('first_name')
+        if 'last_name' in validated_data:
+            user.last_name = validated_data.pop('last_name')
+        if 'phone' in validated_data:
+            user.phone = validated_data.pop('phone')
+        user.save()
+
+        # Handle M2M relationships
+        if 'skill_ids' in validated_data:
+            skills = validated_data.pop('skill_ids')
+            instance.skills.set(skills)
+
+        if 'industry_ids' in validated_data:
+            industries = validated_data.pop('industry_ids')
+            instance.industries.set(industries)
+
+        # Update remaining profile fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+
+
+class CandidateProfileCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating a candidate profile.
+    Profile is typically auto-created when candidate registers,
+    but this handles explicit creation.
+    """
+
+    class Meta:
+        model = CandidateProfile
+        fields = [
+            'professional_title',
+            'headline',
+            'seniority',
+            'professional_summary',
+            'city',
+            'country',
+        ]
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        # Check if profile already exists
+        if hasattr(user, 'candidate_profile'):
+            raise serializers.ValidationError(
+                "Candidate profile already exists for this user."
+            )
+        return CandidateProfile.objects.create(user=user, **validated_data)
+
+
+# ============================================================================
+# Experience Serializers
+# ============================================================================
+
+class ExperienceSerializer(serializers.ModelSerializer):
+    """
+    Full serializer for Experience - includes all details.
+    """
+    industry = IndustrySerializer(read_only=True)
+    industry_id = serializers.PrimaryKeyRelatedField(
+        queryset=Industry.objects.filter(is_active=True),
+        write_only=True,
+        required=False,
+        allow_null=True,
+        source='industry',
+    )
+    technologies = TechnologySerializer(many=True, read_only=True)
+    skills = SkillSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Experience
+        fields = [
+            'id',
+            'job_title',
+            'company_name',
+            'company_size',
+            'industry',
+            'industry_id',
+            'start_date',
+            'end_date',
+            'is_current',
+            'description',
+            'achievements',
+            'technologies_used',
+            'technologies',
+            'skills',
+            'order',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        """Validate date logic."""
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        is_current = data.get('is_current', False)
+
+        if end_date and start_date and end_date < start_date:
+            raise serializers.ValidationError({
+                'end_date': 'End date must be after start date.'
+            })
+
+        if is_current and end_date:
+            raise serializers.ValidationError({
+                'end_date': 'Current positions should not have an end date.'
+            })
+
+        return data
+
+
+class ExperienceSanitizedSerializer(serializers.ModelSerializer):
+    """
+    Sanitized serializer for Experience - hides company name for public profiles.
+    """
+    industry = IndustrySerializer(read_only=True)
+    technologies = TechnologySerializer(many=True, read_only=True)
+    skills = SkillSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Experience
+        fields = [
+            'id',
+            'job_title',
+            'company_size',
+            'industry',
+            'start_date',
+            'end_date',
+            'is_current',
+            'description',
+            'achievements',
+            'technologies_used',
+            'technologies',
+            'skills',
+            'order',
+        ]
+        read_only_fields = fields
+
+
+class ExperienceCreateUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating/updating experiences.
+    """
+    industry_id = serializers.PrimaryKeyRelatedField(
+        queryset=Industry.objects.filter(is_active=True),
+        required=False,
+        allow_null=True,
+    )
+    technology_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Technology.objects.filter(is_active=True),
+        many=True,
+        write_only=True,
+        required=False,
+    )
+    skill_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Skill.objects.filter(is_active=True),
+        many=True,
+        write_only=True,
+        required=False,
+    )
+
+    class Meta:
+        model = Experience
+        fields = [
+            'job_title',
+            'company_name',
+            'company_size',
+            'industry_id',
+            'start_date',
+            'end_date',
+            'is_current',
+            'description',
+            'achievements',
+            'technologies_used',
+            'technology_ids',
+            'skill_ids',
+            'order',
+        ]
+
+    def validate(self, data):
+        """Validate date logic."""
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        is_current = data.get('is_current', False)
+
+        if end_date and start_date and end_date < start_date:
+            raise serializers.ValidationError({
+                'end_date': 'End date must be after start date.'
+            })
+
+        if is_current and end_date:
+            raise serializers.ValidationError({
+                'end_date': 'Current positions should not have an end date.'
+            })
+
+        return data
+
+    def create(self, validated_data):
+        industry = validated_data.pop('industry_id', None)
+        technology_ids = validated_data.pop('technology_ids', [])
+        skill_ids = validated_data.pop('skill_ids', [])
+        candidate = self.context['candidate']
+        experience = Experience.objects.create(
+            candidate=candidate,
+            industry=industry,
+            **validated_data
+        )
+        if technology_ids:
+            experience.technologies.set(technology_ids)
+        if skill_ids:
+            experience.skills.set(skill_ids)
+        return experience
+
+    def update(self, instance, validated_data):
+        if 'industry_id' in validated_data:
+            instance.industry = validated_data.pop('industry_id')
+        if 'technology_ids' in validated_data:
+            instance.technologies.set(validated_data.pop('technology_ids'))
+        if 'skill_ids' in validated_data:
+            instance.skills.set(validated_data.pop('skill_ids'))
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+
+# ============================================================================
+# Education Serializers
+# ============================================================================
+
+class EducationSerializer(serializers.ModelSerializer):
+    """
+    Full serializer for Education.
+    """
+
+    class Meta:
+        model = Education
+        fields = [
+            'id',
+            'institution',
+            'degree',
+            'field_of_study',
+            'start_date',
+            'end_date',
+            'is_current',
+            'grade',
+            'description',
+            'order',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        """Validate date logic."""
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        is_current = data.get('is_current', False)
+
+        if end_date and start_date and end_date < start_date:
+            raise serializers.ValidationError({
+                'end_date': 'End date must be after start date.'
+            })
+
+        if is_current and end_date:
+            raise serializers.ValidationError({
+                'end_date': 'Current education should not have an end date.'
+            })
+
+        return data
+
+
+class EducationCreateUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating/updating education entries.
+    """
+
+    class Meta:
+        model = Education
+        fields = [
+            'institution',
+            'degree',
+            'field_of_study',
+            'start_date',
+            'end_date',
+            'is_current',
+            'grade',
+            'description',
+            'order',
+        ]
+
+    def validate(self, data):
+        """Validate date logic."""
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        is_current = data.get('is_current', False)
+
+        if end_date and start_date and end_date < start_date:
+            raise serializers.ValidationError({
+                'end_date': 'End date must be after start date.'
+            })
+
+        if is_current and end_date:
+            raise serializers.ValidationError({
+                'end_date': 'Current education should not have an end date.'
+            })
+
+        return data
+
+    def create(self, validated_data):
+        candidate = self.context['candidate']
+        education = Education.objects.create(candidate=candidate, **validated_data)
+        return education
+
+
+# ============================================================================
+# Reorder Serializers
+# ============================================================================
+
+class ReorderSerializer(serializers.Serializer):
+    """
+    Serializer for reordering items (experiences or education).
+    Expects a list of IDs in the desired order.
+    """
+    ordered_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        min_length=1,
+    )

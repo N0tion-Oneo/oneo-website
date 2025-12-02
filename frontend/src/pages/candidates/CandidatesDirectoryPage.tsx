@@ -1,0 +1,261 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useCandidates } from '@/hooks'
+import { Seniority, WorkPreference } from '@/types'
+import type { CandidateProfileSanitized } from '@/types'
+
+export default function CandidatesDirectoryPage() {
+  const [filters, setFilters] = useState({
+    seniority: '',
+    work_preference: '',
+    search: '',
+    page: 1,
+  })
+
+  const { candidates, count, hasNext, hasPrevious, isLoading, error } = useCandidates({
+    seniority: filters.seniority || undefined,
+    work_preference: filters.work_preference || undefined,
+    search: filters.search || undefined,
+    page: filters.page,
+  })
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value, page: 1 }))
+  }
+
+  const getSeniorityLabel = (seniority: string) => {
+    const labels: Record<string, string> = {
+      intern: 'Intern',
+      junior: 'Junior',
+      mid: 'Mid-Level',
+      senior: 'Senior',
+      lead: 'Lead',
+      principal: 'Principal',
+      executive: 'Executive',
+    }
+    return labels[seniority] || seniority
+  }
+
+  const getWorkPreferenceLabel = (pref: string) => {
+    const labels: Record<string, string> = {
+      remote: 'Remote',
+      hybrid: 'Hybrid',
+      onsite: 'On-site',
+      flexible: 'Flexible',
+    }
+    return labels[pref] || pref
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <Link to="/" className="text-lg font-semibold text-gray-900">
+            Oneo
+          </Link>
+          <nav className="flex items-center gap-6">
+            <Link to="/jobs" className="text-[13px] font-medium text-gray-500 hover:text-gray-900">
+              Jobs
+            </Link>
+            <Link to="/candidates" className="text-[13px] font-medium text-gray-900">
+              Candidates
+            </Link>
+            <Link to="/login" className="text-[13px] font-medium text-gray-500 hover:text-gray-900">
+              Sign in
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-6 py-10">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-[26px] font-semibold text-gray-900">Talent Directory</h1>
+          <p className="text-[15px] text-gray-500 mt-1">
+            Browse our pool of pre-vetted candidates
+          </p>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+          <div className="grid md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-[12px] font-medium text-gray-500 mb-1.5">Search</label>
+              <input
+                type="text"
+                placeholder="Search by title or skills..."
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] font-medium text-gray-500 mb-1.5">Seniority</label>
+              <select
+                value={filters.seniority}
+                onChange={(e) => handleFilterChange('seniority', e.target.value)}
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              >
+                <option value="">All levels</option>
+                <option value={Seniority.INTERN}>Intern</option>
+                <option value={Seniority.JUNIOR}>Junior</option>
+                <option value={Seniority.MID}>Mid-Level</option>
+                <option value={Seniority.SENIOR}>Senior</option>
+                <option value={Seniority.LEAD}>Lead</option>
+                <option value={Seniority.PRINCIPAL}>Principal</option>
+                <option value={Seniority.EXECUTIVE}>Executive</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[12px] font-medium text-gray-500 mb-1.5">Work Preference</label>
+              <select
+                value={filters.work_preference}
+                onChange={(e) => handleFilterChange('work_preference', e.target.value)}
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              >
+                <option value="">All preferences</option>
+                <option value={WorkPreference.REMOTE}>Remote</option>
+                <option value={WorkPreference.HYBRID}>Hybrid</option>
+                <option value={WorkPreference.ONSITE}>On-site</option>
+                <option value={WorkPreference.FLEXIBLE}>Flexible</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={() => setFilters({ seniority: '', work_preference: '', search: '', page: 1 })}
+                className="w-full px-4 py-2 text-[13px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Results Count */}
+        <div className="text-[13px] text-gray-500 mb-4">
+          {count} candidate{count !== 1 ? 's' : ''} found
+        </div>
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-12">
+            <p className="text-[14px] text-gray-500">Loading candidates...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-[14px] text-red-500">{error}</p>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && !error && candidates.length === 0 && (
+          <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
+            <p className="text-[15px] text-gray-700 mb-1">No candidates found</p>
+            <p className="text-[13px] text-gray-500">Try adjusting your filters</p>
+          </div>
+        )}
+
+        {/* Candidates Grid */}
+        {!isLoading && !error && candidates.length > 0 && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {candidates.map((candidate: CandidateProfileSanitized) => (
+              <Link
+                key={candidate.id}
+                to={`/candidates/${candidate.slug}`}
+                className="bg-white border border-gray-200 rounded-lg p-5 hover:border-gray-300 transition-colors"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gray-900 rounded-full flex items-center justify-center text-white text-[14px] font-medium flex-shrink-0">
+                    {candidate.initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-[15px] font-medium text-gray-900 truncate">
+                      {candidate.professional_title || 'Professional'}
+                    </h3>
+                    {candidate.headline && (
+                      <p className="text-[13px] text-gray-500 truncate mt-0.5">
+                        {candidate.headline}
+                      </p>
+                    )}
+                    {candidate.location && (
+                      <p className="text-[12px] text-gray-400 mt-1 flex items-center gap-1">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        {candidate.location}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {candidate.seniority && (
+                    <span className="px-2 py-0.5 text-[11px] font-medium bg-gray-100 text-gray-700 rounded">
+                      {getSeniorityLabel(candidate.seniority)}
+                    </span>
+                  )}
+                  {candidate.work_preference && (
+                    <span className="px-2 py-0.5 text-[11px] font-medium bg-blue-50 text-blue-700 rounded">
+                      {getWorkPreferenceLabel(candidate.work_preference)}
+                    </span>
+                  )}
+                  {candidate.years_of_experience && (
+                    <span className="px-2 py-0.5 text-[11px] font-medium bg-green-50 text-green-700 rounded">
+                      {candidate.years_of_experience}+ years
+                    </span>
+                  )}
+                </div>
+
+                {/* Skills */}
+                {candidate.skills && candidate.skills.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {candidate.skills.slice(0, 4).map((skill) => (
+                      <span
+                        key={skill.id}
+                        className="px-2 py-0.5 text-[11px] text-gray-600 bg-gray-50 rounded"
+                      >
+                        {skill.name}
+                      </span>
+                    ))}
+                    {candidate.skills.length > 4 && (
+                      <span className="px-2 py-0.5 text-[11px] text-gray-400">
+                        +{candidate.skills.length - 4} more
+                      </span>
+                    )}
+                  </div>
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!isLoading && !error && (hasPrevious || hasNext) && (
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <button
+              onClick={() => setFilters((prev) => ({ ...prev, page: prev.page - 1 }))}
+              disabled={!hasPrevious}
+              className="px-4 py-2 text-[13px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            <span className="text-[13px] text-gray-500">Page {filters.page}</span>
+            <button
+              onClick={() => setFilters((prev) => ({ ...prev, page: prev.page + 1 }))}
+              disabled={!hasNext}
+              className="px-4 py-2 text-[13px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}

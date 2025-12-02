@@ -1,0 +1,1018 @@
+ Overview
+
+  Building a full-stack recruitment platform with Django + React + PostgreSQL, focusing on iterative
+  delivery with working features at each phase.
+
+  ---
+  Phase 0: Foundation Setup (3-4 days)
+
+  Goal: Get the technical foundation ready with proper architecture and tooling.
+
+  Backend Tasks
+
+  - Install additional Django packages: djangorestframework-simplejwt, drf-spectacular (API docs),
+  django-extensions, pillow (for images)
+  - Configure JWT authentication with httpOnly cookies
+  - Set up Django REST Framework settings (permissions, renderers, pagination)
+  - Create custom User model extending AbstractUser (add: phone, avatar, role enum)
+  - Configure media file handling for uploads
+  - Set up CORS for cookie-based auth
+  - Create base serializers and permissions classes
+  - Set up API versioning (/api/v1/)
+
+  Frontend Tasks
+
+  - Convert project to TypeScript (rename files, add tsconfig.json)
+  - Install dependencies: @tanstack/react-query, react-router-dom, react-hook-form, zod, axios,
+  @headlessui/react, clsx, tailwind-merge
+  - Configure Tailwind with Oneo brand colors
+  - Add Poppins font via Google Fonts
+  - Create folder structure:
+  src/
+  ├── components/     # Reusable UI components
+  ├── features/       # Feature-specific components
+  ├── layouts/        # MainLayout, DashboardLayout
+  ├── pages/          # Page components
+  ├── services/       # API client, axios setup
+  ├── hooks/          # Custom React hooks
+  ├── types/          # TypeScript types/interfaces
+  ├── utils/          # Helper functions
+  └── contexts/       # React contexts (AuthContext)
+  - Set up Axios instance with interceptors (token refresh, error handling)
+  - Create QueryClient provider wrapper
+  - Build base Layout components (MainLayout with navbar/footer)
+
+  Deliverables
+
+  - ✅ Both servers running with proper configuration
+  - ✅ TypeScript compilation working
+  - ✅ Tailwind styles rendering
+  - ✅ API can handle JWT authentication
+  - ✅ Frontend can make authenticated API calls
+
+  ---
+  Phase 1: Authentication & User Management (4-5 days)
+
+  Goal: Users can sign up (candidates only), log in, and manage their basic profile.
+
+  Backend Tasks
+
+  Models:
+  - Create User model with fields: email, phone, avatar, role (candidate/client/recruiter/admin)
+  - Add email verification fields (is_verified, verification_token)
+  - Run migrations
+
+  API Endpoints:
+  - POST /api/v1/auth/register/ - Candidate signup
+  - POST /api/v1/auth/login/ - Login (returns httpOnly cookie)
+  - POST /api/v1/auth/logout/ - Logout (clear cookie)
+  - POST /api/v1/auth/refresh/ - Refresh token
+  - GET /api/v1/auth/me/ - Get current user
+  - PATCH /api/v1/auth/me/ - Update user profile
+  - POST /api/v1/auth/verify-email/ - Email verification (stub for now)
+  - POST /api/v1/auth/forgot-password/ - Password reset request (stub)
+  - POST /api/v1/auth/reset-password/ - Password reset (stub)
+
+  Serializers:
+  - UserSerializer (for profile data)
+  - RegisterSerializer (with validation)
+  - LoginSerializer
+
+  Tests:
+  - Test registration flow
+  - Test login/logout
+  - Test token refresh
+  - Test role-based permissions
+
+  Frontend Tasks
+
+  Types:
+  - User interface (id, email, firstName, lastName, phone, avatar, role)
+  - AuthState interface
+  - LoginCredentials, RegisterData types
+
+  Auth Context:
+  - Create AuthContext with: user, login, logout, register, isAuthenticated, isLoading
+  - Implement token refresh logic
+  - Handle 401 responses globally (auto-logout)
+
+  Components:
+  - LoginPage with form validation (email, password)
+  - SignupPage (candidate only) with validation
+  - ProtectedRoute component (checks auth + role)
+  - PublicRoute component (redirects if logged in)
+  - Navbar with login/logout states
+
+  Pages:
+  - /login - Login form
+  - /signup - Candidate signup form
+  - / - Home page (placeholder content)
+  - /dashboard - Protected, redirects based on role
+
+  API Hooks:
+  - useAuth() - access auth context
+  - useLogin() - mutation hook
+  - useRegister() - mutation hook
+  - useLogout() - mutation hook
+
+  Deliverables
+
+  - ✅ Candidates can sign up with email/password
+  - ✅ All users can log in
+  - ✅ Sessions persist (refresh token working)
+  - ✅ Protected routes redirect to login
+  - ✅ Basic user profile editing works
+
+  ---
+  Phase 2: Candidate Profile - Core (5-6 days)
+
+  Goal: Candidates can create and edit their profile with all essential fields.
+
+  Backend Tasks
+
+  Models:
+  - CandidateProfile (OneToOne with User)
+    - Fields: professional_title, headline, seniority, city, country, region
+    - professional_summary, years_of_experience
+    - work_preference, willing_to_relocate, preferred_locations (JSON)
+    - salary_expectation_min/max, salary_currency, notice_period_days
+    - portfolio_links (JSON), resume_url
+    - visibility (private/public_sanitised), profile_completeness
+  - Skill model (id, name, category, slug)
+  - Industry model (id, name, slug)
+  - ManyToMany: CandidateProfile ↔ Skill, CandidateProfile ↔ Industry
+
+  API Endpoints:
+  - GET /api/v1/candidates/me/ - Get own profile
+  - PATCH /api/v1/candidates/me/ - Update own profile
+  - GET /api/v1/candidates/ - List public sanitized profiles
+  - GET /api/v1/candidates/:slug/ - Get single profile (sanitized or full based on auth)
+  - GET /api/v1/skills/ - List all skills
+  - GET /api/v1/industries/ - List all industries
+
+  Serializers:
+  - CandidateProfileSerializer (full)
+  - CandidateProfileSanitizedSerializer (hides sensitive data)
+  - Logic to switch serializers based on auth/visibility
+
+  Seed Data:
+  - Create common skills (Python, Java, React, etc.)
+  - Create industries (FinTech, HealthTech, E-commerce, etc.)
+
+  Frontend Tasks
+
+  Types:
+  - CandidateProfile interface (all fields)
+  - Skill, Industry interfaces
+  - Enums: Seniority, WorkPreference, Currency
+
+  Pages:
+  - /dashboard/candidate/profile - Profile editor form
+    - Tabs: Basic Info, Professional, Work Preferences, Portfolio
+    - Multi-select for skills and industries
+    - Repeatable portfolio links
+    - Salary range with currency selector
+    - Visibility toggle
+  - /candidates - Public candidate directory (cards, filters)
+  - /candidates/:slug - Public candidate profile view (sanitized)
+
+  Components:
+  - DashboardLayout for candidate (sidebar with nav)
+  - ProfileForm with React Hook Form + Zod validation
+  - SkillMultiSelect (searchable, taggable)
+  - IndustryMultiSelect
+  - CurrencySelector
+  - PortfolioLinksEditor (add/remove fields)
+
+  API Hooks:
+  - useMyProfile() - query hook
+  - useUpdateProfile() - mutation hook
+  - useSkills() - query hook
+  - useIndustries() - query hook
+  - useCandidates() - query hook with filters
+  - useCandidate(slug) - query hook
+
+  Deliverables
+
+  - ✅ Candidate can fill out complete profile
+  - ✅ Profile completeness indicator works
+  - ✅ Public directory shows sanitized profiles
+  - ✅ Unauthenticated users see sanitized data
+  - ✅ Authenticated users see full profiles
+  - ✅ Profile validation prevents invalid data
+
+  ---
+  Phase 3: Candidate Profile - Experience & Education (3-4 days)
+
+  Goal: Candidates can add detailed work history and education.
+
+  Backend Tasks
+
+  Models:
+  - Experience (ForeignKey to CandidateProfile)
+    - Fields: job_title, company_name, company_size, industry
+    - start_date, end_date, is_current
+    - description, achievements (text), technologies_used (JSON)
+    - order (for sorting)
+  - Education (ForeignKey to CandidateProfile)
+    - Fields: institution, degree, field_of_study
+    - start_date, end_date, is_current
+    - grade, description
+    - order (for sorting)
+
+  API Endpoints:
+  - GET /api/v1/candidates/me/experiences/ - List own experiences
+  - POST /api/v1/candidates/me/experiences/ - Add experience
+  - PATCH /api/v1/candidates/me/experiences/:id/ - Update experience
+  - DELETE /api/v1/candidates/me/experiences/:id/ - Delete experience
+  - POST /api/v1/candidates/me/experiences/reorder/ - Reorder experiences
+  - Same endpoints for education: /api/v1/candidates/me/education/
+
+  Sanitization:
+  - Implement logic to hide/show company names in sanitized views
+
+  Frontend Tasks
+
+  Types:
+  - Experience interface
+  - Education interface
+
+  Components:
+  - ExperienceEditor - repeatable sections with add/remove
+  - ExperienceForm - single experience form
+  - EducationEditor - repeatable sections
+  - EducationForm - single education form
+  - DateRangePicker (with "current" checkbox)
+  - Drag-to-reorder for experiences/education
+
+  Pages:
+  - Add Experience and Education tabs to /dashboard/candidate/profile
+
+  API Hooks:
+  - useExperiences() - query hook
+  - useAddExperience() - mutation
+  - useUpdateExperience() - mutation
+  - useDeleteExperience() - mutation
+  - useReorderExperiences() - mutation
+  - Similar hooks for education
+
+  Deliverables
+
+  - ✅ Candidates can add multiple work experiences
+  - ✅ Candidates can add education/certifications
+  - ✅ Reordering works (drag-and-drop)
+  - ✅ Sanitized profiles hide company names (if configured)
+  - ✅ Date validation (end date > start date)
+
+  ---
+  Phase 4: Company Profiles (4-5 days)
+
+  Goal: Companies can be created and managed, with multi-user access control.
+
+  Backend Tasks
+
+  Models:
+  - Company
+    - Basic: name, slug, logo_url, tagline, description
+    - Details: industry, company_size, founded_year, funding_stage
+    - URLs: website_url, linkedin_url
+    - Location: headquarters_city, headquarters_country, locations (JSON)
+    - Culture: culture_description, values (JSON), benefits (JSON structured)
+    - Tech: tech_stack (JSON), interview_process (text)
+    - Remote: remote_work_policy (text)
+    - Meta: is_published, created_at, updated_at
+  - CompanyUser (ForeignKey to User and Company)
+    - Fields: role (admin/editor/viewer), joined_at, invited_by, is_active
+
+  API Endpoints:
+  - GET /api/v1/companies/ - List public companies
+  - GET /api/v1/companies/:slug/ - Get company detail
+  - GET /api/v1/companies/my/ - Get user's company (for client users)
+  - PATCH /api/v1/companies/my/ - Update company (admin/editor only)
+  - GET /api/v1/companies/my/users/ - List company users
+  - POST /api/v1/companies/my/users/ - Invite user (admin only)
+  - PATCH /api/v1/companies/my/users/:id/ - Update user role (admin only)
+  - DELETE /api/v1/companies/my/users/:id/ - Remove user (admin only)
+
+  Permissions:
+  - Create permission classes: IsCompanyAdmin, IsCompanyEditor, IsCompanyViewer
+
+  Seed Data:
+  - Create sample companies for testing
+
+  Frontend Tasks
+
+  Types:
+  - Company interface
+  - CompanyUser interface
+  - Enums: CompanySize, FundingStage, CompanyUserRole
+
+  Pages:
+  - /companies - Company directory (cards with filters)
+  - /companies/:slug - Public company profile
+  - /dashboard/client/company - Company editor (tabs)
+    - Tab 1: Basic Info (name, logo, tagline, industry, size)
+    - Tab 2: Culture & Values
+    - Tab 3: Benefits (structured editor)
+    - Tab 4: Tech Stack & Interview Process
+    - Tab 5: Team Members (invite, manage roles)
+
+  Components:
+  - DashboardLayout for client users
+  - CompanyForm with validation
+  - BenefitsEditor (structured: categories with items)
+  - TechStackEditor (tags)
+  - TeamMembersTable with role management
+
+  API Hooks:
+  - useCompanies() - query with filters
+  - useCompany(slug) - query
+  - useMyCompany() - query
+  - useUpdateCompany() - mutation
+  - useCompanyUsers() - query
+  - useInviteUser() - mutation
+  - useUpdateUserRole() - mutation
+  - useRemoveUser() - mutation
+
+  Deliverables
+
+  - ✅ Companies can be browsed publicly
+  - ✅ Client users can edit their company profile
+  - ✅ Company admins can invite/manage team members
+  - ✅ Role-based permissions work (admin/editor/viewer)
+  - ✅ Benefits are structured and filterable
+
+  ---
+  Phase 5: Job Postings (5-6 days)
+
+  Goal: Companies can post jobs, candidates can browse and search.
+
+  Backend Tasks
+
+  Models:
+  - Job
+    - Basic: title, slug, seniority, job_type, status (draft/published/closed/filled)
+    - Content: summary, description, requirements (text), nice_to_haves (text), responsibilities
+  (text)
+    - Location: location_city, location_country, work_mode, remote_regions (JSON)
+    - Compensation: salary_min/max, salary_currency, salary_visible, equity_offered (boolean)
+    - Benefits: benefits (JSON, inherits from company but customizable)
+    - Tech: required_skills (M2M), nice_to_have_skills (M2M), tech_stack (JSON)
+    - Meta: company (FK), created_by (FK), assigned_recruiter (FK, nullable)
+    - Meta: views_count, applications_count, published_at, application_deadline
+    - Category: department (enum: engineering, marketing, sales, operations, etc.)
+
+  API Endpoints:
+  - GET /api/v1/jobs/ - List published jobs (public, with filters)
+  - GET /api/v1/jobs/:id/ - Get job detail (public if published)
+  - POST /api/v1/jobs/ - Create job (client editor/admin)
+  - PATCH /api/v1/jobs/:id/ - Update job (creator or company admin)
+  - DELETE /api/v1/jobs/:id/ - Delete job (creator or company admin)
+  - POST /api/v1/jobs/:id/publish/ - Publish job (change status)
+  - POST /api/v1/jobs/:id/close/ - Close job
+  - GET /api/v1/companies/my/jobs/ - List company's jobs (all statuses)
+
+  Filters:
+  - Implement filters: seniority, job_type, work_mode, department, location, salary_range, skills
+
+  Serializers:
+  - JobListSerializer (summary data)
+  - JobDetailSerializer (full data including company info)
+
+  Frontend Tasks
+
+  Types:
+  - Job interface
+  - Enums: JobStatus, JobType, WorkMode, Department
+
+  Pages:
+  - /jobs - Job listings with filters
+    - Sidebar: Filters (role type, seniority, location, remote, tech stack, company)
+    - Search bar
+    - Sort options (date, salary)
+    - Pagination
+  - /jobs/:id - Job detail page
+    - Company info section
+    - Job description
+    - Requirements, nice-to-haves, responsibilities
+    - Tech stack tags
+    - Benefits
+    - Apply CTA (or "Sign up to apply" if not authenticated)
+  - /dashboard/client/jobs - Job list management (all statuses)
+  - /dashboard/client/jobs/new - Create job form
+  - /dashboard/client/jobs/:id - Edit job + pipeline view
+
+  Components:
+  - JobCard (for listings)
+  - JobFilters sidebar
+  - JobForm (multi-step or tabs)
+    - Step 1: Basics (title, seniority, type, location, work mode)
+    - Step 2: Description (summary, full description)
+    - Step 3: Requirements (free text + skills)
+    - Step 4: Compensation (salary, equity, benefits)
+    - Step 5: Review & Publish
+  - SkillSelector (multi-select with required/nice-to-have)
+
+  API Hooks:
+  - useJobs(filters) - query with filters
+  - useJob(id) - query
+  - useCreateJob() - mutation
+  - useUpdateJob() - mutation
+  - useDeleteJob() - mutation
+  - usePublishJob() - mutation
+  - useCompanyJobs() - query
+
+  Deliverables
+
+  - ✅ Job listings page with working filters
+  - ✅ Job detail page with full information
+  - ✅ Client users can create/edit jobs
+  - ✅ Jobs can be drafted, published, closed
+  - ✅ View counts tracked
+  - ✅ Search and filtering work smoothly
+
+  ---
+  Phase 6: Applications - Basic Flow (4-5 days)
+
+  Goal: Candidates can apply to jobs, track application status.
+
+  Backend Tasks
+
+  Models:
+  - Application
+    - Relations: job (FK), candidate (FK)
+    - Content: covering_statement, resume_url (nullable)
+    - Status: status (enum: applied, screening, shortlisted, interviewing, offer, accepted, rejected,
+   withdrawn)
+    - Process: applied_at, last_status_change, rejection_reason, feedback (internal notes)
+    - Meta: source (enum: direct, referral, recruiter), referrer (FK, nullable)
+
+  API Endpoints:
+  - POST /api/v1/applications/ - Apply to job (candidate)
+  - GET /api/v1/applications/ - List own applications (candidate)
+  - GET /api/v1/applications/:id/ - Get application detail
+  - PATCH /api/v1/applications/:id/ - Update application (status change)
+  - DELETE /api/v1/applications/:id/ - Withdraw application (candidate)
+  - GET /api/v1/jobs/:jobId/applications/ - List job applications (company/recruiter)
+
+  Permissions:
+  - Candidate can only see own applications
+  - Company users can see applications for their jobs
+  - Recruiters can see all applications
+
+  Notifications:
+  - Send email on application submission (candidate)
+  - Send email on application submission (company + recruiter)
+
+  Frontend Tasks
+
+  Types:
+  - Application interface
+  - Enums: ApplicationStatus, ApplicationSource
+
+  Pages:
+  - /jobs/:id - Add "Apply" button/modal
+    - If not logged in: "Sign up to apply"
+    - If logged in as candidate: Show apply form
+    - If logged in as client/recruiter: Hide apply button
+  - /dashboard/candidate/applications - Applications table
+    - Columns: Job, Company, Applied Date, Status
+    - Click row to see details
+    - "Withdraw" action
+  - /dashboard/client/jobs/:id/candidates - View applications for job
+    - Table with candidate info, status, date
+    - Click to see full application
+
+  Components:
+  - ApplyModal/ApplyForm
+    - Covering statement textarea
+    - Optional resume upload (or use profile resume)
+    - Submit button
+  - ApplicationsTable (for candidate dashboard)
+  - ApplicationCard (detail view)
+
+  API Hooks:
+  - useApplyToJob() - mutation
+  - useMyApplications() - query
+  - useWithdrawApplication() - mutation
+  - useJobApplications(jobId) - query (for company users)
+
+  Deliverables
+
+  - ✅ Candidates can apply to jobs
+  - ✅ Application tracking works
+  - ✅ Covering statement saved
+  - ✅ Status displayed correctly
+  - ✅ Company users can see applications
+  - ✅ Email notifications sent (basic)
+
+  ---
+  Phase 7: Applications - Custom Questions & Stages (3-4 days)
+
+  Goal: Jobs can have custom application questions and custom pipeline stages.
+
+  Backend Tasks
+
+  Models:
+  - ApplicationQuestion (ForeignKey to Job)
+    - Fields: question_text, question_type (text, textarea, select, multi_select, file)
+    - options (JSON, for select/multi_select)
+    - is_required, order
+  - ApplicationAnswer (ForeignKey to Application and ApplicationQuestion)
+    - Fields: answer_text, answer_file_url
+  - ApplicationStage (ForeignKey to Job)
+    - Fields: name, order, is_default (e.g., "Applied", "Screening")
+    - color (hex, for UI)
+
+  API Endpoints:
+  - When creating/updating job: include questions and stages
+  - GET /api/v1/jobs/:id/questions/ - List job's questions
+  - When applying: POST /api/v1/applications/ includes answers
+  - GET /api/v1/applications/:id/answers/ - Get application answers
+
+  Frontend Tasks
+
+  Types:
+  - ApplicationQuestion, ApplicationAnswer, ApplicationStage interfaces
+
+  Pages:
+  - /dashboard/client/jobs/new - Add step for custom questions
+    - Question builder (add/remove/reorder)
+    - Question types: text, textarea, select, multi-select, file
+  - /dashboard/client/jobs/new - Add step for custom stages
+    - Stage builder (add/remove/reorder)
+    - Default stages: Applied, Screening, Interviewing, Offer
+  - /jobs/:id - Show custom questions in apply form
+  - /dashboard/client/jobs/:id/candidates - Pipeline view
+    - Kanban board with custom stages
+    - Drag-drop to move candidates between stages
+
+  Components:
+  - QuestionBuilder
+  - QuestionForm (different inputs based on type)
+  - StageBuilder
+  - KanbanBoard for applications
+  - ApplyForm - dynamically render custom questions
+
+  API Hooks:
+  - useJobQuestions(jobId) - query
+  - Application mutations now handle answers
+
+  Deliverables
+
+  - ✅ Jobs can have custom questions
+  - ✅ Apply form shows custom questions
+  - ✅ Answers are saved and displayed
+  - ✅ Jobs can have custom stages
+  - ✅ Kanban pipeline view works
+  - ✅ Drag-drop stage transitions work
+
+  ---
+  Phase 8: Booking System - Foundation (4-5 days)
+
+  Goal: Set up meeting types and basic booking infrastructure.
+
+  Backend Tasks
+
+  Models:
+  - MeetingType
+    - Fields: name, slug, type (enum: candidate_intro, client_discovery, interview)
+    - duration_minutes, buffer_before_minutes, buffer_after_minutes
+    - calendar_id (Google Calendar ID)
+    - is_active, description, confirmation_message
+    - qualification_questions (JSON)
+    - assigned_to (FK to User, nullable - if per-recruiter)
+  - Booking
+    - Relations: meeting_type (FK), organizer (FK), candidate (FK, nullable), client_user (FK,
+  nullable)
+    - Relations: related_job (FK, nullable), related_application (FK, nullable)
+    - Details: title, description, scheduled_at, duration_minutes, meeting_url
+    - Details: calendar_event_id (for Google Calendar sync)
+    - Public booking: attendee_name, attendee_email, attendee_company, attendee_topic
+    - Status: status (enum: scheduled, confirmed, completed, cancelled, no_show)
+    - Workflow: client_proposed_times (JSON, array of datetime options)
+    - Workflow: candidate_selected_time (datetime, nullable)
+    - Meta: created_at, cancelled_at, cancellation_reason
+  - NotificationReminder (ForeignKey to Booking)
+    - Fields: reminder_type (email, sms), send_at, sent_at, status
+
+  API Endpoints:
+  - GET /api/v1/meeting-types/ - List active meeting types
+  - GET /api/v1/meeting-types/:slug/availability/ - Get available time slots
+    - Query params: date_range, recruiter_id (if applicable)
+  - POST /api/v1/bookings/ - Create booking
+  - GET /api/v1/bookings/ - List own bookings (filtered by role)
+  - GET /api/v1/bookings/:id/ - Get booking detail
+  - PATCH /api/v1/bookings/:id/cancel/ - Cancel booking
+  - Admin: CRUD for meeting types
+
+  Google Calendar Integration (Stub for now):
+  - Create placeholder for availability checking
+  - Create placeholder for event creation
+  - TODO: Implement actual Google Calendar API
+
+  Frontend Tasks
+
+  Types:
+  - MeetingType, Booking, NotificationReminder interfaces
+  - Enums: BookingStatus, ReminderType
+
+  Pages:
+  - /dashboard/admin/meeting-types - Manage meeting types
+    - List meeting types
+    - Create/edit form
+    - Configure questions
+  - /dashboard/candidate/bookings - Candidate bookings list
+    - Upcoming and past bookings
+    - "Book a call" CTA
+  - /dashboard/candidate/bookings/new - Book intro call
+    - Select recruiter (dropdown)
+    - Select date/time (availability picker)
+    - Confirm booking
+  - /book-a-call - Public client discovery booking
+    - Form: name, email, company, topic
+    - Date/time picker
+    - Submit
+
+  Components:
+  - MeetingTypeForm
+  - AvailabilityPicker (calendar with time slots)
+  - BookingCard (display booking details)
+  - BookingsList
+
+  API Hooks:
+  - useMeetingTypes() - query
+  - useMeetingTypeAvailability(slug, params) - query
+  - useCreateBooking() - mutation
+  - useMyBookings() - query
+  - useCancelBooking() - mutation
+
+  Deliverables
+
+  - ✅ Meeting types can be configured
+  - ✅ Candidates can book intro calls with recruiters
+  - ✅ Public client discovery booking works
+  - ✅ Availability picker shows time slots (mocked for now)
+  - ✅ Bookings are created and listed
+  - ✅ Cancellation works
+
+  ---
+  Phase 9: Booking System - Interview Scheduling (3-4 days)
+
+  Goal: Recruiters can schedule candidate-client interviews with time proposal workflow.
+
+  Backend Tasks
+
+  API Endpoints:
+  - POST /api/v1/bookings/propose-interview-times/ - Recruiter proposes times to client
+    - Body: candidate_id, client_user_id, job_id, proposed_times[]
+  - POST /api/v1/bookings/:id/select-time/ - Candidate selects from proposed times
+  - GET /api/v1/dashboard/recruiter/interviews/ - List all interviews
+
+  Workflow:
+  1. Recruiter proposes 3-5 time slots to client
+  2. Client selects preferred times (or proposes new ones)
+  3. Candidate selects final time
+  4. Booking confirmed, calendar events created
+
+  Frontend Tasks
+
+  Pages:
+  - /dashboard/recruiter/schedule - Schedule interview
+    - Select application (or search candidate + job)
+    - Select client contact
+    - Propose time slots (date/time picker with multiple selections)
+    - Submit
+  - /dashboard/client/bookings - View proposed interviews
+    - See recruiter-proposed times
+    - Select preferred times or propose alternatives
+  - /dashboard/candidate/bookings - See client-selected times
+    - Choose final time slot
+    - Confirm
+
+  Components:
+  - InterviewScheduleForm
+  - TimeSlotSelector (multi-select for proposing)
+  - TimeSlotPicker (single-select for choosing)
+
+  API Hooks:
+  - useProposeInterviewTimes() - mutation
+  - useSelectInterviewTime() - mutation
+
+  Deliverables
+
+  - ✅ Recruiter can propose interview times
+  - ✅ Time proposal workflow works
+  - ✅ Candidate can select from proposed times
+  - ✅ Confirmation emails sent at each step (basic)
+
+  ---
+  Phase 10: Admin Tools (3-4 days)
+
+  Goal: Admin dashboard with email templates and Nethunt integration logs.
+
+  Backend Tasks
+
+  Models:
+  - EmailTemplate
+    - Fields: name, slug, subject, body (text with placeholders)
+    - available_placeholders (JSON)
+    - is_active, updated_at, updated_by
+  - NethuntLog
+    - Fields: event_type (enum), status (success/failure)
+    - payload (JSON), response (JSON), error_message
+    - Relations: related_job, related_application (nullable)
+    - retry_count, last_retry_at
+
+  API Endpoints:
+  - GET /api/v1/admin/email-templates/ - List templates
+  - GET /api/v1/admin/email-templates/:id/ - Get template
+  - PATCH /api/v1/admin/email-templates/:id/ - Update template
+  - GET /api/v1/admin/nethunt/logs/ - List logs (with filters)
+  - POST /api/v1/admin/nethunt/logs/:id/retry/ - Retry failed sync
+
+  Email System:
+  - Implement email sending function using templates
+  - Placeholder replacement logic
+
+  Nethunt Integration (Stub):
+  - Create webhook receiver endpoint: POST /api/v1/webhooks/nethunt/
+  - Log all events to NethuntLog
+  - TODO: Implement actual Nethunt API calls
+
+  Frontend Tasks
+
+  Pages:
+  - /dashboard/admin - Admin overview dashboard
+    - Stats: total users, active jobs, pending applications
+    - Recent Nethunt errors
+  - /dashboard/admin/email-templates - Email template list
+    - Click to edit
+  - /dashboard/admin/email-templates/:id/edit - Edit template
+    - Subject and body fields
+    - Show available placeholders
+    - Preview
+  - /dashboard/admin/nethunt/logs - Nethunt logs table
+    - Columns: Event Type, Status, Timestamp, Error
+    - Filter by status, event type
+    - "Retry" button on failures
+  - /dashboard/admin/recruiters - Recruiter management
+    - List recruiters
+    - Assign meeting types/calendars
+
+  Components:
+  - EmailTemplateEditor (textarea with syntax highlighting?)
+  - PlaceholderReference (shows available {{placeholders}})
+  - NethuntLogsTable
+  - RetryButton
+
+  API Hooks:
+  - useEmailTemplates() - query
+  - useEmailTemplate(id) - query
+  - useUpdateEmailTemplate() - mutation
+  - useNethuntLogs(filters) - query
+  - useRetryNethuntSync(id) - mutation
+
+  Deliverables
+
+  - ✅ Admin can edit email templates
+  - ✅ Placeholders work in emails
+  - ✅ Nethunt logs are visible
+  - ✅ Retry functionality works
+  - ✅ Admin dashboard shows key metrics
+
+  ---
+  Phase 11: Polish & UX Refinements (5-6 days)
+
+  Goal: Improve user experience, loading states, error handling, responsive design.
+
+  Backend Tasks
+
+  - Add comprehensive error messages
+  - Implement rate limiting
+  - Optimize database queries (select_related, prefetch_related)
+  - Add pagination everywhere
+  - Add search functionality where needed
+  - Security audit (SQL injection, XSS, CSRF)
+
+  Frontend Tasks
+
+  Global Improvements:
+  - Implement loading skeletons for all pages
+  - Add toast notification system (success, error, info)
+  - Improve form validation messages
+  - Add confirmation modals for destructive actions
+  - Responsive design for mobile/tablet
+  - Keyboard navigation and accessibility (ARIA labels)
+
+  Components:
+  - Toast/Notification system
+  - LoadingSkeleton components
+  - ConfirmationModal
+  - ErrorBoundary
+  - EmptyState components (for empty lists)
+
+  Pages:
+  - /404 - Not found page
+  - /500 - Error page
+  - Improve loading states on all pages
+  - Add empty states (e.g., "No jobs yet", "No applications")
+
+  Performance:
+  - Lazy load routes
+  - Optimize images (lazy loading, responsive)
+  - Code splitting
+  - TanStack Query caching strategies
+
+  Deliverables
+
+  - ✅ All forms have proper validation and error messages
+  - ✅ Loading states are smooth and informative
+  - ✅ Toast notifications work globally
+  - ✅ Mobile responsive
+  - ✅ Accessible (keyboard nav, screen reader friendly)
+  - ✅ Performance optimized
+
+  ---
+  Phase 12: Content & Legal Pages (3-4 days)
+
+  Goal: Add required legal pages, blog, glossary, case studies, FAQs, contact.
+
+  Backend Tasks (If dynamic content):
+
+  - Blog model (optional, or use CMS)
+  - CaseStudy model
+  - GlossaryTerm model
+  - FAQ model
+
+  OR use static content / markdown for simplicity
+
+  Frontend Tasks
+
+  Static Pages:
+  - /legal/privacy - Privacy policy
+  - /legal/terms - Terms of service
+  - /legal/popia - POPIA compliance
+  - /contact - Contact form (sends email via API)
+  - /faqs - Accordion-style FAQs
+
+  Content Pages (can be stubbed initially):
+  - /services - Services overview
+  - /services/contingency - Contingency service
+  - /services/retained - Retained service
+  - /services/enterprise-team-building - Enterprise service
+  - /blog - Blog listing (stub or basic list)
+  - /blog/:slug - Blog post (stub)
+  - /glossary - Glossary listing
+  - /glossary/:slug - Term detail
+  - /case-studies - Case studies listing
+  - /case-studies/:slug - Case study detail
+
+  Components:
+  - Footer (with links to legal, social media)
+  - ContactForm
+  - Newsletter signup (stub)
+
+  Deliverables
+
+  - ✅ All legal pages present
+  - ✅ Contact form works
+  - ✅ Footer with proper links
+  - ✅ FAQs implemented
+  - ✅ Service pages outlined (content can be added later)
+
+  ---
+  Phase 13: SEO & Analytics (2-3 days)
+
+  Goal: Optimize for search engines and add analytics tracking.
+
+  Frontend Tasks
+
+  - Install react-helmet-async
+  - Add meta tags to all pages (title, description, og:image)
+  - Create SEO component/hook
+  - Add structured data (JSON-LD) for:
+    - JobPosting
+    - Organization (company profiles)
+    - BreadcrumbList
+  - Add Google Analytics 4
+    - Track page views
+    - Track key events: job view, apply, signup, booking
+  - Add Google Search Console verification tag
+  - Create sitemap.xml (can be static or dynamic)
+  - Create robots.txt
+
+  Deliverables
+
+  - ✅ All pages have proper meta tags
+  - ✅ Open Graph images set
+  - ✅ Structured data validates (Google Rich Results Test)
+  - ✅ GA4 tracking events
+  - ✅ Search Console verified
+
+  ---
+  Phase 14: Testing & Bug Fixes (4-5 days)
+
+  Goal: Comprehensive testing and bug fixing before production.
+
+  Backend Tasks
+
+  - Write unit tests for critical models
+  - Write API endpoint tests
+  - Test authentication flows
+  - Test permissions (role-based access)
+  - Test email sending
+  - Load testing (basic)
+
+  Frontend Tasks
+
+  - Manual testing of all user flows:
+    - Candidate: signup → profile → apply → track application → book call
+    - Client: login → company profile → post job → view applications → manage team
+    - Recruiter: view jobs → view candidates → schedule interviews
+    - Admin: manage templates → view logs
+  - Cross-browser testing (Chrome, Firefox, Safari)
+  - Mobile testing (iOS, Android)
+  - Test error scenarios (network errors, validation errors)
+  - Test edge cases (empty states, long text, special characters)
+
+  Bug Triage
+
+  - Create bug list
+  - Prioritize: critical, high, medium, low
+  - Fix critical and high priority bugs
+  - Document known issues (medium/low) for post-launch
+
+  Deliverables
+
+  - ✅ All critical user flows work end-to-end
+  - ✅ No critical bugs
+  - ✅ Cross-browser compatibility verified
+  - ✅ Mobile experience acceptable
+
+  ---
+  Phase 15: Production Deployment (3-4 days)
+
+  Goal: Deploy to production environment.
+
+  Backend Tasks
+
+  - Set up production server (e.g., DigitalOcean, AWS, Heroku)
+  - Configure PostgreSQL production database
+  - Set up environment variables
+  - Configure static/media file serving (S3 or CDN)
+  - Set up SSL certificate
+  - Configure domain (e.g., api.oneo.co.za)
+  - Run migrations on production DB
+  - Create superuser
+  - Seed production data (skills, industries)
+  - Set up monitoring (Sentry for errors)
+  - Set up backups (database, media files)
+
+  Frontend Tasks
+
+  - Build production bundle (npm run build)
+  - Deploy to hosting (Vercel, Netlify, or server)
+  - Configure domain (e.g., oneo.co.za)
+  - Set environment variables (API URL)
+  - Test production build locally
+  - Verify all API calls work in production
+  - Set up monitoring (error tracking)
+
+  DevOps
+
+  - Set up CI/CD pipeline (GitHub Actions or similar)
+    - Run tests on push
+    - Auto-deploy on merge to main
+  - Documentation for deployment process
+
+  Post-Launch
+
+  - Monitor error logs
+  - Monitor performance
+  - Gather user feedback
+  - Plan Phase 16 (enhancements)
+
+  Deliverables
+
+  - ✅ Application live on production URL
+  - ✅ All features working in production
+  - ✅ SSL configured
+  - ✅ Monitoring set up
+  - ✅ Backups configured
+  - ✅ Documentation complete
+
+  ---
+  Timeline Estimate
+
+  - Phase 0-1: ~1 week (Foundation + Auth)
+  - Phase 2-3: ~2 weeks (Candidate profiles)
+  - Phase 4-5: ~2 weeks (Companies + Jobs)
+  - Phase 6-7: ~1.5 weeks (Applications)
+  - Phase 8-9: ~1.5 weeks (Bookings)
+  - Phase 10: ~1 week (Admin)
+  - Phase 11-12: ~1.5 weeks (Polish + Content)
+  - Phase 13-14: ~1 week (SEO + Testing)
+  - Phase 15: ~1 week (Deployment)
+
+  Total: ~12-14 weeks for a full-featured V1 with proper testing and polish.

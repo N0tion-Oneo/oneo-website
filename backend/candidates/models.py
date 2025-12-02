@@ -1,0 +1,436 @@
+from django.db import models
+from django.conf import settings
+from django.utils.text import slugify
+import uuid
+
+
+class Seniority(models.TextChoices):
+    INTERN = 'intern', 'Intern'
+    JUNIOR = 'junior', 'Junior'
+    MID = 'mid', 'Mid-Level'
+    SENIOR = 'senior', 'Senior'
+    LEAD = 'lead', 'Lead'
+    PRINCIPAL = 'principal', 'Principal'
+    EXECUTIVE = 'executive', 'Executive'
+
+
+class WorkPreference(models.TextChoices):
+    REMOTE = 'remote', 'Remote'
+    HYBRID = 'hybrid', 'Hybrid'
+    ONSITE = 'onsite', 'On-site'
+    FLEXIBLE = 'flexible', 'Flexible'
+
+
+class Currency(models.TextChoices):
+    ZAR = 'ZAR', 'South African Rand'
+    USD = 'USD', 'US Dollar'
+    EUR = 'EUR', 'Euro'
+    GBP = 'GBP', 'British Pound'
+
+
+class ProfileVisibility(models.TextChoices):
+    PRIVATE = 'private', 'Private'
+    PUBLIC_SANITISED = 'public_sanitised', 'Public (Sanitised)'
+
+
+class SkillCategory(models.TextChoices):
+    LEADERSHIP = 'leadership', 'Leadership & Management'
+    COMMUNICATION = 'communication', 'Communication'
+    PROJECT_MANAGEMENT = 'project_management', 'Project Management'
+    ANALYTICAL = 'analytical', 'Analytical & Problem Solving'
+    INTERPERSONAL = 'interpersonal', 'Interpersonal'
+    BUSINESS = 'business', 'Business & Strategy'
+    DOMAIN = 'domain', 'Domain Expertise'
+    OTHER = 'other', 'Other'
+
+
+class TechnologyCategory(models.TextChoices):
+    LANGUAGE = 'language', 'Programming Languages'
+    FRAMEWORK = 'framework', 'Frameworks & Libraries'
+    DATABASE = 'database', 'Databases'
+    CLOUD = 'cloud', 'Cloud & Infrastructure'
+    DEVOPS = 'devops', 'DevOps & CI/CD'
+    TOOL = 'tool', 'Development Tools'
+    OTHER = 'other', 'Other'
+
+
+class Skill(models.Model):
+    """
+    Skills that candidates can add to their profile.
+    """
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+    category = models.CharField(
+        max_length=20,
+        choices=SkillCategory.choices,
+        default=SkillCategory.OTHER,
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'skills'
+        ordering = ['category', 'name']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Handle special characters like C#, C++
+            name_for_slug = self.name.replace('#', '-sharp').replace('++', '-plus-plus').replace('.', '-')
+            base_slug = slugify(name_for_slug)
+            if not base_slug:
+                base_slug = 'skill'
+            slug = base_slug
+            counter = 1
+            while Skill.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class Industry(models.Model):
+    """
+    Industries that candidates can associate with.
+    """
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'industries'
+        verbose_name_plural = 'Industries'
+        ordering = ['name']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class Technology(models.Model):
+    """
+    Technologies and tools that candidates can associate with their experience.
+    Distinct from Skills, which represent professional/soft skills.
+    """
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+    category = models.CharField(
+        max_length=20,
+        choices=TechnologyCategory.choices,
+        default=TechnologyCategory.OTHER,
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'technologies'
+        ordering = ['category', 'name']
+        verbose_name_plural = 'Technologies'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Handle special characters like C#, C++, .NET
+            name_for_slug = self.name.replace('#', '-sharp').replace('++', '-plus-plus').replace('.', '-')
+            base_slug = slugify(name_for_slug)
+            if not base_slug:
+                base_slug = 'tech'
+            slug = base_slug
+            counter = 1
+            while Technology.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class CandidateProfile(models.Model):
+    """
+    Extended profile for candidate users with all professional details.
+    """
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='candidate_profile',
+    )
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+
+    # Professional info
+    professional_title = models.CharField(max_length=200, blank=True)
+    headline = models.CharField(max_length=300, blank=True)
+    seniority = models.CharField(
+        max_length=20,
+        choices=Seniority.choices,
+        blank=True,
+    )
+    professional_summary = models.TextField(blank=True)
+    years_of_experience = models.PositiveIntegerField(null=True, blank=True)
+
+    # Location
+    city = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+    region = models.CharField(max_length=100, blank=True)
+
+    # Work preferences
+    work_preference = models.CharField(
+        max_length=20,
+        choices=WorkPreference.choices,
+        blank=True,
+    )
+    willing_to_relocate = models.BooleanField(default=False)
+    preferred_locations = models.JSONField(default=list, blank=True)
+
+    # Compensation
+    salary_expectation_min = models.PositiveIntegerField(null=True, blank=True)
+    salary_expectation_max = models.PositiveIntegerField(null=True, blank=True)
+    salary_currency = models.CharField(
+        max_length=3,
+        choices=Currency.choices,
+        default=Currency.ZAR,
+    )
+    notice_period_days = models.PositiveIntegerField(null=True, blank=True)
+
+    # Portfolio & Resume
+    portfolio_links = models.JSONField(default=list, blank=True)
+    resume_url = models.FileField(
+        upload_to='resumes/',
+        blank=True,
+        null=True,
+    )
+
+    # Skills & Industries (ManyToMany)
+    skills = models.ManyToManyField(
+        Skill,
+        related_name='candidates',
+        blank=True,
+    )
+    industries = models.ManyToManyField(
+        Industry,
+        related_name='candidates',
+        blank=True,
+    )
+
+    # Visibility & Completeness
+    visibility = models.CharField(
+        max_length=20,
+        choices=ProfileVisibility.choices,
+        default=ProfileVisibility.PUBLIC_SANITISED,
+    )
+    profile_completeness = models.PositiveIntegerField(default=0)
+
+    # Meta
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'candidate_profiles'
+        verbose_name = 'Candidate Profile'
+        verbose_name_plural = 'Candidate Profiles'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Generate unique slug from user's name
+            base_slug = slugify(f"{self.user.first_name}-{self.user.last_name}")
+            slug = base_slug
+            counter = 1
+            while CandidateProfile.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+
+        # Calculate profile completeness
+        self.profile_completeness = self.calculate_completeness()
+        super().save(*args, **kwargs)
+
+    def calculate_completeness(self):
+        """Calculate profile completeness as a percentage."""
+        fields_to_check = [
+            ('professional_title', 10),
+            ('headline', 5),
+            ('seniority', 10),
+            ('professional_summary', 15),
+            ('years_of_experience', 5),
+            ('city', 5),
+            ('country', 5),
+            ('work_preference', 5),
+            ('salary_expectation_min', 5),
+            ('salary_expectation_max', 5),
+            ('notice_period_days', 5),
+            ('resume_url', 10),
+        ]
+
+        score = 0
+        for field, weight in fields_to_check:
+            value = getattr(self, field, None)
+            if value:
+                score += weight
+
+        # Check skills (up to 10%)
+        if hasattr(self, 'pk') and self.pk:
+            skill_count = self.skills.count()
+            if skill_count >= 5:
+                score += 10
+            elif skill_count > 0:
+                score += skill_count * 2
+
+            # Check industries (up to 5%)
+            industry_count = self.industries.count()
+            if industry_count >= 2:
+                score += 5
+            elif industry_count > 0:
+                score += industry_count * 2
+
+        return min(score, 100)
+
+    def __str__(self):
+        return f"{self.user.full_name}'s Profile"
+
+    @property
+    def full_name(self):
+        return self.user.full_name
+
+    @property
+    def email(self):
+        return self.user.email
+
+    @property
+    def location(self):
+        parts = [self.city, self.country]
+        return ', '.join(filter(None, parts))
+
+
+class CompanySize(models.TextChoices):
+    SIZE_1_10 = '1-10', '1-10 employees'
+    SIZE_11_50 = '11-50', '11-50 employees'
+    SIZE_51_200 = '51-200', '51-200 employees'
+    SIZE_201_500 = '201-500', '201-500 employees'
+    SIZE_501_1000 = '501-1000', '501-1000 employees'
+    SIZE_1000_PLUS = '1000+', '1000+ employees'
+
+
+class Experience(models.Model):
+    """
+    Work experience entries for a candidate profile.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    candidate = models.ForeignKey(
+        CandidateProfile,
+        on_delete=models.CASCADE,
+        related_name='experiences',
+    )
+
+    # Job details
+    job_title = models.CharField(max_length=200)
+    company_name = models.CharField(max_length=200)
+    company_size = models.CharField(
+        max_length=20,
+        choices=CompanySize.choices,
+        blank=True,
+    )
+    industry = models.ForeignKey(
+        Industry,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='experiences',
+    )
+
+    # Dates
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    is_current = models.BooleanField(default=False)
+
+    # Details
+    description = models.TextField(blank=True)
+    achievements = models.TextField(blank=True)
+    technologies_used = models.JSONField(default=list, blank=True)  # Deprecated, kept for migration
+
+    # Technologies & Skills (ManyToMany)
+    technologies = models.ManyToManyField(
+        Technology,
+        related_name='experiences',
+        blank=True,
+    )
+    skills = models.ManyToManyField(
+        Skill,
+        related_name='experiences',
+        blank=True,
+    )
+
+    # Ordering
+    order = models.PositiveIntegerField(default=0)
+
+    # Meta
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'candidate_experiences'
+        ordering = ['order', '-start_date']
+
+    def __str__(self):
+        return f"{self.job_title} at {self.company_name}"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.end_date and self.start_date and self.end_date < self.start_date:
+            raise ValidationError({'end_date': 'End date must be after start date.'})
+        if self.is_current and self.end_date:
+            raise ValidationError({'end_date': 'Current positions should not have an end date.'})
+
+
+class Education(models.Model):
+    """
+    Education entries for a candidate profile.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    candidate = models.ForeignKey(
+        CandidateProfile,
+        on_delete=models.CASCADE,
+        related_name='education',
+    )
+
+    # Institution details
+    institution = models.CharField(max_length=200)
+    degree = models.CharField(max_length=200)
+    field_of_study = models.CharField(max_length=200)
+
+    # Dates
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    is_current = models.BooleanField(default=False)
+
+    # Details
+    grade = models.CharField(max_length=50, blank=True)
+    description = models.TextField(blank=True)
+
+    # Ordering
+    order = models.PositiveIntegerField(default=0)
+
+    # Meta
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'candidate_education'
+        ordering = ['order', '-start_date']
+        verbose_name_plural = 'Education'
+
+    def __str__(self):
+        return f"{self.degree} in {self.field_of_study} at {self.institution}"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.end_date and self.start_date and self.end_date < self.start_date:
+            raise ValidationError({'end_date': 'End date must be after start date.'})
+        if self.is_current and self.end_date:
+            raise ValidationError({'end_date': 'Current education should not have an end date.'})
