@@ -10,4 +10,10 @@ urlpatterns = [
 
     # Candidates endpoints (skills, industries, profiles)
     path('', include('candidates.urls')),
+
+    # Companies endpoints
+    path('companies/', include('companies.urls')),
+
+    # Jobs endpoints
+    path('jobs/', include('jobs.urls')),
 ]

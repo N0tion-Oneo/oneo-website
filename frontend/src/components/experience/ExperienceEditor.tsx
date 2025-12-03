@@ -3,9 +3,13 @@ import { useExperiences, useExperienceMutations } from '@/hooks'
 import ExperienceForm from './ExperienceForm'
 import type { Experience, ExperienceInput } from '@/types'
 
-export default function ExperienceEditor() {
-  const { experiences, isLoading, error, refetch } = useExperiences()
-  const { createExperience, updateExperience, deleteExperience, reorderExperiences, isSubmitting } = useExperienceMutations()
+interface ExperienceEditorProps {
+  candidateSlug?: string
+}
+
+export default function ExperienceEditor({ candidateSlug }: ExperienceEditorProps) {
+  const { experiences, isLoading, error, refetch } = useExperiences(candidateSlug)
+  const { createExperience, updateExperience, deleteExperience, reorderExperiences, isSubmitting } = useExperienceMutations(candidateSlug)
 
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)

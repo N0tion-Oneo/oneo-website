@@ -14,6 +14,26 @@ from .models import (
     TechnologyCategory,
     CompanySize,
 )
+from companies.models import City, Country
+
+
+class CountrySerializer(serializers.ModelSerializer):
+    """Serializer for Country model (used in candidate profiles)."""
+
+    class Meta:
+        model = Country
+        fields = ['id', 'name', 'code']
+        read_only_fields = ['id', 'name', 'code']
+
+
+class CitySerializer(serializers.ModelSerializer):
+    """Serializer for City model (used in candidate profiles)."""
+    country = CountrySerializer(read_only=True)
+
+    class Meta:
+        model = City
+        fields = ['id', 'name', 'country']
+        read_only_fields = ['id', 'name', 'country']
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -55,6 +75,10 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
     location = serializers.CharField(read_only=True)
     avatar = serializers.SerializerMethodField()
 
+    # Location FK relationships
+    city_rel = CitySerializer(read_only=True)
+    country_rel = CountrySerializer(read_only=True)
+
     # Nested user info
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
@@ -79,6 +103,8 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
             'city',
             'country',
             'region',
+            'city_rel',
+            'country_rel',
             'location',
             'work_preference',
             'willing_to_relocate',
@@ -166,6 +192,22 @@ class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
         required=False,
     )
 
+    # Location FK fields for writing
+    city_id = serializers.PrimaryKeyRelatedField(
+        queryset=City.objects.filter(is_active=True),
+        write_only=True,
+        required=False,
+        allow_null=True,
+        source='city_rel',
+    )
+    country_id = serializers.PrimaryKeyRelatedField(
+        queryset=Country.objects.filter(is_active=True),
+        write_only=True,
+        required=False,
+        allow_null=True,
+        source='country_rel',
+    )
+
     # User fields that can be updated through profile
     first_name = serializers.CharField(required=False, write_only=True)
     last_name = serializers.CharField(required=False, write_only=True)
@@ -185,6 +227,8 @@ class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
             'city',
             'country',
             'region',
+            'city_id',
+            'country_id',
             'work_preference',
             'willing_to_relocate',
             'preferred_locations',
@@ -550,3 +594,42 @@ class ReorderSerializer(serializers.Serializer):
         child=serializers.UUIDField(),
         min_length=1,
     )
+
+
+class CandidateAdminListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for admin/recruiter candidate listing.
+    Shows full candidate information for management purposes.
+    """
+    initials = serializers.SerializerMethodField()
+    full_name = serializers.CharField(read_only=True)
+    email = serializers.CharField(read_only=True)
+    location = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = CandidateProfile
+        fields = [
+            'id',
+            'slug',
+            'initials',
+            'full_name',
+            'email',
+            'professional_title',
+            'headline',
+            'seniority',
+            'location',
+            'city',
+            'country',
+            'years_of_experience',
+            'work_preference',
+            'visibility',
+            'profile_completeness',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = fields
+
+    def get_initials(self, obj):
+        first_initial = obj.user.first_name[0].upper() if obj.user.first_name else ''
+        last_initial = obj.user.last_name[0].upper() if obj.user.last_name else ''
+        return f"{first_initial}{last_initial}"

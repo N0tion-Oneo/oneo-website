@@ -16,6 +16,7 @@ from .serializers import (
     CandidateProfileSerializer,
     CandidateProfileSanitizedSerializer,
     CandidateProfileUpdateSerializer,
+    CandidateAdminListSerializer,
     ExperienceSerializer,
     ExperienceCreateUpdateSerializer,
     EducationSerializer,
@@ -297,28 +298,137 @@ def list_candidates(request):
 
 
 @extend_schema(
+    responses={200: CandidateAdminListSerializer(many=True)},
+    tags=['Candidates'],
+    parameters=[
+        OpenApiParameter(name='seniority', description='Filter by seniority level', required=False, type=str),
+        OpenApiParameter(name='work_preference', description='Filter by work preference', required=False, type=str),
+        OpenApiParameter(name='visibility', description='Filter by profile visibility', required=False, type=str),
+        OpenApiParameter(name='country', description='Filter by country', required=False, type=str),
+        OpenApiParameter(name='city', description='Filter by city', required=False, type=str),
+        OpenApiParameter(name='search', description='Search in name, title, headline', required=False, type=str),
+    ],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_all_candidates(request):
+    """
+    List all candidate profiles for admin/recruiter management.
+    Shows full candidate information regardless of visibility settings.
+    Restricted to admin and recruiter users only.
+    """
+    # Check if user is admin or recruiter
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    candidates = CandidateProfile.objects.select_related('user').order_by('-created_at')
+
+    # Filter by seniority
+    seniority = request.query_params.get('seniority')
+    if seniority:
+        candidates = candidates.filter(seniority=seniority)
+
+    # Filter by work preference
+    work_preference = request.query_params.get('work_preference')
+    if work_preference:
+        candidates = candidates.filter(work_preference=work_preference)
+
+    # Filter by visibility
+    visibility = request.query_params.get('visibility')
+    if visibility:
+        candidates = candidates.filter(visibility=visibility)
+
+    # Filter by country
+    country = request.query_params.get('country')
+    if country:
+        candidates = candidates.filter(country__icontains=country)
+
+    # Filter by city
+    city = request.query_params.get('city')
+    if city:
+        candidates = candidates.filter(city__icontains=city)
+
+    # Search
+    search = request.query_params.get('search')
+    if search:
+        candidates = candidates.filter(
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search) |
+            Q(user__email__icontains=search) |
+            Q(professional_title__icontains=search) |
+            Q(headline__icontains=search)
+        )
+
+    # Pagination
+    paginator = CandidatePagination()
+    page = paginator.paginate_queryset(candidates, request)
+
+    serializer = CandidateAdminListSerializer(page, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
+
+@extend_schema(
     responses={
         200: CandidateProfileSerializer,
         404: OpenApiResponse(description='Candidate not found'),
     },
     tags=['Candidates'],
 )
-@api_view(['GET'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([AllowAny])
 def get_candidate(request, slug):
     """
-    Get a single candidate profile by slug.
-    Returns full profile if authenticated, sanitized otherwise.
+    Get or update a candidate profile by slug.
+    GET: Returns full profile if authenticated, sanitized otherwise.
+    PATCH: Admin/Recruiter only - update candidate profile.
     """
     profile = get_object_or_404(
         CandidateProfile.objects.select_related('user').prefetch_related('skills', 'industries'),
         slug=slug
     )
 
+    if request.method == 'PATCH':
+        # Only admin/recruiter can update other candidates' profiles
+        if not request.user.is_authenticated:
+            return Response(
+                {'error': 'Authentication required'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+            return Response(
+                {'error': 'Permission denied. Admin or Recruiter access required.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = CandidateProfileUpdateSerializer(
+            profile,
+            data=request.data,
+            partial=True,
+            context={'request': request}
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                CandidateProfileSerializer(profile, context={'request': request}).data
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # GET request
     # Check visibility
     if profile.visibility == ProfileVisibility.PRIVATE:
-        # Only the owner can see private profiles
-        if not request.user.is_authenticated or request.user != profile.user:
+        # Only the owner or admin/recruiter can see private profiles
+        if not request.user.is_authenticated:
+            return Response(
+                {'error': 'This profile is private'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        if request.user != profile.user and request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
             return Response(
                 {'error': 'This profile is private'},
                 status=status.HTTP_404_NOT_FOUND
@@ -345,22 +455,48 @@ def get_candidate_profile_or_403(user):
     return profile
 
 
+def get_profile_for_editing(request, slug=None):
+    """
+    Get candidate profile for editing.
+    - If slug is None: candidate editing their own profile
+    - If slug is provided: admin/recruiter editing any candidate
+    Returns (profile, error_response) tuple.
+    """
+    if slug:
+        # Admin/recruiter editing another candidate's profile
+        if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+            return None, Response(
+                {'error': 'Permission denied. Admin or Recruiter access required.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        profile = get_object_or_404(CandidateProfile, slug=slug)
+        return profile, None
+    else:
+        # Candidate editing their own profile
+        if request.user.role != UserRole.CANDIDATE:
+            return None, Response(
+                {'error': 'Only candidates can access this endpoint'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        profile, _ = CandidateProfile.objects.get_or_create(user=request.user)
+        return profile, None
+
+
 @extend_schema(
     responses={200: ExperienceSerializer(many=True)},
     tags=['Experiences'],
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_experiences(request):
+def list_experiences(request, slug=None):
     """
-    List all experiences for the current candidate.
+    List all experiences for a candidate.
+    - Without slug: returns current candidate's experiences
+    - With slug: returns specified candidate's experiences (admin/recruiter only)
     """
-    profile = get_candidate_profile_or_403(request.user)
-    if not profile:
-        return Response(
-            {'error': 'Only candidates can access this endpoint'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    profile, error = get_profile_for_editing(request, slug)
+    if error:
+        return error
 
     experiences = profile.experiences.all()
     serializer = ExperienceSerializer(experiences, many=True)
@@ -377,16 +513,15 @@ def list_experiences(request):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def create_experience(request):
+def create_experience(request, slug=None):
     """
-    Create a new experience for the current candidate.
+    Create a new experience for a candidate.
+    - Without slug: creates for current candidate
+    - With slug: creates for specified candidate (admin/recruiter only)
     """
-    profile = get_candidate_profile_or_403(request.user)
-    if not profile:
-        return Response(
-            {'error': 'Only candidates can access this endpoint'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    profile, error = get_profile_for_editing(request, slug)
+    if error:
+        return error
 
     serializer = ExperienceCreateUpdateSerializer(
         data=request.data,
@@ -414,16 +549,15 @@ def create_experience(request):
 )
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
-def update_experience(request, experience_id):
+def update_experience(request, experience_id, slug=None):
     """
-    Update an experience for the current candidate.
+    Update an experience for a candidate.
+    - Without slug: updates for current candidate
+    - With slug: updates for specified candidate (admin/recruiter only)
     """
-    profile = get_candidate_profile_or_403(request.user)
-    if not profile:
-        return Response(
-            {'error': 'Only candidates can access this endpoint'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    profile, error = get_profile_for_editing(request, slug)
+    if error:
+        return error
 
     experience = get_object_or_404(Experience, id=experience_id, candidate=profile)
 
@@ -450,16 +584,15 @@ def update_experience(request, experience_id):
 )
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_experience(request, experience_id):
+def delete_experience(request, experience_id, slug=None):
     """
-    Delete an experience for the current candidate.
+    Delete an experience for a candidate.
+    - Without slug: deletes for current candidate
+    - With slug: deletes for specified candidate (admin/recruiter only)
     """
-    profile = get_candidate_profile_or_403(request.user)
-    if not profile:
-        return Response(
-            {'error': 'Only candidates can access this endpoint'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    profile, error = get_profile_for_editing(request, slug)
+    if error:
+        return error
 
     experience = get_object_or_404(Experience, id=experience_id, candidate=profile)
     experience.delete()
@@ -477,17 +610,16 @@ def delete_experience(request, experience_id):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def reorder_experiences(request):
+def reorder_experiences(request, slug=None):
     """
-    Reorder experiences for the current candidate.
+    Reorder experiences for a candidate.
     Expects: { "ordered_ids": ["uuid1", "uuid2", ...] }
+    - Without slug: reorders for current candidate
+    - With slug: reorders for specified candidate (admin/recruiter only)
     """
-    profile = get_candidate_profile_or_403(request.user)
-    if not profile:
-        return Response(
-            {'error': 'Only candidates can access this endpoint'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    profile, error = get_profile_for_editing(request, slug)
+    if error:
+        return error
 
     serializer = ReorderSerializer(data=request.data)
     if not serializer.is_valid():
@@ -499,7 +631,7 @@ def reorder_experiences(request):
     experiences = profile.experiences.filter(id__in=ordered_ids)
     if experiences.count() != len(ordered_ids):
         return Response(
-            {'error': 'Some experience IDs are invalid or do not belong to you'},
+            {'error': 'Some experience IDs are invalid or do not belong to this candidate'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -520,16 +652,15 @@ def reorder_experiences(request):
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_education(request):
+def list_education(request, slug=None):
     """
-    List all education entries for the current candidate.
+    List all education entries for a candidate.
+    - Without slug: returns current candidate's education
+    - With slug: returns specified candidate's education (admin/recruiter only)
     """
-    profile = get_candidate_profile_or_403(request.user)
-    if not profile:
-        return Response(
-            {'error': 'Only candidates can access this endpoint'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    profile, error = get_profile_for_editing(request, slug)
+    if error:
+        return error
 
     education = profile.education.all()
     serializer = EducationSerializer(education, many=True)
@@ -546,16 +677,15 @@ def list_education(request):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def create_education(request):
+def create_education(request, slug=None):
     """
-    Create a new education entry for the current candidate.
+    Create a new education entry for a candidate.
+    - Without slug: creates for current candidate
+    - With slug: creates for specified candidate (admin/recruiter only)
     """
-    profile = get_candidate_profile_or_403(request.user)
-    if not profile:
-        return Response(
-            {'error': 'Only candidates can access this endpoint'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    profile, error = get_profile_for_editing(request, slug)
+    if error:
+        return error
 
     serializer = EducationCreateUpdateSerializer(
         data=request.data,
@@ -583,16 +713,15 @@ def create_education(request):
 )
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
-def update_education(request, education_id):
+def update_education(request, education_id, slug=None):
     """
-    Update an education entry for the current candidate.
+    Update an education entry for a candidate.
+    - Without slug: updates for current candidate
+    - With slug: updates for specified candidate (admin/recruiter only)
     """
-    profile = get_candidate_profile_or_403(request.user)
-    if not profile:
-        return Response(
-            {'error': 'Only candidates can access this endpoint'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    profile, error = get_profile_for_editing(request, slug)
+    if error:
+        return error
 
     education = get_object_or_404(Education, id=education_id, candidate=profile)
 
@@ -619,16 +748,15 @@ def update_education(request, education_id):
 )
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_education(request, education_id):
+def delete_education(request, education_id, slug=None):
     """
-    Delete an education entry for the current candidate.
+    Delete an education entry for a candidate.
+    - Without slug: deletes for current candidate
+    - With slug: deletes for specified candidate (admin/recruiter only)
     """
-    profile = get_candidate_profile_or_403(request.user)
-    if not profile:
-        return Response(
-            {'error': 'Only candidates can access this endpoint'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    profile, error = get_profile_for_editing(request, slug)
+    if error:
+        return error
 
     education = get_object_or_404(Education, id=education_id, candidate=profile)
     education.delete()
@@ -646,17 +774,16 @@ def delete_education(request, education_id):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def reorder_education(request):
+def reorder_education(request, slug=None):
     """
-    Reorder education entries for the current candidate.
+    Reorder education entries for a candidate.
     Expects: { "ordered_ids": ["uuid1", "uuid2", ...] }
+    - Without slug: reorders for current candidate
+    - With slug: reorders for specified candidate (admin/recruiter only)
     """
-    profile = get_candidate_profile_or_403(request.user)
-    if not profile:
-        return Response(
-            {'error': 'Only candidates can access this endpoint'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    profile, error = get_profile_for_editing(request, slug)
+    if error:
+        return error
 
     serializer = ReorderSerializer(data=request.data)
     if not serializer.is_valid():
@@ -668,7 +795,7 @@ def reorder_education(request):
     education_entries = profile.education.filter(id__in=ordered_ids)
     if education_entries.count() != len(ordered_ids):
         return Response(
-            {'error': 'Some education IDs are invalid or do not belong to you'},
+            {'error': 'Some education IDs are invalid or do not belong to this candidate'},
             status=status.HTTP_400_BAD_REQUEST
         )
 

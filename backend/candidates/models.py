@@ -175,7 +175,22 @@ class CandidateProfile(models.Model):
     professional_summary = models.TextField(blank=True)
     years_of_experience = models.PositiveIntegerField(null=True, blank=True)
 
-    # Location
+    # Location (ForeignKey relationships)
+    city_rel = models.ForeignKey(
+        'companies.City',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='candidates',
+    )
+    country_rel = models.ForeignKey(
+        'companies.Country',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='candidates',
+    )
+    # Legacy location fields (kept for backward compatibility)
     city = models.CharField(max_length=100, blank=True)
     country = models.CharField(max_length=100, blank=True)
     region = models.CharField(max_length=100, blank=True)
@@ -259,8 +274,6 @@ class CandidateProfile(models.Model):
             ('seniority', 10),
             ('professional_summary', 15),
             ('years_of_experience', 5),
-            ('city', 5),
-            ('country', 5),
             ('work_preference', 5),
             ('salary_expectation_min', 5),
             ('salary_expectation_max', 5),
@@ -273,6 +286,12 @@ class CandidateProfile(models.Model):
             value = getattr(self, field, None)
             if value:
                 score += weight
+
+        # Check location (FK or legacy fields) - 10% total (5% each for city and country)
+        if self.city_rel or self.city:
+            score += 5
+        if self.country_rel or self.country:
+            score += 5
 
         # Check skills (up to 10%)
         if hasattr(self, 'pk') and self.pk:
@@ -304,7 +323,10 @@ class CandidateProfile(models.Model):
 
     @property
     def location(self):
-        parts = [self.city, self.country]
+        # Prefer FK relationships if available, fallback to legacy fields
+        city_name = self.city_rel.name if self.city_rel else self.city
+        country_name = self.country_rel.name if self.country_rel else self.country
+        parts = [city_name, country_name]
         return ', '.join(filter(None, parts))
 
 

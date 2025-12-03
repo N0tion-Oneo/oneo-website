@@ -3,9 +3,13 @@ import { useEducation, useEducationMutations } from '@/hooks'
 import EducationForm from './EducationForm'
 import type { Education, EducationInput } from '@/types'
 
-export default function EducationEditor() {
-  const { education, isLoading, error, refetch } = useEducation()
-  const { createEducation, updateEducation, deleteEducation, reorderEducation, isSubmitting } = useEducationMutations()
+interface EducationEditorProps {
+  candidateSlug?: string
+}
+
+export default function EducationEditor({ candidateSlug }: EducationEditorProps) {
+  const { education, isLoading, error, refetch } = useEducation(candidateSlug)
+  const { createEducation, updateEducation, deleteEducation, reorderEducation, isSubmitting } = useEducationMutations(candidateSlug)
 
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)

@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     'api',
     'authentication',
     'candidates',
+    'companies',
+    'jobs',
 ]
 
 MIDDLEWARE = [

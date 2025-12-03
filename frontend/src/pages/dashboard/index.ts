@@ -1,2 +1,13 @@
 export { default as DashboardPage } from './DashboardPage';
 export { default as ProfilePage } from './ProfilePage';
+export { default as InvitationsPage } from './InvitationsPage';
+export { default as JobsPage } from './JobsPage';
+export { default as NewJobPage } from './NewJobPage';
+export { default as EditJobPage } from './EditJobPage';
+export { default as AdminCompaniesPage } from './AdminCompaniesPage';
+export { default as AdminCompanyEditPage } from './AdminCompanyEditPage';
+export { default as AdminCandidatesPage } from './AdminCandidatesPage';
+export { default as AdminCandidateEditPage } from './AdminCandidateEditPage';
+export { default as AdminJobsPage } from './AdminJobsPage';
+export { default as AdminNewJobPage } from './AdminNewJobPage';
+export { default as AdminRecruitersPage } from './AdminRecruitersPage';

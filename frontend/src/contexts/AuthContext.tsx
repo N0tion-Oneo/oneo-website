@@ -9,11 +9,18 @@ import {
 import api, { setTokens, clearTokens, getAccessToken } from '@/services/api';
 import type { User, AuthState, LoginCredentials, RegisterData } from '@/types';
 
+interface UserProfileUpdateData {
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+}
+
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
+  updateUserProfile: (data: UserProfileUpdateData) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -90,6 +97,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(updatedUser);
   };
 
+  const updateUserProfile = async (data: UserProfileUpdateData) => {
+    const response = await api.patch<User>('/auth/me/update/', data);
+    setUser(response.data);
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated,
@@ -98,6 +110,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     register,
     logout,
     updateUser,
+    updateUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

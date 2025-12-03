@@ -21,4 +21,20 @@ urlpatterns = [
     # Password Reset (stub)
     path('forgot-password/', views.forgot_password, name='forgot_password'),
     path('reset-password/', views.reset_password, name='reset_password'),
+
+    # Client Invitations
+    path('invitations/', views.list_invitations, name='list_invitations'),
+    path('invitations/create/', views.create_client_invitation, name='create_invitation'),
+    path('invitations/<uuid:token>/validate/', views.validate_invitation, name='validate_invitation'),
+    path('invitations/<uuid:token>/signup/', views.signup_with_invitation, name='signup_with_invitation'),
+
+    # Company Team Invitations
+    path('company-invitations/<uuid:token>/validate/', views.validate_company_invitation, name='validate_company_invitation'),
+    path('company-invitations/<uuid:token>/signup/', views.signup_with_company_invitation, name='signup_with_company_invitation'),
+
+    # Recruiter Invitations (Admin only)
+    path('recruiter-invitations/', views.list_recruiter_invitations, name='list_recruiter_invitations'),
+    path('recruiter-invitations/create/', views.create_recruiter_invitation, name='create_recruiter_invitation'),
+    path('recruiter-invitations/<uuid:token>/validate/', views.validate_recruiter_invitation, name='validate_recruiter_invitation'),
+    path('recruiter-invitations/<uuid:token>/signup/', views.signup_with_recruiter_invitation, name='signup_with_recruiter_invitation'),
 ]

@@ -17,6 +17,7 @@ urlpatterns = [
 
     # Candidate profiles - public
     path('candidates/', views.list_candidates, name='list-candidates'),
+    path('candidates/all/', views.list_all_candidates, name='list-all-candidates'),
     path('candidates/<slug:slug>/', views.get_candidate, name='get-candidate'),
 
     # Experience - CRUD for authenticated candidates
@@ -32,4 +33,18 @@ urlpatterns = [
     path('candidates/me/education/<uuid:education_id>/', views.update_education, name='update-education'),
     path('candidates/me/education/<uuid:education_id>/delete/', views.delete_education, name='delete-education'),
     path('candidates/me/education/reorder/', views.reorder_education, name='reorder-education'),
+
+    # Admin Experience - CRUD for admin/recruiter editing any candidate
+    path('candidates/<slug:slug>/experiences/', views.list_experiences, name='admin-list-experiences'),
+    path('candidates/<slug:slug>/experiences/create/', views.create_experience, name='admin-create-experience'),
+    path('candidates/<slug:slug>/experiences/<uuid:experience_id>/', views.update_experience, name='admin-update-experience'),
+    path('candidates/<slug:slug>/experiences/<uuid:experience_id>/delete/', views.delete_experience, name='admin-delete-experience'),
+    path('candidates/<slug:slug>/experiences/reorder/', views.reorder_experiences, name='admin-reorder-experiences'),
+
+    # Admin Education - CRUD for admin/recruiter editing any candidate
+    path('candidates/<slug:slug>/education/', views.list_education, name='admin-list-education'),
+    path('candidates/<slug:slug>/education/create/', views.create_education, name='admin-create-education'),
+    path('candidates/<slug:slug>/education/<uuid:education_id>/', views.update_education, name='admin-update-education'),
+    path('candidates/<slug:slug>/education/<uuid:education_id>/delete/', views.delete_education, name='admin-delete-education'),
+    path('candidates/<slug:slug>/education/reorder/', views.reorder_education, name='admin-reorder-education'),
 ]

@@ -7,6 +7,12 @@ from rest_framework_simplejwt.exceptions import TokenError
 from django.conf import settings
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 
+from datetime import timedelta
+from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from users.models import UserRole
+
+from .models import ClientInvitation, RecruiterInvitation
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
@@ -16,6 +22,15 @@ from .serializers import (
     ForgotPasswordSerializer,
     ResetPasswordSerializer,
     VerifyEmailSerializer,
+    CreateClientInvitationSerializer,
+    ClientInvitationResponseSerializer,
+    ClientInvitationListSerializer,
+    ValidateInvitationSerializer,
+    ClientSignupSerializer,
+    CreateRecruiterInvitationSerializer,
+    RecruiterInvitationResponseSerializer,
+    RecruiterInvitationListSerializer,
+    RecruiterSignupSerializer,
 )
 
 
@@ -379,4 +394,513 @@ def reset_password(request):
             {'message': 'Password reset endpoint (stub)'},
             status=status.HTTP_200_OK
         )
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Client Invitation Endpoints
+
+@extend_schema(
+    responses={
+        200: ClientInvitationListSerializer(many=True),
+        403: OpenApiResponse(description="Permission denied"),
+    },
+    tags=['Client Invitations'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_invitations(request):
+    """
+    List all client invitations created by the current user.
+
+    Only Admin or Recruiter users can view invitations.
+    Returns invitations ordered by creation date (newest first).
+    """
+    # Only Admin or Recruiter can view invitations
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can view client invitations'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    invitations = ClientInvitation.objects.filter(
+        created_by=request.user
+    ).order_by('-created_at')
+
+    serializer = ClientInvitationListSerializer(invitations, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    request=CreateClientInvitationSerializer,
+    responses={
+        201: ClientInvitationResponseSerializer,
+        403: OpenApiResponse(description="Permission denied"),
+    },
+    tags=['Client Invitations'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_client_invitation(request):
+    """
+    Create a client invitation link.
+
+    Only Admin or Recruiter users can create invitations.
+    Returns a token that can be used for client signup.
+    Invitation expires in 7 days.
+    """
+    # Only Admin or Recruiter can create invitations
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can create client invitations'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    serializer = CreateClientInvitationSerializer(data=request.data)
+    if serializer.is_valid():
+        invitation = ClientInvitation.objects.create(
+            email=serializer.validated_data.get('email', ''),
+            created_by=request.user,
+            expires_at=timezone.now() + timedelta(days=7)
+        )
+
+        # Build signup URL
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        signup_url = f"{frontend_url}/signup/client/{invitation.token}"
+
+        return Response({
+            'token': str(invitation.token),
+            'email': invitation.email,
+            'expires_at': invitation.expires_at,
+            'signup_url': signup_url,
+        }, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    responses={
+        200: ValidateInvitationSerializer,
+        400: OpenApiResponse(description="Invalid or expired invitation"),
+        404: OpenApiResponse(description="Invitation not found"),
+    },
+    tags=['Client Invitations'],
+)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def validate_invitation(request, token):
+    """
+    Validate an invitation token.
+
+    Returns whether the invitation is valid and the associated email (if any).
+    Used by frontend to check token before showing signup form.
+    """
+    try:
+        invitation = ClientInvitation.objects.get(token=token)
+    except ClientInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if not invitation.is_valid:
+        return Response(
+            {'error': 'This invitation has expired or already been used'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    return Response({
+        'valid': True,
+        'email': invitation.email,
+    }, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    request=ClientSignupSerializer,
+    responses={
+        201: OpenApiResponse(description="Client user created successfully"),
+        400: OpenApiResponse(description="Invalid data or invitation"),
+        404: OpenApiResponse(description="Invitation not found"),
+    },
+    tags=['Client Invitations'],
+)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signup_with_invitation(request, token):
+    """
+    Sign up as a new CLIENT user using an invitation token.
+
+    Creates a new user with CLIENT role.
+    If user's email has a pending company invitation, auto-links them to that company.
+    Returns JWT tokens for immediate authentication.
+    """
+    from companies.models import CompanyInvitation, InvitationStatus, CompanyUser
+
+    try:
+        invitation = ClientInvitation.objects.get(token=token)
+    except ClientInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if not invitation.is_valid:
+        return Response(
+            {'error': 'This invitation has expired or already been used'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    serializer = ClientSignupSerializer(data=request.data)
+    if serializer.is_valid():
+        # Create the user with CLIENT role
+        user = serializer.save()
+
+        # Mark invitation as used
+        invitation.used_at = timezone.now()
+        invitation.used_by = user
+        invitation.save()
+
+        # Check for pending company invitations for this email
+        company_invitation = CompanyInvitation.objects.filter(
+            email__iexact=user.email,
+            status=InvitationStatus.PENDING
+        ).first()
+
+        company_data = None
+        if company_invitation:
+            # Create company membership
+            CompanyUser.objects.create(
+                user=user,
+                company=company_invitation.company,
+                role=company_invitation.role,
+                invited_by=company_invitation.invited_by,
+            )
+            # Mark company invitation as accepted
+            company_invitation.status = InvitationStatus.ACCEPTED
+            company_invitation.accepted_at = timezone.now()
+            company_invitation.save()
+
+            company_data = {
+                'id': str(company_invitation.company.id),
+                'name': company_invitation.company.name,
+                'role': company_invitation.role,
+            }
+
+        # Generate tokens
+        tokens = get_tokens_for_user(user)
+
+        response_data = {
+            'message': 'Registration successful',
+            'user': UserProfileSerializer(user).data,
+            'access': tokens['access'],
+            'refresh': tokens['refresh'],
+        }
+
+        if company_data:
+            response_data['company'] = company_data
+            response_data['message'] = f'Registration successful. You have been added to {company_data["name"]}.'
+
+        response = Response(response_data, status=status.HTTP_201_CREATED)
+        return set_auth_cookies(response, tokens)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# =============================================================================
+# Company Invitation Endpoints (for team member invitations)
+# =============================================================================
+
+@extend_schema(
+    responses={
+        200: OpenApiResponse(description="Company invitation is valid"),
+        400: OpenApiResponse(description="Invalid or expired invitation"),
+        404: OpenApiResponse(description="Invitation not found"),
+    },
+    tags=['Company Invitations'],
+)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def validate_company_invitation(request, token):
+    """
+    Validate a company invitation token.
+
+    Returns whether the invitation is valid and the associated company/email.
+    Used by frontend to check token before showing signup form.
+    """
+    from companies.models import CompanyInvitation
+
+    try:
+        invitation = CompanyInvitation.objects.select_related('company').get(token=token)
+    except CompanyInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if not invitation.is_valid:
+        return Response(
+            {'error': 'This invitation has expired or already been used'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    return Response({
+        'valid': True,
+        'email': invitation.email,
+        'role': invitation.role,
+        'company_name': invitation.company.name,
+    }, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    request=ClientSignupSerializer,
+    responses={
+        201: OpenApiResponse(description="User created and added to company"),
+        400: OpenApiResponse(description="Invalid data or invitation"),
+        404: OpenApiResponse(description="Invitation not found"),
+    },
+    tags=['Company Invitations'],
+)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signup_with_company_invitation(request, token):
+    """
+    Sign up as a new CLIENT user using a company invitation token.
+
+    Creates a new user with CLIENT role and links them to the inviting company.
+    Returns JWT tokens for immediate authentication.
+    """
+    from companies.models import CompanyInvitation, InvitationStatus, CompanyUser
+
+    try:
+        invitation = CompanyInvitation.objects.select_related('company').get(token=token)
+    except CompanyInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if not invitation.is_valid:
+        return Response(
+            {'error': 'This invitation has expired or already been used'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    serializer = ClientSignupSerializer(data=request.data)
+    if serializer.is_valid():
+        # Verify email matches invitation
+        if serializer.validated_data['email'].lower() != invitation.email.lower():
+            return Response(
+                {'error': 'Email address does not match the invitation'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create the user with CLIENT role
+        user = serializer.save()
+
+        # Link user to company (job_title comes from signup form, not invitation)
+        CompanyUser.objects.create(
+            user=user,
+            company=invitation.company,
+            role=invitation.role,
+            job_title=serializer.validated_data.get('job_title', ''),
+            invited_by=invitation.invited_by,
+        )
+
+        # Mark invitation as accepted
+        invitation.status = InvitationStatus.ACCEPTED
+        invitation.accepted_at = timezone.now()
+        invitation.save()
+
+        # Generate tokens
+        tokens = get_tokens_for_user(user)
+
+        response_data = {
+            'message': f'Registration successful. You have been added to {invitation.company.name}.',
+            'user': UserProfileSerializer(user).data,
+            'access': tokens['access'],
+            'refresh': tokens['refresh'],
+            'company': {
+                'id': str(invitation.company.id),
+                'name': invitation.company.name,
+                'role': invitation.role,
+            },
+        }
+
+        response = Response(response_data, status=status.HTTP_201_CREATED)
+        return set_auth_cookies(response, tokens)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# =============================================================================
+# Recruiter Invitation Endpoints
+# =============================================================================
+
+@extend_schema(
+    responses={
+        200: RecruiterInvitationListSerializer(many=True),
+        403: OpenApiResponse(description="Permission denied"),
+    },
+    tags=['Recruiter Invitations'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_recruiter_invitations(request):
+    """
+    List all recruiter invitations.
+
+    Only Admin users can view recruiter invitations.
+    Returns invitations ordered by creation date (newest first).
+    """
+    # Only Admin can view recruiter invitations
+    if request.user.role != UserRole.ADMIN:
+        return Response(
+            {'error': 'Only administrators can view recruiter invitations'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    invitations = RecruiterInvitation.objects.all().order_by('-created_at')
+
+    serializer = RecruiterInvitationListSerializer(invitations, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    request=CreateRecruiterInvitationSerializer,
+    responses={
+        201: RecruiterInvitationResponseSerializer,
+        403: OpenApiResponse(description="Permission denied"),
+    },
+    tags=['Recruiter Invitations'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_recruiter_invitation(request):
+    """
+    Create a recruiter invitation link.
+
+    Only Admin users can create recruiter invitations.
+    Returns a token that can be used for recruiter signup.
+    Invitation expires in 7 days.
+    """
+    # Only Admin can create recruiter invitations
+    if request.user.role != UserRole.ADMIN:
+        return Response(
+            {'error': 'Only administrators can create recruiter invitations'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    serializer = CreateRecruiterInvitationSerializer(data=request.data)
+    if serializer.is_valid():
+        invitation = RecruiterInvitation.objects.create(
+            email=serializer.validated_data.get('email', ''),
+            created_by=request.user,
+            expires_at=timezone.now() + timedelta(days=7)
+        )
+
+        # Build signup URL
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        signup_url = f"{frontend_url}/signup/recruiter/{invitation.token}"
+
+        return Response({
+            'token': str(invitation.token),
+            'email': invitation.email,
+            'expires_at': invitation.expires_at,
+            'signup_url': signup_url,
+        }, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    responses={
+        200: ValidateInvitationSerializer,
+        400: OpenApiResponse(description="Invalid or expired invitation"),
+        404: OpenApiResponse(description="Invitation not found"),
+    },
+    tags=['Recruiter Invitations'],
+)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def validate_recruiter_invitation(request, token):
+    """
+    Validate a recruiter invitation token.
+
+    Returns whether the invitation is valid and the associated email (if any).
+    Used by frontend to check token before showing signup form.
+    """
+    try:
+        invitation = RecruiterInvitation.objects.get(token=token)
+    except RecruiterInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if not invitation.is_valid:
+        return Response(
+            {'error': 'This invitation has expired or already been used'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    return Response({
+        'valid': True,
+        'email': invitation.email,
+    }, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    request=RecruiterSignupSerializer,
+    responses={
+        201: OpenApiResponse(description="Recruiter user created successfully"),
+        400: OpenApiResponse(description="Invalid data or invitation"),
+        404: OpenApiResponse(description="Invitation not found"),
+    },
+    tags=['Recruiter Invitations'],
+)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signup_with_recruiter_invitation(request, token):
+    """
+    Sign up as a new RECRUITER user using an invitation token.
+
+    Creates a new user with RECRUITER role.
+    Returns JWT tokens for immediate authentication.
+    """
+    try:
+        invitation = RecruiterInvitation.objects.get(token=token)
+    except RecruiterInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if not invitation.is_valid:
+        return Response(
+            {'error': 'This invitation has expired or already been used'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    serializer = RecruiterSignupSerializer(data=request.data)
+    if serializer.is_valid():
+        # Create the user with RECRUITER role
+        user = serializer.save()
+
+        # Mark invitation as used
+        invitation.used_at = timezone.now()
+        invitation.used_by = user
+        invitation.save()
+
+        # Generate tokens
+        tokens = get_tokens_for_user(user)
+
+        response_data = {
+            'message': 'Registration successful. Welcome to the recruitment team!',
+            'user': UserProfileSerializer(user).data,
+            'access': tokens['access'],
+            'refresh': tokens['refresh'],
+        }
+
+        response = Response(response_data, status=status.HTTP_201_CREATED)
+        return set_auth_cookies(response, tokens)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

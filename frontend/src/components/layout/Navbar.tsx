@@ -13,13 +13,18 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
 
   const isActive = (href: string) => location.pathname === href;
 
+  const publicLinks = [
+    { name: 'Candidates', href: '/candidates' },
+    { name: 'Companies', href: '/companies' },
+  ];
+
   const navLinks = isAuthenticated
     ? [
         { name: 'Dashboard', href: '/dashboard' },
-        { name: 'Jobs', href: '/jobs' },
-        { name: 'Applications', href: '/applications' },
+        { name: 'Companies', href: '/companies' },
+        { name: 'Candidates', href: '/candidates' },
       ]
-    : [];
+    : publicLinks;
 
   return (
     <header className={`border-b ${variant === 'transparent' ? 'border-transparent bg-transparent' : 'border-gray-200 bg-white'}`}>
@@ -28,23 +33,21 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
           <Link to="/" className="text-lg font-semibold text-gray-900">
             Oneo
           </Link>
-          {navLinks.length > 0 && (
-            <nav className="hidden md:flex items-center gap-6">
-              {navLinks.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`text-[13px] font-medium transition-colors ${
-                    isActive(item.href)
-                      ? 'text-gray-900'
-                      : 'text-gray-500 hover:text-gray-900'
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-          )}
+          <nav className="hidden md:flex items-center gap-6">
+            {navLinks.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`text-[13px] font-medium transition-colors ${
+                  isActive(item.href)
+                    ? 'text-gray-900'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </nav>
         </div>
 
         <div className="flex items-center gap-4">

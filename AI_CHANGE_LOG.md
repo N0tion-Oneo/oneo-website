@@ -18,3 +18,25 @@ This file tracks all changes made by the AI assistant to the project.
 - Pushed main branch to GitHub repository `oneo-website`
 - Set up branch tracking for `main` branch
 
+## 2024-12-19 - Backend Server Startup
+
+**Time**: Current session
+**Description**: Executed start-backend.sh script to start Django development server
+**Reason**: User requested to run the backend startup script
+**Affected Files**:
+- `scripts/start-backend.sh` - Executed (no changes to file)
+**Changes**:
+- Ran backend startup script in background mode
+- Script activates virtual environment, checks database connection, runs migrations if needed, and starts Django development server on http://localhost:8000
+
+## 2024-12-19 - Frontend Server Startup
+
+**Time**: Current session
+**Description**: Executed start-frontend.sh script to start React + Vite development server
+**Reason**: User requested to run the frontend startup script
+**Affected Files**:
+- `scripts/start-frontend.sh` - Executed (no changes to file)
+**Changes**:
+- Ran frontend startup script in background mode
+- Script checks for node_modules, installs dependencies if needed, checks for .env file, and starts Vite development server on http://localhost:5173
+

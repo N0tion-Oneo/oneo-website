@@ -138,6 +138,8 @@ export interface CandidateProfile {
   city: string
   country: string
   region: string
+  city_rel: { id: number; name: string; country: { id: number; name: string; code: string } } | null
+  country_rel: { id: number; name: string; code: string } | null
   location: string
   // Work preferences
   work_preference: WorkPreference | ''
@@ -180,6 +182,27 @@ export interface CandidateProfileSanitized {
   skills: Skill[]
   industries: Industry[]
   profile_completeness: number
+}
+
+// Admin/recruiter candidate list item
+export interface CandidateAdminListItem {
+  id: number
+  slug: string
+  initials: string
+  full_name: string
+  email: string
+  professional_title: string
+  headline: string
+  seniority: Seniority | ''
+  location: string
+  city: string
+  country: string
+  years_of_experience: number | null
+  work_preference: WorkPreference | ''
+  visibility: ProfileVisibility
+  profile_completeness: number
+  created_at: string
+  updated_at: string
 }
 
 export interface PortfolioLink {
@@ -269,6 +292,7 @@ export enum FundingStage {
   SERIES_A = 'series_a',
   SERIES_B = 'series_b',
   SERIES_C = 'series_c',
+  SERIES_D_PLUS = 'series_d_plus',
   PUBLIC = 'public',
 }
 
@@ -278,31 +302,117 @@ export enum CompanyUserRole {
   VIEWER = 'viewer',
 }
 
+export enum RemoteWorkPolicy {
+  FULLY_REMOTE = 'fully_remote',
+  REMOTE_FIRST = 'remote_first',
+  HYBRID = 'hybrid',
+  OFFICE_FIRST = 'office_first',
+  OFFICE_ONLY = 'office_only',
+}
+
+export interface Country {
+  id: number
+  name: string
+  code: string
+}
+
+export interface City {
+  id: number
+  name: string
+  country: Country
+}
+
 export interface Company {
   id: string
   name: string
   slug: string
-  logo_url: string | null
+  logo: string | null
   tagline: string
   description: string
-  industry: Industry
-  company_size: CompanySize
+  industry: Industry | null
+  company_size: CompanySize | ''
   founded_year: number | null
-  funding_stage: FundingStage | null
+  funding_stage: FundingStage | ''
   website_url: string
-  linkedin_url: string | null
-  headquarters_city: string
-  headquarters_country: string
+  linkedin_url: string
+  headquarters_city: City | null
+  headquarters_country: Country | null
+  headquarters_location: string
   locations: CompanyLocation[]
-  culture_description: string | null
+  culture_description: string
   values: string[]
   benefits: BenefitCategory[]
-  tech_stack: string[]
-  interview_process: string | null
-  remote_work_policy: string | null
+  technologies: Technology[]
+  remote_work_policy: RemoteWorkPolicy | ''
+  // Legal/Registration
+  legal_name: string
+  registration_number: string
+  vat_number: string
+  // Billing
+  billing_address: string
+  billing_city: string
+  billing_country: Country | null
+  billing_postal_code: string
+  billing_contact_name: string
+  billing_contact_email: string
+  billing_contact_phone: string
+  // Meta
   is_published: boolean
   created_at: string
   updated_at: string
+}
+
+export interface AdminCompanyListItem {
+  id: string
+  name: string
+  slug: string
+  logo: string | null
+  tagline: string
+  industry: Industry | null
+  company_size: CompanySize | ''
+  headquarters_location: string
+  is_published: boolean
+  created_at: string
+  jobs_total: number
+  jobs_draft: number
+  jobs_published: number
+  jobs_closed: number
+  jobs_filled: number
+}
+
+export interface CompanyInput {
+  name?: string
+  logo?: File | null
+  tagline?: string
+  description?: string
+  industry_id?: string | null
+  company_size?: CompanySize | ''
+  founded_year?: number | null
+  funding_stage?: FundingStage | ''
+  website_url?: string
+  linkedin_url?: string
+  headquarters_city_id?: number | null
+  headquarters_country_id?: number | null
+  locations?: CompanyLocation[]
+  culture_description?: string
+  values?: string[]
+  benefits?: BenefitCategory[]
+  technology_ids?: string[]
+  remote_work_policy?: RemoteWorkPolicy | ''
+  // Legal/Registration
+  legal_name?: string
+  registration_number?: string
+  vat_number?: string
+  // Billing
+  billing_address?: string
+  billing_city?: string
+  billing_country_id?: number | null
+  billing_postal_code?: string
+  billing_contact_name?: string
+  billing_contact_email?: string
+  billing_contact_phone?: string
+  // Meta
+  is_published?: boolean
 }
 
 export interface CompanyLocation {
@@ -318,12 +428,34 @@ export interface BenefitCategory {
 
 export interface CompanyUser {
   id: string
-  user: User
-  company: Company
+  user: string
+  user_email: string
+  user_first_name: string
+  user_last_name: string
+  user_avatar: string | null
+  user_phone: string | null
+  company: string
   role: CompanyUserRole
+  job_title: string
   joined_at: string
-  invited_by: User | null
+  invited_by: string | null
+  invited_by_email: string | null
   is_active: boolean
+}
+
+export interface CompanyUserInvite {
+  email: string
+  role: CompanyUserRole
+}
+
+export interface CompanyUserUpdate {
+  role?: CompanyUserRole
+  job_title?: string
+  is_active?: boolean
+  // User profile fields
+  user_first_name?: string
+  user_last_name?: string
+  user_phone?: string
 }
 
 // ============================================================================
@@ -362,41 +494,80 @@ export enum Department {
   FINANCE = 'finance',
 }
 
-export interface Job {
+export interface JobListItem {
   id: string
-  company: Company
-  created_by: User
-  assigned_recruiter: User | null
-  title: string
   slug: string
+  title: string
+  company: Company
   seniority: Seniority
   job_type: JobType
   status: JobStatus
+  department: Department
   summary: string
-  description: string
-  requirements: string
-  nice_to_haves: string | null
-  responsibilities: string
-  location_city: string
-  location_country: string
+  location_city: City | null
+  location_country: Country | null
+  location_display: string
   work_mode: WorkMode
-  remote_regions: string[]
   salary_min: number | null
   salary_max: number | null
-  salary_currency: string
+  salary_currency: Currency
   salary_visible: boolean
+  salary_display: string
   equity_offered: boolean
-  benefits: BenefitCategory[]
   required_skills: Skill[]
-  nice_to_have_skills: Skill[]
-  tech_stack: string[]
-  department: Department
+  technologies: Technology[]
   views_count: number
   applications_count: number
   published_at: string | null
   application_deadline: string | null
   created_at: string
+}
+
+export interface InterviewStage {
+  name: string
+  order: number
+  description?: string
+}
+
+export interface Job extends JobListItem {
+  created_by: User | null
+  assigned_recruiter: User | null
+  description: string
+  requirements: string
+  nice_to_haves: string
+  responsibilities: string
+  remote_regions: string[]
+  benefits: BenefitCategory[]
+  nice_to_have_skills: Skill[]
+  interview_stages: InterviewStage[]
   updated_at: string
+}
+
+export interface JobInput {
+  title: string
+  seniority?: Seniority
+  job_type?: JobType
+  department?: Department
+  summary?: string
+  description?: string
+  requirements?: string
+  nice_to_haves?: string
+  responsibilities?: string
+  location_city_id?: number | null
+  location_country_id?: number | null
+  work_mode?: WorkMode
+  remote_regions?: string[]
+  salary_min?: number | null
+  salary_max?: number | null
+  salary_currency?: Currency
+  salary_visible?: boolean
+  equity_offered?: boolean
+  benefits?: BenefitCategory[]
+  interview_stages?: InterviewStage[]
+  required_skill_ids?: string[]
+  nice_to_have_skill_ids?: string[]
+  technology_ids?: string[]
+  application_deadline?: string | null
 }
 
 export interface JobFilters {
@@ -404,12 +575,14 @@ export interface JobFilters {
   job_type?: JobType
   work_mode?: WorkMode
   department?: Department
-  location?: string
+  country?: string // country code
   salary_min?: number
   salary_max?: number
-  skills?: string[]
-  company?: string
+  skills?: string // comma-separated IDs
+  technologies?: string // comma-separated IDs
+  company?: string // company slug
   search?: string
+  sort?: string
 }
 
 // ============================================================================

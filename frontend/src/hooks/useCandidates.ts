@@ -3,6 +3,7 @@ import api from '@/services/api'
 import type {
   CandidateProfile,
   CandidateProfileSanitized,
+  CandidateAdminListItem,
   Skill,
   Industry,
   Technology,
@@ -173,7 +174,10 @@ export interface ProfileUpdateData {
   seniority?: string
   professional_summary?: string
   years_of_experience?: number | null
-  // Location
+  // Location (FK IDs)
+  city_id?: number | null
+  country_id?: number | null
+  // Legacy location fields (kept for backward compatibility)
   city?: string
   country?: string
   region?: string
@@ -317,7 +321,82 @@ export function useCandidates(options: UseCandidatesOptions = {}): UseCandidates
 }
 
 // ============================================================================
-// Single Candidate Hook (Public Profile)
+// All Candidates Hook (Admin/Recruiter)
+// ============================================================================
+
+interface UseAllCandidatesOptions {
+  seniority?: string
+  work_preference?: string
+  visibility?: string
+  country?: string
+  city?: string
+  search?: string
+  page?: number
+}
+
+interface UseAllCandidatesReturn {
+  candidates: CandidateAdminListItem[]
+  count: number
+  hasNext: boolean
+  hasPrevious: boolean
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export function useAllCandidates(options: UseAllCandidatesOptions = {}): UseAllCandidatesReturn {
+  const [candidates, setCandidates] = useState<CandidateAdminListItem[]>([])
+  const [count, setCount] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrevious, setHasPrevious] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchCandidates = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams()
+      if (options.seniority) params.append('seniority', options.seniority)
+      if (options.work_preference) params.append('work_preference', options.work_preference)
+      if (options.visibility) params.append('visibility', options.visibility)
+      if (options.country) params.append('country', options.country)
+      if (options.city) params.append('city', options.city)
+      if (options.search) params.append('search', options.search)
+      if (options.page) params.append('page', options.page.toString())
+
+      const response = await api.get<PaginatedResponse<CandidateAdminListItem>>(
+        `/candidates/all/?${params.toString()}`
+      )
+      setCandidates(response.data.results)
+      setCount(response.data.count)
+      setHasNext(!!response.data.next)
+      setHasPrevious(!!response.data.previous)
+    } catch (err) {
+      setError('Failed to load candidates')
+      console.error('Error fetching candidates:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [
+    options.seniority,
+    options.work_preference,
+    options.visibility,
+    options.country,
+    options.city,
+    options.search,
+    options.page,
+  ])
+
+  useEffect(() => {
+    fetchCandidates()
+  }, [fetchCandidates])
+
+  return { candidates, count, hasNext, hasPrevious, isLoading, error, refetch: fetchCandidates }
+}
+
+// ============================================================================
+// Single Candidate Hook (Public Profile + Admin Edit)
 // ============================================================================
 
 interface UseCandidateReturn {
@@ -325,11 +404,14 @@ interface UseCandidateReturn {
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
+  updateCandidate: (data: Partial<ProfileUpdateData>) => Promise<CandidateProfile>
+  isUpdating: boolean
 }
 
 export function useCandidate(slug: string): UseCandidateReturn {
   const [candidate, setCandidate] = useState<CandidateProfile | CandidateProfileSanitized | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isUpdating, setIsUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchCandidate = useCallback(async () => {
@@ -350,11 +432,29 @@ export function useCandidate(slug: string): UseCandidateReturn {
     }
   }, [slug])
 
+  const updateCandidate = useCallback(async (data: Partial<ProfileUpdateData>): Promise<CandidateProfile> => {
+    if (!slug) throw new Error('No candidate slug provided')
+
+    setIsUpdating(true)
+    setError(null)
+    try {
+      const response = await api.patch<CandidateProfile>(`/candidates/${slug}/`, data)
+      setCandidate(response.data)
+      return response.data
+    } catch (err) {
+      setError('Failed to update candidate')
+      console.error('Error updating candidate:', err)
+      throw err
+    } finally {
+      setIsUpdating(false)
+    }
+  }, [slug])
+
   useEffect(() => {
     fetchCandidate()
   }, [fetchCandidate])
 
-  return { candidate, isLoading, error, refetch: fetchCandidate }
+  return { candidate, isLoading, error, refetch: fetchCandidate, updateCandidate, isUpdating }
 }
 
 // ============================================================================
@@ -368,7 +468,11 @@ interface UseExperiencesReturn {
   refetch: () => Promise<void>
 }
 
-export function useExperiences(): UseExperiencesReturn {
+/**
+ * Hook to fetch experiences for a candidate.
+ * @param candidateSlug - Optional slug for admin/recruiter to fetch another candidate's experiences
+ */
+export function useExperiences(candidateSlug?: string): UseExperiencesReturn {
   const [experiences, setExperiences] = useState<Experience[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -377,7 +481,10 @@ export function useExperiences(): UseExperiencesReturn {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await api.get<Experience[]>('/candidates/me/experiences/')
+      const endpoint = candidateSlug
+        ? `/candidates/${candidateSlug}/experiences/`
+        : '/candidates/me/experiences/'
+      const response = await api.get<Experience[]>(endpoint)
       setExperiences(response.data)
     } catch (err) {
       setError('Failed to load experiences')
@@ -385,7 +492,7 @@ export function useExperiences(): UseExperiencesReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [candidateSlug])
 
   useEffect(() => {
     fetchExperiences()
@@ -403,15 +510,23 @@ interface UseExperienceMutationsReturn {
   error: string | null
 }
 
-export function useExperienceMutations(): UseExperienceMutationsReturn {
+/**
+ * Hook for experience mutations (create, update, delete, reorder).
+ * @param candidateSlug - Optional slug for admin/recruiter to edit another candidate's experiences
+ */
+export function useExperienceMutations(candidateSlug?: string): UseExperienceMutationsReturn {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const basePath = candidateSlug
+    ? `/candidates/${candidateSlug}/experiences`
+    : '/candidates/me/experiences'
 
   const createExperience = useCallback(async (data: ExperienceInput): Promise<Experience> => {
     setIsSubmitting(true)
     setError(null)
     try {
-      const response = await api.post<Experience>('/candidates/me/experiences/create/', data)
+      const response = await api.post<Experience>(`${basePath}/create/`, data)
       return response.data
     } catch (err) {
       setError('Failed to create experience')
@@ -420,13 +535,13 @@ export function useExperienceMutations(): UseExperienceMutationsReturn {
     } finally {
       setIsSubmitting(false)
     }
-  }, [])
+  }, [basePath])
 
   const updateExperience = useCallback(async (id: string, data: Partial<ExperienceInput>): Promise<Experience> => {
     setIsSubmitting(true)
     setError(null)
     try {
-      const response = await api.patch<Experience>(`/candidates/me/experiences/${id}/`, data)
+      const response = await api.patch<Experience>(`${basePath}/${id}/`, data)
       return response.data
     } catch (err) {
       setError('Failed to update experience')
@@ -435,13 +550,13 @@ export function useExperienceMutations(): UseExperienceMutationsReturn {
     } finally {
       setIsSubmitting(false)
     }
-  }, [])
+  }, [basePath])
 
   const deleteExperience = useCallback(async (id: string): Promise<void> => {
     setIsSubmitting(true)
     setError(null)
     try {
-      await api.delete(`/candidates/me/experiences/${id}/delete/`)
+      await api.delete(`${basePath}/${id}/delete/`)
     } catch (err) {
       setError('Failed to delete experience')
       console.error('Error deleting experience:', err)
@@ -449,13 +564,13 @@ export function useExperienceMutations(): UseExperienceMutationsReturn {
     } finally {
       setIsSubmitting(false)
     }
-  }, [])
+  }, [basePath])
 
   const reorderExperiences = useCallback(async (orderedIds: string[]): Promise<void> => {
     setIsSubmitting(true)
     setError(null)
     try {
-      await api.post('/candidates/me/experiences/reorder/', { ordered_ids: orderedIds })
+      await api.post(`${basePath}/reorder/`, { ordered_ids: orderedIds })
     } catch (err) {
       setError('Failed to reorder experiences')
       console.error('Error reordering experiences:', err)
@@ -463,7 +578,7 @@ export function useExperienceMutations(): UseExperienceMutationsReturn {
     } finally {
       setIsSubmitting(false)
     }
-  }, [])
+  }, [basePath])
 
   return { createExperience, updateExperience, deleteExperience, reorderExperiences, isSubmitting, error }
 }
@@ -479,7 +594,11 @@ interface UseEducationReturn {
   refetch: () => Promise<void>
 }
 
-export function useEducation(): UseEducationReturn {
+/**
+ * Hook to fetch education for a candidate.
+ * @param candidateSlug - Optional slug for admin/recruiter to fetch another candidate's education
+ */
+export function useEducation(candidateSlug?: string): UseEducationReturn {
   const [education, setEducation] = useState<Education[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -488,7 +607,10 @@ export function useEducation(): UseEducationReturn {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await api.get<Education[]>('/candidates/me/education/')
+      const endpoint = candidateSlug
+        ? `/candidates/${candidateSlug}/education/`
+        : '/candidates/me/education/'
+      const response = await api.get<Education[]>(endpoint)
       setEducation(response.data)
     } catch (err) {
       setError('Failed to load education')
@@ -496,7 +618,7 @@ export function useEducation(): UseEducationReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [candidateSlug])
 
   useEffect(() => {
     fetchEducation()
@@ -514,15 +636,23 @@ interface UseEducationMutationsReturn {
   error: string | null
 }
 
-export function useEducationMutations(): UseEducationMutationsReturn {
+/**
+ * Hook for education mutations (create, update, delete, reorder).
+ * @param candidateSlug - Optional slug for admin/recruiter to edit another candidate's education
+ */
+export function useEducationMutations(candidateSlug?: string): UseEducationMutationsReturn {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const basePath = candidateSlug
+    ? `/candidates/${candidateSlug}/education`
+    : '/candidates/me/education'
 
   const createEducation = useCallback(async (data: EducationInput): Promise<Education> => {
     setIsSubmitting(true)
     setError(null)
     try {
-      const response = await api.post<Education>('/candidates/me/education/create/', data)
+      const response = await api.post<Education>(`${basePath}/create/`, data)
       return response.data
     } catch (err) {
       setError('Failed to create education')
@@ -531,13 +661,13 @@ export function useEducationMutations(): UseEducationMutationsReturn {
     } finally {
       setIsSubmitting(false)
     }
-  }, [])
+  }, [basePath])
 
   const updateEducation = useCallback(async (id: string, data: Partial<EducationInput>): Promise<Education> => {
     setIsSubmitting(true)
     setError(null)
     try {
-      const response = await api.patch<Education>(`/candidates/me/education/${id}/`, data)
+      const response = await api.patch<Education>(`${basePath}/${id}/`, data)
       return response.data
     } catch (err) {
       setError('Failed to update education')
@@ -546,13 +676,13 @@ export function useEducationMutations(): UseEducationMutationsReturn {
     } finally {
       setIsSubmitting(false)
     }
-  }, [])
+  }, [basePath])
 
   const deleteEducation = useCallback(async (id: string): Promise<void> => {
     setIsSubmitting(true)
     setError(null)
     try {
-      await api.delete(`/candidates/me/education/${id}/delete/`)
+      await api.delete(`${basePath}/${id}/delete/`)
     } catch (err) {
       setError('Failed to delete education')
       console.error('Error deleting education:', err)
@@ -560,13 +690,13 @@ export function useEducationMutations(): UseEducationMutationsReturn {
     } finally {
       setIsSubmitting(false)
     }
-  }, [])
+  }, [basePath])
 
   const reorderEducation = useCallback(async (orderedIds: string[]): Promise<void> => {
     setIsSubmitting(true)
     setError(null)
     try {
-      await api.post('/candidates/me/education/reorder/', { ordered_ids: orderedIds })
+      await api.post(`${basePath}/reorder/`, { ordered_ids: orderedIds })
     } catch (err) {
       setError('Failed to reorder education')
       console.error('Error reordering education:', err)
@@ -574,7 +704,7 @@ export function useEducationMutations(): UseEducationMutationsReturn {
     } finally {
       setIsSubmitting(false)
     }
-  }, [])
+  }, [basePath])
 
   return { createEducation, updateEducation, deleteEducation, reorderEducation, isSubmitting, error }
 }

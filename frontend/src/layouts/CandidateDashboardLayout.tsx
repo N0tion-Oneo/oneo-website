@@ -13,7 +13,12 @@ export default function CandidateDashboardLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const navigation: NavItem[] = [
+  // Check if user is admin or recruiter
+  const isAdmin = user?.role === 'admin'
+  const isAdminOrRecruiter = user?.role === 'admin' || user?.role === 'recruiter'
+  const isClient = user?.role === 'client'
+
+  const baseNavigation: NavItem[] = [
     {
       name: 'Dashboard',
       href: '/dashboard',
@@ -36,6 +41,104 @@ export default function CandidateDashboardLayout() {
         </svg>
       ),
     },
+  ]
+
+  // Add Company and Jobs links for clients, recruiters, and admins
+  const companyNav: NavItem[] = isClient || isAdminOrRecruiter ? [
+    {
+      name: 'Company',
+      href: '/dashboard/company',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M3 21h18" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9 21V8l-4 2v11" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9 8V3h10v18" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M13 7h2M13 11h2M13 15h2" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Job Postings',
+      href: '/dashboard/jobs',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+  ] : []
+
+  // Admin/Recruiter only navigation
+  const adminNav: NavItem[] = isAdminOrRecruiter ? [
+    {
+      name: 'All Companies',
+      href: '/dashboard/admin/companies',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M3 21h18" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M5 21V7l8-4v18" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M19 21V11l-6-4" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9 9h1M9 13h1M9 17h1" strokeLinecap="round" />
+          <path d="M14 13h1M14 17h1" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      name: 'All Candidates',
+      href: '/dashboard/admin/candidates',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    {
+      name: 'All Jobs',
+      href: '/dashboard/admin/jobs',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M6 11h12" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Client Invitations',
+      href: '/dashboard/invitations',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="8.5" cy="7" r="4" />
+          <line x1="20" y1="8" x2="20" y2="14" strokeLinecap="round" />
+          <line x1="23" y1="11" x2="17" y2="11" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+  ] : []
+
+  // Admin-only navigation (not visible to recruiters)
+  const adminOnlyNav: NavItem[] = isAdmin ? [
+    {
+      name: 'Recruiters',
+      href: '/dashboard/admin/recruiters',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+  ] : []
+
+  // Candidate-specific navigation
+  const candidateNav: NavItem[] = !isClient && !isAdminOrRecruiter ? [
     {
       name: 'Applications',
       href: '/dashboard/applications',
@@ -69,7 +172,15 @@ export default function CandidateDashboardLayout() {
         </svg>
       ),
     },
-  ];
+  ] : []
+
+  const navigation: NavItem[] = [
+    ...baseNavigation,
+    ...companyNav,
+    ...adminNav,
+    ...adminOnlyNav,
+    ...candidateNav,
+  ]
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
