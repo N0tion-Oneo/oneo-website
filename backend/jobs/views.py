@@ -5,12 +5,20 @@ from rest_framework.response import Response
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import Job, JobStatus
+from .models import Job, JobStatus, Application, ApplicationStatus, RejectionReason
 from .serializers import (
     JobListSerializer,
     JobDetailSerializer,
     JobCreateSerializer,
     JobUpdateSerializer,
+    ApplicationSerializer,
+    ApplicationListSerializer,
+    ApplicationCreateSerializer,
+    ApplicationStageUpdateSerializer,
+    CandidateApplicationListSerializer,
+    MakeOfferSerializer,
+    AcceptOfferSerializer,
+    RejectApplicationSerializer,
 )
 from companies.models import Company, CompanyUser, CompanyUserRole
 from companies.permissions import (
@@ -484,3 +492,544 @@ def list_all_jobs(request):
 
     serializer = JobListSerializer(jobs, many=True)
     return Response(serializer.data)
+
+
+# =============================================================================
+# Application Endpoints
+# =============================================================================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def apply_to_job(request):
+    """
+    Apply to a job.
+    Candidates only.
+    """
+    from candidates.models import CandidateProfile
+
+    # Check user is a candidate
+    if request.user.role != UserRole.CANDIDATE:
+        return Response(
+            {'error': 'Only candidates can apply to jobs'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    serializer = ApplicationCreateSerializer(
+        data=request.data,
+        context={'request': request}
+    )
+    if serializer.is_valid():
+        application = serializer.save()
+        return Response(
+            ApplicationSerializer(application).data,
+            status=status.HTTP_201_CREATED
+        )
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_my_applications(request):
+    """
+    List the current candidate's applications.
+    """
+    from candidates.models import CandidateProfile
+
+    if request.user.role != UserRole.CANDIDATE:
+        return Response(
+            {'error': 'Only candidates can view their applications'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        candidate = CandidateProfile.objects.get(user=request.user)
+    except CandidateProfile.DoesNotExist:
+        return Response(
+            {'error': 'Candidate profile not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    applications = Application.objects.filter(
+        candidate=candidate
+    ).select_related(
+        'job', 'job__company', 'job__location_city', 'job__location_country'
+    ).prefetch_related(
+        'job__required_skills', 'job__technologies'
+    ).order_by('-applied_at')
+
+    # Filter by status
+    app_status = request.query_params.get('status')
+    if app_status:
+        applications = applications.filter(status=app_status)
+
+    serializer = CandidateApplicationListSerializer(applications, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_application(request, application_id):
+    """
+    Get a single application.
+    Candidate can view own, company/recruiter can view for their jobs.
+    """
+    from candidates.models import CandidateProfile
+
+    try:
+        application = Application.objects.select_related(
+            'job', 'job__company', 'candidate', 'candidate__user', 'referrer'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_own_application = (
+        request.user.role == UserRole.CANDIDATE and
+        application.candidate.user == request.user
+    )
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_member = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        is_active=True
+    ).exists()
+
+    if not is_own_application and not is_staff and not is_company_member:
+        return Response(
+            {'error': 'You do not have permission to view this application'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    serializer = ApplicationSerializer(application)
+    return Response(serializer.data)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def withdraw_application(request, application_id):
+    """
+    Withdraw an application.
+    Candidate only, and only if not already in interview process.
+    """
+    from candidates.models import CandidateProfile
+
+    try:
+        application = Application.objects.select_related(
+            'job', 'candidate'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check ownership
+    if application.candidate.user != request.user:
+        return Response(
+            {'error': 'You do not have permission to withdraw this application'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Check if already in interview process
+    if application.status in [ApplicationStatus.OFFER, ApplicationStatus.ACCEPTED]:
+        return Response(
+            {'error': 'Cannot withdraw application at this stage'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    application.withdraw()
+
+    # Decrement job applications count
+    application.job.applications_count = max(0, application.job.applications_count - 1)
+    application.job.save(update_fields=['applications_count'])
+
+    return Response(
+        {'message': 'Application withdrawn'},
+        status=status.HTTP_200_OK
+    )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_job_applications(request, job_id):
+    """
+    List all applications for a specific job.
+    Company members or recruiters only.
+    """
+    try:
+        job = Job.objects.get(id=job_id)
+    except Job.DoesNotExist:
+        return Response(
+            {'error': 'Job not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_member = CompanyUser.objects.filter(
+        user=request.user,
+        company=job.company,
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_member:
+        return Response(
+            {'error': 'You do not have permission to view applications for this job'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    applications = Application.objects.filter(
+        job=job
+    ).select_related(
+        'candidate', 'candidate__user'
+    ).order_by('-applied_at')
+
+    # Filter by status
+    app_status = request.query_params.get('status')
+    if app_status:
+        applications = applications.filter(status=app_status)
+
+    # Filter by stage
+    stage = request.query_params.get('stage')
+    if stage:
+        applications = applications.filter(current_stage_order=int(stage))
+
+    serializer = ApplicationListSerializer(applications, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def advance_application(request, application_id):
+    """
+    Advance an application to the next interview stage.
+    Company members or recruiters only.
+    """
+    try:
+        application = Application.objects.select_related(
+            'job', 'job__company'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response(
+            {'error': 'You do not have permission to update this application'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Check if application can be advanced
+    if application.status in [
+        ApplicationStatus.REJECTED,
+        ApplicationStatus.WITHDRAWN,
+        ApplicationStatus.OFFER,
+        ApplicationStatus.ACCEPTED
+    ]:
+        return Response(
+            {'error': f'Cannot advance application with status: {application.status}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    serializer = ApplicationStageUpdateSerializer(data=request.data)
+    if serializer.is_valid():
+        notes = serializer.validated_data.get('notes', '')
+        application.advance_stage(notes=notes)
+        return Response(ApplicationSerializer(application).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def shortlist_application(request, application_id):
+    """
+    Move an application to shortlisted status.
+    Company members or recruiters only.
+    """
+    try:
+        application = Application.objects.select_related(
+            'job', 'job__company'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response(
+            {'error': 'You do not have permission to update this application'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Allow shortlisting from any status (full flexibility for pipeline movement)
+    application.shortlist()
+    return Response(ApplicationSerializer(application).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reject_application(request, application_id):
+    """
+    Reject an application with structured reason and feedback.
+    Company members or recruiters only.
+    """
+    try:
+        application = Application.objects.select_related(
+            'job', 'job__company'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response(
+            {'error': 'You do not have permission to update this application'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Allow rejecting from any status (even already rejected - allows changing reason)
+
+    serializer = RejectApplicationSerializer(data=request.data)
+    if serializer.is_valid():
+        reason = serializer.validated_data.get('rejection_reason', '')
+        feedback = serializer.validated_data.get('rejection_feedback', '')
+        application.reject(reason=reason, feedback=feedback)
+        return Response(ApplicationSerializer(application).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def make_offer(request, application_id):
+    """
+    Make an offer to a candidate with offer details.
+    Company members or recruiters only.
+    """
+    try:
+        application = Application.objects.select_related(
+            'job', 'job__company'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response(
+            {'error': 'You do not have permission to update this application'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Allow making offers from any status (full flexibility - can update/redo offers)
+    serializer = MakeOfferSerializer(data=request.data)
+    if serializer.is_valid():
+        offer_details = serializer.validated_data.get('offer_details', {})
+        # Convert date to string for JSON storage
+        if offer_details.get('start_date'):
+            offer_details['start_date'] = offer_details['start_date'].isoformat()
+        application.make_offer(offer_details=offer_details)
+        return Response(ApplicationSerializer(application).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def accept_offer(request, application_id):
+    """
+    Confirm offer acceptance with final details.
+    Company members or recruiters only.
+    """
+    try:
+        application = Application.objects.select_related(
+            'job', 'job__company'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response(
+            {'error': 'You do not have permission to update this application'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Allow accepting from any status (full flexibility for data corrections)
+    serializer = AcceptOfferSerializer(data=request.data)
+    if serializer.is_valid():
+        final_details = serializer.validated_data.get('final_offer_details')
+        if final_details and final_details.get('start_date'):
+            final_details['start_date'] = final_details['start_date'].isoformat()
+        application.accept_offer(final_details=final_details)
+        return Response(ApplicationSerializer(application).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def move_to_stage(request, application_id):
+    """
+    Move an application to a specific interview stage.
+    Company members or recruiters only.
+    """
+    try:
+        application = Application.objects.select_related(
+            'job', 'job__company'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response(
+            {'error': 'You do not have permission to update this application'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Allow moving from any status (full flexibility for pipeline movement)
+    stage_order = request.data.get('stage_order')
+    if stage_order is None:
+        return Response(
+            {'error': 'stage_order is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        stage_order = int(stage_order)
+    except (ValueError, TypeError):
+        return Response(
+            {'error': 'stage_order must be an integer'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Validate stage exists
+    job_stages = application.job.interview_stages or []
+    max_stage = max((s.get('order', 0) for s in job_stages), default=0)
+
+    if stage_order < 0 or stage_order > max_stage:
+        return Response(
+            {'error': f'Invalid stage_order. Must be between 0 and {max_stage}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    application.current_stage_order = stage_order
+    if stage_order > 0:
+        application.status = ApplicationStatus.IN_PROGRESS
+    else:
+        application.status = ApplicationStatus.APPLIED
+    application.save()
+
+    return Response(ApplicationSerializer(application).data)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_application_notes(request, application_id):
+    """
+    Update notes for an application.
+    Company members or recruiters only.
+    """
+    try:
+        application = Application.objects.select_related(
+            'job', 'job__company'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response(
+            {'error': 'You do not have permission to update this application'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    feedback = request.data.get('feedback')
+    if feedback is not None:
+        application.feedback = feedback
+
+    stage_notes = request.data.get('stage_notes')
+    if stage_notes is not None:
+        # Merge with existing notes
+        existing_notes = application.stage_notes or {}
+        existing_notes.update(stage_notes)
+        application.stage_notes = existing_notes
+
+    application.save()
+    return Response(ApplicationSerializer(application).data)

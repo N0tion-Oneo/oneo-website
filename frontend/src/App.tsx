@@ -13,6 +13,8 @@ import {
   JobsPage,
   NewJobPage,
   EditJobPage,
+  ApplicationsPage,
+  JobApplicationsPage,
   AdminCompaniesPage,
   AdminCompanyEditPage,
   AdminCandidatesPage,
@@ -81,6 +83,8 @@ function App() {
           <Route path="jobs" element={<JobsPage />} />
           <Route path="jobs/new" element={<NewJobPage />} />
           <Route path="jobs/:jobId" element={<EditJobPage />} />
+          <Route path="jobs/:jobId/applications" element={<JobApplicationsPage />} />
+          <Route path="applications" element={<ApplicationsPage />} />
           <Route path="invitations" element={<InvitationsPage />} />
           {/* Admin/Recruiter routes */}
           <Route path="admin/companies" element={<AdminCompaniesPage />} />

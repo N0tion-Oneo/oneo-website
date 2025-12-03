@@ -15,6 +15,7 @@ import {
   Pause,
   CheckCircle,
   AlertCircle,
+  Users,
 } from 'lucide-react'
 
 const statusTabs = [
@@ -253,8 +254,13 @@ export default function JobsPage() {
                         {badge.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-gray-600">
-                      {job.applications_count || 0}
+                    <td className="px-4 py-3">
+                      <Link
+                        to={`/dashboard/jobs/${job.id}/applications`}
+                        className="text-[13px] text-gray-600 hover:text-gray-900 hover:underline"
+                      >
+                        {job.applications_count || 0} applications
+                      </Link>
                     </td>
                     <td className="px-4 py-3 text-[13px] text-gray-600">
                       {job.views_count || 0}
@@ -294,6 +300,13 @@ export default function JobsPage() {
                                 >
                                   <Edit className="w-4 h-4" />
                                   Edit Job
+                                </Link>
+                                <Link
+                                  to={`/dashboard/jobs/${job.id}/applications`}
+                                  className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                                >
+                                  <Users className="w-4 h-4" />
+                                  View Applications
                                 </Link>
 
                                 {job.status === JobStatus.DRAFT && (

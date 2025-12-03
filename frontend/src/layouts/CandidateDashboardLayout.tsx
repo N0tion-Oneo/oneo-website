@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface NavItem {
   name: string;
@@ -12,6 +13,16 @@ export default function CandidateDashboardLayout() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Persist minimized state in localStorage
+  const [isMinimized, setIsMinimized] = useState(() => {
+    const saved = localStorage.getItem('sidebarMinimized');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sidebarMinimized', JSON.stringify(isMinimized));
+  }, [isMinimized]);
 
   // Check if user is admin or recruiter
   const isAdmin = user?.role === 'admin'
@@ -189,6 +200,9 @@ export default function CandidateDashboardLayout() {
     return location.pathname.startsWith(href);
   };
 
+  const sidebarWidth = isMinimized ? 'w-16' : 'w-64';
+  const mainPadding = isMinimized ? 'lg:pl-16' : 'lg:pl-64';
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar backdrop */}
@@ -201,72 +215,108 @@ export default function CandidateDashboardLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full ${sidebarWidth} bg-white border-r border-gray-200 transform transition-all duration-200 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Logo */}
-        <div className="h-14 flex items-center px-6 border-b border-gray-200">
-          <Link to="/" className="text-lg font-semibold text-gray-900">
-            Oneo
-          </Link>
+        {/* Logo & Toggle */}
+        <div className="h-14 flex items-center justify-between px-4 border-b border-gray-200">
+          {!isMinimized && (
+            <Link to="/" className="text-lg font-semibold text-gray-900">
+              Oneo
+            </Link>
+          )}
+          <button
+            onClick={() => setIsMinimized(!isMinimized)}
+            className={`hidden lg:flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors ${
+              isMinimized ? 'mx-auto' : ''
+            }`}
+            title={isMinimized ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isMinimized ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
+          </button>
         </div>
 
         {/* User info */}
-        <div className="p-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white text-[12px] font-medium">
+        <div className={`p-4 border-b border-gray-100 ${isMinimized ? 'px-2' : ''}`}>
+          <div className={`flex items-center ${isMinimized ? 'justify-center' : 'gap-3'}`}>
+            <div
+              className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white text-[12px] font-medium flex-shrink-0"
+              title={isMinimized ? `${user?.first_name} ${user?.last_name}` : undefined}
+            >
               {user?.first_name?.[0]?.toUpperCase()}
               {user?.last_name?.[0]?.toUpperCase()}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-medium text-gray-900 truncate">
-                {user?.first_name} {user?.last_name}
-              </p>
-              <p className="text-[12px] text-gray-500 truncate">{user?.email}</p>
-            </div>
+            {!isMinimized && (
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-medium text-gray-900 truncate">
+                  {user?.first_name} {user?.last_name}
+                </p>
+                <p className="text-[12px] text-gray-500 truncate">{user?.email}</p>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="p-3 space-y-1">
+        <nav className={`p-3 space-y-1 ${isMinimized ? 'px-2' : ''}`}>
           {navigation.map((item) => (
             <Link
               key={item.name}
               to={item.href}
               onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-[14px] font-medium transition-colors ${
+              className={`relative group flex items-center ${isMinimized ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-md text-[14px] font-medium transition-colors ${
                 isActive(item.href)
                   ? 'bg-gray-100 text-gray-900'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
+              title={isMinimized ? item.name : undefined}
             >
-              <span className={isActive(item.href) ? 'text-gray-900' : 'text-gray-400'}>
+              <span className={`flex-shrink-0 ${isActive(item.href) ? 'text-gray-900' : 'text-gray-400'}`}>
                 {item.icon}
               </span>
-              {item.name}
+              {!isMinimized && item.name}
+
+              {/* Tooltip for minimized state */}
+              {isMinimized && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-[12px] rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                  {item.name}
+                </div>
+              )}
             </Link>
           ))}
         </nav>
 
         {/* Bottom section */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-100">
+        <div className={`absolute bottom-0 left-0 right-0 p-3 border-t border-gray-100 ${isMinimized ? 'px-2' : ''}`}>
           <button
             onClick={logout}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-[14px] font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+            className={`relative group flex items-center ${isMinimized ? 'justify-center' : 'gap-3'} w-full px-3 py-2 rounded-md text-[14px] font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors`}
+            title={isMinimized ? 'Sign out' : undefined}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400 flex-shrink-0">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" strokeLinecap="round" strokeLinejoin="round" />
               <polyline points="16 17 21 12 16 7" strokeLinecap="round" strokeLinejoin="round" />
               <line x1="21" y1="12" x2="9" y2="12" strokeLinecap="round" />
             </svg>
-            Sign out
+            {!isMinimized && 'Sign out'}
+
+            {/* Tooltip for minimized state */}
+            {isMinimized && (
+              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-[12px] rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                Sign out
+              </div>
+            )}
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className={`${mainPadding} transition-all duration-200`}>
         {/* Top header */}
         <header className="sticky top-0 z-30 bg-white border-b border-gray-200 h-14 flex items-center px-4 lg:px-6">
           <button

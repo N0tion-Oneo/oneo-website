@@ -156,6 +156,9 @@ export interface CandidateProfile {
   // Skills & Industries
   skills: Skill[]
   industries: Industry[]
+  // Experience & Education
+  experiences?: Experience[]
+  education?: Education[]
   // Visibility & Completeness
   visibility: ProfileVisibility
   profile_completeness: number
@@ -591,15 +594,27 @@ export interface JobFilters {
 
 export enum ApplicationStatus {
   APPLIED = 'applied',
-  SCREENING = 'screening',
   SHORTLISTED = 'shortlisted',
-  INTERVIEWING = 'interviewing',
-  INTERVIEW_SCHEDULED = 'interview_scheduled',
-  INTERVIEW_COMPLETED = 'interview_completed',
-  OFFER = 'offer',
-  ACCEPTED = 'accepted',
+  IN_PROGRESS = 'in_progress',
+  OFFER_MADE = 'offer_made',
+  OFFER_ACCEPTED = 'offer_accepted',
   REJECTED = 'rejected',
+}
+
+export enum RejectionReason {
+  INTERNAL_REJECTION = 'internal_rejection',
+  CLIENT_REJECTION = 'client_rejection',
   WITHDRAWN = 'withdrawn',
+  INVALID_SHORTLIST = 'invalid_shortlist',
+  CANDIDATE_NOT_INTERESTED = 'candidate_not_interested',
+}
+
+export const RejectionReasonLabels: Record<RejectionReason, string> = {
+  [RejectionReason.INTERNAL_REJECTION]: 'Internal Rejection',
+  [RejectionReason.CLIENT_REJECTION]: 'Client Rejection',
+  [RejectionReason.WITHDRAWN]: 'Withdrawn',
+  [RejectionReason.INVALID_SHORTLIST]: 'Invalid Shortlist',
+  [RejectionReason.CANDIDATE_NOT_INTERESTED]: 'Candidate Not Interested',
 }
 
 export enum ApplicationSource {
@@ -616,6 +631,20 @@ export enum QuestionType {
   FILE = 'file',
 }
 
+export interface StageNote {
+  notes: string
+  updated_at: string
+}
+
+export interface OfferDetails {
+  salary?: number | null
+  currency?: string
+  start_date?: string | null
+  notes?: string
+  benefits?: string
+  equity?: string
+}
+
 export interface Application {
   id: string
   job: Job
@@ -623,12 +652,60 @@ export interface Application {
   covering_statement: string
   resume_url: string | null
   status: ApplicationStatus
-  applied_at: string
-  last_status_change: string
-  rejection_reason: string | null
+  current_stage_order: number
+  current_stage_name: string
+  stage_notes: Record<string, StageNote>
+  interview_stages: InterviewStage[]
+  // Offer fields
+  offer_details: OfferDetails
+  offer_made_at: string | null
+  offer_accepted_at: string | null
+  final_offer_details: OfferDetails
+  // Rejection fields
+  rejection_reason: RejectionReason | null
+  rejection_feedback: string | null
+  rejected_at: string | null
+  // Other
   feedback: string | null
   source: ApplicationSource
   referrer: User | null
+  applied_at: string
+  shortlisted_at: string | null
+  last_status_change: string
+}
+
+// Candidate's view of their applications (lighter weight)
+export interface CandidateApplication {
+  id: string
+  job: Job
+  status: ApplicationStatus
+  current_stage_order: number
+  current_stage_name: string
+  interview_stages: InterviewStage[]
+  covering_statement: string
+  applied_at: string
+  last_status_change: string
+}
+
+// Minimal application info for listing (company view)
+export interface ApplicationListItem {
+  id: string
+  job: string
+  job_title: string
+  job_slug: string
+  company_name: string
+  company_logo: string | null
+  candidate: string
+  candidate_name: string
+  candidate_email: string
+  status: ApplicationStatus
+  current_stage_order: number
+  current_stage_name: string
+  source: ApplicationSource
+  applied_at: string
+  shortlisted_at: string | null
+  last_status_change: string
+  rejection_reason: RejectionReason | null
 }
 
 export interface ApplicationQuestion {

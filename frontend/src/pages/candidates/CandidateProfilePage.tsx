@@ -1,10 +1,26 @@
 import { Link, useParams } from 'react-router-dom'
 import { useCandidate } from '@/hooks'
+import { Briefcase, GraduationCap, Building2 } from 'lucide-react'
 import type { CandidateProfile, CandidateProfileSanitized } from '@/types'
 
 // Type guard to check if profile is full or sanitized
 function isFullProfile(profile: CandidateProfile | CandidateProfileSanitized): profile is CandidateProfile {
   return 'email' in profile
+}
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+const formatDateRange = (startDate: string, endDate: string | null, isCurrent: boolean) => {
+  const start = formatDate(startDate)
+  if (isCurrent) {
+    return `${start} - Present`
+  }
+  return endDate ? `${start} - ${formatDate(endDate)}` : start
 }
 
 export default function CandidateProfilePage() {
@@ -198,6 +214,125 @@ export default function CandidateProfilePage() {
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* Experience */}
+            {isFull && (
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h2 className="text-[15px] font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-gray-400" />
+                Experience
+              </h2>
+              {!candidate.experiences || candidate.experiences.length === 0 ? (
+                <p className="text-[14px] text-gray-500 italic">No experience listed</p>
+              ) : (
+                <div className="space-y-6">
+                  {candidate.experiences.map((exp) => (
+                    <div key={exp.id} className="border-l-2 border-gray-200 pl-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <h3 className="text-[15px] font-medium text-gray-900">{exp.job_title}</h3>
+                          <p className="text-[14px] text-gray-600 flex items-center gap-1.5 mt-0.5">
+                            <Building2 className="w-4 h-4 text-gray-400" />
+                            {exp.company_name}
+                            {exp.company_size && (
+                              <span className="text-gray-400">• {exp.company_size} employees</span>
+                            )}
+                          </p>
+                          {exp.industry && (
+                            <p className="text-[13px] text-gray-500 mt-0.5">
+                              Industry: {exp.industry.name}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-[13px] text-gray-500 whitespace-nowrap">
+                          {formatDateRange(exp.start_date, exp.end_date, exp.is_current)}
+                        </span>
+                      </div>
+                      {exp.description && (
+                        <p className="text-[14px] text-gray-600 mt-3 leading-relaxed whitespace-pre-wrap">
+                          {exp.description}
+                        </p>
+                      )}
+                      {exp.achievements && (
+                        <div className="mt-2">
+                          <p className="text-[13px] font-medium text-gray-700">Key Achievements:</p>
+                          <p className="text-[14px] text-gray-600 whitespace-pre-wrap">{exp.achievements}</p>
+                        </div>
+                      )}
+                      {/* Technologies */}
+                      {exp.technologies && exp.technologies.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-[12px] font-medium text-gray-500 mb-1.5">Technologies</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {exp.technologies.map((tech) => (
+                              <span
+                                key={tech.id}
+                                className="px-2 py-0.5 text-[12px] bg-blue-50 text-blue-700 rounded"
+                              >
+                                {tech.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {/* Skills */}
+                      {exp.skills && exp.skills.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-[12px] font-medium text-gray-500 mb-1.5">Skills</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {exp.skills.map((skill) => (
+                              <span
+                                key={skill.id}
+                                className="px-2 py-0.5 text-[12px] bg-gray-100 text-gray-700 rounded"
+                              >
+                                {skill.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            )}
+
+            {/* Education */}
+            {isFull && (
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h2 className="text-[15px] font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-gray-400" />
+                Education
+              </h2>
+              {!candidate.education || candidate.education.length === 0 ? (
+                <p className="text-[14px] text-gray-500 italic">No education listed</p>
+              ) : (
+                <div className="space-y-6">
+                  {candidate.education.map((edu) => (
+                    <div key={edu.id} className="border-l-2 border-gray-200 pl-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <h3 className="text-[15px] font-medium text-gray-900">{edu.degree}</h3>
+                          <p className="text-[14px] text-gray-600">{edu.field_of_study}</p>
+                          <p className="text-[14px] text-gray-500">{edu.institution}</p>
+                        </div>
+                        <span className="text-[13px] text-gray-500 whitespace-nowrap">
+                          {formatDateRange(edu.start_date, edu.end_date, edu.is_current)}
+                        </span>
+                      </div>
+                      {edu.grade && (
+                        <p className="text-[13px] text-gray-500 mt-1">Grade: {edu.grade}</p>
+                      )}
+                      {edu.description && (
+                        <p className="text-[14px] text-gray-600 mt-2 whitespace-pre-wrap">{edu.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             )}
 
             {/* Portfolio - Only for full profiles */}

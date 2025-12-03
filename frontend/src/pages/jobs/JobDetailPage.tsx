@@ -1,5 +1,8 @@
-import { useParams, Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useJob } from '@/hooks/useJobs'
+import { useAuth } from '@/contexts/AuthContext'
+import { ApplyModal } from '@/components/applications'
 import {
   Building2,
   MapPin,
@@ -14,7 +17,7 @@ import {
   ChevronRight,
   ExternalLink,
 } from 'lucide-react'
-import { JobType, WorkMode, Seniority, Department } from '@/types'
+import { JobType, WorkMode, Seniority, Department, UserRole } from '@/types'
 import type { InterviewStage } from '@/types'
 
 const getJobTypeLabel = (type: JobType) => {
@@ -74,7 +77,13 @@ const formatDate = (dateString: string) => {
 
 export default function JobDetailPage() {
   const { slug } = useParams<{ slug: string }>()
-  const { job, isLoading, error } = useJob(slug || '')
+  const navigate = useNavigate()
+  const { job, isLoading, error, refetch } = useJob(slug || '')
+  const { user, isAuthenticated } = useAuth()
+  const [showApplyModal, setShowApplyModal] = useState(false)
+
+  const isCandidate = user?.role === UserRole.CANDIDATE
+  const canApply = isAuthenticated && isCandidate
 
   if (isLoading) {
     return (
@@ -380,13 +389,46 @@ export default function JobDetailPage() {
               )}
 
               {/* Apply Button */}
-              <button className="w-full py-2.5 bg-gray-900 text-white text-[14px] font-medium rounded-md hover:bg-gray-800 transition-colors">
-                Apply Now
-              </button>
-
-              <p className="text-[11px] text-gray-400 text-center mt-3">
-                Apply with your Oneo profile
-              </p>
+              {canApply ? (
+                <>
+                  <button
+                    onClick={() => setShowApplyModal(true)}
+                    className="w-full py-2.5 bg-gray-900 text-white text-[14px] font-medium rounded-md hover:bg-gray-800 transition-colors"
+                  >
+                    Apply Now
+                  </button>
+                  <p className="text-[11px] text-gray-400 text-center mt-3">
+                    Apply with your Oneo profile
+                  </p>
+                </>
+              ) : isAuthenticated ? (
+                <div className="text-center">
+                  <p className="text-[13px] text-gray-500 mb-2">
+                    Applications are for candidates only
+                  </p>
+                  <Link
+                    to="/dashboard"
+                    className="text-[13px] font-medium text-gray-900 hover:text-gray-700"
+                  >
+                    Go to Dashboard
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    to={`/signup?redirect=/jobs/${slug}`}
+                    className="block w-full py-2.5 bg-gray-900 text-white text-[14px] font-medium rounded-md hover:bg-gray-800 transition-colors text-center"
+                  >
+                    Sign up to Apply
+                  </Link>
+                  <p className="text-[11px] text-gray-400 text-center mt-3">
+                    Already have an account?{' '}
+                    <Link to={`/login?redirect=/jobs/${slug}`} className="text-gray-900 hover:underline">
+                      Sign in
+                    </Link>
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Company Card */}
@@ -464,6 +506,18 @@ export default function JobDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* Apply Modal */}
+      {job && (
+        <ApplyModal
+          job={job}
+          isOpen={showApplyModal}
+          onClose={() => setShowApplyModal(false)}
+          onSuccess={() => {
+            refetch()
+          }}
+        />
+      )}
     </div>
   )
 }

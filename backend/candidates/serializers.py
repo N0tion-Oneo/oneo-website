@@ -84,6 +84,10 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(source='user.last_name', read_only=True)
     phone = serializers.CharField(source='user.phone', read_only=True)
 
+    # Nested experiences and education
+    experiences = serializers.SerializerMethodField()
+    education = serializers.SerializerMethodField()
+
     class Meta:
         model = CandidateProfile
         fields = [
@@ -117,12 +121,23 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
             'resume_url',
             'skills',
             'industries',
+            'experiences',
+            'education',
             'visibility',
             'profile_completeness',
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['id', 'slug', 'profile_completeness', 'created_at', 'updated_at']
+
+    def get_experiences(self, obj):
+        from .serializers import ExperienceSerializer
+        experiences = obj.experiences.all().order_by('order', '-start_date')
+        return ExperienceSerializer(experiences, many=True).data
+
+    def get_education(self, obj):
+        from .serializers import EducationSerializer
+        education = obj.education.all().order_by('order', '-start_date')
+        return EducationSerializer(education, many=True).data
 
     def get_avatar(self, obj):
         if obj.user.avatar:

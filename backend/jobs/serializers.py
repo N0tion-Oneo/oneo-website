@@ -1,9 +1,9 @@
 from rest_framework import serializers
-from .models import Job, JobStatus, JobType, WorkMode, Department
+from .models import Job, JobStatus, JobType, WorkMode, Department, Application, ApplicationStatus, ApplicationSource, RejectionReason
 from companies.serializers import CompanyListSerializer, CountrySerializer, CitySerializer, BenefitCategorySerializer
 from companies.models import Country, City
-from candidates.serializers import SkillSerializer, TechnologySerializer
-from candidates.models import Skill, Technology
+from candidates.serializers import SkillSerializer, TechnologySerializer, CandidateProfileSerializer
+from candidates.models import Skill, Technology, CandidateProfile
 from authentication.serializers import UserProfileSerializer
 
 
@@ -338,3 +338,215 @@ class JobUpdateSerializer(serializers.ModelSerializer):
 class JobStatusUpdateSerializer(serializers.Serializer):
     """Serializer for updating job status (publish/close/etc)."""
     status = serializers.ChoiceField(choices=JobStatus.choices)
+
+
+# ==================== Application Serializers ====================
+
+
+class ApplicationListSerializer(serializers.ModelSerializer):
+    """Serializer for application list view (minimal data)."""
+    job_title = serializers.CharField(source='job.title', read_only=True)
+    job_slug = serializers.CharField(source='job.slug', read_only=True)
+    company_name = serializers.CharField(source='job.company.name', read_only=True)
+    company_logo = serializers.SerializerMethodField()
+    current_stage_name = serializers.CharField(read_only=True)
+    candidate_name = serializers.CharField(source='candidate.full_name', read_only=True)
+    candidate_email = serializers.CharField(source='candidate.email', read_only=True)
+
+    def get_company_logo(self, obj):
+        """Safely get company logo URL."""
+        if obj.job.company and obj.job.company.logo:
+            return obj.job.company.logo.url
+        return None
+
+    class Meta:
+        model = Application
+        fields = [
+            'id',
+            'job',
+            'job_title',
+            'job_slug',
+            'company_name',
+            'company_logo',
+            'candidate',
+            'candidate_name',
+            'candidate_email',
+            'status',
+            'current_stage_order',
+            'current_stage_name',
+            'source',
+            'applied_at',
+            'shortlisted_at',
+            'last_status_change',
+            'rejection_reason',
+        ]
+        read_only_fields = ['id', 'applied_at', 'shortlisted_at', 'last_status_change']
+
+
+class ApplicationSerializer(serializers.ModelSerializer):
+    """Full application serializer with job interview stages."""
+    job = JobListSerializer(read_only=True)
+    candidate = CandidateProfileSerializer(read_only=True)
+    referrer = UserProfileSerializer(read_only=True)
+    current_stage_name = serializers.CharField(read_only=True)
+    interview_stages = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Application
+        fields = [
+            'id',
+            'job',
+            'candidate',
+            'referrer',
+            'covering_statement',
+            'resume_url',
+            'status',
+            'current_stage_order',
+            'current_stage_name',
+            'stage_notes',
+            'interview_stages',
+            'source',
+            # Offer fields
+            'offer_details',
+            'offer_made_at',
+            'offer_accepted_at',
+            'final_offer_details',
+            # Rejection fields
+            'rejection_reason',
+            'rejection_feedback',
+            'rejected_at',
+            # Other
+            'feedback',
+            'applied_at',
+            'shortlisted_at',
+            'last_status_change',
+        ]
+        read_only_fields = ['id', 'applied_at', 'shortlisted_at', 'last_status_change']
+
+    def get_interview_stages(self, obj):
+        """Return the job's interview stages."""
+        return obj.job.interview_stages or []
+
+
+class ApplicationCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating a new application."""
+    job_id = serializers.UUIDField(write_only=True)
+
+    class Meta:
+        model = Application
+        fields = [
+            'job_id',
+            'covering_statement',
+            'resume_url',
+        ]
+
+    def validate_job_id(self, value):
+        """Validate job exists and is open for applications."""
+        try:
+            job = Job.objects.get(id=value)
+        except Job.DoesNotExist:
+            raise serializers.ValidationError('Job not found.')
+
+        if job.status != JobStatus.PUBLISHED:
+            raise serializers.ValidationError('This job is not accepting applications.')
+
+        return value
+
+    def validate(self, data):
+        """Validate candidate hasn't already applied."""
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            raise serializers.ValidationError('Authentication required.')
+
+        try:
+            candidate = CandidateProfile.objects.get(user=request.user)
+        except CandidateProfile.DoesNotExist:
+            raise serializers.ValidationError('Candidate profile not found.')
+
+        job_id = data.get('job_id')
+        if Application.objects.filter(job_id=job_id, candidate=candidate).exists():
+            raise serializers.ValidationError('You have already applied to this job.')
+
+        data['candidate'] = candidate
+        return data
+
+    def create(self, validated_data):
+        """Create the application."""
+        job_id = validated_data.pop('job_id')
+        job = Job.objects.get(id=job_id)
+
+        application = Application.objects.create(
+            job=job,
+            **validated_data
+        )
+
+        # Increment job applications count
+        job.applications_count += 1
+        job.save(update_fields=['applications_count'])
+
+        return application
+
+
+class ApplicationStageUpdateSerializer(serializers.Serializer):
+    """Serializer for updating application stage (advance)."""
+    notes = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class OfferDetailsSerializer(serializers.Serializer):
+    """Serializer for offer details when making an offer."""
+    salary = serializers.IntegerField(required=False, allow_null=True)
+    currency = serializers.ChoiceField(
+        choices=[('ZAR', 'ZAR'), ('USD', 'USD'), ('EUR', 'EUR'), ('GBP', 'GBP')],
+        required=False,
+        default='ZAR'
+    )
+    start_date = serializers.DateField(required=False, allow_null=True)
+    notes = serializers.CharField(required=False, allow_blank=True, default='')
+    benefits = serializers.CharField(required=False, allow_blank=True, default='')
+    equity = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class MakeOfferSerializer(serializers.Serializer):
+    """Serializer for making an offer."""
+    offer_details = OfferDetailsSerializer(required=True)
+
+
+class AcceptOfferSerializer(serializers.Serializer):
+    """Serializer for accepting an offer with final details."""
+    final_offer_details = OfferDetailsSerializer(required=False)
+    notes = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class RejectApplicationSerializer(serializers.Serializer):
+    """Serializer for rejecting an application with structured reason."""
+    rejection_reason = serializers.ChoiceField(
+        choices=RejectionReason.choices,
+        required=True
+    )
+    rejection_feedback = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class CandidateApplicationListSerializer(serializers.ModelSerializer):
+    """Serializer for candidate viewing their applications (includes job details)."""
+    job = JobListSerializer(read_only=True)
+    current_stage_name = serializers.CharField(read_only=True)
+    interview_stages = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Application
+        fields = [
+            'id',
+            'job',
+            'status',
+            'current_stage_order',
+            'current_stage_name',
+            'interview_stages',
+            'covering_statement',
+            'applied_at',
+            'last_status_change',
+        ]
+        read_only_fields = fields
+
+    def get_interview_stages(self, obj):
+        """Return the job's interview stages."""
+        return obj.job.interview_stages or []
