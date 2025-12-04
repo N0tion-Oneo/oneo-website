@@ -288,17 +288,21 @@ export default function ScheduleInterviewModal({
             </p>
           </div>
 
-          {/* PRIMARY OPTION: Send Booking Link (for new schedules only) */}
-          {!isReschedule && !bookingLinkResult && (
+          {/* PRIMARY OPTION: Send Booking Link (for both schedule and reschedule) */}
+          {!bookingLinkResult && (
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
                   <Link2 className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900">Let candidate choose a time</h3>
+                  <h3 className="font-medium text-gray-900">
+                    {isReschedule ? 'Send new booking link' : 'Let candidate choose a time'}
+                  </h3>
                   <p className="text-sm text-gray-500 mt-0.5">
-                    Send a booking link and the candidate will pick from available slots on the interviewer's calendar
+                    {isReschedule
+                      ? 'Send a new booking link so the candidate can pick a different time'
+                      : 'Send a booking link and the candidate will pick from available slots on the interviewer\'s calendar'}
                   </p>
                 </div>
               </div>
@@ -316,7 +320,7 @@ export default function ScheduleInterviewModal({
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    Send Booking Link
+                    {isReschedule ? 'Send New Booking Link' : 'Send Booking Link'}
                   </>
                 )}
               </button>

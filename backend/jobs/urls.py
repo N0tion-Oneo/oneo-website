@@ -63,15 +63,8 @@ urlpatterns = [
     path('notifications/mark-read/', views.mark_notifications_read, name='mark-notifications-read'),
     path('notifications/<uuid:notification_id>/', views.get_notification, name='get-notification'),
 
-    # Calendar Connection endpoints (OAuth)
-    path('calendar/connections/', views.list_calendar_connections, name='list-calendar-connections'),
-    path('calendar/auth/<str:provider>/', views.initiate_calendar_oauth, name='initiate-calendar-oauth'),
-    path('calendar/auth/<str:provider>/callback/', views.calendar_oauth_callback, name='calendar-oauth-callback'),
-    path('calendar/disconnect/<str:provider>/', views.disconnect_calendar, name='disconnect-calendar'),
-    path('calendar/<str:provider>/calendars/', views.list_available_calendars, name='list-available-calendars'),
-    path('calendar/<str:provider>/settings/', views.update_calendar_settings, name='update-calendar-settings'),
-
     # Interviewer endpoints (for scheduling)
+    # NOTE: Calendar connection endpoints moved to scheduling app (/api/v1/scheduling/)
     path('<uuid:job_id>/interviewers/', views.list_job_interviewers, name='list-job-interviewers'),
 
     # Public single job by slug (must be last - catches any remaining slug)

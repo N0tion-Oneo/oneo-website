@@ -16,4 +16,7 @@ urlpatterns = [
 
     # Jobs endpoints
     path('jobs/', include('jobs.urls')),
+
+    # Scheduling endpoints (calendar integration)
+    path('scheduling/', include('scheduling.urls')),
 ]

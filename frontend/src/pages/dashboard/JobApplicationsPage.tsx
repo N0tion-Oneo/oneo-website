@@ -129,6 +129,7 @@ export default function JobApplicationsPage() {
     applicationId: string
     stageInstance: ApplicationStageInstance
     candidateName: string
+    mode: 'schedule' | 'reschedule'
   } | null>(null)
   const [assessmentModal, setAssessmentModal] = useState<{
     applicationId: string
@@ -296,6 +297,7 @@ export default function JobApplicationsPage() {
           applicationId,
           stageInstance,
           candidateName,
+          mode: 'schedule',
         })
       }
 
@@ -467,6 +469,7 @@ export default function JobApplicationsPage() {
                         location: application.current_stage_instance.location,
                       } as ApplicationStageInstance,
                       candidateName: application.candidate_name,
+                      mode: 'schedule',
                     })
                   }
                 }}
@@ -496,6 +499,7 @@ export default function JobApplicationsPage() {
                         location: application.current_stage_instance.location,
                       } as ApplicationStageInstance,
                       candidateName: application.candidate_name,
+                      mode: 'reschedule',
                     })
                   }
                 }}
@@ -866,7 +870,7 @@ export default function JobApplicationsPage() {
           applicationId={scheduleModal.applicationId}
           jobId={jobId}
           candidateName={scheduleModal.candidateName}
-          mode="schedule"
+          mode={scheduleModal.mode}
           onSuccess={() => {
             setScheduleModal(null)
             refetch()

@@ -31,7 +31,7 @@ export default function CalendarOAuthCallback() {
     // Exchange code for tokens
     const exchangeCode = async () => {
       try {
-        await api.post(`/jobs/calendar/auth/${provider}/callback/`, {
+        await api.post(`/scheduling/auth/${provider}/callback/`, {
           code,
           state,
         })

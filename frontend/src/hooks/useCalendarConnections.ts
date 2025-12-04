@@ -22,7 +22,7 @@ export function useCalendarConnections(): UseCalendarConnectionsReturn {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await api.get<CalendarConnection[]>('/jobs/calendar/connections/')
+      const response = await api.get<CalendarConnection[]>('/scheduling/connections/')
       setConnections(response.data)
     } catch (err) {
       setError('Failed to load calendar connections')
@@ -58,7 +58,7 @@ export function useInitiateCalendarOAuth(): UseInitiateCalendarOAuthReturn {
     setError(null)
     try {
       const response = await api.get<{ auth_url: string }>(
-        `/jobs/calendar/auth/${provider}/`
+        `/scheduling/auth/${provider}/`
       )
       return response.data.auth_url
     } catch (err) {
@@ -95,7 +95,7 @@ export function useConnectCalendar(): UseConnectCalendarReturn {
     try {
       // Get the OAuth URL from the backend
       const response = await api.get<{ auth_url: string }>(
-        `/jobs/calendar/auth/${provider}/`
+        `/scheduling/auth/${provider}/`
       )
 
       // Open OAuth popup or redirect
@@ -154,7 +154,7 @@ export function useDisconnectCalendar(): UseDisconnectCalendarReturn {
     setIsDisconnecting(true)
     setError(null)
     try {
-      await api.delete(`/jobs/calendar/disconnect/${provider}/`)
+      await api.delete(`/scheduling/disconnect/${provider}/`)
     } catch (err) {
       const axiosError = err as { response?: { data?: { error?: string } } }
       const message = axiosError.response?.data?.error || 'Failed to disconnect calendar'
@@ -222,7 +222,7 @@ export function useAvailableCalendars(provider: CalendarProvider | null): UseAva
       const response = await api.get<{
         calendars: AvailableCalendar[]
         current_calendar_id: string
-      }>(`/jobs/calendar/${provider}/calendars/`)
+      }>(`/scheduling/${provider}/calendars/`)
       setCalendars(response.data.calendars)
       setCurrentCalendarId(response.data.current_calendar_id)
     } catch (err) {
@@ -263,7 +263,7 @@ export function useUpdateCalendarSettings(): UseUpdateCalendarSettingsReturn {
     setError(null)
     try {
       const response = await api.patch<CalendarConnection>(
-        `/jobs/calendar/${provider}/settings/`,
+        `/scheduling/${provider}/settings/`,
         settings
       )
       return response.data

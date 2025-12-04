@@ -16,11 +16,13 @@ import requests
 import json
 import uuid
 
-from jobs.models import (
+# Import models from scheduling app
+from scheduling.models import (
     UserCalendarConnection,
     CalendarProvider,
-    ApplicationStageInstance,
 )
+# ApplicationStageInstance stays in jobs app
+from jobs.models import ApplicationStageInstance
 
 
 class CalendarServiceError(Exception):
