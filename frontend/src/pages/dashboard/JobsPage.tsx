@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useCompanyJobs, useJobStatus, useDeleteJob } from '@/hooks/useJobs'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useCompanyJobs, useAllJobs, useJobStatus, useDeleteJob } from '@/hooks/useJobs'
 import { useMyCompany } from '@/hooks'
-import { JobStatus } from '@/types'
+import { useAuth } from '@/contexts/AuthContext'
+import { JobStatus, UserRole } from '@/types'
 import type { JobListItem } from '@/types'
+import { statusTabs, getStatusBadge, formatJobDate } from '@/utils/jobs'
 import {
   Plus,
   Briefcase,
@@ -16,49 +18,57 @@ import {
   CheckCircle,
   AlertCircle,
   Users,
+  Search,
+  Building2,
+  X,
+  ArrowLeft,
 } from 'lucide-react'
 
-const statusTabs = [
-  { value: '', label: 'All Jobs' },
-  { value: JobStatus.DRAFT, label: 'Draft' },
-  { value: JobStatus.PUBLISHED, label: 'Published' },
-  { value: JobStatus.CLOSED, label: 'Closed' },
-  { value: JobStatus.FILLED, label: 'Filled' },
-]
-
-const getStatusBadge = (status: JobStatus) => {
-  const badges: Record<
-    string,
-    { bg: string; text: string; label: string }
-  > = {
-    draft: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Draft' },
-    published: { bg: 'bg-green-100', text: 'text-green-700', label: 'Published' },
-    closed: { bg: 'bg-red-100', text: 'text-red-700', label: 'Closed' },
-    filled: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Filled' },
-    archived: { bg: 'bg-gray-100', text: 'text-gray-500', label: 'Archived' },
-  }
-  return badges[status] || badges.draft
+interface JobsPageProps {
+  mode?: 'company' | 'admin'
 }
 
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
-export default function JobsPage() {
+export default function JobsPage({ mode }: JobsPageProps) {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [statusFilter, setStatusFilter] = useState<JobStatus | ''>('')
+  const [search, setSearch] = useState('')
   const [openMenu, setOpenMenu] = useState<string | null>(null)
 
+  // Determine mode based on prop or user role
+  const isAdminMode = mode === 'admin' ||
+    (user && [UserRole.ADMIN, UserRole.RECRUITER].includes(user.role))
+
+  // Admin-specific: company filter from URL params
+  const companyFilter = isAdminMode ? (searchParams.get('company') || undefined) : undefined
+
+  // Company mode: get company info
   const { company, isLoading: companyLoading } = useMyCompany()
-  const { jobs, isLoading, error, refetch } = useCompanyJobs({
+
+  // Conditional data fetching based on mode
+  const companyJobsResult = useCompanyJobs({
     status: statusFilter || undefined,
   })
+  const allJobsResult = useAllJobs({
+    status: statusFilter || undefined,
+    search: search || undefined,
+    company: companyFilter,
+  })
+
+  // Use appropriate data based on mode
+  const { jobs, isLoading, error, refetch } = isAdminMode ? allJobsResult : companyJobsResult
+
   const { publishJob, closeJob, markJobFilled, isSubmitting } = useJobStatus()
   const { deleteJob, isDeleting } = useDeleteJob()
+
+  // Get company name from first job if filtering by company (admin mode)
+  const filteredCompanyName = companyFilter && jobs.length > 0 ? jobs[0].company?.name : null
+
+  const clearCompanyFilter = () => {
+    searchParams.delete('company')
+    setSearchParams(searchParams)
+  }
 
   const handlePublish = async (jobId: string) => {
     try {
@@ -103,7 +113,21 @@ export default function JobsPage() {
     }
   }
 
-  if (companyLoading) {
+  // Admin mode: Check role access
+  if (isAdminMode && user && ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500">
+          You do not have permission to view this page.
+        </p>
+      </div>
+    )
+  }
+
+  // Company mode: Loading state
+  if (!isAdminMode && companyLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <p className="text-[14px] text-gray-500">Loading...</p>
@@ -111,7 +135,8 @@ export default function JobsPage() {
     )
   }
 
-  if (!company) {
+  // Company mode: No company profile
+  if (!isAdminMode && !company) {
     return (
       <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -134,19 +159,79 @@ export default function JobsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">Job Postings</h1>
+          {/* Admin mode: Back link when filtering by company */}
+          {isAdminMode && companyFilter && (
+            <Link
+              to="/dashboard/admin/companies"
+              className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700 mb-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to All Companies
+            </Link>
+          )}
+          <h1 className="text-[20px] font-semibold text-gray-900">
+            {isAdminMode
+              ? filteredCompanyName
+                ? `Jobs: ${filteredCompanyName}`
+                : 'All Jobs'
+              : 'Job Postings'}
+          </h1>
           <p className="text-[13px] text-gray-500 mt-0.5">
-            Manage your company's job listings
+            {isAdminMode
+              ? companyFilter
+                ? 'View and manage jobs for this company'
+                : 'View and manage all jobs across all companies'
+              : "Manage your company's job listings"}
           </p>
         </div>
-        <Link
-          to="/dashboard/jobs/new"
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
-        >
-          <Plus className="w-4 h-4" />
-          Post New Job
-        </Link>
+        <div className="flex items-center gap-3">
+          {/* Admin mode: Clear filter and Create Job buttons */}
+          {isAdminMode && companyFilter && (
+            <>
+              <button
+                onClick={clearCompanyFilter}
+                className="flex items-center gap-2 px-3 py-1.5 text-[13px] text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+              >
+                <X className="w-4 h-4" />
+                Clear Filter
+              </button>
+              <Link
+                to={`/dashboard/admin/jobs/new?company=${companyFilter}`}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
+              >
+                <Plus className="w-4 h-4" />
+                Create Job
+              </Link>
+            </>
+          )}
+          {/* Company mode: Post New Job button */}
+          {!isAdminMode && (
+            <Link
+              to="/dashboard/jobs/new"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
+            >
+              <Plus className="w-4 h-4" />
+              Post New Job
+            </Link>
+          )}
+        </div>
       </div>
+
+      {/* Admin mode: Search */}
+      {isAdminMode && (
+        <div className="mb-4">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search jobs by title or company..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Status Tabs */}
       <div className="border-b border-gray-200 mb-6">
@@ -187,11 +272,17 @@ export default function JobsPage() {
           <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <p className="text-[15px] text-gray-700 mb-1">No jobs found</p>
           <p className="text-[13px] text-gray-500 mb-4">
-            {statusFilter
+            {isAdminMode
+              ? companyFilter
+                ? 'This company has no jobs yet'
+                : statusFilter || search
+                ? 'No jobs match your search criteria'
+                : 'No jobs have been created yet'
+              : statusFilter
               ? 'No jobs match the selected filter'
               : 'Get started by posting your first job'}
           </p>
-          {!statusFilter && (
+          {!isAdminMode && !statusFilter && (
             <Link
               to="/dashboard/jobs/new"
               className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
@@ -212,15 +303,24 @@ export default function JobsPage() {
                 <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                   Job Title
                 </th>
+                {/* Admin mode: Company column */}
+                {isAdminMode && (
+                  <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    Company
+                  </th>
+                )}
                 <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                   Applications
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
-                  Views
-                </th>
+                {/* Company mode: Views column */}
+                {!isAdminMode && (
+                  <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    Views
+                  </th>
+                )}
                 <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                   Created
                 </th>
@@ -247,6 +347,27 @@ export default function JobsPage() {
                         </p>
                       </div>
                     </td>
+                    {/* Admin mode: Company column */}
+                    {isAdminMode && (
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {job.company?.logo ? (
+                            <img
+                              src={job.company.logo}
+                              alt={job.company.name}
+                              className="w-6 h-6 rounded object-cover"
+                            />
+                          ) : (
+                            <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center">
+                              <Building2 className="w-3 h-3 text-gray-400" />
+                            </div>
+                          )}
+                          <span className="text-[13px] text-gray-600">
+                            {job.company?.name || 'Unknown'}
+                          </span>
+                        </div>
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${badge.bg} ${badge.text}`}
@@ -262,11 +383,14 @@ export default function JobsPage() {
                         {job.applications_count || 0} applications
                       </Link>
                     </td>
+                    {/* Company mode: Views column */}
+                    {!isAdminMode && (
+                      <td className="px-4 py-3 text-[13px] text-gray-600">
+                        {job.views_count || 0}
+                      </td>
+                    )}
                     <td className="px-4 py-3 text-[13px] text-gray-600">
-                      {job.views_count || 0}
-                    </td>
-                    <td className="px-4 py-3 text-[13px] text-gray-600">
-                      {formatDate(job.created_at)}
+                      {formatJobDate(job.created_at)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="relative inline-block">
@@ -287,13 +411,15 @@ export default function JobsPage() {
                             />
                             <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20">
                               <div className="py-1">
-                                <Link
-                                  to={`/jobs/${job.slug}`}
-                                  className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                  View Listing
-                                </Link>
+                                {job.status === JobStatus.PUBLISHED && (
+                                  <Link
+                                    to={`/jobs/${job.slug}`}
+                                    className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                    View Listing
+                                  </Link>
+                                )}
                                 <Link
                                   to={`/dashboard/jobs/${job.id}`}
                                   className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"

@@ -5,7 +5,10 @@ from rest_framework.response import Response
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import Job, JobStatus, Application, ApplicationStatus, RejectionReason
+from .models import (
+    Job, JobStatus, Application, ApplicationStatus, RejectionReason,
+    ActivityLog, ActivityNote, ActivityType
+)
 from .serializers import (
     JobListSerializer,
     JobDetailSerializer,
@@ -19,6 +22,9 @@ from .serializers import (
     MakeOfferSerializer,
     AcceptOfferSerializer,
     RejectApplicationSerializer,
+    ActivityLogSerializer,
+    ActivityNoteSerializer,
+    ActivityNoteCreateSerializer,
 )
 from companies.models import Company, CompanyUser, CompanyUserRole
 from companies.permissions import (
@@ -520,6 +526,15 @@ def apply_to_job(request):
     )
     if serializer.is_valid():
         application = serializer.save()
+
+        # Log the application activity
+        log_activity(
+            application=application,
+            user=request.user,
+            activity_type=ActivityType.APPLIED,
+            new_status=ApplicationStatus.APPLIED,
+        )
+
         return Response(
             ApplicationSerializer(application).data,
             status=status.HTTP_201_CREATED
@@ -703,58 +718,6 @@ def list_job_applications(request, job_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def advance_application(request, application_id):
-    """
-    Advance an application to the next interview stage.
-    Company members or recruiters only.
-    """
-    try:
-        application = Application.objects.select_related(
-            'job', 'job__company'
-        ).get(id=application_id)
-    except Application.DoesNotExist:
-        return Response(
-            {'error': 'Application not found'},
-            status=status.HTTP_404_NOT_FOUND
-        )
-
-    # Check permission
-    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
-    is_company_editor = CompanyUser.objects.filter(
-        user=request.user,
-        company=application.job.company,
-        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
-        is_active=True
-    ).exists()
-
-    if not is_staff and not is_company_editor:
-        return Response(
-            {'error': 'You do not have permission to update this application'},
-            status=status.HTTP_403_FORBIDDEN
-        )
-
-    # Check if application can be advanced
-    if application.status in [
-        ApplicationStatus.REJECTED,
-        ApplicationStatus.WITHDRAWN,
-        ApplicationStatus.OFFER,
-        ApplicationStatus.ACCEPTED
-    ]:
-        return Response(
-            {'error': f'Cannot advance application with status: {application.status}'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    serializer = ApplicationStageUpdateSerializer(data=request.data)
-    if serializer.is_valid():
-        notes = serializer.validated_data.get('notes', '')
-        application.advance_stage(notes=notes)
-        return Response(ApplicationSerializer(application).data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def shortlist_application(request, application_id):
     """
     Move an application to shortlisted status.
@@ -785,8 +748,21 @@ def shortlist_application(request, application_id):
             status=status.HTTP_403_FORBIDDEN
         )
 
+    # Capture previous status before change
+    previous_status = application.status
+
     # Allow shortlisting from any status (full flexibility for pipeline movement)
     application.shortlist()
+
+    # Log the activity
+    log_activity(
+        application=application,
+        user=request.user,
+        activity_type=ActivityType.SHORTLISTED,
+        previous_status=previous_status,
+        new_status=application.status,
+    )
+
     return Response(ApplicationSerializer(application).data)
 
 
@@ -826,9 +802,26 @@ def reject_application(request, application_id):
 
     serializer = RejectApplicationSerializer(data=request.data)
     if serializer.is_valid():
+        # Capture previous status before change
+        previous_status = application.status
+
         reason = serializer.validated_data.get('rejection_reason', '')
         feedback = serializer.validated_data.get('rejection_feedback', '')
         application.reject(reason=reason, feedback=feedback)
+
+        # Log the activity
+        log_activity(
+            application=application,
+            user=request.user,
+            activity_type=ActivityType.REJECTED,
+            previous_status=previous_status,
+            new_status=application.status,
+            metadata={
+                'rejection_reason': reason,
+                'rejection_feedback': feedback,
+            },
+        )
+
         return Response(ApplicationSerializer(application).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -868,11 +861,26 @@ def make_offer(request, application_id):
     # Allow making offers from any status (full flexibility - can update/redo offers)
     serializer = MakeOfferSerializer(data=request.data)
     if serializer.is_valid():
+        # Capture previous status before change
+        previous_status = application.status
+        is_update = application.status == ApplicationStatus.OFFER_MADE
+
         offer_details = serializer.validated_data.get('offer_details', {})
         # Convert date to string for JSON storage
         if offer_details.get('start_date'):
             offer_details['start_date'] = offer_details['start_date'].isoformat()
         application.make_offer(offer_details=offer_details)
+
+        # Log the activity
+        log_activity(
+            application=application,
+            user=request.user,
+            activity_type=ActivityType.OFFER_UPDATED if is_update else ActivityType.OFFER_MADE,
+            previous_status=previous_status,
+            new_status=application.status,
+            metadata={'offer_details': offer_details},
+        )
+
         return Response(ApplicationSerializer(application).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -912,10 +920,24 @@ def accept_offer(request, application_id):
     # Allow accepting from any status (full flexibility for data corrections)
     serializer = AcceptOfferSerializer(data=request.data)
     if serializer.is_valid():
+        # Capture previous status before change
+        previous_status = application.status
+
         final_details = serializer.validated_data.get('final_offer_details')
         if final_details and final_details.get('start_date'):
             final_details['start_date'] = final_details['start_date'].isoformat()
         application.accept_offer(final_details=final_details)
+
+        # Log the activity
+        log_activity(
+            application=application,
+            user=request.user,
+            activity_type=ActivityType.OFFER_ACCEPTED,
+            previous_status=previous_status,
+            new_status=application.status,
+            metadata={'final_offer_details': final_details or application.offer_details},
+        )
+
         return Response(ApplicationSerializer(application).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -978,12 +1000,41 @@ def move_to_stage(request, application_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    # Capture previous state before change
+    previous_status = application.status
+    previous_stage = application.current_stage_order
+
     application.current_stage_order = stage_order
     if stage_order > 0:
         application.status = ApplicationStatus.IN_PROGRESS
     else:
         application.status = ApplicationStatus.APPLIED
+
+    # Clear rejection fields when moving to a non-rejected stage
+    application.rejection_reason = ''
+    application.rejection_feedback = ''
+    application.rejected_at = None
+
     application.save()
+
+    # Get stage name for the activity log
+    stage_name = ''
+    for stage in job_stages:
+        if stage.get('order') == stage_order:
+            stage_name = stage.get('name', '')
+            break
+
+    # Log the activity
+    log_activity(
+        application=application,
+        user=request.user,
+        activity_type=ActivityType.STAGE_CHANGED,
+        previous_status=previous_status,
+        new_status=application.status,
+        previous_stage=previous_stage,
+        new_stage=stage_order,
+        stage_name=stage_name,
+    )
 
     return Response(ApplicationSerializer(application).data)
 
@@ -1033,3 +1084,174 @@ def update_application_notes(request, application_id):
 
     application.save()
     return Response(ApplicationSerializer(application).data)
+
+
+# =============================================================================
+# Activity Log Helper & Endpoints
+# =============================================================================
+
+def log_activity(
+    application,
+    user,
+    activity_type,
+    previous_status=None,
+    new_status=None,
+    previous_stage=None,
+    new_stage=None,
+    stage_name='',
+    metadata=None
+):
+    """
+    Helper function to create an activity log entry.
+    """
+    return ActivityLog.objects.create(
+        application=application,
+        performed_by=user,
+        activity_type=activity_type,
+        previous_status=previous_status or '',
+        new_status=new_status or '',
+        previous_stage=previous_stage,
+        new_stage=new_stage,
+        stage_name=stage_name,
+        metadata=metadata or {},
+    )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_application_activities(request, application_id):
+    """
+    List all activity log entries for an application.
+    Company members or recruiters only.
+    """
+    try:
+        application = Application.objects.select_related(
+            'job', 'job__company'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_member = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_member:
+        return Response(
+            {'error': 'Permission denied'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    activities = ActivityLog.objects.filter(
+        application=application
+    ).select_related(
+        'performed_by'
+    ).prefetch_related(
+        'notes', 'notes__author'
+    ).order_by('-created_at')
+
+    serializer = ActivityLogSerializer(activities, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_activity_note(request, application_id, activity_id):
+    """
+    Add a note to an activity log entry.
+    Company members or recruiters only.
+    """
+    try:
+        application = Application.objects.select_related(
+            'job', 'job__company'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_member = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_member:
+        return Response(
+            {'error': 'Permission denied'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        activity = ActivityLog.objects.get(
+            id=activity_id,
+            application=application
+        )
+    except ActivityLog.DoesNotExist:
+        return Response(
+            {'error': 'Activity not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = ActivityNoteCreateSerializer(data=request.data)
+    if serializer.is_valid():
+        note = ActivityNote.objects.create(
+            activity=activity,
+            author=request.user,
+            content=serializer.validated_data['content']
+        )
+        return Response(
+            ActivityNoteSerializer(note).data,
+            status=status.HTTP_201_CREATED
+        )
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def record_application_view(request, application_id):
+    """
+    Record that an application was viewed.
+    Debounced on frontend; creates one view event per session.
+    """
+    try:
+        application = Application.objects.select_related(
+            'job', 'job__company'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_member = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_member:
+        return Response(
+            {'error': 'Permission denied'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Create view activity
+    log_activity(
+        application=application,
+        user=request.user,
+        activity_type=ActivityType.APPLICATION_VIEWED,
+    )
+
+    return Response({'status': 'recorded'}, status=status.HTTP_201_CREATED)

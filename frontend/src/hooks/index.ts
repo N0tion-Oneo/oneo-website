@@ -60,7 +60,6 @@ export {
   useApplication,
   useWithdrawApplication,
   useJobApplications,
-  useAdvanceApplication,
   useShortlistApplication,
   useRejectApplication,
   useMakeOffer,
@@ -68,3 +67,10 @@ export {
   useMoveToStage,
   useUpdateApplicationNotes,
 } from './useApplications'
+
+// Activity Log hooks
+export {
+  useActivityLog,
+  useAddActivityNote,
+  useRecordApplicationView,
+} from './useActivityLog'

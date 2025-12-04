@@ -19,7 +19,6 @@ import {
   AdminCompanyEditPage,
   AdminCandidatesPage,
   AdminCandidateEditPage,
-  AdminJobsPage,
   AdminNewJobPage,
   AdminRecruitersPage,
   HomePage,
@@ -91,7 +90,7 @@ function App() {
           <Route path="admin/companies/:companyId" element={<AdminCompanyEditPage />} />
           <Route path="admin/candidates" element={<AdminCandidatesPage />} />
           <Route path="admin/candidates/:slug" element={<AdminCandidateEditPage />} />
-          <Route path="admin/jobs" element={<AdminJobsPage />} />
+          <Route path="admin/jobs" element={<JobsPage mode="admin" />} />
           <Route path="admin/jobs/new" element={<AdminNewJobPage />} />
           <Route path="admin/recruiters" element={<AdminRecruitersPage />} />
         </Route>

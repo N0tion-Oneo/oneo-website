@@ -223,48 +223,6 @@ export function useJobApplications(
 }
 
 // ============================================================================
-// Advance Application Hook
-// ============================================================================
-
-interface AdvanceApplicationInput {
-  notes?: string
-}
-
-interface UseAdvanceApplicationReturn {
-  advance: (applicationId: string, input?: AdvanceApplicationInput) => Promise<Application>
-  isLoading: boolean
-  error: string | null
-}
-
-export function useAdvanceApplication(): UseAdvanceApplicationReturn {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const advance = useCallback(async (
-    applicationId: string,
-    input: AdvanceApplicationInput = {}
-  ): Promise<Application> => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const response = await api.post<Application>(
-        `/jobs/applications/${applicationId}/advance/`,
-        input
-      )
-      return response.data
-    } catch (err: unknown) {
-      const errorMessage = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to advance'
-      setError(errorMessage)
-      throw new Error(errorMessage)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  return { advance, isLoading, error }
-}
-
-// ============================================================================
 // Shortlist Application Hook
 // ============================================================================
 

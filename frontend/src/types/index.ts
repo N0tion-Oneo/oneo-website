@@ -736,6 +736,52 @@ export interface ApplicationStage {
 }
 
 // ============================================================================
+// Activity Log
+// ============================================================================
+
+export enum ActivityType {
+  APPLIED = 'applied',
+  SHORTLISTED = 'shortlisted',
+  STAGE_CHANGED = 'stage_changed',
+  OFFER_MADE = 'offer_made',
+  OFFER_UPDATED = 'offer_updated',
+  OFFER_ACCEPTED = 'offer_accepted',
+  REJECTED = 'rejected',
+  WITHDRAWN = 'withdrawn',
+  APPLICATION_VIEWED = 'application_viewed',
+}
+
+export interface ActivityNote {
+  id: string
+  author: string | null
+  author_name: string | null
+  author_email: string | null
+  author_avatar: string | null
+  content: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ActivityLogEntry {
+  id: string
+  application: string
+  performed_by: string | null
+  performed_by_name: string | null
+  performed_by_email: string | null
+  performed_by_avatar: string | null
+  activity_type: ActivityType
+  previous_status: ApplicationStatus | null
+  new_status: ApplicationStatus | null
+  previous_stage: number | null
+  new_stage: number | null
+  stage_name: string | null
+  metadata: Record<string, unknown>
+  created_at: string
+  notes: ActivityNote[]
+  notes_count: number
+}
+
+// ============================================================================
 // Bookings
 // ============================================================================
 

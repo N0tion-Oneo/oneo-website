@@ -214,7 +214,7 @@ export default function JobApplicationsPage() {
   const handleShortlist = (applicationId: string) => {
     optimisticUpdate(
       applicationId,
-      (app) => ({ ...app, status: ApplicationStatus.SHORTLISTED }),
+      (app) => ({ ...app, status: ApplicationStatus.SHORTLISTED, rejection_reason: null }),
       () => shortlist(applicationId)
     )
   }
@@ -222,7 +222,7 @@ export default function JobApplicationsPage() {
   const handleResetToApplied = (applicationId: string) => {
     optimisticUpdate(
       applicationId,
-      (app) => ({ ...app, status: ApplicationStatus.APPLIED, current_stage_order: 0 }),
+      (app) => ({ ...app, status: ApplicationStatus.APPLIED, current_stage_order: 0, rejection_reason: null }),
       () => moveToStage(applicationId, { stage_order: 0 })
     )
   }
@@ -230,7 +230,12 @@ export default function JobApplicationsPage() {
   const handleMoveToStage = (applicationId: string, stageOrder: number) => {
     optimisticUpdate(
       applicationId,
-      (app) => ({ ...app, status: ApplicationStatus.IN_PROGRESS, current_stage_order: stageOrder }),
+      (app) => ({
+        ...app,
+        status: ApplicationStatus.IN_PROGRESS,
+        current_stage_order: stageOrder,
+        rejection_reason: null,  // Clear rejection when moving to a stage
+      }),
       () => moveToStage(applicationId, { stage_order: stageOrder })
     )
   }
@@ -382,6 +387,8 @@ export default function JobApplicationsPage() {
         onClose={handleCloseDrawer}
         onUpdate={refetch}
         onShortlist={handleShortlist}
+        onMoveToStage={handleMoveToStage}
+        onResetToApplied={handleResetToApplied}
         onMakeOffer={async (id, details) => {
           setLocalApplications((prev) =>
             prev.map((app) =>
@@ -794,9 +801,6 @@ function KanbanColumnComponent({
         className={`flex-1 p-2 space-y-2 overflow-y-auto max-h-[calc(100vh-280px)] ${
           isDragOver && canDrop ? 'bg-blue-50/50' : ''
         }`}
-        onDragOver={canDrop ? handleDragOver : undefined}
-        onDragLeave={canDrop ? handleDragLeave : undefined}
-        onDrop={canDrop ? handleDrop : undefined}
       >
         {column.applications.map((application) => (
           <ApplicationCard

@@ -8,7 +8,6 @@ export { default as AdminCompaniesPage } from './AdminCompaniesPage';
 export { default as AdminCompanyEditPage } from './AdminCompanyEditPage';
 export { default as AdminCandidatesPage } from './AdminCandidatesPage';
 export { default as AdminCandidateEditPage } from './AdminCandidateEditPage';
-export { default as AdminJobsPage } from './AdminJobsPage';
 export { default as AdminNewJobPage } from './AdminNewJobPage';
 export { default as AdminRecruitersPage } from './AdminRecruitersPage';
 export { default as ApplicationsPage } from './ApplicationsPage';
