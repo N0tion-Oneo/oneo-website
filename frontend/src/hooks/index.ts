@@ -74,3 +74,12 @@ export {
   useAddActivityNote,
   useRecordApplicationView,
 } from './useActivityLog'
+
+// Question Template hooks
+export {
+  useQuestionTemplates,
+  useQuestionTemplate,
+  useCreateQuestionTemplate,
+  useUpdateQuestionTemplate,
+  useDeleteQuestionTemplate,
+} from './useQuestionTemplates'

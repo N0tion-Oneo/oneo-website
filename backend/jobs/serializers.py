@@ -2,7 +2,9 @@ from rest_framework import serializers
 from .models import (
     Job, JobStatus, JobType, WorkMode, Department,
     Application, ApplicationStatus, ApplicationSource, RejectionReason,
-    ActivityLog, ActivityNote, ActivityType
+    ActivityLog, ActivityNote, ActivityType,
+    ApplicationQuestion, ApplicationAnswer, QuestionType,
+    QuestionTemplate, TemplateQuestion,
 )
 from companies.serializers import CompanyListSerializer, CountrySerializer, CitySerializer, BenefitCategorySerializer
 from companies.models import Country, City
@@ -67,6 +69,7 @@ class JobDetailSerializer(serializers.ModelSerializer):
     nice_to_have_skills = SkillSerializer(many=True, read_only=True)
     technologies = TechnologySerializer(many=True, read_only=True)
     benefits = BenefitCategorySerializer(many=True, read_only=True)
+    questions = serializers.SerializerMethodField()
 
     class Meta:
         model = Job
@@ -102,6 +105,7 @@ class JobDetailSerializer(serializers.ModelSerializer):
             'nice_to_have_skills',
             'technologies',
             'interview_stages',
+            'questions',
             'views_count',
             'applications_count',
             'published_at',
@@ -114,12 +118,20 @@ class JobDetailSerializer(serializers.ModelSerializer):
             'views_count', 'applications_count', 'published_at'
         ]
 
+    def get_questions(self, obj):
+        """Return the job's application questions."""
+        from .serializers import ApplicationQuestionSerializer
+        questions = obj.questions.all().order_by('order')
+        return ApplicationQuestionSerializer(questions, many=True).data
+
 
 class InterviewStageSerializer(serializers.Serializer):
     """Serializer for interview stage structure."""
     name = serializers.CharField(max_length=100)
     order = serializers.IntegerField(min_value=1)
     description = serializers.CharField(required=False, allow_blank=True, default='')
+    assessment_url = serializers.URLField(required=False, allow_blank=True, default='')
+    assessment_name = serializers.CharField(max_length=100, required=False, allow_blank=True, default='')
 
 
 class JobCreateSerializer(serializers.ModelSerializer):
@@ -164,6 +176,15 @@ class JobCreateSerializer(serializers.ModelSerializer):
         required=False,
         default=list,
     )
+    # Application questions
+    questions = serializers.ListField(
+        child=serializers.DictField(),
+        required=False,
+        default=list,
+        write_only=True,
+    )
+    # Template ID to apply questions from
+    question_template_id = serializers.UUIDField(required=False, allow_null=True, write_only=True)
 
     class Meta:
         model = Job
@@ -188,6 +209,8 @@ class JobCreateSerializer(serializers.ModelSerializer):
             'equity_offered',
             'benefits',
             'interview_stages',
+            'questions',
+            'question_template_id',
             'required_skill_ids',
             'nice_to_have_skill_ids',
             'technology_ids',
@@ -203,6 +226,19 @@ class JobCreateSerializer(serializers.ModelSerializer):
                 stage['order'] = i + 1
         return value
 
+    def validate_questions(self, value):
+        """Validate questions structure."""
+        for i, q in enumerate(value):
+            if 'question_text' not in q or not q['question_text']:
+                raise serializers.ValidationError(f'Question {i+1} must have text.')
+            question_type = q.get('question_type', 'text')
+            if question_type in ['select', 'multi_select']:
+                if 'options' not in q or not q['options']:
+                    raise serializers.ValidationError(
+                        f'Question {i+1} requires options for select/multi-select type.'
+                    )
+        return value
+
     def validate(self, data):
         """Validate salary range."""
         salary_min = data.get('salary_min')
@@ -214,10 +250,12 @@ class JobCreateSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        """Handle M2M fields separately."""
+        """Handle M2M fields and questions separately."""
         required_skill_ids = validated_data.pop('required_skill_ids', [])
         nice_to_have_skill_ids = validated_data.pop('nice_to_have_skill_ids', [])
         technology_ids = validated_data.pop('technology_ids', [])
+        questions_data = validated_data.pop('questions', [])
+        template_id = validated_data.pop('question_template_id', None)
 
         job = Job.objects.create(**validated_data)
 
@@ -227,6 +265,41 @@ class JobCreateSerializer(serializers.ModelSerializer):
             job.nice_to_have_skills.set(nice_to_have_skill_ids)
         if technology_ids:
             job.technologies.set(technology_ids)
+
+        # Create questions from template if provided
+        if template_id:
+            from .models import QuestionTemplate
+            try:
+                template = QuestionTemplate.objects.get(id=template_id)
+                for tq in template.questions.all():
+                    ApplicationQuestion.objects.create(
+                        job=job,
+                        question_text=tq.question_text,
+                        question_type=tq.question_type,
+                        options=tq.options,
+                        placeholder=tq.placeholder,
+                        helper_text=tq.helper_text,
+                        is_required=tq.is_required,
+                        order=tq.order,
+                    )
+            except QuestionTemplate.DoesNotExist:
+                pass  # Template not found, skip
+
+        # Create questions from direct input (overrides template if both provided)
+        if questions_data:
+            # Clear any template-created questions first
+            job.questions.all().delete()
+            for i, q_data in enumerate(questions_data):
+                ApplicationQuestion.objects.create(
+                    job=job,
+                    question_text=q_data.get('question_text', ''),
+                    question_type=q_data.get('question_type', 'text'),
+                    options=q_data.get('options', []),
+                    placeholder=q_data.get('placeholder', ''),
+                    helper_text=q_data.get('helper_text', ''),
+                    is_required=q_data.get('is_required', False),
+                    order=q_data.get('order', i + 1),
+                )
 
         return job
 
@@ -272,6 +345,12 @@ class JobUpdateSerializer(serializers.ModelSerializer):
         child=serializers.DictField(),
         required=False,
     )
+    # Application questions
+    questions = serializers.ListField(
+        child=serializers.DictField(),
+        required=False,
+        write_only=True,
+    )
 
     class Meta:
         model = Job
@@ -296,6 +375,7 @@ class JobUpdateSerializer(serializers.ModelSerializer):
             'equity_offered',
             'benefits',
             'interview_stages',
+            'questions',
             'required_skill_ids',
             'nice_to_have_skill_ids',
             'technology_ids',
@@ -311,6 +391,19 @@ class JobUpdateSerializer(serializers.ModelSerializer):
                 stage['order'] = i + 1
         return value
 
+    def validate_questions(self, value):
+        """Validate questions structure."""
+        for i, q in enumerate(value):
+            if 'question_text' not in q or not q['question_text']:
+                raise serializers.ValidationError(f'Question {i+1} must have text.')
+            question_type = q.get('question_type', 'text')
+            if question_type in ['select', 'multi_select']:
+                if 'options' not in q or not q['options']:
+                    raise serializers.ValidationError(
+                        f'Question {i+1} requires options for select/multi-select type.'
+                    )
+        return value
+
     def validate(self, data):
         """Validate salary range."""
         salary_min = data.get('salary_min', getattr(self.instance, 'salary_min', None))
@@ -322,10 +415,11 @@ class JobUpdateSerializer(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
-        """Handle M2M fields separately."""
+        """Handle M2M fields and questions separately."""
         required_skill_ids = validated_data.pop('required_skill_ids', None)
         nice_to_have_skill_ids = validated_data.pop('nice_to_have_skill_ids', None)
         technology_ids = validated_data.pop('technology_ids', None)
+        questions_data = validated_data.pop('questions', None)
 
         instance = super().update(instance, validated_data)
 
@@ -335,6 +429,24 @@ class JobUpdateSerializer(serializers.ModelSerializer):
             instance.nice_to_have_skills.set(nice_to_have_skill_ids)
         if technology_ids is not None:
             instance.technologies.set(technology_ids)
+
+        # Update questions if provided
+        if questions_data is not None:
+            # Delete existing questions
+            instance.questions.all().delete()
+
+            # Create new questions
+            for i, q_data in enumerate(questions_data):
+                ApplicationQuestion.objects.create(
+                    job=instance,
+                    question_text=q_data.get('question_text', ''),
+                    question_type=q_data.get('question_type', 'text'),
+                    options=q_data.get('options', []),
+                    placeholder=q_data.get('placeholder', ''),
+                    helper_text=q_data.get('helper_text', ''),
+                    is_required=q_data.get('is_required', False),
+                    order=q_data.get('order', i + 1),
+                )
 
         return instance
 
@@ -394,6 +506,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
     referrer = UserProfileSerializer(read_only=True)
     current_stage_name = serializers.CharField(read_only=True)
     interview_stages = serializers.SerializerMethodField()
+    answers = serializers.SerializerMethodField()
 
     class Meta:
         model = Application
@@ -409,6 +522,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             'current_stage_name',
             'stage_notes',
             'interview_stages',
+            'answers',
             'source',
             # Offer fields
             'offer_details',
@@ -431,10 +545,38 @@ class ApplicationSerializer(serializers.ModelSerializer):
         """Return the job's interview stages."""
         return obj.job.interview_stages or []
 
+    def get_answers(self, obj):
+        """Return the application's answers."""
+        from .models import ApplicationAnswer
+        answers = ApplicationAnswer.objects.filter(application=obj).select_related('question')
+        result = []
+        for answer in answers:
+            result.append({
+                'id': str(answer.id),
+                'question': {
+                    'id': str(answer.question.id),
+                    'question_text': answer.question.question_text,
+                    'question_type': answer.question.question_type,
+                    'options': answer.question.options,
+                    'is_required': answer.question.is_required,
+                    'order': answer.question.order,
+                },
+                'answer_text': answer.answer_text,
+                'answer_file': answer.answer_file.url if answer.answer_file else None,
+                'created_at': answer.created_at.isoformat(),
+            })
+        return result
+
 
 class ApplicationCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating a new application."""
     job_id = serializers.UUIDField(write_only=True)
+    answers = serializers.ListField(
+        child=serializers.DictField(),
+        required=False,
+        default=list,
+        write_only=True,
+    )
 
     class Meta:
         model = Application
@@ -442,6 +584,7 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
             'job_id',
             'covering_statement',
             'resume_url',
+            'answers',
         ]
 
     def validate_job_id(self, value):
@@ -457,7 +600,7 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        """Validate candidate hasn't already applied."""
+        """Validate candidate hasn't already applied and validate answers."""
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             raise serializers.ValidationError('Authentication required.')
@@ -471,18 +614,51 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
         if Application.objects.filter(job_id=job_id, candidate=candidate).exists():
             raise serializers.ValidationError('You have already applied to this job.')
 
+        # Validate answers against job questions
+        job = Job.objects.get(id=job_id)
+        answers_data = data.get('answers', [])
+        questions = {str(q.id): q for q in job.questions.all()}
+
+        # Check required questions are answered
+        for q_id, question in questions.items():
+            if question.is_required:
+                answer = next((a for a in answers_data if str(a.get('question_id')) == q_id), None)
+                if not answer:
+                    raise serializers.ValidationError(
+                        f'Required question "{question.question_text[:50]}..." must be answered.'
+                    )
+                # Check if answer has content
+                if not answer.get('answer_text') and not answer.get('answer_file'):
+                    raise serializers.ValidationError(
+                        f'Required question "{question.question_text[:50]}..." must be answered.'
+                    )
+
         data['candidate'] = candidate
+        data['job'] = job
         return data
 
     def create(self, validated_data):
-        """Create the application."""
+        """Create the application with answers."""
         job_id = validated_data.pop('job_id')
-        job = Job.objects.get(id=job_id)
+        job = validated_data.pop('job')
+        answers_data = validated_data.pop('answers', [])
 
         application = Application.objects.create(
             job=job,
             **validated_data
         )
+
+        # Create answers
+        questions = {str(q.id): q for q in job.questions.all()}
+        for answer_data in answers_data:
+            question_id = str(answer_data.get('question_id'))
+            if question_id in questions:
+                ApplicationAnswer.objects.create(
+                    application=application,
+                    question=questions[question_id],
+                    answer_text=answer_data.get('answer_text', ''),
+                    answer_file=answer_data.get('answer_file'),
+                )
 
         # Increment job applications count
         job.applications_count += 1
@@ -642,3 +818,249 @@ class ActivityLogSerializer(serializers.ModelSerializer):
     def get_notes_count(self, obj):
         """Get the count of notes on this activity."""
         return obj.notes.count()
+
+
+# ==================== Application Questions Serializers ====================
+
+
+class ApplicationQuestionSerializer(serializers.ModelSerializer):
+    """Serializer for application questions."""
+
+    class Meta:
+        model = ApplicationQuestion
+        fields = [
+            'id',
+            'job',
+            'question_text',
+            'question_type',
+            'options',
+            'placeholder',
+            'helper_text',
+            'is_required',
+            'order',
+        ]
+        read_only_fields = ['id', 'job']
+
+
+class ApplicationQuestionCreateSerializer(serializers.Serializer):
+    """Serializer for creating questions when creating/updating a job."""
+    question_text = serializers.CharField(max_length=500)
+    question_type = serializers.ChoiceField(choices=QuestionType.choices, default=QuestionType.TEXT)
+    options = serializers.ListField(child=serializers.CharField(), required=False, default=list)
+    placeholder = serializers.CharField(max_length=200, required=False, allow_blank=True, default='')
+    helper_text = serializers.CharField(max_length=300, required=False, allow_blank=True, default='')
+    is_required = serializers.BooleanField(default=False)
+    order = serializers.IntegerField(default=0)
+
+    def validate(self, data):
+        """Validate that select types have options."""
+        question_type = data.get('question_type')
+        options = data.get('options', [])
+        if question_type in [QuestionType.SELECT, QuestionType.MULTI_SELECT] and not options:
+            raise serializers.ValidationError({
+                'options': 'Options are required for select/multi-select questions.'
+            })
+        return data
+
+
+class ApplicationAnswerSerializer(serializers.ModelSerializer):
+    """Serializer for application answers (read)."""
+    question = ApplicationQuestionSerializer(read_only=True)
+
+    class Meta:
+        model = ApplicationAnswer
+        fields = [
+            'id',
+            'application',
+            'question',
+            'answer_text',
+            'answer_file',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'application', 'created_at', 'updated_at']
+
+
+class ApplicationAnswerCreateSerializer(serializers.Serializer):
+    """Serializer for submitting answers when applying."""
+    question_id = serializers.UUIDField()
+    answer_text = serializers.CharField(required=False, allow_blank=True, default='')
+    answer_file = serializers.FileField(required=False, allow_null=True)
+
+    def validate_answer_file(self, value):
+        """Validate file type and size."""
+        if value:
+            # Max 25MB
+            max_size = 25 * 1024 * 1024
+            if value.size > max_size:
+                raise serializers.ValidationError('File size must be less than 25MB.')
+
+            # Allowed extensions
+            allowed_extensions = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'zip']
+            ext = value.name.split('.')[-1].lower() if '.' in value.name else ''
+            if ext not in allowed_extensions:
+                raise serializers.ValidationError(
+                    f'File type not allowed. Allowed types: {", ".join(allowed_extensions)}'
+                )
+        return value
+
+
+# ==================== Question Templates Serializers ====================
+
+
+class TemplateQuestionSerializer(serializers.ModelSerializer):
+    """Serializer for template questions."""
+
+    class Meta:
+        model = TemplateQuestion
+        fields = [
+            'id',
+            'template',
+            'question_text',
+            'question_type',
+            'options',
+            'placeholder',
+            'helper_text',
+            'is_required',
+            'order',
+        ]
+        read_only_fields = ['id', 'template']
+
+
+class TemplateQuestionCreateSerializer(serializers.Serializer):
+    """Serializer for creating/updating template questions."""
+    id = serializers.UUIDField(required=False)  # For updates
+    question_text = serializers.CharField(max_length=500)
+    question_type = serializers.ChoiceField(choices=QuestionType.choices, default=QuestionType.TEXT)
+    options = serializers.ListField(child=serializers.CharField(), required=False, default=list)
+    placeholder = serializers.CharField(max_length=200, required=False, allow_blank=True, default='')
+    helper_text = serializers.CharField(max_length=300, required=False, allow_blank=True, default='')
+    is_required = serializers.BooleanField(default=False)
+    order = serializers.IntegerField(default=0)
+
+    def validate(self, data):
+        """Validate that select types have options."""
+        question_type = data.get('question_type')
+        options = data.get('options', [])
+        if question_type in [QuestionType.SELECT, QuestionType.MULTI_SELECT] and not options:
+            raise serializers.ValidationError({
+                'options': 'Options are required for select/multi-select questions.'
+            })
+        return data
+
+
+class QuestionTemplateListSerializer(serializers.ModelSerializer):
+    """Serializer for listing question templates."""
+    questions_count = serializers.SerializerMethodField()
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = QuestionTemplate
+        fields = [
+            'id',
+            'company',
+            'name',
+            'description',
+            'is_active',
+            'questions_count',
+            'created_by',
+            'created_by_name',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'company', 'created_by', 'created_at', 'updated_at']
+
+    def get_questions_count(self, obj):
+        return obj.questions.count()
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return obj.created_by.full_name or obj.created_by.email
+        return None
+
+
+class QuestionTemplateDetailSerializer(serializers.ModelSerializer):
+    """Serializer for question template detail (with questions)."""
+    questions = TemplateQuestionSerializer(many=True, read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = QuestionTemplate
+        fields = [
+            'id',
+            'company',
+            'name',
+            'description',
+            'is_active',
+            'questions',
+            'created_by',
+            'created_by_name',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'company', 'created_by', 'created_at', 'updated_at']
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return obj.created_by.full_name or obj.created_by.email
+        return None
+
+
+class QuestionTemplateCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating a question template."""
+    questions = TemplateQuestionCreateSerializer(many=True, required=False, default=list)
+
+    class Meta:
+        model = QuestionTemplate
+        fields = [
+            'name',
+            'description',
+            'is_active',
+            'questions',
+        ]
+
+    def create(self, validated_data):
+        questions_data = validated_data.pop('questions', [])
+        template = QuestionTemplate.objects.create(**validated_data)
+
+        for i, question_data in enumerate(questions_data):
+            question_data.pop('id', None)  # Remove id if present
+            if 'order' not in question_data or question_data['order'] == 0:
+                question_data['order'] = i + 1
+            TemplateQuestion.objects.create(template=template, **question_data)
+
+        return template
+
+
+class QuestionTemplateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating a question template."""
+    questions = TemplateQuestionCreateSerializer(many=True, required=False)
+
+    class Meta:
+        model = QuestionTemplate
+        fields = [
+            'name',
+            'description',
+            'is_active',
+            'questions',
+        ]
+
+    def update(self, instance, validated_data):
+        questions_data = validated_data.pop('questions', None)
+
+        # Update template fields
+        instance = super().update(instance, validated_data)
+
+        # Update questions if provided
+        if questions_data is not None:
+            # Delete existing questions
+            instance.questions.all().delete()
+
+            # Create new questions
+            for i, question_data in enumerate(questions_data):
+                question_data.pop('id', None)  # Remove id if present
+                if 'order' not in question_data or question_data['order'] == 0:
+                    question_data['order'] = i + 1
+                TemplateQuestion.objects.create(template=instance, **question_data)
+
+        return instance

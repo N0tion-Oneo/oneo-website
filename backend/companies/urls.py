@@ -22,6 +22,10 @@ urlpatterns = [
     path('my/invitations/', views.list_company_invitations, name='list-company-invitations'),
     path('my/invitations/<uuid:invitation_id>/cancel/', views.cancel_company_invitation, name='cancel-company-invitation'),
 
+    # Question templates
+    path('my/question-templates/', views.list_create_question_templates, name='list-create-question-templates'),
+    path('my/question-templates/<uuid:template_id>/', views.question_template_detail, name='question-template-detail'),
+
     # Location endpoints
     path('countries/', views.list_countries, name='list-countries'),
     path('cities/', views.list_cities, name='list-cities'),

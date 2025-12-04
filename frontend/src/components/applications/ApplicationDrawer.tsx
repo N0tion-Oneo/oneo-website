@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { X, User, Clock, Gift, Ban, CheckCircle, AlertCircle, ChevronDown } from 'lucide-react'
+import { X, User, Clock, Gift, Ban, CheckCircle, AlertCircle, ChevronDown, FileText, ExternalLink, Paperclip } from 'lucide-react'
 import { useApplication, useRecordApplicationView } from '@/hooks'
 import { CandidateProfileCard } from '@/components/candidates'
 import ActivityTimeline from './ActivityTimeline'
-import { ApplicationStatus, RejectionReason, RejectionReasonLabels } from '@/types'
-import type { Application, InterviewStage, OfferDetails } from '@/types'
+import { ApplicationStatus, RejectionReason, RejectionReasonLabels, QuestionType } from '@/types'
+import type { Application, InterviewStage, OfferDetails, ApplicationAnswer } from '@/types'
 
 interface ApplicationDrawerProps {
   applicationId: string | null
@@ -21,7 +21,7 @@ interface ApplicationDrawerProps {
   isProcessing?: boolean
 }
 
-type TabType = 'profile' | 'activity' | 'offer' | 'reject'
+type TabType = 'profile' | 'answers' | 'activity' | 'offer' | 'reject'
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -172,6 +172,11 @@ export default function ApplicationDrawer({
     { id: 'profile', label: 'Candidate', icon: User },
     { id: 'activity', label: 'Activity', icon: Clock },
   ]
+
+  // Add answers tab if there are answers
+  if (application && application.answers && application.answers.length > 0) {
+    tabs.splice(1, 0, { id: 'answers', label: 'Answers', icon: FileText })
+  }
 
   // Add action tabs based on status
   const hasOffer = application && (application.status === ApplicationStatus.OFFER_MADE || application.status === ApplicationStatus.OFFER_ACCEPTED)
@@ -380,6 +385,9 @@ export default function ApplicationDrawer({
                   variant="compact"
                   hideViewProfileLink={false}
                 />
+              )}
+              {activeTab === 'answers' && (
+                <AnswersTab answers={application.answers || []} />
               )}
               {activeTab === 'activity' && (
                 <ActivityTimeline applicationId={applicationId!} />
@@ -856,4 +864,165 @@ function RejectTab({
       </button>
     </div>
   )
+}
+
+// ============================================================================
+// Answers Tab
+// ============================================================================
+
+function AnswersTab({ answers }: { answers: ApplicationAnswer[] }) {
+  if (!answers || answers.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <p className="text-[14px] text-gray-500">No answers submitted</p>
+      </div>
+    )
+  }
+
+  // Sort answers by question order
+  const sortedAnswers = [...answers].sort(
+    (a, b) => (a.question?.order || 0) - (b.question?.order || 0)
+  )
+
+  const renderAnswerValue = (answer: ApplicationAnswer) => {
+    const { question, answer_text, answer_file } = answer
+
+    // Handle file answers
+    if (question.question_type === QuestionType.FILE) {
+      if (answer_file) {
+        return (
+          <a
+            href={answer_file}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[14px] text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            <Paperclip className="w-4 h-4" />
+            View uploaded file
+          </a>
+        )
+      }
+      if (answer_text) {
+        return (
+          <a
+            href={answer_text}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[14px] text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            <Paperclip className="w-4 h-4" />
+            {answer_text}
+          </a>
+        )
+      }
+      return <span className="text-[14px] text-gray-400 italic">No file provided</span>
+    }
+
+    // Handle external links
+    if (question.question_type === QuestionType.EXTERNAL_LINK) {
+      if (answer_text) {
+        return (
+          <a
+            href={answer_text}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[14px] text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            <ExternalLink className="w-4 h-4" />
+            {answer_text}
+          </a>
+        )
+      }
+      return <span className="text-[14px] text-gray-400 italic">No link provided</span>
+    }
+
+    // Handle multi-select (comma-separated values displayed as tags)
+    if (question.question_type === QuestionType.MULTI_SELECT && answer_text) {
+      const values = answer_text.split(',').filter(Boolean)
+      if (values.length === 0) {
+        return <span className="text-[14px] text-gray-400 italic">No selection</span>
+      }
+      return (
+        <div className="flex flex-wrap gap-1.5">
+          {values.map((value, idx) => (
+            <span
+              key={idx}
+              className="inline-flex items-center px-2 py-0.5 text-[12px] font-medium text-gray-700 bg-gray-100 rounded-md"
+            >
+              {value.trim()}
+            </span>
+          ))}
+        </div>
+      )
+    }
+
+    // Handle select (single value)
+    if (question.question_type === QuestionType.SELECT && answer_text) {
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 text-[12px] font-medium text-gray-700 bg-gray-100 rounded-md">
+          {answer_text}
+        </span>
+      )
+    }
+
+    // Handle text/textarea
+    if (answer_text) {
+      return (
+        <p className="text-[14px] text-gray-700 whitespace-pre-wrap">{answer_text}</p>
+      )
+    }
+
+    return <span className="text-[14px] text-gray-400 italic">No answer</span>
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h4 className="text-[14px] font-medium text-gray-900 mb-1">Application Answers</h4>
+        <p className="text-[13px] text-gray-500">
+          Responses to custom questions for this job
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        {sortedAnswers.map((answer) => (
+          <div
+            key={answer.id}
+            className="bg-gray-50 border border-gray-200 rounded-lg p-4"
+          >
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <p className="text-[13px] font-medium text-gray-900">
+                {answer.question.question_text}
+                {answer.question.is_required && (
+                  <span className="text-red-500 ml-1">*</span>
+                )}
+              </p>
+              <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 bg-white border border-gray-200 rounded">
+                {getQuestionTypeLabel(answer.question.question_type)}
+              </span>
+            </div>
+            {answer.question.helper_text && (
+              <p className="text-[12px] text-gray-500 mb-2">
+                {answer.question.helper_text}
+              </p>
+            )}
+            <div className="mt-2">{renderAnswerValue(answer)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Helper function to get question type label
+function getQuestionTypeLabel(type: QuestionType): string {
+  const labels: Record<QuestionType, string> = {
+    [QuestionType.TEXT]: 'Short Text',
+    [QuestionType.TEXTAREA]: 'Long Text',
+    [QuestionType.SELECT]: 'Single Select',
+    [QuestionType.MULTI_SELECT]: 'Multi Select',
+    [QuestionType.FILE]: 'File Upload',
+    [QuestionType.EXTERNAL_LINK]: 'Link',
+  }
+  return labels[type] || type
 }

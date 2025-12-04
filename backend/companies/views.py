@@ -655,3 +655,120 @@ def list_cities(request, country_id=None):
         cities = cities.filter(country_id=country_id)
     serializer = CitySerializer(cities, many=True)
     return Response(serializer.data)
+
+
+# =============================================================================
+# Question Templates Endpoints
+# =============================================================================
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def list_create_question_templates(request):
+    """
+    List or create question templates for a company.
+
+    GET: List all templates for the user's company (or specified company for admins).
+    POST: Create a new template.
+    """
+    from jobs.models import QuestionTemplate
+    from jobs.serializers import (
+        QuestionTemplateListSerializer,
+        QuestionTemplateDetailSerializer,
+        QuestionTemplateCreateSerializer,
+    )
+
+    is_platform_admin = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    company_id = request.query_params.get('company_id')
+
+    # Determine which company to use
+    if is_platform_admin and company_id:
+        try:
+            company = Company.objects.get(id=company_id)
+        except Company.DoesNotExist:
+            return Response(
+                {'error': 'Company not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    else:
+        company = get_user_company(request.user)
+        if not company:
+            return Response(
+                {'error': 'You are not associated with any company'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    if request.method == 'GET':
+        templates = QuestionTemplate.objects.filter(company=company)
+
+        # Filter by active status
+        is_active = request.query_params.get('is_active')
+        if is_active is not None:
+            templates = templates.filter(is_active=is_active.lower() == 'true')
+
+        serializer = QuestionTemplateListSerializer(templates, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = QuestionTemplateCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            template = serializer.save(company=company, created_by=request.user)
+            return Response(
+                QuestionTemplateDetailSerializer(template).data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PATCH', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def question_template_detail(request, template_id):
+    """
+    Get, update, or delete a question template.
+    """
+    from jobs.models import QuestionTemplate
+    from jobs.serializers import (
+        QuestionTemplateDetailSerializer,
+        QuestionTemplateUpdateSerializer,
+    )
+
+    is_platform_admin = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+
+    # Platform admins can access any template
+    if is_platform_admin:
+        try:
+            template = QuestionTemplate.objects.get(id=template_id)
+        except QuestionTemplate.DoesNotExist:
+            return Response(
+                {'error': 'Template not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    else:
+        # Company users can only access their company's templates
+        company = get_user_company(request.user)
+        if not company:
+            return Response(
+                {'error': 'You are not associated with any company'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        try:
+            template = QuestionTemplate.objects.get(id=template_id, company=company)
+        except QuestionTemplate.DoesNotExist:
+            return Response(
+                {'error': 'Template not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    if request.method == 'GET':
+        serializer = QuestionTemplateDetailSerializer(template)
+        return Response(serializer.data)
+
+    elif request.method == 'PATCH':
+        serializer = QuestionTemplateUpdateSerializer(template, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(QuestionTemplateDetailSerializer(template).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        template.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

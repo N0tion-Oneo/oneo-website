@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSkills, useTechnologies, useCountries, useCities } from '@/hooks'
+import { useSkills, useTechnologies, useCountries, useCities, useQuestionTemplates } from '@/hooks'
 import { useCreateJob, useUpdateJob } from '@/hooks/useJobs'
 import {
   Seniority,
@@ -9,8 +9,9 @@ import {
   Department,
   Currency,
 } from '@/types'
-import type { Job, JobInput, BenefitCategory, InterviewStage } from '@/types'
-import { ChevronLeft, ChevronRight, Loader2, Plus, X, GripVertical, Trash2 } from 'lucide-react'
+import type { Job, JobInput, BenefitCategory, InterviewStage, ApplicationQuestionInput } from '@/types'
+import { ChevronLeft, ChevronRight, Loader2, Plus, X, GripVertical, Trash2, ExternalLink, FileText } from 'lucide-react'
+import QuestionBuilder from './QuestionBuilder'
 
 interface JobFormProps {
   job?: Job
@@ -103,6 +104,15 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
     application_deadline: job?.application_deadline || null,
     benefits: job?.benefits || [],
     interview_stages: job?.interview_stages || defaultInterviewStages,
+    questions: job?.questions?.map((q) => ({
+      question_text: q.question_text,
+      question_type: q.question_type,
+      options: q.options,
+      placeholder: q.placeholder,
+      helper_text: q.helper_text,
+      is_required: q.is_required,
+      order: q.order,
+    })) || [],
   })
 
   const { skills } = useSkills()
@@ -111,6 +121,7 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
   const { cities } = useCities({
     countryId: formData.location_country_id || undefined,
   })
+  const { templates: questionTemplates } = useQuestionTemplates({ is_active: true })
 
   const { createJob, isCreating, error: createError } = useCreateJob()
   const { updateJob, isUpdating, error: updateError } = useUpdateJob()
@@ -225,6 +236,33 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
       ...prev,
       interview_stages: updatedStages,
     }))
+  }
+
+  // Questions handlers
+  const handleQuestionsChange = (questions: ApplicationQuestionInput[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      questions,
+    }))
+  }
+
+  const handleApplyTemplate = (templateId: string) => {
+    const template = questionTemplates.find((t) => t.id === templateId)
+    if (template) {
+      const questions: ApplicationQuestionInput[] = template.questions.map((q, i) => ({
+        question_text: q.question_text,
+        question_type: q.question_type,
+        options: q.options,
+        placeholder: q.placeholder,
+        helper_text: q.helper_text,
+        is_required: q.is_required,
+        order: q.order || i + 1,
+      }))
+      setFormData((prev) => ({
+        ...prev,
+        questions,
+      }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -660,97 +698,172 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
         </div>
       )}
 
-      {/* Step 5: Interview Pipeline */}
+      {/* Step 5: Interview Pipeline & Application Questions */}
       {currentStep === 5 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-[14px] font-medium text-gray-900">Interview Stages</h3>
-              <p className="text-[12px] text-gray-500 mt-0.5">
-                Define the stages candidates will go through in your hiring process
-              </p>
+        <div className="space-y-8">
+          {/* Interview Stages Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-[14px] font-medium text-gray-900">Interview Stages</h3>
+                <p className="text-[12px] text-gray-500 mt-0.5">
+                  Define the stages candidates will go through in your hiring process
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddStage}
+                className="flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Stage
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleAddStage}
-              className="flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Stage
-            </button>
+
+            <div className="space-y-3">
+              {(formData.interview_stages || []).map((stage, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg"
+                >
+                  <div className="flex flex-col items-center gap-1 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => handleMoveStage(index, 'up')}
+                      disabled={index === 0}
+                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M18 15l-6-6-6 6" />
+                      </svg>
+                    </button>
+                    <span className="w-6 h-6 flex items-center justify-center bg-gray-900 text-white text-[11px] font-medium rounded-full">
+                      {stage.order}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveStage(index, 'down')}
+                      disabled={index === (formData.interview_stages?.length || 0) - 1}
+                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="text"
+                      value={stage.name}
+                      onChange={(e) => handleStageChange(index, 'name', e.target.value)}
+                      placeholder="Stage name (e.g., Phone Screen)"
+                      className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
+                    />
+                    <input
+                      type="text"
+                      value={stage.description || ''}
+                      onChange={(e) => handleStageChange(index, 'description', e.target.value)}
+                      placeholder="Brief description (optional)"
+                      className="w-full px-3 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
+                    />
+                    {/* Assessment URL fields */}
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1 mb-1">
+                          <ExternalLink className="w-3 h-3 text-gray-400" />
+                          <span className="text-[11px] text-gray-500">External Assessment URL (optional)</span>
+                        </div>
+                        <input
+                          type="url"
+                          value={stage.assessment_url || ''}
+                          onChange={(e) => handleStageChange(index, 'assessment_url', e.target.value)}
+                          placeholder="e.g., https://codility.com/test/..."
+                          className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
+                        />
+                      </div>
+                      <div className="w-1/3">
+                        <div className="mb-1">
+                          <span className="text-[11px] text-gray-500">Assessment Name</span>
+                        </div>
+                        <input
+                          type="text"
+                          value={stage.assessment_name || ''}
+                          onChange={(e) => handleStageChange(index, 'assessment_name', e.target.value)}
+                          placeholder="e.g., Codility"
+                          className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveStage(index)}
+                    className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+
+              {(formData.interview_stages || []).length === 0 && (
+                <div className="text-center py-8 bg-gray-50 border border-gray-200 border-dashed rounded-lg">
+                  <p className="text-[13px] text-gray-500">No interview stages defined</p>
+                  <button
+                    type="button"
+                    onClick={handleAddStage}
+                    className="mt-2 text-[13px] text-gray-900 font-medium hover:underline"
+                  >
+                    Add your first stage
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-3">
-            {(formData.interview_stages || []).map((stage, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg"
-              >
-                <div className="flex flex-col items-center gap-1 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => handleMoveStage(index, 'up')}
-                    disabled={index === 0}
-                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M18 15l-6-6-6 6" />
-                    </svg>
-                  </button>
-                  <span className="w-6 h-6 flex items-center justify-center bg-gray-900 text-white text-[11px] font-medium rounded-full">
-                    {stage.order}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleMoveStage(index, 'down')}
-                    disabled={index === (formData.interview_stages?.length || 0) - 1}
-                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </button>
-                </div>
+          {/* Divider */}
+          <div className="border-t border-gray-200" />
 
-                <div className="flex-1 space-y-2">
-                  <input
-                    type="text"
-                    value={stage.name}
-                    onChange={(e) => handleStageChange(index, 'name', e.target.value)}
-                    placeholder="Stage name (e.g., Phone Screen)"
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
-                  />
-                  <input
-                    type="text"
-                    value={stage.description || ''}
-                    onChange={(e) => handleStageChange(index, 'description', e.target.value)}
-                    placeholder="Brief description (optional)"
-                    className="w-full px-3 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleRemoveStage(index)}
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+          {/* Application Questions Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-[14px] font-medium text-gray-900 flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Application Questions
+                </h3>
+                <p className="text-[12px] text-gray-500 mt-0.5">
+                  Custom questions candidates must answer when applying
+                </p>
               </div>
-            ))}
+              {questionTemplates.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        handleApplyTemplate(e.target.value)
+                        e.target.value = ''
+                      }
+                    }}
+                    className="px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    defaultValue=""
+                  >
+                    <option value="">Apply from template...</option>
+                    {questionTemplates.map((template) => (
+                      <option key={template.id} value={template.id}>
+                        {template.name} ({template.questions_count || template.questions.length} questions)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
 
-            {(formData.interview_stages || []).length === 0 && (
-              <div className="text-center py-8 bg-gray-50 border border-gray-200 border-dashed rounded-lg">
-                <p className="text-[13px] text-gray-500">No interview stages defined</p>
-                <button
-                  type="button"
-                  onClick={handleAddStage}
-                  className="mt-2 text-[13px] text-gray-900 font-medium hover:underline"
-                >
-                  Add your first stage
-                </button>
-              </div>
-            )}
+            <QuestionBuilder
+              questions={formData.questions || []}
+              onChange={handleQuestionsChange}
+            />
           </div>
         </div>
       )}

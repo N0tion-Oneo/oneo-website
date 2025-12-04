@@ -530,6 +530,8 @@ export interface InterviewStage {
   name: string
   order: number
   description?: string
+  assessment_url?: string
+  assessment_name?: string
 }
 
 export interface Job extends JobListItem {
@@ -543,6 +545,7 @@ export interface Job extends JobListItem {
   benefits: BenefitCategory[]
   nice_to_have_skills: Skill[]
   interview_stages: InterviewStage[]
+  questions: ApplicationQuestion[]
   updated_at: string
 }
 
@@ -567,6 +570,8 @@ export interface JobInput {
   equity_offered?: boolean
   benefits?: BenefitCategory[]
   interview_stages?: InterviewStage[]
+  questions?: ApplicationQuestionInput[]
+  question_template_id?: string | null
   required_skill_ids?: string[]
   nice_to_have_skill_ids?: string[]
   technology_ids?: string[]
@@ -629,6 +634,7 @@ export enum QuestionType {
   SELECT = 'select',
   MULTI_SELECT = 'multi_select',
   FILE = 'file',
+  EXTERNAL_LINK = 'external_link',
 }
 
 export interface StageNote {
@@ -669,6 +675,7 @@ export interface Application {
   feedback: string | null
   source: ApplicationSource
   referrer: User | null
+  answers: ApplicationAnswer[]
   applied_at: string
   shortlisted_at: string | null
   last_status_change: string
@@ -714,16 +721,35 @@ export interface ApplicationQuestion {
   question_text: string
   question_type: QuestionType
   options: string[]
+  placeholder?: string
+  helper_text?: string
   is_required: boolean
   order: number
 }
 
+export interface ApplicationQuestionInput {
+  question_text: string
+  question_type: QuestionType
+  options?: string[]
+  placeholder?: string
+  helper_text?: string
+  is_required: boolean
+  order?: number
+}
+
 export interface ApplicationAnswer {
   id: string
-  application: string
+  application?: string
   question: ApplicationQuestion
-  answer_text: string | null
-  answer_file_url: string | null
+  answer_text: string
+  answer_file: string | null
+  created_at?: string
+}
+
+export interface ApplicationAnswerInput {
+  question_id: string
+  answer_text?: string
+  answer_file?: File | null
 }
 
 export interface ApplicationStage {
@@ -733,6 +759,54 @@ export interface ApplicationStage {
   order: number
   is_default: boolean
   color: string
+}
+
+// ============================================================================
+// Question Templates
+// ============================================================================
+
+export interface TemplateQuestion {
+  id: string
+  template: string
+  question_text: string
+  question_type: QuestionType
+  options: string[]
+  placeholder?: string
+  helper_text?: string
+  is_required: boolean
+  order: number
+}
+
+export interface TemplateQuestionInput {
+  id?: string
+  question_text: string
+  question_type: QuestionType
+  options?: string[]
+  placeholder?: string
+  helper_text?: string
+  is_required: boolean
+  order?: number
+}
+
+export interface QuestionTemplate {
+  id: string
+  company: string
+  name: string
+  description: string
+  is_active: boolean
+  questions: TemplateQuestion[]
+  questions_count?: number
+  created_by: string | null
+  created_by_name: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface QuestionTemplateInput {
+  name: string
+  description?: string
+  is_active?: boolean
+  questions?: TemplateQuestionInput[]
 }
 
 // ============================================================================
