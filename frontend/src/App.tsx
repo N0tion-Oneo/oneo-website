@@ -9,6 +9,7 @@ import {
   RecruiterSignupPage,
   DashboardPage,
   ProfilePage,
+  SettingsPage,
   InvitationsPage,
   JobsPage,
   NewJobPage,
@@ -29,7 +30,9 @@ import {
   CompanyEditorPage,
   JobsListingPage,
   JobDetailPage,
+  CalendarOAuthCallback,
 } from '@/pages';
+import { BookingPage } from '@/pages/booking';
 import { CandidateDashboardLayout } from '@/layouts';
 import './App.css';
 
@@ -85,6 +88,7 @@ function App() {
           <Route path="jobs/:jobId/applications" element={<JobApplicationsPage />} />
           <Route path="applications" element={<ApplicationsPage />} />
           <Route path="invitations" element={<InvitationsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
           {/* Admin/Recruiter routes */}
           <Route path="admin/companies" element={<AdminCompaniesPage />} />
           <Route path="admin/companies/:companyId" element={<AdminCompanyEditPage />} />
@@ -106,6 +110,19 @@ function App() {
         {/* Public jobs board */}
         <Route path="/jobs" element={<JobsListingPage />} />
         <Route path="/jobs/:slug" element={<JobDetailPage />} />
+
+        {/* Public booking page (Calendly-like self-scheduling) */}
+        <Route path="/book/:token" element={<BookingPage />} />
+
+        {/* OAuth callback routes (for calendar integration) */}
+        <Route
+          path="/settings/calendar/:provider/callback"
+          element={
+            <ProtectedRoute>
+              <CalendarOAuthCallback />
+            </ProtectedRoute>
+          }
+        />
 
         {/* 404 - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />

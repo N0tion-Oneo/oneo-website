@@ -18,6 +18,12 @@ urlpatterns = [
     path('<uuid:job_id>/close/', views.close_job, name='close-job'),
     path('<uuid:job_id>/filled/', views.mark_job_filled, name='mark-job-filled'),
 
+    # Interview Stage Template endpoints (job pipeline configuration)
+    path('<uuid:job_id>/stages/', views.list_create_stage_templates, name='list-create-stage-templates'),
+    path('<uuid:job_id>/stages/bulk/', views.bulk_update_stage_templates, name='bulk-update-stage-templates'),
+    path('<uuid:job_id>/stages/reorder/', views.reorder_stage_templates, name='reorder-stage-templates'),
+    path('<uuid:job_id>/stages/<uuid:template_id>/', views.stage_template_detail, name='stage-template-detail'),
+
     # Application endpoints
     path('applications/', views.apply_to_job, name='apply-to-job'),
     path('applications/my/', views.list_my_applications, name='list-my-applications'),
@@ -33,6 +39,40 @@ urlpatterns = [
     path('applications/<uuid:application_id>/activities/<uuid:activity_id>/notes/', views.add_activity_note, name='add-activity-note'),
     path('applications/<uuid:application_id>/view/', views.record_application_view, name='record-application-view'),
     path('<uuid:job_id>/applications/', views.list_job_applications, name='list-job-applications'),
+
+    # Application Stage Instance endpoints (candidate scheduling)
+    path('applications/<uuid:application_id>/stages/', views.list_application_stage_instances, name='list-application-stage-instances'),
+    path('applications/<uuid:application_id>/stages/<uuid:instance_id>/', views.get_stage_instance, name='get-stage-instance'),
+    path('applications/<uuid:application_id>/stages/<uuid:instance_id>/schedule/', views.schedule_stage, name='schedule-stage'),
+    path('applications/<uuid:application_id>/stages/<uuid:instance_id>/reschedule/', views.reschedule_stage, name='reschedule-stage'),
+    path('applications/<uuid:application_id>/stages/<uuid:instance_id>/cancel/', views.cancel_stage, name='cancel-stage'),
+    path('applications/<uuid:application_id>/stages/<uuid:instance_id>/complete/', views.complete_stage, name='complete-stage'),
+    path('applications/<uuid:application_id>/stages/<uuid:instance_id>/reopen/', views.reopen_stage, name='reopen-stage'),
+    path('applications/<uuid:application_id>/stages/<uuid:instance_id>/assign-assessment/', views.assign_assessment, name='assign-assessment'),
+    path('applications/<uuid:application_id>/stages/<uuid:instance_id>/submit/', views.submit_assessment, name='submit-assessment'),
+    path('applications/<uuid:application_id>/stages/<uuid:instance_id>/send-booking-link/', views.send_booking_link, name='send-booking-link'),
+    path('applications/<uuid:application_id>/move-to/<uuid:template_id>/', views.move_to_stage_template, name='move-to-stage-template'),
+
+    # Public booking endpoints (Calendly-like self-scheduling)
+    path('booking/<str:token>/', views.get_booking_info, name='get-booking-info'),
+    path('booking/<str:token>/book/', views.book_slot, name='book-slot'),
+
+    # Notification endpoints
+    path('notifications/', views.list_notifications, name='list-notifications'),
+    path('notifications/unread-count/', views.get_unread_count, name='get-unread-count'),
+    path('notifications/mark-read/', views.mark_notifications_read, name='mark-notifications-read'),
+    path('notifications/<uuid:notification_id>/', views.get_notification, name='get-notification'),
+
+    # Calendar Connection endpoints (OAuth)
+    path('calendar/connections/', views.list_calendar_connections, name='list-calendar-connections'),
+    path('calendar/auth/<str:provider>/', views.initiate_calendar_oauth, name='initiate-calendar-oauth'),
+    path('calendar/auth/<str:provider>/callback/', views.calendar_oauth_callback, name='calendar-oauth-callback'),
+    path('calendar/disconnect/<str:provider>/', views.disconnect_calendar, name='disconnect-calendar'),
+    path('calendar/<str:provider>/calendars/', views.list_available_calendars, name='list-available-calendars'),
+    path('calendar/<str:provider>/settings/', views.update_calendar_settings, name='update-calendar-settings'),
+
+    # Interviewer endpoints (for scheduling)
+    path('<uuid:job_id>/interviewers/', views.list_job_interviewers, name='list-job-interviewers'),
 
     # Public single job by slug (must be last - catches any remaining slug)
     path('<slug:slug>/', views.get_job, name='get-job'),

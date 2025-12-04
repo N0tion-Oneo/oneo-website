@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMyApplications, useWithdrawApplication } from '@/hooks'
+import { AssessmentSubmissionModal } from '@/components/applications'
 import { ApplicationStatus } from '@/types'
+import type { PendingAssessment } from '@/types'
 import {
   Briefcase,
   Building2,
@@ -13,6 +15,12 @@ import {
   XCircle,
   ArrowRight,
   X,
+  Link as LinkIcon,
+  Video,
+  MapPin,
+  ExternalLink,
+  ClipboardCheck,
+  Upload,
 } from 'lucide-react'
 
 const getStatusBadge = (status: ApplicationStatus) => {
@@ -71,11 +79,26 @@ const formatDate = (dateString: string) => {
   })
 }
 
+const formatInterviewTime = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
 export default function ApplicationsPage() {
   const { applications, isLoading, error, refetch } = useMyApplications()
   const { withdraw, isLoading: isWithdrawing } = useWithdrawApplication()
   const [confirmWithdraw, setConfirmWithdraw] = useState<string | null>(null)
   const [withdrawError, setWithdrawError] = useState<string | null>(null)
+  const [assessmentModal, setAssessmentModal] = useState<{
+    applicationId: string
+    assessment: PendingAssessment
+  } | null>(null)
 
   const handleWithdraw = async (applicationId: string) => {
     try {
@@ -140,6 +163,9 @@ export default function ApplicationsPage() {
                     Stage
                   </th>
                   <th className="px-4 py-3 text-left text-[12px] font-medium text-gray-500 uppercase tracking-wider">
+                    Next Action
+                  </th>
+                  <th className="px-4 py-3 text-left text-[12px] font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-4 py-3 text-left text-[12px] font-medium text-gray-500 uppercase tracking-wider">
@@ -190,6 +216,76 @@ export default function ApplicationsPage() {
                             {application.interview_stages.length}
                           </p>
                         )}
+                    </td>
+                    <td className="px-4 py-4">
+                      {/* Pending Assessment */}
+                      {application.pending_assessment ? (
+                        <div>
+                          <button
+                            onClick={() => setAssessmentModal({
+                              applicationId: application.id,
+                              assessment: application.pending_assessment!,
+                            })}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 transition-colors"
+                          >
+                            <Upload className="w-3.5 h-3.5" />
+                            Submit Assessment
+                          </button>
+                          <p className="text-[11px] text-gray-500 mt-1">
+                            {application.pending_assessment.stage_name}
+                          </p>
+                          {application.pending_assessment.deadline && (
+                            <p className={`text-[11px] mt-0.5 ${
+                              application.pending_assessment.deadline_passed
+                                ? 'text-red-600 font-medium'
+                                : 'text-gray-500'
+                            }`}>
+                              {application.pending_assessment.deadline_passed ? 'Overdue' : 'Due'}: {' '}
+                              {new Date(application.pending_assessment.deadline).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      ) : application.pending_booking ? (
+                        /* Pending Booking Link */
+                        <a
+                          href={application.pending_booking.booking_url}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                          <LinkIcon className="w-3.5 h-3.5" />
+                          Book {application.pending_booking.stage_name}
+                        </a>
+                      ) : application.next_interview ? (
+                        /* Next Scheduled Interview */
+                        <div className="text-[12px]">
+                          <div className="flex items-center gap-1.5 text-gray-900 font-medium">
+                            <Calendar className="w-3.5 h-3.5 text-green-600" />
+                            {formatInterviewTime(application.next_interview.scheduled_at)}
+                          </div>
+                          <p className="text-gray-500 mt-0.5">
+                            {application.next_interview.stage_name}
+                          </p>
+                          {application.next_interview.meeting_link && (
+                            <a
+                              href={application.next_interview.meeting_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 mt-1 text-blue-600 hover:text-blue-700"
+                            >
+                              <Video className="w-3 h-3" />
+                              Join Meeting
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                          {application.next_interview.location && !application.next_interview.meeting_link && (
+                            <p className="flex items-center gap-1 mt-1 text-gray-500">
+                              <MapPin className="w-3 h-3" />
+                              {application.next_interview.location}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-[12px] text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-4">
                       {getStatusBadge(application.status)}
@@ -268,6 +364,20 @@ export default function ApplicationsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Assessment Submission Modal */}
+      {assessmentModal && (
+        <AssessmentSubmissionModal
+          isOpen={true}
+          onClose={() => setAssessmentModal(null)}
+          applicationId={assessmentModal.applicationId}
+          assessment={assessmentModal.assessment}
+          onSuccess={() => {
+            setAssessmentModal(null)
+            refetch()
+          }}
+        />
       )}
     </div>
   )

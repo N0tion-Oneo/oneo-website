@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
-import { X, User, Clock, Gift, Ban, CheckCircle, AlertCircle, ChevronDown, FileText, ExternalLink, Paperclip } from 'lucide-react'
-import { useApplication, useRecordApplicationView } from '@/hooks'
+import { X, User, Clock, Gift, Ban, CheckCircle, AlertCircle, ChevronDown, FileText, ExternalLink, Paperclip, Calendar } from 'lucide-react'
+import { useApplication, useRecordApplicationView, useStageInstances, useCancelStage, useCompleteStage } from '@/hooks'
 import { CandidateProfileCard } from '@/components/candidates'
 import ActivityTimeline from './ActivityTimeline'
+import StageTimeline from './StageTimeline'
+import ScheduleInterviewModal from './ScheduleInterviewModal'
+import AssignAssessmentModal from './AssignAssessmentModal'
 import { ApplicationStatus, RejectionReason, RejectionReasonLabels, QuestionType } from '@/types'
-import type { Application, InterviewStage, OfferDetails, ApplicationAnswer } from '@/types'
+import type { Application, InterviewStage, OfferDetails, ApplicationAnswer, ApplicationStageInstance } from '@/types'
 
 interface ApplicationDrawerProps {
   applicationId: string | null
@@ -21,7 +24,7 @@ interface ApplicationDrawerProps {
   isProcessing?: boolean
 }
 
-type TabType = 'profile' | 'answers' | 'activity' | 'offer' | 'reject'
+type TabType = 'profile' | 'answers' | 'stages' | 'activity' | 'offer' | 'reject'
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -102,6 +105,57 @@ export default function ApplicationDrawer({
 
   const { application, isLoading, refetch } = useApplication(applicationId || '')
 
+  // Fetch stage instances for the typed stage timeline
+  const { instances: stageInstances, isLoading: isLoadingStages, refetch: refetchStages } = useStageInstances(applicationId || '')
+
+  // Scheduling modal state
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
+  const [selectedStageInstance, setSelectedStageInstance] = useState<ApplicationStageInstance | null>(null)
+  const [scheduleMode, setScheduleMode] = useState<'schedule' | 'reschedule'>('schedule')
+
+  // Assessment modal state
+  const [assessmentModalOpen, setAssessmentModalOpen] = useState(false)
+  const [assessmentStageInstance, setAssessmentStageInstance] = useState<ApplicationStageInstance | null>(null)
+
+  // Stage action hooks
+  const { cancel: cancelStage } = useCancelStage()
+  const { complete: completeStage } = useCompleteStage()
+
+  // Scheduling handlers
+  const handleOpenScheduleModal = (instance: ApplicationStageInstance, mode: 'schedule' | 'reschedule' = 'schedule') => {
+    setSelectedStageInstance(instance)
+    setScheduleMode(mode)
+    setScheduleModalOpen(true)
+  }
+
+  const handleScheduleSuccess = (_updatedInstance: ApplicationStageInstance) => {
+    setScheduleModalOpen(false)
+    refetchStages()
+  }
+
+  const handleCancelStage = async (instance: ApplicationStageInstance) => {
+    if (!applicationId) return
+    if (!confirm('Are you sure you want to cancel this interview?')) return
+
+    try {
+      await cancelStage(applicationId, instance.id, { reason: 'Cancelled by recruiter' })
+      refetchStages()
+    } catch (error) {
+      console.error('Failed to cancel:', error)
+    }
+  }
+
+  const handleCompleteStage = async (instance: ApplicationStageInstance) => {
+    if (!applicationId) return
+
+    try {
+      await completeStage(applicationId, instance.id, {})
+      refetchStages()
+    } catch (error) {
+      console.error('Failed to complete:', error)
+    }
+  }
+
   // Record application view (debounced)
   useRecordApplicationView(isOpen ? applicationId : null)
 
@@ -176,6 +230,13 @@ export default function ApplicationDrawer({
   // Add answers tab if there are answers
   if (application && application.answers && application.answers.length > 0) {
     tabs.splice(1, 0, { id: 'answers', label: 'Answers', icon: FileText })
+  }
+
+  // Add stages tab if there are stage instances (new typed system)
+  if (stageInstances && stageInstances.length > 0) {
+    // Insert after answers (or after profile if no answers)
+    const insertIndex = tabs.findIndex(t => t.id === 'activity')
+    tabs.splice(insertIndex, 0, { id: 'stages', label: 'Interview Pipeline', icon: Calendar })
   }
 
   // Add action tabs based on status
@@ -389,6 +450,31 @@ export default function ApplicationDrawer({
               {activeTab === 'answers' && (
                 <AnswersTab answers={application.answers || []} />
               )}
+              {activeTab === 'stages' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[14px] font-medium text-gray-900">Interview Pipeline</h3>
+                  </div>
+                  {isLoadingStages ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                    </div>
+                  ) : (
+                    <StageTimeline
+                      instances={stageInstances}
+                      isRecruiterView={true}
+                      onSchedule={(instance) => handleOpenScheduleModal(instance, 'schedule')}
+                      onReschedule={(instance) => handleOpenScheduleModal(instance, 'reschedule')}
+                      onCancel={handleCancelStage}
+                      onComplete={handleCompleteStage}
+                      onAssignAssessment={(instance) => {
+                        setAssessmentStageInstance(instance)
+                        setAssessmentModalOpen(true)
+                      }}
+                    />
+                  )}
+                </div>
+              )}
               {activeTab === 'activity' && (
                 <ActivityTimeline applicationId={applicationId!} />
               )}
@@ -425,6 +511,35 @@ export default function ApplicationDrawer({
           )}
         </div>
       </div>
+
+      {/* Schedule Interview Modal */}
+      {selectedStageInstance && applicationId && application?.job?.id && (
+        <ScheduleInterviewModal
+          isOpen={scheduleModalOpen}
+          onClose={() => setScheduleModalOpen(false)}
+          instance={selectedStageInstance}
+          applicationId={applicationId}
+          jobId={application.job.id}
+          candidateName={application?.candidate?.full_name || 'Candidate'}
+          mode={scheduleMode}
+          onSuccess={handleScheduleSuccess}
+        />
+      )}
+
+      {/* Assign Assessment Modal */}
+      {assessmentStageInstance && applicationId && (
+        <AssignAssessmentModal
+          isOpen={assessmentModalOpen}
+          onClose={() => setAssessmentModalOpen(false)}
+          instance={assessmentStageInstance}
+          applicationId={applicationId}
+          candidateName={application?.candidate?.full_name || 'Candidate'}
+          onSuccess={() => {
+            setAssessmentModalOpen(false)
+            refetchStages()
+          }}
+        />
+      )}
     </>
   )
 }

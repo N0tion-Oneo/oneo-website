@@ -1,0 +1,35 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Interview Cancelled - {{ stage_name }}{% endblock %}
+
+{% block content %}
+<h1>Interview Cancelled</h1>
+
+<p>Hi {{ recipient_name }},</p>
+
+<p>We're writing to inform you that the {{ stage_name }} for the <strong>{{ job_title }}</strong> position at <strong>{{ company_name }}</strong> has been cancelled.</p>
+
+<div class="details">
+    <div class="details-row">
+        <span class="details-label">Original Date:</span>
+        <span class="details-value">{{ scheduled_date }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Original Time:</span>
+        <span class="details-value">{{ scheduled_time }}</span>
+    </div>
+</div>
+
+{% if reason %}
+<h2>Reason</h2>
+<p>{{ reason }}</p>
+{% endif %}
+
+{% if will_reschedule %}
+<div class="highlight">
+    <p style="margin: 0;">We will be in touch shortly to schedule a new time.</p>
+</div>
+{% endif %}
+
+<p>If you have any questions, please don't hesitate to reach out.</p>
+{% endblock %}

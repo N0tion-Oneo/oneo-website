@@ -250,3 +250,70 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+# Email Configuration
+# https://docs.djangoproject.com/en/5.2/topics/email/
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Oneo <noreply@oneo.com>')
+
+# Site URL (used in emails and notifications)
+SITE_URL = os.getenv('SITE_URL', 'http://localhost:3000')
+
+# Google Calendar OAuth
+# https://console.cloud.google.com/apis/credentials
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
+GOOGLE_CALENDAR_REDIRECT_URI = os.getenv(
+    'GOOGLE_CALENDAR_REDIRECT_URI',
+    f'{SITE_URL}/settings/calendar/google/callback'
+)
+
+# Microsoft 365 Calendar OAuth
+# https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade
+MICROSOFT_CLIENT_ID = os.getenv('MICROSOFT_CLIENT_ID', '')
+MICROSOFT_CLIENT_SECRET = os.getenv('MICROSOFT_CLIENT_SECRET', '')
+MICROSOFT_CALENDAR_REDIRECT_URI = os.getenv(
+    'MICROSOFT_CALENDAR_REDIRECT_URI',
+    f'{SITE_URL}/settings/calendar/microsoft/callback'
+)
+
+# Celery Configuration (for background tasks)
+# https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html
+#
+# TODO: Celery is OPTIONAL - the app works without it
+# ====================================================
+# Celery is used for automated daily reminder notifications:
+# - Interview reminders (24h before scheduled interviews)
+# - Assessment deadline reminders (24h before due date)
+#
+# Without Celery: Notifications are still sent immediately when scheduling,
+# but automated reminders won't run. You can run them manually via:
+#   python manage.py shell -c "from jobs.tasks import send_interview_reminders; send_interview_reminders()"
+#
+# To enable: pip install celery redis
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# Celery Beat Schedule (periodic tasks)
+CELERY_BEAT_SCHEDULE = {
+    'send-interview-reminders': {
+        'task': 'jobs.send_interview_reminders',
+        'schedule': 60 * 60 * 24,  # Daily (run at 9 AM via crontab in production)
+    },
+    'send-assessment-deadline-reminders': {
+        'task': 'jobs.send_assessment_deadline_reminders',
+        'schedule': 60 * 60 * 24,  # Daily
+    },
+}
+
+# Template directories (for email templates)
+TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']

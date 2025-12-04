@@ -4,11 +4,23 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q
 from django.utils import timezone
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 from .models import (
     Job, JobStatus, Application, ApplicationStatus, RejectionReason,
-    ActivityLog, ActivityNote, ActivityType
+    ActivityLog, ActivityNote, ActivityType,
+    # Interview Stage System
+    StageType, InterviewStageTemplate, StageInstanceStatus, ApplicationStageInstance,
+    CalendarProvider, UserCalendarConnection,
+    NotificationType, NotificationChannel, Notification,
+    BookingToken,
 )
+from .services.calendar_service import CalendarService, CalendarServiceError
+from .services.notification_service import NotificationService
+import secrets
+from datetime import timedelta
 from .serializers import (
     JobListSerializer,
     JobDetailSerializer,
@@ -25,6 +37,20 @@ from .serializers import (
     ActivityLogSerializer,
     ActivityNoteSerializer,
     ActivityNoteCreateSerializer,
+    # Interview Stage System
+    InterviewStageTemplateSerializer,
+    InterviewStageTemplateCreateSerializer,
+    InterviewStageTemplateBulkSerializer,
+    ApplicationStageInstanceSerializer,
+    ScheduleStageSerializer,
+    RescheduleStageSerializer,
+    AssignAssessmentSerializer,
+    SubmitAssessmentSerializer,
+    CompleteStageSerializer,
+    UserCalendarConnectionSerializer,
+    NotificationSerializer,
+    NotificationListSerializer,
+    MarkNotificationReadSerializer,
 )
 from companies.models import Company, CompanyUser, CompanyUserRole
 from companies.permissions import (
@@ -526,6 +552,15 @@ def apply_to_job(request):
     )
     if serializer.is_valid():
         application = serializer.save()
+
+        # Create stage instances for all job stage templates
+        stage_templates = InterviewStageTemplate.objects.filter(job=application.job).order_by('order')
+        for template in stage_templates:
+            ApplicationStageInstance.objects.create(
+                application=application,
+                stage_template=template,
+                status=StageInstanceStatus.NOT_STARTED,
+            )
 
         # Log the application activity
         log_activity(
@@ -1255,3 +1290,1622 @@ def record_application_view(request, application_id):
     )
 
     return Response({'status': 'recorded'}, status=status.HTTP_201_CREATED)
+
+
+# =============================================================================
+# Interview Stage Template Endpoints (Job Pipeline Configuration)
+# =============================================================================
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def list_create_stage_templates(request, job_id):
+    """
+    GET: List all stage templates for a job.
+    POST: Create a new stage template for a job.
+    """
+    try:
+        job = Job.objects.get(id=job_id)
+    except Job.DoesNotExist:
+        return Response(
+            {'error': 'Job not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_member = CompanyUser.objects.filter(
+        user=request.user,
+        company=job.company,
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_member:
+        return Response(
+            {'error': 'Permission denied'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    if request.method == 'GET':
+        templates = InterviewStageTemplate.objects.filter(job=job).order_by('order')
+        serializer = InterviewStageTemplateSerializer(templates, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        # Check editor permission for creation
+        is_company_editor = CompanyUser.objects.filter(
+            user=request.user,
+            company=job.company,
+            role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+            is_active=True
+        ).exists()
+
+        if not is_staff and not is_company_editor:
+            return Response(
+                {'error': 'You do not have permission to create stage templates'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = InterviewStageTemplateCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            template = serializer.save(job=job)
+            return Response(
+                InterviewStageTemplateSerializer(template).data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def stage_template_detail(request, job_id, template_id):
+    """
+    GET: Get a single stage template.
+    PUT: Update a stage template.
+    DELETE: Delete a stage template.
+    """
+    try:
+        job = Job.objects.get(id=job_id)
+        template = InterviewStageTemplate.objects.get(id=template_id, job=job)
+    except Job.DoesNotExist:
+        return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
+    except InterviewStageTemplate.DoesNotExist:
+        return Response({'error': 'Stage template not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if request.method == 'GET':
+        is_company_member = CompanyUser.objects.filter(
+            user=request.user,
+            company=job.company,
+            is_active=True
+        ).exists()
+        if not is_staff and not is_company_member:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        return Response(InterviewStageTemplateSerializer(template).data)
+
+    elif request.method == 'PUT':
+        if not is_staff and not is_company_editor:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = InterviewStageTemplateCreateSerializer(template, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(InterviewStageTemplateSerializer(template).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        if not is_staff and not is_company_editor:
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        template.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def bulk_update_stage_templates(request, job_id):
+    """
+    Bulk create/update stage templates for a job.
+    Replaces all existing templates with the provided list.
+    """
+    try:
+        job = Job.objects.get(id=job_id)
+    except Job.DoesNotExist:
+        return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    serializer = InterviewStageTemplateBulkSerializer(data=request.data)
+    if serializer.is_valid():
+        # Delete existing templates
+        InterviewStageTemplate.objects.filter(job=job).delete()
+
+        # Create new templates
+        stages_data = serializer.validated_data['stages']
+        created_templates = []
+        for i, stage_data in enumerate(stages_data):
+            if 'order' not in stage_data:
+                stage_data['order'] = i + 1
+            template = InterviewStageTemplate.objects.create(job=job, **stage_data)
+            created_templates.append(template)
+
+        return Response(
+            InterviewStageTemplateSerializer(created_templates, many=True).data,
+            status=status.HTTP_200_OK
+        )
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reorder_stage_templates(request, job_id):
+    """
+    Reorder stage templates for a job.
+    Expects: { "order": ["uuid1", "uuid2", "uuid3"] }
+    """
+    try:
+        job = Job.objects.get(id=job_id)
+    except Job.DoesNotExist:
+        return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    order_list = request.data.get('order', [])
+    if not order_list:
+        return Response({'error': 'order list is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Update orders
+    for i, template_id in enumerate(order_list):
+        InterviewStageTemplate.objects.filter(id=template_id, job=job).update(order=i + 1)
+
+    templates = InterviewStageTemplate.objects.filter(job=job).order_by('order')
+    return Response(InterviewStageTemplateSerializer(templates, many=True).data)
+
+
+# =============================================================================
+# Application Stage Instance Endpoints (Candidate Scheduling)
+# =============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_application_stage_instances(request, application_id):
+    """
+    List all stage instances for an application.
+    Auto-creates missing instances if stage templates exist but instances don't.
+    """
+    try:
+        application = Application.objects.select_related('job', 'job__company').get(id=application_id)
+    except Application.DoesNotExist:
+        return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_member = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        is_active=True
+    ).exists()
+    is_own_application = (
+        hasattr(application, 'candidate') and
+        application.candidate.user == request.user
+    )
+
+    if not is_staff and not is_company_member and not is_own_application:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Auto-create missing stage instances for this application
+    # This handles cases where stage templates were added after the application was created
+    stage_templates = InterviewStageTemplate.objects.filter(job=application.job)
+    existing_template_ids = set(
+        ApplicationStageInstance.objects.filter(application=application)
+        .values_list('stage_template_id', flat=True)
+    )
+
+    for template in stage_templates:
+        if template.id not in existing_template_ids:
+            ApplicationStageInstance.objects.create(
+                application=application,
+                stage_template=template,
+                status=StageInstanceStatus.NOT_STARTED,
+            )
+
+    instances = ApplicationStageInstance.objects.filter(
+        application=application
+    ).select_related(
+        'stage_template', 'interviewer'
+    ).order_by('stage_template__order')
+
+    serializer = ApplicationStageInstanceSerializer(instances, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_stage_instance(request, application_id, instance_id):
+    """
+    Get a single stage instance.
+    """
+    try:
+        application = Application.objects.select_related('job', 'job__company').get(id=application_id)
+        instance = ApplicationStageInstance.objects.select_related(
+            'stage_template', 'interviewer'
+        ).get(id=instance_id, application=application)
+    except Application.DoesNotExist:
+        return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
+    except ApplicationStageInstance.DoesNotExist:
+        return Response({'error': 'Stage instance not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_member = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        is_active=True
+    ).exists()
+    is_own_application = (
+        hasattr(application, 'candidate') and
+        application.candidate.user == request.user
+    )
+
+    if not is_staff and not is_company_member and not is_own_application:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    return Response(ApplicationStageInstanceSerializer(instance).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def schedule_stage(request, application_id, instance_id):
+    """
+    Schedule an interview for a stage instance.
+    """
+    try:
+        application = Application.objects.select_related('job', 'job__company').get(id=application_id)
+        instance = ApplicationStageInstance.objects.select_related('stage_template').get(
+            id=instance_id, application=application
+        )
+    except Application.DoesNotExist:
+        return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
+    except ApplicationStageInstance.DoesNotExist:
+        return Response({'error': 'Stage instance not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    serializer = ScheduleStageSerializer(data=request.data)
+    if serializer.is_valid():
+        data = serializer.validated_data
+
+        # Get interviewer if provided
+        interviewer = None
+        interviewer_id = data.get('interviewer_id')
+        if interviewer_id:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            try:
+                interviewer = User.objects.get(id=interviewer_id)
+            except User.DoesNotExist:
+                return Response({'error': 'Interviewer not found'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            interviewer = instance.stage_template.default_interviewer
+
+        # Determine location
+        location = data.get('location', '')
+        if not location and instance.stage_template.requires_location:
+            if instance.stage_template.use_company_address:
+                # Get company address
+                company = application.job.company
+                address_parts = [
+                    company.billing_address or '',
+                    str(company.billing_city) if company.billing_city else '',
+                    str(company.billing_country) if company.billing_country else '',
+                ]
+                location = ', '.join(filter(None, address_parts))
+            else:
+                location = instance.stage_template.custom_location
+
+        # Schedule the instance
+        instance.scheduled_at = data['scheduled_at']
+        instance.duration_minutes = data.get('duration_minutes') or instance.stage_template.default_duration_minutes
+        instance.interviewer = interviewer
+        instance.meeting_link = data.get('meeting_link', '')
+        instance.location = location
+        instance.meeting_notes = data.get('meeting_notes', '')
+        instance.status = StageInstanceStatus.SCHEDULED
+        instance.save()
+
+        # Handle additional participants
+        participant_ids = data.get('participant_ids', [])
+        if participant_ids:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            participants = User.objects.filter(id__in=participant_ids)
+            instance.participants.set(participants)
+
+        # Create calendar event with auto-generated meeting link if requested
+        # (must happen BEFORE activity logging so meeting_link is captured)
+        if data.get('send_calendar_invite', False) and interviewer:
+            try:
+                connection = UserCalendarConnection.objects.filter(
+                    user=interviewer,
+                    is_active=True
+                ).first()
+
+                if connection:
+                    # Build attendee list
+                    attendees = [application.candidate.user.email]
+                    for participant in instance.participants.all():
+                        if participant.email and participant.email not in attendees:
+                            attendees.append(participant.email)
+
+                    # Create calendar event with auto-generated meeting link
+                    result = CalendarService.create_event_with_meeting_link(
+                        connection=connection,
+                        stage_instance=instance,
+                        attendees=attendees,
+                    )
+
+                    # Reload instance to get updated meeting_link
+                    instance.refresh_from_db()
+            except CalendarServiceError as e:
+                # Log error but don't fail the scheduling
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to create calendar event: {e}")
+
+        # Log activity (after calendar event so meeting_link is captured)
+        log_activity(
+            application=application,
+            user=request.user,
+            activity_type=ActivityType.INTERVIEW_SCHEDULED,
+            new_stage=instance.stage_template.order,
+            stage_name=instance.stage_template.name,
+            metadata={
+                'stage_name': instance.stage_template.name,
+                'stage_type': instance.stage_template.stage_type,
+                'scheduled_at': data['scheduled_at'].isoformat(),
+                'duration_minutes': instance.duration_minutes,
+                'interviewer_name': interviewer.full_name if interviewer else None,
+                'meeting_link': instance.meeting_link or None,
+                'location': instance.location or None,
+            }
+        )
+
+        # Send notification to candidate
+        try:
+            notification_service = NotificationService()
+            notification_service.send_interview_scheduled(instance)
+        except Exception as e:
+            # Log error but don't fail the scheduling
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to send notification: {e}")
+
+        return Response(ApplicationStageInstanceSerializer(instance).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def reschedule_stage(request, application_id, instance_id):
+    """
+    Reschedule an interview.
+    """
+    try:
+        application = Application.objects.select_related('job', 'job__company').get(id=application_id)
+        instance = ApplicationStageInstance.objects.select_related('stage_template').get(
+            id=instance_id, application=application
+        )
+    except Application.DoesNotExist:
+        return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
+    except ApplicationStageInstance.DoesNotExist:
+        return Response({'error': 'Stage instance not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    serializer = RescheduleStageSerializer(data=request.data)
+    if serializer.is_valid():
+        data = serializer.validated_data
+        old_time = instance.scheduled_at
+
+        instance.scheduled_at = data['scheduled_at']
+        if 'duration_minutes' in data:
+            instance.duration_minutes = data['duration_minutes']
+        if 'interviewer_id' in data and data['interviewer_id']:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            try:
+                instance.interviewer = User.objects.get(id=data['interviewer_id'])
+            except User.DoesNotExist:
+                return Response({'error': 'Interviewer not found'}, status=status.HTTP_400_BAD_REQUEST)
+        if 'meeting_link' in data:
+            instance.meeting_link = data['meeting_link']
+        if 'location' in data:
+            instance.location = data['location']
+        if 'meeting_notes' in data:
+            instance.meeting_notes = data['meeting_notes']
+        instance.save()
+
+        # Handle additional participants
+        if 'participant_ids' in data:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            participant_ids = data.get('participant_ids', [])
+            if participant_ids:
+                participants = User.objects.filter(id__in=participant_ids)
+                instance.participants.set(participants)
+            else:
+                instance.participants.clear()
+
+        # Update calendar event if requested and interviewer has connected calendar
+        # (must happen BEFORE activity logging so any meeting_link updates are captured)
+        if data.get('send_calendar_invite', False) and instance.interviewer:
+            try:
+                connection = UserCalendarConnection.objects.filter(
+                    user=instance.interviewer,
+                    is_active=True
+                ).first()
+
+                if connection and (instance.google_calendar_event_id or instance.microsoft_calendar_event_id):
+                    # Build attendee list
+                    attendees = [application.candidate.user.email]
+                    for participant in instance.participants.all():
+                        if participant.email and participant.email not in attendees:
+                            attendees.append(participant.email)
+
+                    # Update calendar event
+                    CalendarService.update_calendar_event(
+                        connection=connection,
+                        stage_instance=instance,
+                        attendees=attendees,
+                    )
+                    # Reload instance to get any updates
+                    instance.refresh_from_db()
+            except CalendarServiceError as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to update calendar event: {e}")
+
+        # Log activity (after calendar event update so meeting_link is captured)
+        log_activity(
+            application=application,
+            user=request.user,
+            activity_type=ActivityType.INTERVIEW_RESCHEDULED,
+            new_stage=instance.stage_template.order,
+            stage_name=instance.stage_template.name,
+            metadata={
+                'stage_name': instance.stage_template.name,
+                'stage_type': instance.stage_template.stage_type,
+                'old_time': old_time.isoformat() if old_time else None,
+                'new_time': data['scheduled_at'].isoformat(),
+                'scheduled_at': data['scheduled_at'].isoformat(),
+                'duration_minutes': instance.duration_minutes,
+                'reason': data.get('reschedule_reason', ''),
+                'interviewer_name': instance.interviewer.full_name if instance.interviewer else None,
+                'meeting_link': instance.meeting_link or None,
+                'location': instance.location or None,
+            }
+        )
+
+        # Send rescheduled notification to candidate
+        try:
+            notification_service = NotificationService()
+            notification_service.send_interview_rescheduled(
+                instance,
+                old_time=old_time,
+                reason=data.get('reschedule_reason', '')
+            )
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to send reschedule notification: {e}")
+
+        return Response(ApplicationStageInstanceSerializer(instance).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancel_stage(request, application_id, instance_id):
+    """
+    Cancel a scheduled stage.
+    """
+    try:
+        application = Application.objects.select_related('job', 'job__company').get(id=application_id)
+        instance = ApplicationStageInstance.objects.select_related('stage_template').get(
+            id=instance_id, application=application
+        )
+    except Application.DoesNotExist:
+        return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
+    except ApplicationStageInstance.DoesNotExist:
+        return Response({'error': 'Stage instance not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    instance.status = StageInstanceStatus.CANCELLED
+    instance.save()
+
+    # Log activity
+    log_activity(
+        application=application,
+        user=request.user,
+        activity_type=ActivityType.INTERVIEW_CANCELLED,
+        new_stage=instance.stage_template.order,
+        stage_name=instance.stage_template.name,
+        metadata={
+            'stage_name': instance.stage_template.name,
+            'scheduled_at': instance.scheduled_at.isoformat() if instance.scheduled_at else None,
+        }
+    )
+
+    # Delete calendar event if exists
+    if instance.interviewer and (instance.google_calendar_event_id or instance.microsoft_calendar_event_id):
+        try:
+            connection = UserCalendarConnection.objects.filter(
+                user=instance.interviewer,
+                is_active=True
+            ).first()
+
+            if connection:
+                CalendarService.delete_calendar_event(
+                    connection=connection,
+                    stage_instance=instance,
+                )
+        except CalendarServiceError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to delete calendar event: {e}")
+
+    # Send cancellation notification
+    try:
+        notification_service = NotificationService()
+        notification_service.send_interview_cancelled(instance)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to send cancellation notification: {e}")
+
+    return Response(ApplicationStageInstanceSerializer(instance).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def complete_stage(request, application_id, instance_id):
+    """
+    Mark a stage as completed with feedback.
+    """
+    try:
+        application = Application.objects.select_related('job', 'job__company').get(id=application_id)
+        instance = ApplicationStageInstance.objects.select_related('stage_template').get(
+            id=instance_id, application=application
+        )
+    except Application.DoesNotExist:
+        return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
+    except ApplicationStageInstance.DoesNotExist:
+        return Response({'error': 'Stage instance not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    serializer = CompleteStageSerializer(data=request.data)
+    if serializer.is_valid():
+        data = serializer.validated_data
+        instance.complete(
+            feedback=data.get('feedback', ''),
+            score=data.get('score'),
+            recommendation=data.get('recommendation', '')
+        )
+
+        # Log activity
+        log_activity(
+            application=application,
+            user=request.user,
+            activity_type=ActivityType.STAGE_CHANGED,
+            new_stage=instance.stage_template.order,
+            stage_name=instance.stage_template.name,
+            metadata={
+                'action': 'completed',
+                'feedback': data.get('feedback', ''),
+                'score': data.get('score'),
+                'recommendation': data.get('recommendation', ''),
+            }
+        )
+
+        return Response(ApplicationStageInstanceSerializer(instance).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reopen_stage(request, application_id, instance_id):
+    """
+    Reopen a completed or cancelled stage (undo complete/cancel).
+    """
+    try:
+        application = Application.objects.select_related('job', 'job__company').get(id=application_id)
+        instance = ApplicationStageInstance.objects.select_related('stage_template').get(
+            id=instance_id, application=application
+        )
+    except Application.DoesNotExist:
+        return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
+    except ApplicationStageInstance.DoesNotExist:
+        return Response({'error': 'Stage instance not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Only allow reopening completed or cancelled stages
+    if instance.status not in [StageInstanceStatus.COMPLETED, StageInstanceStatus.CANCELLED]:
+        return Response(
+            {'error': 'Only completed or cancelled stages can be reopened'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Determine the new status based on whether it was scheduled before
+    if instance.scheduled_at:
+        new_status = StageInstanceStatus.SCHEDULED
+    else:
+        new_status = StageInstanceStatus.NOT_STARTED
+
+    old_status = instance.status
+    instance.status = new_status
+    instance.completed_at = None
+    instance.save()
+
+    # Log activity
+    log_activity(
+        application=application,
+        user=request.user,
+        activity_type=ActivityType.STAGE_CHANGED,
+        new_stage=instance.stage_template.order,
+        stage_name=instance.stage_template.name,
+        metadata={
+            'action': 'reopened',
+            'previous_status': old_status,
+            'new_status': new_status,
+        }
+    )
+
+    return Response(ApplicationStageInstanceSerializer(instance).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def assign_assessment(request, application_id, instance_id):
+    """
+    Assign an assessment to a candidate with deadline.
+    """
+    try:
+        application = Application.objects.select_related('job', 'job__company').get(id=application_id)
+        instance = ApplicationStageInstance.objects.select_related('stage_template').get(
+            id=instance_id, application=application
+        )
+    except Application.DoesNotExist:
+        return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
+    except ApplicationStageInstance.DoesNotExist:
+        return Response({'error': 'Stage instance not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check this is an assessment stage
+    if not instance.stage_template.is_assessment:
+        return Response(
+            {'error': 'This stage is not an assessment type'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    serializer = AssignAssessmentSerializer(data=request.data)
+    if serializer.is_valid():
+        data = serializer.validated_data
+
+        instance.deadline = data['deadline']
+        instance.meeting_notes = data.get('instructions', '') or instance.stage_template.assessment_instructions
+        instance.meeting_link = data.get('external_url', '') or instance.stage_template.assessment_external_url
+        instance.status = StageInstanceStatus.AWAITING_SUBMISSION
+        instance.save()
+
+        # Log activity
+        log_activity(
+            application=application,
+            user=request.user,
+            activity_type=ActivityType.STAGE_CHANGED,
+            new_stage=instance.stage_template.order,
+            stage_name=instance.stage_template.name,
+            metadata={
+                'action': 'assessment_assigned',
+                'deadline': data['deadline'].isoformat(),
+            }
+        )
+
+        # TODO: Send notification if data.get('send_notification', True)
+
+        return Response(ApplicationStageInstanceSerializer(instance).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def submit_assessment(request, application_id, instance_id):
+    """
+    Candidate submits an assessment.
+    """
+    try:
+        application = Application.objects.select_related('job', 'job__company', 'candidate').get(id=application_id)
+        instance = ApplicationStageInstance.objects.select_related('stage_template').get(
+            id=instance_id, application=application
+        )
+    except Application.DoesNotExist:
+        return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
+    except ApplicationStageInstance.DoesNotExist:
+        return Response({'error': 'Stage instance not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check this is the candidate's application
+    if application.candidate.user != request.user:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Check the stage is awaiting submission
+    if instance.status != StageInstanceStatus.AWAITING_SUBMISSION:
+        return Response(
+            {'error': 'This stage is not awaiting submission'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    serializer = SubmitAssessmentSerializer(data=request.data)
+    if serializer.is_valid():
+        data = serializer.validated_data
+
+        instance.submission_url = data.get('submission_url', '')
+        if data.get('submission_file'):
+            instance.submission_file = data['submission_file']
+        instance.submitted_at = timezone.now()
+        instance.status = StageInstanceStatus.SUBMITTED
+        instance.save()
+
+        # Log activity (as system since candidate submitted)
+        log_activity(
+            application=application,
+            user=request.user,
+            activity_type=ActivityType.STAGE_CHANGED,
+            new_stage=instance.stage_template.order,
+            stage_name=instance.stage_template.name,
+            metadata={'action': 'assessment_submitted'}
+        )
+
+        # TODO: Send notification to recruiter
+
+        return Response(ApplicationStageInstanceSerializer(instance).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def move_to_stage_template(request, application_id, template_id):
+    """
+    Move an application to a specific stage template.
+    Creates a stage instance if it doesn't exist.
+    """
+    try:
+        application = Application.objects.select_related('job', 'job__company').get(id=application_id)
+        template = InterviewStageTemplate.objects.get(id=template_id, job=application.job)
+    except Application.DoesNotExist:
+        return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
+    except InterviewStageTemplate.DoesNotExist:
+        return Response({'error': 'Stage template not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Get or create stage instance
+    instance, created = ApplicationStageInstance.objects.get_or_create(
+        application=application,
+        stage_template=template,
+        defaults={'status': StageInstanceStatus.NOT_STARTED}
+    )
+
+    # Update application's current stage
+    previous_stage = application.current_stage_order
+    application.current_stage_order = template.order
+    application.status = ApplicationStatus.IN_PROGRESS
+    application.save()
+
+    # Log activity
+    log_activity(
+        application=application,
+        user=request.user,
+        activity_type=ActivityType.STAGE_CHANGED,
+        previous_stage=previous_stage,
+        new_stage=template.order,
+        stage_name=template.name,
+    )
+
+    return Response({
+        'application': ApplicationSerializer(application).data,
+        'stage_instance': ApplicationStageInstanceSerializer(instance).data,
+    })
+
+
+# =============================================================================
+# Notification Endpoints
+# =============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_notifications(request):
+    """
+    List notifications for the current user.
+    """
+    notifications = Notification.objects.filter(
+        recipient=request.user
+    ).order_by('-sent_at')
+
+    # Filter by read status
+    is_read = request.query_params.get('is_read')
+    if is_read is not None:
+        notifications = notifications.filter(is_read=is_read.lower() == 'true')
+
+    # Limit
+    limit = request.query_params.get('limit', 50)
+    notifications = notifications[:int(limit)]
+
+    serializer = NotificationListSerializer(notifications, many=True)
+
+    # Also return unread count
+    unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+
+    return Response({
+        'notifications': serializer.data,
+        'unread_count': unread_count,
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_notification(request, notification_id):
+    """
+    Get a single notification and mark it as read.
+    """
+    try:
+        notification = Notification.objects.get(id=notification_id, recipient=request.user)
+    except Notification.DoesNotExist:
+        return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Mark as read
+    notification.mark_as_read()
+
+    return Response(NotificationSerializer(notification).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_notifications_read(request):
+    """
+    Mark notification(s) as read.
+    If notification_ids is empty or not provided, marks all as read.
+    """
+    serializer = MarkNotificationReadSerializer(data=request.data)
+    if serializer.is_valid():
+        notification_ids = serializer.validated_data.get('notification_ids', [])
+
+        if notification_ids:
+            Notification.objects.filter(
+                id__in=notification_ids,
+                recipient=request.user,
+                is_read=False
+            ).update(is_read=True, read_at=timezone.now())
+        else:
+            Notification.objects.filter(
+                recipient=request.user,
+                is_read=False
+            ).update(is_read=True, read_at=timezone.now())
+
+        unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+        return Response({'unread_count': unread_count})
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_unread_count(request):
+    """
+    Get the count of unread notifications.
+    """
+    unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+    return Response({'unread_count': unread_count})
+
+
+# =============================================================================
+# Interviewer Endpoints
+# =============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_job_interviewers(request, job_id):
+    """
+    List potential interviewers for a job.
+    Includes company team members AND recruiters/admins.
+    Returns users with their calendar connection status.
+    """
+    try:
+        job = Job.objects.select_related('company').get(id=job_id)
+    except Job.DoesNotExist:
+        return Response({'error': 'Job not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission - must be company member or staff
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_member = CompanyUser.objects.filter(
+        user=request.user,
+        company=job.company,
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_member:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Collect all potential interviewers
+    all_user_ids = set()
+    user_roles = {}  # user_id -> role label
+
+    # 1. Get all active company users
+    company_users = CompanyUser.objects.filter(
+        company=job.company,
+        is_active=True
+    ).select_related('user')
+
+    for cu in company_users:
+        all_user_ids.add(cu.user.id)
+        user_roles[cu.user.id] = cu.role
+
+    # 2. Also include recruiters and admins (only visible to other staff users)
+    if is_staff:
+        staff_users = User.objects.filter(
+            role__in=[UserRole.ADMIN, UserRole.RECRUITER],
+            is_active=True
+        )
+
+        for user in staff_users:
+            all_user_ids.add(user.id)
+            if user.id not in user_roles:
+                user_roles[user.id] = user.role  # 'admin' or 'recruiter'
+
+    # Get all users in one query
+    all_users = User.objects.filter(id__in=all_user_ids)
+
+    # Get users with calendar connections
+    users_with_calendar = set(
+        UserCalendarConnection.objects.filter(
+            user_id__in=all_user_ids,
+            is_active=True
+        ).values_list('user_id', flat=True)
+    )
+
+    # Build response
+    interviewers = []
+    for user in all_users:
+        interviewers.append({
+            'id': str(user.id),
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'full_name': f"{user.first_name} {user.last_name}".strip() or user.email,
+            'email': user.email,
+            'role': user_roles.get(user.id, 'member'),
+            'has_calendar': user.id in users_with_calendar,
+        })
+
+    # Sort: users with calendar first, then by name
+    interviewers.sort(key=lambda x: (not x['has_calendar'], x['full_name']))
+
+    return Response(interviewers)
+
+
+# =============================================================================
+# Calendar Connection Endpoints (OAuth Placeholder)
+# =============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_calendar_connections(request):
+    """
+    List the current user's calendar connections.
+    """
+    connections = UserCalendarConnection.objects.filter(user=request.user)
+    serializer = UserCalendarConnectionSerializer(connections, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def initiate_calendar_oauth(request, provider):
+    """
+    Initiate OAuth flow for a calendar provider.
+    Returns the OAuth authorization URL.
+    """
+    from django.conf import settings
+    from jobs.services import CalendarService
+
+    if provider not in ['google', 'microsoft']:
+        return Response({'error': 'Invalid provider'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Build redirect URI for OAuth callback
+    if provider == 'google':
+        redirect_uri = settings.GOOGLE_CALENDAR_REDIRECT_URI
+        if not settings.GOOGLE_CLIENT_ID:
+            return Response({'error': 'Google Calendar not configured'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        auth_url = CalendarService.get_google_auth_url(
+            user_id=str(request.user.id),
+            redirect_uri=redirect_uri
+        )
+    else:
+        redirect_uri = settings.MICROSOFT_CALENDAR_REDIRECT_URI
+        if not settings.MICROSOFT_CLIENT_ID:
+            return Response({'error': 'Microsoft Calendar not configured'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        auth_url = CalendarService.get_microsoft_auth_url(
+            user_id=str(request.user.id),
+            redirect_uri=redirect_uri
+        )
+
+    return Response({'auth_url': auth_url})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def calendar_oauth_callback(request, provider):
+    """
+    Handle OAuth callback from calendar provider.
+    Exchange authorization code for tokens.
+    """
+    from django.conf import settings
+    from jobs.services import CalendarService, CalendarServiceError
+
+    if provider not in ['google', 'microsoft']:
+        return Response({'error': 'Invalid provider'}, status=status.HTTP_400_BAD_REQUEST)
+
+    code = request.data.get('code')
+    if not code:
+        return Response({'error': 'Authorization code not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        if provider == 'google':
+            redirect_uri = settings.GOOGLE_CALENDAR_REDIRECT_URI
+            connection = CalendarService.exchange_google_code(
+                code=code,
+                redirect_uri=redirect_uri,
+                user=request.user
+            )
+        else:
+            redirect_uri = settings.MICROSOFT_CALENDAR_REDIRECT_URI
+            connection = CalendarService.exchange_microsoft_code(
+                code=code,
+                redirect_uri=redirect_uri,
+                user=request.user
+            )
+
+        return Response({
+            'message': f'{provider} calendar connected successfully',
+            'provider': provider,
+            'email': connection.provider_email,
+        })
+    except CalendarServiceError as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': 'Failed to connect calendar'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def disconnect_calendar(request, provider):
+    """
+    Disconnect a calendar provider.
+    """
+    if provider not in ['google', 'microsoft']:
+        return Response({'error': 'Invalid provider'}, status=status.HTTP_400_BAD_REQUEST)
+
+    deleted, _ = UserCalendarConnection.objects.filter(
+        user=request.user,
+        provider=provider
+    ).delete()
+
+    if deleted:
+        return Response({'message': f'{provider} calendar disconnected'})
+    return Response({'error': 'No connection found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_available_calendars(request, provider):
+    """
+    List available calendars for a provider connection.
+    Used to let users select which calendar to use for availability.
+    """
+    if provider not in ['google', 'microsoft']:
+        return Response({'error': 'Invalid provider'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        connection = UserCalendarConnection.objects.get(
+            user=request.user,
+            provider=provider,
+            is_active=True
+        )
+    except UserCalendarConnection.DoesNotExist:
+        return Response({'error': 'No active connection found'}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        from jobs.services.calendar_service import CalendarService
+        calendars = CalendarService.list_calendars(connection)
+        return Response({
+            'calendars': calendars,
+            'current_calendar_id': connection.calendar_id,
+        })
+    except Exception as e:
+        return Response({
+            'error': f'Failed to list calendars: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_calendar_settings(request, provider):
+    """
+    Update calendar connection settings (selected calendar, booking settings).
+    """
+    if provider not in ['google', 'microsoft']:
+        return Response({'error': 'Invalid provider'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        connection = UserCalendarConnection.objects.get(
+            user=request.user,
+            provider=provider,
+            is_active=True
+        )
+    except UserCalendarConnection.DoesNotExist:
+        return Response({'error': 'No active connection found'}, status=status.HTTP_404_NOT_FOUND)
+
+    from jobs.serializers import CalendarConnectionUpdateSerializer
+    serializer = CalendarConnectionUpdateSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    data = serializer.validated_data
+
+    # Update fields if provided
+    if 'calendar_id' in data:
+        connection.calendar_id = data['calendar_id']
+    if 'calendar_name' in data:
+        connection.calendar_name = data['calendar_name']
+    if 'booking_days_ahead' in data:
+        connection.booking_days_ahead = data['booking_days_ahead']
+    if 'business_hours_start' in data:
+        connection.business_hours_start = data['business_hours_start']
+    if 'business_hours_end' in data:
+        connection.business_hours_end = data['business_hours_end']
+    if 'min_notice_hours' in data:
+        connection.min_notice_hours = data['min_notice_hours']
+    if 'buffer_minutes' in data:
+        connection.buffer_minutes = data['buffer_minutes']
+    if 'available_days' in data:
+        # Convert list to comma-separated string
+        connection.available_days = ','.join(str(d) for d in data['available_days'])
+    if 'timezone' in data:
+        connection.timezone = data['timezone']
+
+    connection.save()
+
+    from jobs.serializers import UserCalendarConnectionSerializer
+    return Response(UserCalendarConnectionSerializer(connection).data)
+
+
+# =============================================================================
+# Candidate Self-Booking Endpoints (Calendly-like)
+# =============================================================================
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_booking_info(request, token):
+    """
+    Get booking info and available slots for a booking token.
+    Public endpoint - no authentication required.
+    """
+    try:
+        booking = BookingToken.objects.select_related(
+            'stage_instance__application__job__company',
+            'stage_instance__application__candidate__user',
+            'stage_instance__stage_template',
+            'stage_instance__interviewer',
+        ).get(token=token)
+    except BookingToken.DoesNotExist:
+        return Response({'error': 'Booking link not found or expired'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check if token is valid
+    if not booking.is_valid:
+        return Response({
+            'error': 'This booking link has expired or already been used'
+        }, status=status.HTTP_410_GONE)
+
+    instance = booking.stage_instance
+    application = instance.application
+    job = application.job
+    company = job.company
+    template = instance.stage_template
+
+    # Get interviewer availability
+    available_slots = []
+    calendar_error = None
+    interviewer_timezone = None
+    if instance.interviewer:
+        try:
+            # Get interviewer's calendar connection for settings
+            connection = UserCalendarConnection.objects.filter(
+                user=instance.interviewer,
+                is_active=True
+            ).first()
+
+            # Use interviewer's booking settings or defaults
+            days_ahead = connection.booking_days_ahead if connection else 14
+            interviewer_timezone = connection.timezone if connection else None
+
+            start_date = timezone.now()
+            end_date = start_date + timedelta(days=days_ahead)
+
+            available_slots = CalendarService.get_free_busy(
+                user=instance.interviewer,
+                start_date=start_date,
+                end_date=end_date,
+                duration_minutes=template.default_duration_minutes or 60,
+            )
+        except CalendarServiceError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Calendar service error for booking {token}: {e}")
+            calendar_error = str(e)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Unexpected error getting availability for booking {token}: {e}")
+            calendar_error = "Failed to load calendar availability"
+
+    # If no slots returned but interviewer has calendar, log it for debugging
+    if instance.interviewer and not available_slots:
+        import logging
+        logger = logging.getLogger(__name__)
+        # Check if interviewer has a calendar connection
+        has_connection = UserCalendarConnection.objects.filter(
+            user=instance.interviewer,
+            is_active=True
+        ).exists()
+        logger.info(
+            f"Booking {token}: interviewer={instance.interviewer.id}, "
+            f"has_connection={has_connection}, slots_count={len(available_slots)}, "
+            f"error={calendar_error}"
+        )
+
+    # Build location string
+    location = instance.location or template.custom_location or ''
+    if not location and template.use_company_address:
+        address_parts = [
+            company.billing_address or '',
+            str(company.billing_city) if company.billing_city else '',
+            str(company.billing_country) if company.billing_country else '',
+        ]
+        location = ', '.join(filter(None, address_parts))
+
+    response_data = {
+        'company_name': company.name,
+        'company_logo': company.logo.url if company.logo else None,
+        'job_title': job.title,
+        'stage_name': template.name,
+        'stage_type': template.stage_type,
+        'duration_minutes': template.default_duration_minutes or 60,
+        'interviewer_name': instance.interviewer.full_name if instance.interviewer else None,
+        'location': location,
+        'available_slots': available_slots,
+        'expires_at': booking.expires_at.isoformat(),
+        'interviewer_timezone': interviewer_timezone,
+    }
+
+    # Include calendar error if any (for debugging)
+    if calendar_error:
+        response_data['calendar_error'] = calendar_error
+
+    return Response(response_data)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def book_slot(request, token):
+    """
+    Candidate books a specific time slot.
+    Public endpoint - no authentication required.
+    """
+    try:
+        booking = BookingToken.objects.select_related(
+            'stage_instance__application__job__company',
+            'stage_instance__application__candidate__user',
+            'stage_instance__stage_template',
+            'stage_instance__interviewer',
+        ).get(token=token)
+    except BookingToken.DoesNotExist:
+        return Response({'error': 'Booking link not found or expired'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check if token is valid
+    if not booking.is_valid:
+        return Response({
+            'error': 'This booking link has expired or already been used'
+        }, status=status.HTTP_410_GONE)
+
+    scheduled_at = request.data.get('scheduled_at')
+    if not scheduled_at:
+        return Response({'error': 'scheduled_at is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    from django.utils.dateparse import parse_datetime
+    scheduled_datetime = parse_datetime(scheduled_at)
+    if not scheduled_datetime:
+        return Response({'error': 'Invalid datetime format'}, status=status.HTTP_400_BAD_REQUEST)
+
+    instance = booking.stage_instance
+    application = instance.application
+    template = instance.stage_template
+
+    # Update the stage instance
+    instance.scheduled_at = scheduled_datetime
+    instance.duration_minutes = template.default_duration_minutes or 60
+    instance.status = StageInstanceStatus.SCHEDULED
+    instance.save()
+
+    # Create calendar event with auto-generated meeting link
+    if instance.interviewer:
+        try:
+            connection = UserCalendarConnection.objects.filter(
+                user=instance.interviewer,
+                is_active=True
+            ).first()
+
+            if connection:
+                attendees = [application.candidate.user.email]
+                for participant in instance.participants.all():
+                    if participant.email and participant.email not in attendees:
+                        attendees.append(participant.email)
+
+                CalendarService.create_event_with_meeting_link(
+                    connection=connection,
+                    stage_instance=instance,
+                    attendees=attendees,
+                )
+                instance.refresh_from_db()
+        except CalendarServiceError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to create calendar event during booking: {e}")
+
+    # Mark token as used
+    booking.mark_as_used()
+
+    # Log activity (performed by candidate via booking link)
+    log_activity(
+        application=application,
+        user=application.candidate.user,  # The candidate
+        activity_type=ActivityType.INTERVIEW_BOOKED,
+        new_stage=template.order,
+        stage_name=template.name,
+        metadata={
+            'stage_name': template.name,
+            'stage_type': template.stage_type,
+            'scheduled_at': scheduled_datetime.isoformat(),
+            'duration_minutes': instance.duration_minutes,
+            'interviewer_name': instance.interviewer.full_name if instance.interviewer else None,
+            'meeting_link': instance.meeting_link or None,
+            'location': instance.location or None,
+        }
+    )
+
+    # Send confirmation notification
+    try:
+        notification_service = NotificationService()
+        notification_service.send_interview_scheduled(instance)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to send booking confirmation: {e}")
+
+    return Response({
+        'success': True,
+        'scheduled_at': instance.scheduled_at.isoformat(),
+        'duration_minutes': instance.duration_minutes,
+        'meeting_link': instance.meeting_link or None,
+        'location': instance.location or None,
+        'message': 'Your interview has been scheduled! Check your email for confirmation.',
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_booking_link(request, application_id, instance_id):
+    """
+    Send a booking link to the candidate so they can self-schedule.
+    Creates a BookingToken and sends it via email.
+    """
+    try:
+        application = Application.objects.select_related('job', 'job__company', 'candidate__user').get(id=application_id)
+        instance = ApplicationStageInstance.objects.select_related('stage_template', 'interviewer').get(
+            id=instance_id, application=application
+        )
+    except Application.DoesNotExist:
+        return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
+    except ApplicationStageInstance.DoesNotExist:
+        return Response({'error': 'Stage instance not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Check if stage requires scheduling
+    if not instance.stage_template.requires_scheduling:
+        return Response({
+            'error': 'This stage type does not require scheduling'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Get interviewer from request body, instance, or default
+    interviewer_id = request.data.get('interviewer_id')
+    if interviewer_id:
+        try:
+            interviewer = User.objects.get(id=interviewer_id)
+        except User.DoesNotExist:
+            return Response({
+                'error': 'Interviewer not found'
+            }, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        interviewer = instance.interviewer or instance.stage_template.default_interviewer
+
+    if not interviewer:
+        return Response({
+            'error': 'Please assign an interviewer before sending booking link'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Always update interviewer on instance
+    instance.interviewer = interviewer
+    instance.save(update_fields=['interviewer'])
+
+    # Delete existing unused booking token if exists
+    BookingToken.objects.filter(stage_instance=instance, is_used=False).delete()
+
+    # Create new booking token
+    booking = BookingToken.objects.create(
+        stage_instance=instance,
+        token=secrets.token_urlsafe(32),
+        expires_at=timezone.now() + timedelta(days=7),
+    )
+
+    # Build booking URL
+    from django.conf import settings
+    booking_url = f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')}/book/{booking.token}"
+
+    # Send email with booking link
+    try:
+        notification_service = NotificationService()
+        notification_service.send_booking_link(
+            stage_instance=instance,
+            booking_url=booking_url,
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to send booking link email: {e}")
+
+    # Log activity
+    log_activity(
+        application=application,
+        user=request.user,
+        activity_type=ActivityType.BOOKING_LINK_SENT,
+        new_stage=instance.stage_template.order,
+        stage_name=instance.stage_template.name,
+        metadata={
+            'stage_name': instance.stage_template.name,
+            'booking_url': booking_url,
+            'expires_at': booking.expires_at.isoformat(),
+            'interviewer_name': interviewer.full_name if interviewer else None,
+        }
+    )
+
+    return Response({
+        'booking_url': booking_url,
+        'expires_at': booking.expires_at.isoformat(),
+        'message': f'Booking link sent to {application.candidate.user.email}',
+    })

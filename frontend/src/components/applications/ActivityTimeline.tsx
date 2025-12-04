@@ -14,6 +14,20 @@ import {
   FileText,
   Filter,
   X,
+  Link,
+  Calendar,
+  CalendarCheck,
+  CalendarX,
+  RefreshCw,
+  RotateCcw,
+  ClipboardCheck,
+  Upload,
+  Star,
+  Clock,
+  ExternalLink,
+  Video,
+  MapPin,
+  Users,
 } from 'lucide-react'
 import { useActivityLog, useAddActivityNote } from '@/hooks'
 import { ActivityType } from '@/types'
@@ -42,6 +56,12 @@ const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
   [ActivityType.REJECTED]: 'Rejected',
   [ActivityType.WITHDRAWN]: 'Withdrawn',
   [ActivityType.APPLICATION_VIEWED]: 'Viewed',
+  // Booking/Scheduling activities
+  [ActivityType.BOOKING_LINK_SENT]: 'Booking Link Sent',
+  [ActivityType.INTERVIEW_BOOKED]: 'Interview Booked',
+  [ActivityType.INTERVIEW_SCHEDULED]: 'Interview Scheduled',
+  [ActivityType.INTERVIEW_RESCHEDULED]: 'Interview Rescheduled',
+  [ActivityType.INTERVIEW_CANCELLED]: 'Interview Cancelled',
 }
 
 const formatDate = (dateString: string) => {
@@ -54,7 +74,21 @@ const formatDate = (dateString: string) => {
   })
 }
 
-const getActivityIcon = (type: ActivityType) => {
+const getActivityIcon = (type: ActivityType, metadata?: Record<string, unknown>) => {
+  // Check for specific STAGE_CHANGED actions
+  if (type === ActivityType.STAGE_CHANGED && metadata?.action) {
+    switch (metadata.action) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-600" />
+      case 'reopened':
+        return <RotateCcw className="w-4 h-4 text-amber-600" />
+      case 'assessment_assigned':
+        return <ClipboardCheck className="w-4 h-4 text-blue-600" />
+      case 'assessment_submitted':
+        return <Upload className="w-4 h-4 text-green-600" />
+    }
+  }
+
   switch (type) {
     case ActivityType.APPLIED:
       return <FileText className="w-4 h-4 text-gray-600" />
@@ -73,12 +107,37 @@ const getActivityIcon = (type: ActivityType) => {
       return <Eye className="w-4 h-4 text-gray-400" />
     case ActivityType.WITHDRAWN:
       return <XCircle className="w-4 h-4 text-orange-600" />
+    // Booking/Scheduling activities
+    case ActivityType.BOOKING_LINK_SENT:
+      return <Link className="w-4 h-4 text-blue-500" />
+    case ActivityType.INTERVIEW_BOOKED:
+      return <CalendarCheck className="w-4 h-4 text-green-600" />
+    case ActivityType.INTERVIEW_SCHEDULED:
+      return <Calendar className="w-4 h-4 text-blue-600" />
+    case ActivityType.INTERVIEW_RESCHEDULED:
+      return <RefreshCw className="w-4 h-4 text-amber-600" />
+    case ActivityType.INTERVIEW_CANCELLED:
+      return <CalendarX className="w-4 h-4 text-red-500" />
     default:
       return <FileText className="w-4 h-4 text-gray-600" />
   }
 }
 
-const getActivityColor = (type: ActivityType) => {
+const getActivityColor = (type: ActivityType, metadata?: Record<string, unknown>) => {
+  // Check for specific STAGE_CHANGED actions
+  if (type === ActivityType.STAGE_CHANGED && metadata?.action) {
+    switch (metadata.action) {
+      case 'completed':
+        return 'bg-green-100'
+      case 'reopened':
+        return 'bg-amber-100'
+      case 'assessment_assigned':
+        return 'bg-blue-100'
+      case 'assessment_submitted':
+        return 'bg-green-100'
+    }
+  }
+
   switch (type) {
     case ActivityType.APPLIED:
       return 'bg-gray-100'
@@ -97,13 +156,54 @@ const getActivityColor = (type: ActivityType) => {
       return 'bg-gray-50'
     case ActivityType.WITHDRAWN:
       return 'bg-orange-100'
+    // Booking/Scheduling activities
+    case ActivityType.BOOKING_LINK_SENT:
+      return 'bg-blue-50'
+    case ActivityType.INTERVIEW_BOOKED:
+      return 'bg-green-100'
+    case ActivityType.INTERVIEW_SCHEDULED:
+      return 'bg-blue-100'
+    case ActivityType.INTERVIEW_RESCHEDULED:
+      return 'bg-amber-100'
+    case ActivityType.INTERVIEW_CANCELLED:
+      return 'bg-red-50'
     default:
       return 'bg-gray-100'
   }
 }
 
+const formatScheduleTime = (isoString: string | undefined) => {
+  if (!isoString) return ''
+  try {
+    return new Date(isoString).toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+  } catch {
+    return ''
+  }
+}
+
 const getActivityLabel = (activity: ActivityLogEntry) => {
   const performer = activity.performed_by_name || 'System'
+  const stageName = activity.stage_name || (activity.metadata?.stage_name as string) || 'interview'
+
+  // Handle STAGE_CHANGED with specific actions
+  if (activity.activity_type === ActivityType.STAGE_CHANGED && activity.metadata?.action) {
+    switch (activity.metadata.action) {
+      case 'completed':
+        return `${performer} completed ${stageName}`
+      case 'reopened':
+        return `${performer} reopened ${stageName}`
+      case 'assessment_assigned':
+        return `${performer} assigned assessment for ${stageName}`
+      case 'assessment_submitted':
+        return `Candidate submitted ${stageName} assessment`
+    }
+  }
 
   switch (activity.activity_type) {
     case ActivityType.APPLIED:
@@ -127,9 +227,319 @@ const getActivityLabel = (activity: ActivityLogEntry) => {
       return `${performer} viewed this application`
     case ActivityType.WITHDRAWN:
       return `${performer} withdrew application`
+    // Booking/Scheduling activities
+    case ActivityType.BOOKING_LINK_SENT:
+      return `${performer} sent a booking link for ${stageName}`
+    case ActivityType.INTERVIEW_BOOKED:
+      return `Candidate booked ${stageName}`
+    case ActivityType.INTERVIEW_SCHEDULED:
+      return `${performer} scheduled ${stageName}`
+    case ActivityType.INTERVIEW_RESCHEDULED:
+      return `${performer} rescheduled ${stageName}`
+    case ActivityType.INTERVIEW_CANCELLED:
+      return `${performer} cancelled ${stageName}`
     default:
       return activity.activity_type
   }
+}
+
+const getSchedulingDetails = (activity: ActivityLogEntry): string | null => {
+  const metadata = activity.metadata || {}
+
+  // Handle STAGE_CHANGED with specific actions
+  if (activity.activity_type === ActivityType.STAGE_CHANGED && metadata.action) {
+    switch (metadata.action) {
+      case 'assessment_assigned': {
+        const deadline = metadata.deadline as string
+        if (deadline) {
+          return `Due: ${new Date(deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+        }
+        return null
+      }
+      case 'reopened': {
+        const prevStatus = metadata.previous_status as string
+        if (prevStatus) {
+          return `Previous status: ${prevStatus}`
+        }
+        return null
+      }
+    }
+  }
+
+  switch (activity.activity_type) {
+    case ActivityType.BOOKING_LINK_SENT: {
+      const expiresAt = metadata.expires_at as string
+      if (expiresAt) {
+        return `Expires ${new Date(expiresAt).toLocaleDateString()}`
+      }
+      return null
+    }
+    case ActivityType.INTERVIEW_BOOKED:
+    case ActivityType.INTERVIEW_SCHEDULED: {
+      const scheduledAt = metadata.scheduled_at as string
+      const interviewer = metadata.interviewer_name as string
+      const parts = []
+      if (scheduledAt) {
+        parts.push(formatScheduleTime(scheduledAt))
+      }
+      if (interviewer) {
+        parts.push(`with ${interviewer}`)
+      }
+      return parts.length ? parts.join(' ') : null
+    }
+    case ActivityType.INTERVIEW_RESCHEDULED: {
+      const oldTime = metadata.old_time as string
+      const newTime = metadata.new_time as string
+      const reason = metadata.reason as string
+      const parts = []
+      if (oldTime && newTime) {
+        parts.push(`${formatScheduleTime(oldTime)} → ${formatScheduleTime(newTime)}`)
+      }
+      if (reason) {
+        parts.push(`Reason: ${reason}`)
+      }
+      return parts.length ? parts.join('. ') : null
+    }
+    case ActivityType.INTERVIEW_CANCELLED: {
+      const scheduledAt = metadata.scheduled_at as string
+      if (scheduledAt) {
+        return `Was scheduled for ${formatScheduleTime(scheduledAt)}`
+      }
+      return null
+    }
+    default:
+      return null
+  }
+}
+
+// Get rich metadata display for activities with detailed info
+const getRichMetadataDisplay = (activity: ActivityLogEntry): React.ReactNode | null => {
+  const metadata = activity.metadata || {}
+
+  // Handle completed stage with feedback/score
+  if (activity.activity_type === ActivityType.STAGE_CHANGED && metadata.action === 'completed') {
+    const feedback = metadata.feedback as string
+    const score = metadata.score as number
+    const recommendation = metadata.recommendation as string
+
+    if (!feedback && !score && !recommendation) return null
+
+    return (
+      <div className="mt-2 p-2.5 bg-green-50 border border-green-200 rounded-md space-y-1.5">
+        {score && (
+          <div className="flex items-center gap-2">
+            <Star className="w-3.5 h-3.5 text-amber-500" />
+            <span className="text-[12px] text-gray-700">
+              <span className="font-medium">Score:</span> {score}/10
+            </span>
+          </div>
+        )}
+        {recommendation && (
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+            <span className="text-[12px] text-gray-700">
+              <span className="font-medium">Recommendation:</span> {recommendation}
+            </span>
+          </div>
+        )}
+        {feedback && (
+          <p className="text-[12px] text-gray-600 whitespace-pre-wrap">{feedback}</p>
+        )}
+      </div>
+    )
+  }
+
+  // Handle booking link sent with more details
+  if (activity.activity_type === ActivityType.BOOKING_LINK_SENT) {
+    const bookingUrl = metadata.booking_url as string
+    const expiresAt = metadata.expires_at as string
+    const isUsed = metadata.is_used as boolean
+
+    return (
+      <div className="mt-2 p-2.5 bg-blue-50 border border-blue-200 rounded-md space-y-1.5">
+        {expiresAt && (
+          <div className="flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-blue-600" />
+            <span className="text-[12px] text-gray-700">
+              Expires {new Date(expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+            </span>
+          </div>
+        )}
+        {isUsed !== undefined && (
+          <div className="flex items-center gap-2">
+            {isUsed ? (
+              <>
+                <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                <span className="text-[12px] text-green-700">Link used - appointment booked</span>
+              </>
+            ) : (
+              <>
+                <Link className="w-3.5 h-3.5 text-blue-600" />
+                <span className="text-[12px] text-blue-700">Awaiting candidate booking</span>
+              </>
+            )}
+          </div>
+        )}
+        {bookingUrl && (
+          <a
+            href={bookingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800"
+          >
+            <ExternalLink className="w-3 h-3" />
+            View booking page
+          </a>
+        )}
+      </div>
+    )
+  }
+
+  // Handle interview scheduled/booked with meeting details
+  if (
+    activity.activity_type === ActivityType.INTERVIEW_SCHEDULED ||
+    activity.activity_type === ActivityType.INTERVIEW_BOOKED
+  ) {
+    const scheduledAt = metadata.scheduled_at as string
+    const durationMinutes = metadata.duration_minutes as number
+    const meetingLink = metadata.meeting_link as string
+    const location = metadata.location as string
+    const interviewerName = metadata.interviewer_name as string
+    const stageType = metadata.stage_type as string
+
+    // Determine if this is an in-person interview type
+    const isInPerson = stageType === 'in_person_interview' || stageType === 'in_person_assessment'
+
+    // Only show if we have meaningful details
+    if (!scheduledAt && !meetingLink && !location && !interviewerName) return null
+
+    return (
+      <div className="mt-2 p-2.5 bg-green-50 border border-green-200 rounded-md space-y-1.5">
+        {scheduledAt && (
+          <div className="flex items-center gap-2">
+            <Calendar className="w-3.5 h-3.5 text-green-600" />
+            <span className="text-[12px] text-gray-700">
+              {new Date(scheduledAt).toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+              })}
+              {durationMinutes && ` (${durationMinutes} min)`}
+            </span>
+          </div>
+        )}
+        {interviewerName && (
+          <div className="flex items-center gap-2">
+            <Users className="w-3.5 h-3.5 text-green-600" />
+            <span className="text-[12px] text-gray-700">
+              with {interviewerName}
+            </span>
+          </div>
+        )}
+        {/* For in-person interviews, show location; for virtual, show meeting link */}
+        {isInPerson && location && (
+          <div className="flex items-center gap-2">
+            <MapPin className="w-3.5 h-3.5 text-green-600" />
+            <span className="text-[12px] text-gray-700">{location}</span>
+          </div>
+        )}
+        {!isInPerson && meetingLink && (
+          <div className="flex items-center gap-2">
+            <Video className="w-3.5 h-3.5 text-blue-600" />
+            <a
+              href={meetingLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[12px] text-blue-600 hover:text-blue-800 underline"
+            >
+              Join Meeting
+            </a>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Handle interview rescheduled with old/new times
+  if (activity.activity_type === ActivityType.INTERVIEW_RESCHEDULED) {
+    const oldTime = metadata.old_time as string
+    const newTime = metadata.new_time as string
+    const reason = metadata.reason as string
+    const meetingLink = metadata.meeting_link as string
+    const location = metadata.location as string
+    const interviewerName = metadata.interviewer_name as string
+    const stageType = metadata.stage_type as string
+
+    // Determine if this is an in-person interview type
+    const isInPerson = stageType === 'in_person_interview' || stageType === 'in_person_assessment'
+
+    return (
+      <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-md space-y-1.5">
+        {oldTime && newTime && (
+          <div className="flex items-center gap-2">
+            <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+            <span className="text-[12px] text-gray-700">
+              <span className="line-through text-gray-400">
+                {new Date(oldTime).toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </span>
+              {' → '}
+              <span className="font-medium">
+                {new Date(newTime).toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </span>
+            </span>
+          </div>
+        )}
+        {reason && (
+          <div className="flex items-start gap-2">
+            <FileText className="w-3.5 h-3.5 text-amber-600 mt-0.5" />
+            <span className="text-[12px] text-gray-600">Reason: {reason}</span>
+          </div>
+        )}
+        {interviewerName && (
+          <div className="flex items-center gap-2">
+            <Users className="w-3.5 h-3.5 text-amber-600" />
+            <span className="text-[12px] text-gray-700">with {interviewerName}</span>
+          </div>
+        )}
+        {/* For in-person interviews, show location; for virtual, show meeting link */}
+        {isInPerson && location && (
+          <div className="flex items-center gap-2">
+            <MapPin className="w-3.5 h-3.5 text-amber-600" />
+            <span className="text-[12px] text-gray-700">{location}</span>
+          </div>
+        )}
+        {!isInPerson && meetingLink && (
+          <div className="flex items-center gap-2">
+            <Video className="w-3.5 h-3.5 text-blue-600" />
+            <a
+              href={meetingLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[12px] text-blue-600 hover:text-blue-800 underline"
+            >
+              Join Meeting
+            </a>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return null
 }
 
 function NoteItem({ note }: { note: ActivityNote }) {
@@ -176,15 +586,18 @@ function ActivityEntry({
     }
   }
 
+  // Check if this activity has rich metadata display
+  const richMetadata = getRichMetadataDisplay(activity)
+
   // Don't show view events prominently (they clutter the timeline)
   const isViewEvent = activity.activity_type === ActivityType.APPLICATION_VIEWED
   if (isViewEvent && activity.notes_count === 0 && !showViewsNormally) {
     return (
       <div className="relative flex gap-3 opacity-50">
         <div
-          className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center ${getActivityColor(activity.activity_type)}`}
+          className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center ${getActivityColor(activity.activity_type, activity.metadata)}`}
         >
-          {getActivityIcon(activity.activity_type)}
+          {getActivityIcon(activity.activity_type, activity.metadata)}
         </div>
         <div className="flex-1 pb-4">
           <div className="flex items-center justify-between">
@@ -204,9 +617,9 @@ function ActivityEntry({
     <div className="relative flex gap-3">
       {/* Timeline dot */}
       <div
-        className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center ${getActivityColor(activity.activity_type)}`}
+        className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center ${getActivityColor(activity.activity_type, activity.metadata)}`}
       >
-        {getActivityIcon(activity.activity_type)}
+        {getActivityIcon(activity.activity_type, activity.metadata)}
       </div>
 
       {/* Content */}
@@ -220,8 +633,18 @@ function ActivityEntry({
           </span>
         </div>
 
-        {/* Metadata display (offer details, rejection reason, etc.) */}
-        {activity.metadata && Object.keys(activity.metadata).length > 0 && (
+        {/* Scheduling details for interview activities */}
+        {getSchedulingDetails(activity) && (
+          <p className="mt-1 text-[12px] text-gray-600">
+            {getSchedulingDetails(activity)}
+          </p>
+        )}
+
+        {/* Rich metadata display (booking links, completed stages with feedback) */}
+        {richMetadata}
+
+        {/* Generic metadata display (offer details, rejection reason, etc.) - only if no rich metadata */}
+        {!richMetadata && activity.metadata && Object.keys(activity.metadata).length > 0 && (
           <div className="mt-2 p-2.5 bg-gray-50 rounded-md text-[12px] text-gray-600">
             {activity.metadata.rejection_reason && (
               <p>

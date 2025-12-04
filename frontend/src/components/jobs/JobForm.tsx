@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSkills, useTechnologies, useCountries, useCities, useQuestionTemplates } from '@/hooks'
+import { useSkills, useTechnologies, useCountries, useCities, useQuestionTemplates, useBulkUpdateStageTemplates, useCompanyUsers, useStageTemplates } from '@/hooks'
 import { useCreateJob, useUpdateJob } from '@/hooks/useJobs'
 import {
   Seniority,
@@ -8,10 +8,14 @@ import {
   WorkMode,
   Department,
   Currency,
+  StageType,
+  StageTypeLabels,
 } from '@/types'
-import type { Job, JobInput, BenefitCategory, InterviewStage, ApplicationQuestionInput } from '@/types'
+import type { Job, JobInput, BenefitCategory, InterviewStage, ApplicationQuestionInput, InterviewStageTemplateInput } from '@/types'
 import { ChevronLeft, ChevronRight, Loader2, Plus, X, GripVertical, Trash2, ExternalLink, FileText } from 'lucide-react'
 import QuestionBuilder from './QuestionBuilder'
+import StageTypeSelector from './StageTypeSelector'
+import { StageList } from './StageConfigForm'
 
 interface JobFormProps {
   job?: Job
@@ -75,6 +79,14 @@ const defaultInterviewStages: InterviewStage[] = [
   { name: 'Final Interview', order: 4, description: 'Final round with hiring manager' },
 ]
 
+// Default typed stage templates for new jobs
+const defaultStageTemplates: InterviewStageTemplateInput[] = [
+  { stage_type: StageType.APPLICATION_SCREEN, name: 'Application Review', order: 1, description: 'Initial resume and application screening' },
+  { stage_type: StageType.PHONE_SCREENING, name: 'Phone Screen', order: 2, description: 'Brief call to discuss experience and expectations', default_duration_minutes: 30 },
+  { stage_type: StageType.VIDEO_CALL, name: 'Technical Interview', order: 3, description: 'Technical assessment and problem-solving', default_duration_minutes: 60 },
+  { stage_type: StageType.IN_PERSON_INTERVIEW, name: 'Final Interview', order: 4, description: 'Final round with hiring manager', default_duration_minutes: 60, use_company_address: true },
+]
+
 export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
   const navigate = useNavigate()
   const isEditing = !!job
@@ -115,6 +127,12 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
     })) || [],
   })
 
+  // Stage templates state (new typed system)
+  const [stageTemplates, setStageTemplates] = useState<InterviewStageTemplateInput[]>(
+    defaultStageTemplates
+  )
+  const [showStageSelector, setShowStageSelector] = useState(false)
+
   const { skills } = useSkills()
   const { technologies } = useTechnologies()
   const { countries } = useCountries()
@@ -122,12 +140,39 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
     countryId: formData.location_country_id || undefined,
   })
   const { templates: questionTemplates } = useQuestionTemplates({ is_active: true })
+  const { users: teamMembers } = useCompanyUsers(companyId)
+
+  // Load existing stage templates when editing a job
+  const { templates: existingStageTemplates, isLoading: isLoadingStages } = useStageTemplates(job?.id || '')
 
   const { createJob, isCreating, error: createError } = useCreateJob()
   const { updateJob, isUpdating, error: updateError } = useUpdateJob()
+  const { bulkUpdate: bulkUpdateStages, isUpdating: isUpdatingStages, error: stagesError } = useBulkUpdateStageTemplates()
 
-  const error = createError || updateError
-  const isSubmitting = isCreating || isUpdating
+  // Populate stageTemplates from server when editing
+  useEffect(() => {
+    if (isEditing && existingStageTemplates && existingStageTemplates.length > 0) {
+      // Map server response to input format
+      const mapped: InterviewStageTemplateInput[] = existingStageTemplates.map((t) => ({
+        stage_type: t.stage_type,
+        name: t.name,
+        order: t.order,
+        description: t.description || undefined,
+        default_duration_minutes: t.default_duration_minutes,
+        default_interviewer_id: t.default_interviewer_id || null,
+        assessment_instructions: t.assessment_instructions || undefined,
+        assessment_external_url: t.assessment_external_url || undefined,
+        assessment_provider_name: t.assessment_provider_name || undefined,
+        deadline_days: t.deadline_days,
+        use_company_address: t.use_company_address,
+        custom_location: t.custom_location || undefined,
+      }))
+      setStageTemplates(mapped)
+    }
+  }, [isEditing, existingStageTemplates])
+
+  const error = createError || updateError || stagesError
+  const isSubmitting = isCreating || isUpdating || isUpdatingStages
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -238,6 +283,28 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
     }))
   }
 
+  // Typed stage template handlers (new system)
+  const handleAddStageTemplate = (stageType: StageType) => {
+    const newStage: InterviewStageTemplateInput = {
+      stage_type: stageType,
+      name: StageTypeLabels[stageType],
+      order: stageTemplates.length + 1,
+      description: '',
+    }
+    setStageTemplates((prev) => [...prev, newStage])
+    setShowStageSelector(false)
+  }
+
+  const handleStageTemplatesChange = (templates: InterviewStageTemplateInput[]) => {
+    setStageTemplates(templates)
+  }
+
+  const handleRemoveStageTemplate = (index: number) => {
+    setStageTemplates((prev) =>
+      prev.filter((_, i) => i !== index).map((stage, i) => ({ ...stage, order: i + 1 }))
+    )
+  }
+
   // Questions handlers
   const handleQuestionsChange = (questions: ApplicationQuestionInput[]) => {
     setFormData((prev) => ({
@@ -275,6 +342,17 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
       } else {
         result = await createJob(formData, companyId)
       }
+
+      // Save typed stage templates (new system)
+      if (stageTemplates.length > 0) {
+        try {
+          await bulkUpdateStages(result.id, stageTemplates)
+        } catch (stageErr) {
+          console.error('Error saving stage templates:', stageErr)
+          // Continue even if stages fail - job was saved
+        }
+      }
+
       if (onSuccess) {
         onSuccess(result)
       } else {
@@ -701,18 +779,19 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
       {/* Step 5: Interview Pipeline & Application Questions */}
       {currentStep === 5 && (
         <div className="space-y-8">
-          {/* Interview Stages Section */}
+          {/* Interview Stages Section - Typed System */}
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-[14px] font-medium text-gray-900">Interview Stages</h3>
+                <h3 className="text-[14px] font-medium text-gray-900">Interview Pipeline</h3>
                 <p className="text-[12px] text-gray-500 mt-0.5">
-                  Define the stages candidates will go through in your hiring process
+                  Define the stages candidates will go through in your hiring process.
+                  Each stage type has specific scheduling and notification features.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={handleAddStage}
+                onClick={() => setShowStageSelector(!showStageSelector)}
                 className="flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -720,106 +799,27 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
               </button>
             </div>
 
-            <div className="space-y-3">
-              {(formData.interview_stages || []).map((stage, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg"
+            {/* Stage Type Selector */}
+            {showStageSelector && (
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg mb-4">
+                <StageTypeSelector onSelect={handleAddStageTemplate} />
+                <button
+                  type="button"
+                  onClick={() => setShowStageSelector(false)}
+                  className="mt-4 text-sm text-gray-500 hover:text-gray-700"
                 >
-                  <div className="flex flex-col items-center gap-1 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => handleMoveStage(index, 'up')}
-                      disabled={index === 0}
-                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 15l-6-6-6 6" />
-                      </svg>
-                    </button>
-                    <span className="w-6 h-6 flex items-center justify-center bg-gray-900 text-white text-[11px] font-medium rounded-full">
-                      {stage.order}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleMoveStage(index, 'down')}
-                      disabled={index === (formData.interview_stages?.length || 0) - 1}
-                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M6 9l6 6 6-6" />
-                      </svg>
-                    </button>
-                  </div>
+                  Cancel
+                </button>
+              </div>
+            )}
 
-                  <div className="flex-1 space-y-2">
-                    <input
-                      type="text"
-                      value={stage.name}
-                      onChange={(e) => handleStageChange(index, 'name', e.target.value)}
-                      placeholder="Stage name (e.g., Phone Screen)"
-                      className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
-                    />
-                    <input
-                      type="text"
-                      value={stage.description || ''}
-                      onChange={(e) => handleStageChange(index, 'description', e.target.value)}
-                      placeholder="Brief description (optional)"
-                      className="w-full px-3 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
-                    />
-                    {/* Assessment URL fields */}
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-1 mb-1">
-                          <ExternalLink className="w-3 h-3 text-gray-400" />
-                          <span className="text-[11px] text-gray-500">External Assessment URL (optional)</span>
-                        </div>
-                        <input
-                          type="url"
-                          value={stage.assessment_url || ''}
-                          onChange={(e) => handleStageChange(index, 'assessment_url', e.target.value)}
-                          placeholder="e.g., https://codility.com/test/..."
-                          className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
-                        />
-                      </div>
-                      <div className="w-1/3">
-                        <div className="mb-1">
-                          <span className="text-[11px] text-gray-500">Assessment Name</span>
-                        </div>
-                        <input
-                          type="text"
-                          value={stage.assessment_name || ''}
-                          onChange={(e) => handleStageChange(index, 'assessment_name', e.target.value)}
-                          placeholder="e.g., Codility"
-                          className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveStage(index)}
-                    className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-
-              {(formData.interview_stages || []).length === 0 && (
-                <div className="text-center py-8 bg-gray-50 border border-gray-200 border-dashed rounded-lg">
-                  <p className="text-[13px] text-gray-500">No interview stages defined</p>
-                  <button
-                    type="button"
-                    onClick={handleAddStage}
-                    className="mt-2 text-[13px] text-gray-900 font-medium hover:underline"
-                  >
-                    Add your first stage
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Stage List */}
+            <StageList
+              stages={stageTemplates}
+              onChange={handleStageTemplatesChange}
+              onRemove={handleRemoveStageTemplate}
+              teamMembers={teamMembers}
+            />
           </div>
 
           {/* Divider */}

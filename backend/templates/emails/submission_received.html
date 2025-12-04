@@ -1,0 +1,52 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Assessment Submission Received - {{ candidate_name }}{% endblock %}
+
+{% block content %}
+<h1>Assessment Submission Received</h1>
+
+<p>Hi {{ recipient_name }},</p>
+
+<p>A candidate has submitted their assessment for the <strong>{{ job_title }}</strong> position.</p>
+
+<div class="details">
+    <div class="details-row">
+        <span class="details-label">Candidate:</span>
+        <span class="details-value">{{ candidate_name }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Assessment:</span>
+        <span class="details-value">{{ stage_name }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Submitted:</span>
+        <span class="details-value">{{ submitted_at }}</span>
+    </div>
+    {% if deadline %}
+    <div class="details-row">
+        <span class="details-label">Deadline:</span>
+        <span class="details-value">{{ deadline }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Status:</span>
+        <span class="details-value">{% if on_time %}Submitted on time{% else %}Submitted late{% endif %}</span>
+    </div>
+    {% endif %}
+</div>
+
+{% if submission_url %}
+<p style="text-align: center;">
+    <a href="{{ submission_url }}" class="button">View Submission</a>
+</p>
+{% endif %}
+
+{% if application_url %}
+<p style="text-align: center;">
+    <a href="{{ application_url }}" class="button" style="background-color: #666;">View Application</a>
+</p>
+{% endif %}
+
+<div class="highlight">
+    <p style="margin: 0;"><strong>Next step:</strong> Review the submission and decide whether to advance the candidate to the next stage.</p>
+</div>
+{% endblock %}

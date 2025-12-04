@@ -329,7 +329,7 @@ export default function CandidateDashboardLayout() {
           </button>
           <div className="flex-1" />
           <Link
-            to="/dashboard/profile"
+            to="/dashboard/settings"
             className="flex items-center gap-2 text-[13px] text-gray-500 hover:text-gray-900"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

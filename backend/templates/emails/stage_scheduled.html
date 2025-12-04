@@ -1,0 +1,63 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Interview Scheduled - {{ stage_name }}{% endblock %}
+
+{% block content %}
+<h1>Your Interview Has Been Scheduled</h1>
+
+<p>Hi {{ recipient_name }},</p>
+
+<p>Great news! Your {{ stage_name }} for the <strong>{{ job_title }}</strong> position at <strong>{{ company_name }}</strong> has been scheduled.</p>
+
+<div class="details">
+    <div class="details-row">
+        <span class="details-label">Date:</span>
+        <span class="details-value">{{ scheduled_date }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Time:</span>
+        <span class="details-value">{{ scheduled_time }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Duration:</span>
+        <span class="details-value">{{ duration_minutes }} minutes</span>
+    </div>
+    {% if interviewer_name %}
+    <div class="details-row">
+        <span class="details-label">Interviewer:</span>
+        <span class="details-value">{{ interviewer_name }}</span>
+    </div>
+    {% endif %}
+    {% if meeting_link %}
+    <div class="details-row">
+        <span class="details-label">Meeting Link:</span>
+        <span class="details-value"><a href="{{ meeting_link }}">{{ meeting_link }}</a></span>
+    </div>
+    {% endif %}
+    {% if location %}
+    <div class="details-row">
+        <span class="details-label">Location:</span>
+        <span class="details-value">{{ location }}</span>
+    </div>
+    {% endif %}
+</div>
+
+{% if meeting_link %}
+<p style="text-align: center;">
+    <a href="{{ meeting_link }}" class="button">Join Meeting</a>
+</p>
+{% endif %}
+
+<div class="highlight">
+    <p style="margin: 0;"><strong>Tip:</strong> Add this to your calendar and join a few minutes early to ensure everything is working properly.</p>
+</div>
+
+{% if notes %}
+<h2>Additional Notes</h2>
+<p>{{ notes }}</p>
+{% endif %}
+
+<p>If you need to reschedule, please contact us as soon as possible.</p>
+
+<p>Best of luck!</p>
+{% endblock %}

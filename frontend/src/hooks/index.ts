@@ -83,3 +83,55 @@ export {
   useUpdateQuestionTemplate,
   useDeleteQuestionTemplate,
 } from './useQuestionTemplates'
+
+// Stage Template hooks
+export {
+  useStageTemplates,
+  useCreateStageTemplate,
+  useUpdateStageTemplate,
+  useDeleteStageTemplate,
+  useBulkUpdateStageTemplates,
+  useReorderStageTemplates,
+} from './useStageTemplates'
+
+// Stage Instance hooks
+export {
+  useStageInstances,
+  useStageInstance,
+  useScheduleStage,
+  useRescheduleStage,
+  useCancelStage,
+  useCompleteStage,
+  useReopenStage,
+  useAssignAssessment,
+  useSubmitAssessment,
+  useMoveToStageTemplate,
+  useJobInterviewers,
+} from './useStageInstances'
+export type { Interviewer } from './useStageInstances'
+
+// Calendar Connection hooks
+export {
+  useCalendarConnections,
+  useInitiateCalendarOAuth,
+  useConnectCalendar,
+  useDisconnectCalendar,
+  useHasCalendarConnection,
+} from './useCalendarConnections'
+
+// Notification hooks
+export {
+  useNotifications,
+  useUnreadCount,
+  useUnreadCountPolling,
+  useNotification,
+  useMarkNotificationsRead,
+} from './useNotifications'
+
+// Booking hooks (Calendly-like self-scheduling)
+export {
+  useBookingInfo,
+  useBookSlot,
+  useSendBookingLink,
+} from './useBooking'
+export type { BookingInfo, BookingResult, SendBookingLinkResult } from './useBooking'

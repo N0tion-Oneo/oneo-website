@@ -1,16 +1,24 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from .models import (
     Job, JobStatus, JobType, WorkMode, Department,
     Application, ApplicationStatus, ApplicationSource, RejectionReason,
     ActivityLog, ActivityNote, ActivityType,
     ApplicationQuestion, ApplicationAnswer, QuestionType,
     QuestionTemplate, TemplateQuestion,
+    # Interview Stage System
+    StageType, InterviewStageTemplate, StageInstanceStatus, ApplicationStageInstance,
+    CalendarProvider, UserCalendarConnection,
+    NotificationType, NotificationChannel, Notification,
+    BookingToken,
 )
 from companies.serializers import CompanyListSerializer, CountrySerializer, CitySerializer, BenefitCategorySerializer
 from companies.models import Country, City
 from candidates.serializers import SkillSerializer, TechnologySerializer, CandidateProfileSerializer
 from candidates.models import Skill, Technology, CandidateProfile
 from authentication.serializers import UserProfileSerializer
+
+User = get_user_model()
 
 
 class JobListSerializer(serializers.ModelSerializer):
@@ -468,12 +476,85 @@ class ApplicationListSerializer(serializers.ModelSerializer):
     current_stage_name = serializers.CharField(read_only=True)
     candidate_name = serializers.CharField(source='candidate.full_name', read_only=True)
     candidate_email = serializers.CharField(source='candidate.email', read_only=True)
+    current_stage_instance = serializers.SerializerMethodField()
 
     def get_company_logo(self, obj):
         """Safely get company logo URL."""
         if obj.job.company and obj.job.company.logo:
             return obj.job.company.logo.url
         return None
+
+    def get_current_stage_instance(self, obj):
+        """Return the current stage instance with scheduling info."""
+        from django.utils import timezone
+
+        # Only return for IN_PROGRESS applications
+        if obj.status != ApplicationStatus.IN_PROGRESS or obj.current_stage_order < 1:
+            return None
+
+        # Find the stage instance for current stage
+        instance = ApplicationStageInstance.objects.filter(
+            application=obj,
+            stage_template__order=obj.current_stage_order
+        ).select_related('stage_template', 'interviewer').first()
+
+        if not instance:
+            return None
+
+        # Check for booking token (including used ones for history)
+        booking_token = None
+        booking = BookingToken.objects.filter(
+            stage_instance=instance,
+        ).order_by('-created_at').first()
+        if booking:
+            booking_token = {
+                'token': booking.token,
+                'booking_url': f"/book/{booking.token}",
+                'created_at': booking.created_at.isoformat(),
+                'expires_at': booking.expires_at.isoformat(),
+                'is_used': booking.is_used,
+                'used_at': booking.used_at.isoformat() if booking.used_at else None,
+                'is_valid': not booking.is_used and booking.expires_at > timezone.now(),
+            }
+
+        # Assessment info
+        is_assessment = instance.stage_template.is_assessment
+        assessment_info = None
+        if is_assessment:
+            assessment_info = {
+                'deadline': instance.deadline.isoformat() if instance.deadline else None,
+                'deadline_passed': instance.is_deadline_passed if hasattr(instance, 'is_deadline_passed') else False,
+                'submission_url': instance.submission_url,
+                'submitted_at': instance.submitted_at.isoformat() if instance.submitted_at else None,
+                'instructions': instance.meeting_notes,  # Instructions stored in meeting_notes
+            }
+
+        # Feedback/score for completed stages
+        feedback_info = None
+        if instance.status == StageInstanceStatus.COMPLETED:
+            feedback_info = {
+                'feedback': instance.feedback,
+                'score': instance.score,
+                'recommendation': instance.recommendation,
+                'completed_at': instance.completed_at.isoformat() if instance.completed_at else None,
+            }
+
+        return {
+            'id': str(instance.id),
+            'stage_name': instance.stage_template.name,
+            'stage_type': instance.stage_template.stage_type,
+            'status': instance.status,
+            'scheduled_at': instance.scheduled_at.isoformat() if instance.scheduled_at else None,
+            'duration_minutes': instance.duration_minutes,
+            'meeting_link': instance.meeting_link,
+            'location': instance.location,
+            'interviewer_id': str(instance.interviewer.id) if instance.interviewer else None,
+            'interviewer_name': instance.interviewer.full_name if instance.interviewer else None,
+            'booking_token': booking_token,
+            'is_assessment': is_assessment,
+            'assessment': assessment_info,
+            'feedback': feedback_info,
+        }
 
     class Meta:
         model = Application
@@ -490,6 +571,7 @@ class ApplicationListSerializer(serializers.ModelSerializer):
             'status',
             'current_stage_order',
             'current_stage_name',
+            'current_stage_instance',
             'source',
             'applied_at',
             'shortlisted_at',
@@ -711,6 +793,9 @@ class CandidateApplicationListSerializer(serializers.ModelSerializer):
     job = JobListSerializer(read_only=True)
     current_stage_name = serializers.CharField(read_only=True)
     interview_stages = serializers.SerializerMethodField()
+    pending_booking = serializers.SerializerMethodField()
+    next_interview = serializers.SerializerMethodField()
+    pending_assessment = serializers.SerializerMethodField()
 
     class Meta:
         model = Application
@@ -724,12 +809,81 @@ class CandidateApplicationListSerializer(serializers.ModelSerializer):
             'covering_statement',
             'applied_at',
             'last_status_change',
+            'pending_booking',
+            'next_interview',
+            'pending_assessment',
         ]
         read_only_fields = fields
 
     def get_interview_stages(self, obj):
         """Return the job's interview stages."""
         return obj.job.interview_stages or []
+
+    def get_pending_booking(self, obj):
+        """Return the pending booking link for this application, if any."""
+        from django.utils import timezone
+
+        # Find a valid, unused booking token for this application
+        booking = BookingToken.objects.filter(
+            stage_instance__application=obj,
+            is_used=False,
+            expires_at__gt=timezone.now()
+        ).select_related('stage_instance__stage_template').first()
+
+        if booking:
+            return {
+                'booking_url': f"/book/{booking.token}",
+                'stage_name': booking.stage_instance.stage_template.name,
+                'expires_at': booking.expires_at.isoformat(),
+            }
+        return None
+
+    def get_next_interview(self, obj):
+        """Return the next scheduled interview for this application."""
+        from django.utils import timezone
+
+        # Find the next scheduled interview
+        instance = ApplicationStageInstance.objects.filter(
+            application=obj,
+            status=StageInstanceStatus.SCHEDULED,
+            scheduled_at__gte=timezone.now()
+        ).select_related('stage_template', 'interviewer').order_by('scheduled_at').first()
+
+        if instance:
+            return {
+                'stage_name': instance.stage_template.name,
+                'scheduled_at': instance.scheduled_at.isoformat(),
+                'duration_minutes': instance.duration_minutes,
+                'meeting_link': instance.meeting_link or None,
+                'location': instance.location or None,
+                'interviewer_name': instance.interviewer.full_name if instance.interviewer else None,
+            }
+        return None
+
+    def get_pending_assessment(self, obj):
+        """Return pending assessment that needs candidate submission."""
+        from django.utils import timezone
+
+        # Find an assessment stage awaiting submission
+        instance = ApplicationStageInstance.objects.filter(
+            application=obj,
+            status=StageInstanceStatus.AWAITING_SUBMISSION
+        ).select_related('stage_template').first()
+
+        if instance:
+            deadline_passed = False
+            if instance.deadline:
+                deadline_passed = instance.deadline < timezone.now()
+
+            return {
+                'instance_id': str(instance.id),
+                'stage_name': instance.stage_template.name,
+                'deadline': instance.deadline.isoformat() if instance.deadline else None,
+                'deadline_passed': deadline_passed,
+                'instructions': instance.meeting_notes or None,
+                'external_url': instance.meeting_link or None,
+            }
+        return None
 
 
 # ==================== Activity Log Serializers ====================
@@ -1064,3 +1218,459 @@ class QuestionTemplateUpdateSerializer(serializers.ModelSerializer):
                 TemplateQuestion.objects.create(template=instance, **question_data)
 
         return instance
+
+
+# ==================== Interview Stage System Serializers ====================
+
+
+class InterviewStageTemplateSerializer(serializers.ModelSerializer):
+    """Serializer for reading interview stage templates."""
+    stage_type_display = serializers.CharField(source='get_stage_type_display', read_only=True)
+    default_interviewer_id = serializers.PrimaryKeyRelatedField(
+        source='default_interviewer',
+        read_only=True,
+    )
+    default_interviewer_name = serializers.SerializerMethodField()
+    requires_scheduling = serializers.BooleanField(read_only=True)
+    requires_location = serializers.BooleanField(read_only=True)
+    is_assessment = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = InterviewStageTemplate
+        fields = [
+            'id',
+            'job',
+            'stage_type',
+            'stage_type_display',
+            'name',
+            'order',
+            'description',
+            'default_duration_minutes',
+            'default_interviewer',
+            'default_interviewer_id',
+            'default_interviewer_name',
+            'assessment_instructions',
+            'assessment_instructions_file',
+            'assessment_external_url',
+            'assessment_provider_name',
+            'deadline_days',
+            'use_company_address',
+            'custom_location',
+            'requires_scheduling',
+            'requires_location',
+            'is_assessment',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'job', 'created_at', 'updated_at']
+
+    def get_default_interviewer_name(self, obj):
+        if obj.default_interviewer:
+            return obj.default_interviewer.full_name or obj.default_interviewer.email
+        return None
+
+
+class InterviewStageTemplateCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating/updating interview stage templates."""
+    # Accept default_interviewer_id from frontend and map to default_interviewer
+    default_interviewer_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        source='default_interviewer',
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = InterviewStageTemplate
+        fields = [
+            'stage_type',
+            'name',
+            'order',
+            'description',
+            'default_duration_minutes',
+            'default_interviewer',
+            'default_interviewer_id',
+            'assessment_instructions',
+            'assessment_instructions_file',
+            'assessment_external_url',
+            'assessment_provider_name',
+            'deadline_days',
+            'use_company_address',
+            'custom_location',
+        ]
+        extra_kwargs = {
+            'default_interviewer': {'required': False, 'allow_null': True},
+        }
+
+    def validate(self, data):
+        """Validate based on stage type requirements."""
+        stage_type = data.get('stage_type', StageType.CUSTOM)
+
+        # Validate duration for scheduling types
+        requires_scheduling = stage_type in [
+            StageType.PHONE_SCREENING,
+            StageType.VIDEO_CALL,
+            StageType.IN_PERSON_INTERVIEW,
+            StageType.IN_PERSON_ASSESSMENT,
+        ]
+        if requires_scheduling and not data.get('default_duration_minutes'):
+            # Will be auto-filled by model.save()
+            pass
+
+        # Validate deadline for take-home assessments
+        if stage_type == StageType.TAKE_HOME_ASSESSMENT:
+            if not data.get('deadline_days') and not data.get('assessment_external_url'):
+                # Either deadline_days or external_url should be provided
+                pass  # Not strictly required, can be set per instance
+
+        return data
+
+
+class InterviewStageTemplateBulkSerializer(serializers.Serializer):
+    """Serializer for bulk creating/updating stage templates for a job."""
+    stages = InterviewStageTemplateCreateSerializer(many=True)
+
+    def validate_stages(self, value):
+        """Validate stage orders are unique and sequential."""
+        orders = [s.get('order', 0) for s in value]
+        if len(orders) != len(set(orders)):
+            raise serializers.ValidationError('Stage orders must be unique.')
+        return value
+
+
+class BookingTokenSerializer(serializers.ModelSerializer):
+    """Serializer for booking tokens (candidate self-scheduling links)."""
+    is_valid = serializers.BooleanField(read_only=True)
+    booking_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BookingToken
+        fields = [
+            'id',
+            'token',
+            'expires_at',
+            'is_used',
+            'used_at',
+            'is_valid',
+            'booking_url',
+            'created_at',
+        ]
+        read_only_fields = fields
+
+    def get_booking_url(self, obj):
+        """Generate the full booking URL for this token."""
+        request = self.context.get('request')
+        if request:
+            # Use the frontend URL pattern for booking
+            base_url = request.build_absolute_uri('/').rstrip('/')
+            # Assuming frontend is on same domain or we use a relative path
+            return f"/booking/{obj.token}"
+        return f"/booking/{obj.token}"
+
+
+class ApplicationStageInstanceSerializer(serializers.ModelSerializer):
+    """Serializer for reading application stage instances."""
+    stage_template = InterviewStageTemplateSerializer(read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    interviewer_name = serializers.SerializerMethodField()
+    interviewer_email = serializers.SerializerMethodField()
+    participants_list = serializers.SerializerMethodField()
+    is_overdue = serializers.BooleanField(read_only=True)
+    booking_token = BookingTokenSerializer(read_only=True)
+
+    class Meta:
+        model = ApplicationStageInstance
+        fields = [
+            'id',
+            'application',
+            'stage_template',
+            'status',
+            'status_display',
+            'scheduled_at',
+            'duration_minutes',
+            'interviewer',
+            'interviewer_name',
+            'interviewer_email',
+            'participants',
+            'participants_list',
+            'meeting_link',
+            'location',
+            'meeting_notes',
+            'google_calendar_event_id',
+            'microsoft_calendar_event_id',
+            'calendar_invite_sent',
+            'deadline',
+            'submission_url',
+            'submission_file',
+            'submitted_at',
+            'recruiter_notes',
+            'feedback',
+            'score',
+            'recommendation',
+            'notification_sent_at',
+            'reminder_sent_at',
+            'is_overdue',
+            'booking_token',
+            'created_at',
+            'updated_at',
+            'completed_at',
+        ]
+        read_only_fields = [
+            'id', 'application', 'created_at', 'updated_at', 'completed_at',
+            'notification_sent_at', 'reminder_sent_at',
+        ]
+
+    def get_interviewer_name(self, obj):
+        if obj.interviewer:
+            return obj.interviewer.full_name or obj.interviewer.email
+        return None
+
+    def get_interviewer_email(self, obj):
+        if obj.interviewer:
+            return obj.interviewer.email
+        return None
+
+    def get_participants_list(self, obj):
+        """Return list of participant details."""
+        return [
+            {
+                'id': str(p.id),
+                'full_name': p.full_name or p.email,
+                'email': p.email,
+            }
+            for p in obj.participants.all()
+        ]
+
+
+class ScheduleStageSerializer(serializers.Serializer):
+    """Serializer for scheduling an interview stage."""
+    scheduled_at = serializers.DateTimeField(required=True)
+    duration_minutes = serializers.IntegerField(required=False, min_value=15, max_value=480)
+    interviewer_id = serializers.UUIDField(required=False, allow_null=True)
+    participant_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+        default=list,
+        help_text='Additional participant user IDs',
+    )
+    meeting_link = serializers.URLField(required=False, allow_blank=True, default='')
+    location = serializers.CharField(max_length=500, required=False, allow_blank=True, default='')
+    meeting_notes = serializers.CharField(required=False, allow_blank=True, default='')
+    send_notification = serializers.BooleanField(default=True)
+    create_calendar_event = serializers.BooleanField(default=True)
+
+    def validate_scheduled_at(self, value):
+        """Ensure scheduled time is in the future."""
+        from django.utils import timezone
+        if value <= timezone.now():
+            raise serializers.ValidationError('Scheduled time must be in the future.')
+        return value
+
+
+class RescheduleStageSerializer(serializers.Serializer):
+    """Serializer for rescheduling an interview."""
+    scheduled_at = serializers.DateTimeField(required=True)
+    duration_minutes = serializers.IntegerField(required=False, min_value=15, max_value=480)
+    interviewer_id = serializers.UUIDField(required=False, allow_null=True)
+    participant_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+        help_text='Additional participant user IDs (replaces existing participants)',
+    )
+    meeting_link = serializers.URLField(required=False, allow_blank=True)
+    location = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    meeting_notes = serializers.CharField(required=False, allow_blank=True)
+    reschedule_reason = serializers.CharField(required=False, allow_blank=True, default='')
+    send_notification = serializers.BooleanField(default=True)
+    update_calendar_event = serializers.BooleanField(default=True)
+
+
+class AssignAssessmentSerializer(serializers.Serializer):
+    """Serializer for assigning a take-home assessment."""
+    deadline = serializers.DateTimeField(required=True)
+    instructions = serializers.CharField(required=False, allow_blank=True, default='')
+    external_url = serializers.URLField(required=False, allow_blank=True, default='')
+    send_notification = serializers.BooleanField(default=True)
+
+    def validate_deadline(self, value):
+        """Ensure deadline is in the future."""
+        from django.utils import timezone
+        if value <= timezone.now():
+            raise serializers.ValidationError('Deadline must be in the future.')
+        return value
+
+
+class SubmitAssessmentSerializer(serializers.Serializer):
+    """Serializer for candidate submitting an assessment."""
+    submission_url = serializers.URLField(required=False, allow_blank=True, default='')
+    submission_file = serializers.FileField(required=False, allow_null=True)
+    notes = serializers.CharField(required=False, allow_blank=True, default='')
+
+    def validate(self, data):
+        """Ensure at least one submission method is provided."""
+        if not data.get('submission_url') and not data.get('submission_file'):
+            raise serializers.ValidationError(
+                'Either a submission URL or file must be provided.'
+            )
+        return data
+
+    def validate_submission_file(self, value):
+        """Validate file type and size."""
+        if value:
+            max_size = 25 * 1024 * 1024  # 25MB
+            if value.size > max_size:
+                raise serializers.ValidationError('File size must be less than 25MB.')
+
+            allowed_extensions = ['pdf', 'doc', 'docx', 'zip', 'tar', 'gz', 'txt', 'md']
+            ext = value.name.split('.')[-1].lower() if '.' in value.name else ''
+            if ext not in allowed_extensions:
+                raise serializers.ValidationError(
+                    f'File type not allowed. Allowed: {", ".join(allowed_extensions)}'
+                )
+        return value
+
+
+class CompleteStageSerializer(serializers.Serializer):
+    """Serializer for completing a stage with feedback."""
+    feedback = serializers.CharField(required=False, allow_blank=True, default='')
+    score = serializers.IntegerField(required=False, min_value=1, max_value=5, allow_null=True)
+    recommendation = serializers.ChoiceField(
+        choices=[
+            ('strong_yes', 'Strong Yes'),
+            ('yes', 'Yes'),
+            ('maybe', 'Maybe'),
+            ('no', 'No'),
+            ('strong_no', 'Strong No'),
+        ],
+        required=False,
+        allow_blank=True,
+    )
+
+
+# ==================== Calendar Integration Serializers ====================
+
+
+class UserCalendarConnectionSerializer(serializers.ModelSerializer):
+    """Serializer for user calendar connections (read)."""
+    provider_display = serializers.CharField(source='get_provider_display', read_only=True)
+    is_token_expired = serializers.BooleanField(read_only=True)
+    available_days_list = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserCalendarConnection
+        fields = [
+            'id',
+            'provider',
+            'provider_display',
+            'provider_email',
+            'calendar_id',
+            'calendar_name',
+            'is_active',
+            'is_token_expired',
+            # Booking settings
+            'booking_days_ahead',
+            'business_hours_start',
+            'business_hours_end',
+            'min_notice_hours',
+            'buffer_minutes',
+            'available_days',
+            'available_days_list',
+            'timezone',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = fields
+
+    def get_available_days_list(self, obj):
+        """Convert comma-separated days to list of integers."""
+        if obj.available_days:
+            return [int(d) for d in obj.available_days.split(',') if d.strip()]
+        return []
+
+
+class CalendarConnectionUpdateSerializer(serializers.Serializer):
+    """Serializer for updating calendar connection settings."""
+    calendar_id = serializers.CharField(required=False)
+    calendar_name = serializers.CharField(required=False, allow_blank=True)
+    booking_days_ahead = serializers.IntegerField(min_value=1, max_value=90, required=False)
+    business_hours_start = serializers.IntegerField(min_value=0, max_value=23, required=False)
+    business_hours_end = serializers.IntegerField(min_value=0, max_value=23, required=False)
+    min_notice_hours = serializers.IntegerField(min_value=0, max_value=168, required=False)  # max 1 week
+    buffer_minutes = serializers.IntegerField(min_value=0, max_value=60, required=False)
+    available_days = serializers.ListField(
+        child=serializers.IntegerField(min_value=0, max_value=6),
+        required=False,
+    )
+    timezone = serializers.CharField(max_length=50, required=False)
+
+    def validate(self, data):
+        # Ensure business_hours_end > business_hours_start
+        start = data.get('business_hours_start')
+        end = data.get('business_hours_end')
+        if start is not None and end is not None and end <= start:
+            raise serializers.ValidationError({
+                'business_hours_end': 'End hour must be after start hour'
+            })
+        return data
+
+
+class CalendarConnectionCreateSerializer(serializers.Serializer):
+    """Serializer for initiating calendar connection (OAuth)."""
+    provider = serializers.ChoiceField(choices=CalendarProvider.choices)
+    redirect_uri = serializers.URLField(required=False)
+
+
+# ==================== Notification Serializers ====================
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    """Serializer for notifications."""
+    notification_type_display = serializers.CharField(source='get_notification_type_display', read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = [
+            'id',
+            'notification_type',
+            'notification_type_display',
+            'channel',
+            'application',
+            'stage_instance',
+            'title',
+            'body',
+            'action_url',
+            'is_read',
+            'read_at',
+            'email_sent',
+            'email_sent_at',
+            'sent_at',
+        ]
+        read_only_fields = fields
+
+
+class NotificationListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for notification list."""
+    notification_type_display = serializers.CharField(source='get_notification_type_display', read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = [
+            'id',
+            'notification_type',
+            'notification_type_display',
+            'title',
+            'body',
+            'action_url',
+            'is_read',
+            'sent_at',
+        ]
+        read_only_fields = fields
+
+
+class MarkNotificationReadSerializer(serializers.Serializer):
+    """Serializer for marking notification(s) as read."""
+    notification_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+        help_text='List of notification IDs to mark as read. If empty, marks all as read.'
+    )

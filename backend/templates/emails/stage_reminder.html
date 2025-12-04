@@ -1,0 +1,62 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Interview Reminder - {{ stage_name }}{% endblock %}
+
+{% block content %}
+<h1>Interview Reminder</h1>
+
+<p>Hi {{ recipient_name }},</p>
+
+<p>This is a friendly reminder that your {{ stage_name }} for the <strong>{{ job_title }}</strong> position at <strong>{{ company_name }}</strong> is coming up soon.</p>
+
+<div class="details">
+    <div class="details-row">
+        <span class="details-label">Date:</span>
+        <span class="details-value">{{ scheduled_date }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Time:</span>
+        <span class="details-value">{{ scheduled_time }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Duration:</span>
+        <span class="details-value">{{ duration_minutes }} minutes</span>
+    </div>
+    {% if interviewer_name %}
+    <div class="details-row">
+        <span class="details-label">Interviewer:</span>
+        <span class="details-value">{{ interviewer_name }}</span>
+    </div>
+    {% endif %}
+    {% if meeting_link %}
+    <div class="details-row">
+        <span class="details-label">Meeting Link:</span>
+        <span class="details-value"><a href="{{ meeting_link }}">{{ meeting_link }}</a></span>
+    </div>
+    {% endif %}
+    {% if location %}
+    <div class="details-row">
+        <span class="details-label">Location:</span>
+        <span class="details-value">{{ location }}</span>
+    </div>
+    {% endif %}
+</div>
+
+{% if meeting_link %}
+<p style="text-align: center;">
+    <a href="{{ meeting_link }}" class="button">Join Meeting</a>
+</p>
+{% endif %}
+
+<div class="highlight">
+    <p style="margin: 0;"><strong>Preparation tips:</strong></p>
+    <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+        <li>Test your audio and video if it's a video call</li>
+        <li>Have your resume and any notes ready</li>
+        <li>Find a quiet place with good lighting</li>
+        <li>Join a few minutes early</li>
+    </ul>
+</div>
+
+<p>Best of luck with your interview!</p>
+{% endblock %}

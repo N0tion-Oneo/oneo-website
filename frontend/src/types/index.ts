@@ -534,6 +534,251 @@ export interface InterviewStage {
   assessment_name?: string
 }
 
+// Interview Stage Types (typed stage system)
+export enum StageType {
+  APPLICATION_SCREEN = 'application_screen',
+  PHONE_SCREENING = 'phone_screening',
+  VIDEO_CALL = 'video_call',
+  IN_PERSON_INTERVIEW = 'in_person_interview',
+  TAKE_HOME_ASSESSMENT = 'take_home_assessment',
+  IN_PERSON_ASSESSMENT = 'in_person_assessment',
+  CUSTOM = 'custom',
+}
+
+export const StageTypeLabels: Record<StageType, string> = {
+  [StageType.APPLICATION_SCREEN]: 'Application Screen',
+  [StageType.PHONE_SCREENING]: 'Phone Screening',
+  [StageType.VIDEO_CALL]: 'Video Call Interview',
+  [StageType.IN_PERSON_INTERVIEW]: 'In-Person Interview',
+  [StageType.TAKE_HOME_ASSESSMENT]: 'Take-Home Assessment',
+  [StageType.IN_PERSON_ASSESSMENT]: 'In-Person Assessment',
+  [StageType.CUSTOM]: 'Custom',
+}
+
+export const StageTypeConfig: Record<StageType, {
+  requiresScheduling: boolean
+  requiresLocation: boolean
+  isAssessment: boolean
+  defaultDuration: number | null
+  icon: string
+  color: string
+}> = {
+  [StageType.APPLICATION_SCREEN]: {
+    requiresScheduling: false,
+    requiresLocation: false,
+    isAssessment: false,
+    defaultDuration: null,
+    icon: 'FileText',
+    color: 'gray',
+  },
+  [StageType.PHONE_SCREENING]: {
+    requiresScheduling: true,
+    requiresLocation: false,
+    isAssessment: false,
+    defaultDuration: 30,
+    icon: 'Phone',
+    color: 'blue',
+  },
+  [StageType.VIDEO_CALL]: {
+    requiresScheduling: true,
+    requiresLocation: false,
+    isAssessment: false,
+    defaultDuration: 45,
+    icon: 'Video',
+    color: 'purple',
+  },
+  [StageType.IN_PERSON_INTERVIEW]: {
+    requiresScheduling: true,
+    requiresLocation: true,
+    isAssessment: false,
+    defaultDuration: 60,
+    icon: 'Users',
+    color: 'green',
+  },
+  [StageType.TAKE_HOME_ASSESSMENT]: {
+    requiresScheduling: false,
+    requiresLocation: false,
+    isAssessment: true,
+    defaultDuration: null,
+    icon: 'FileCode',
+    color: 'orange',
+  },
+  [StageType.IN_PERSON_ASSESSMENT]: {
+    requiresScheduling: true,
+    requiresLocation: true,
+    isAssessment: true,
+    defaultDuration: 90,
+    icon: 'ClipboardCheck',
+    color: 'amber',
+  },
+  [StageType.CUSTOM]: {
+    requiresScheduling: false,
+    requiresLocation: false,
+    isAssessment: false,
+    defaultDuration: 60,
+    icon: 'Settings',
+    color: 'gray',
+  },
+}
+
+export enum StageInstanceStatus {
+  NOT_STARTED = 'not_started',
+  SCHEDULED = 'scheduled',
+  IN_PROGRESS = 'in_progress',
+  AWAITING_SUBMISSION = 'awaiting_submission',
+  SUBMITTED = 'submitted',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+  NO_SHOW = 'no_show',
+}
+
+export const StageInstanceStatusLabels: Record<StageInstanceStatus, string> = {
+  [StageInstanceStatus.NOT_STARTED]: 'Not Started',
+  [StageInstanceStatus.SCHEDULED]: 'Scheduled',
+  [StageInstanceStatus.IN_PROGRESS]: 'In Progress',
+  [StageInstanceStatus.AWAITING_SUBMISSION]: 'Awaiting Submission',
+  [StageInstanceStatus.SUBMITTED]: 'Submitted',
+  [StageInstanceStatus.COMPLETED]: 'Completed',
+  [StageInstanceStatus.CANCELLED]: 'Cancelled',
+  [StageInstanceStatus.NO_SHOW]: 'No Show',
+}
+
+export interface InterviewStageTemplate {
+  id: string
+  job: string
+  stage_type: StageType
+  name: string
+  order: number
+  description: string
+  default_duration_minutes: number | null
+  default_interviewer: User | null
+  default_interviewer_id: string | null
+  default_interviewer_name: string | null
+  // Assessment config
+  assessment_instructions: string
+  assessment_instructions_file: string | null
+  assessment_external_url: string
+  assessment_provider_name: string
+  deadline_days: number | null
+  // Location config
+  use_company_address: boolean
+  custom_location: string
+  // Computed
+  requires_scheduling: boolean
+  requires_location: boolean
+  is_assessment: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface InterviewStageTemplateInput {
+  stage_type: StageType
+  name?: string
+  order?: number
+  description?: string
+  default_duration_minutes?: number | null
+  default_interviewer_id?: string | null
+  // Assessment config
+  assessment_instructions?: string
+  assessment_external_url?: string
+  assessment_provider_name?: string
+  deadline_days?: number | null
+  // Location config
+  use_company_address?: boolean
+  custom_location?: string
+}
+
+export interface StageParticipant {
+  id: string
+  full_name: string
+  email: string
+}
+
+export interface BookingToken {
+  id: string
+  token: string
+  expires_at: string
+  is_used: boolean
+  used_at: string | null
+  is_valid: boolean
+  booking_url: string
+  created_at: string
+}
+
+export interface ApplicationStageInstance {
+  id: string
+  application: string
+  stage_template: InterviewStageTemplate
+  status: StageInstanceStatus
+  // Scheduling
+  scheduled_at: string | null
+  duration_minutes: number | null
+  interviewer: User | null
+  participants: string[]
+  participants_list: StageParticipant[]
+  meeting_link: string
+  location: string
+  // Calendar integration
+  google_calendar_event_id: string
+  microsoft_calendar_event_id: string
+  calendar_invite_sent: boolean
+  // Assessment submission
+  deadline: string | null
+  submission_url: string
+  submission_file: string | null
+  submitted_at: string | null
+  // Feedback
+  feedback: string
+  score: number | null
+  // Booking token (for candidate self-scheduling)
+  booking_token: BookingToken | null
+  // Notifications
+  notification_sent_at: string | null
+  reminder_sent_at: string | null
+  // Timestamps
+  created_at: string
+  updated_at: string
+  completed_at: string | null
+}
+
+export interface ScheduleStageInput {
+  scheduled_at: string
+  duration_minutes?: number
+  interviewer_id?: string
+  participant_ids?: string[]
+  meeting_link?: string
+  location?: string
+  send_calendar_invite?: boolean
+}
+
+export interface RescheduleStageInput {
+  scheduled_at: string
+  duration_minutes?: number
+  interviewer_id?: string
+  participant_ids?: string[]
+  meeting_link?: string
+  location?: string
+  reason?: string
+  send_calendar_invite?: boolean
+}
+
+export interface AssignAssessmentInput {
+  deadline: string // ISO date string - required
+  instructions?: string
+  external_url?: string
+  send_notification?: boolean
+}
+
+export interface SubmitAssessmentInput {
+  submission_url?: string
+  submission_file?: File
+}
+
+export interface CompleteStageInput {
+  feedback?: string
+  score?: number
+}
+
 export interface Job extends JobListItem {
   created_by: User | null
   assigned_recruiter: User | null
@@ -681,6 +926,33 @@ export interface Application {
   last_status_change: string
 }
 
+// Pending booking link info for candidates
+export interface PendingBooking {
+  booking_url: string
+  stage_name: string
+  expires_at: string
+}
+
+// Next scheduled interview info for candidates
+export interface NextInterview {
+  stage_name: string
+  scheduled_at: string
+  duration_minutes: number
+  meeting_link: string | null
+  location: string | null
+  interviewer_name: string | null
+}
+
+// Pending assessment info for candidate applications
+export interface PendingAssessment {
+  instance_id: string
+  stage_name: string
+  deadline: string
+  deadline_passed: boolean
+  instructions: string | null
+  external_url: string | null
+}
+
 // Candidate's view of their applications (lighter weight)
 export interface CandidateApplication {
   id: string
@@ -692,9 +964,48 @@ export interface CandidateApplication {
   covering_statement: string
   applied_at: string
   last_status_change: string
+  pending_booking: PendingBooking | null
+  next_interview: NextInterview | null
+  pending_assessment: PendingAssessment | null
 }
 
 // Minimal application info for listing (company view)
+export interface CurrentStageInstance {
+  id: string
+  stage_name: string
+  stage_type: string
+  status: string
+  scheduled_at: string | null
+  duration_minutes: number
+  meeting_link: string | null
+  location: string | null
+  interviewer_id: string | null
+  interviewer_name: string | null
+  booking_token: {
+    token: string
+    booking_url: string
+    created_at: string
+    expires_at: string
+    is_used: boolean
+    used_at: string | null
+    is_valid: boolean
+  } | null
+  is_assessment: boolean
+  assessment: {
+    deadline: string | null
+    deadline_passed: boolean
+    submission_url: string | null
+    submitted_at: string | null
+    instructions: string | null
+  } | null
+  feedback: {
+    feedback: string | null
+    score: number | null
+    recommendation: string | null
+    completed_at: string | null
+  } | null
+}
+
 export interface ApplicationListItem {
   id: string
   job: string
@@ -708,6 +1019,7 @@ export interface ApplicationListItem {
   status: ApplicationStatus
   current_stage_order: number
   current_stage_name: string
+  current_stage_instance: CurrentStageInstance | null
   source: ApplicationSource
   applied_at: string
   shortlisted_at: string | null
@@ -823,6 +1135,12 @@ export enum ActivityType {
   REJECTED = 'rejected',
   WITHDRAWN = 'withdrawn',
   APPLICATION_VIEWED = 'application_viewed',
+  // Booking/Scheduling activities
+  BOOKING_LINK_SENT = 'booking_link_sent',
+  INTERVIEW_BOOKED = 'interview_booked',
+  INTERVIEW_SCHEDULED = 'interview_scheduled',
+  INTERVIEW_RESCHEDULED = 'interview_rescheduled',
+  INTERVIEW_CANCELLED = 'interview_cancelled',
 }
 
 export interface ActivityNote {
@@ -951,4 +1269,108 @@ export interface FormField {
   placeholder?: string
   required?: boolean
   options?: { value: string; label: string }[]
+}
+
+// ============================================================================
+// Calendar Integration
+// ============================================================================
+
+export enum CalendarProvider {
+  GOOGLE = 'google',
+  MICROSOFT = 'microsoft',
+}
+
+export const CalendarProviderLabels: Record<CalendarProvider, string> = {
+  [CalendarProvider.GOOGLE]: 'Google Calendar',
+  [CalendarProvider.MICROSOFT]: 'Microsoft 365',
+}
+
+export interface CalendarConnection {
+  id: string
+  provider: CalendarProvider
+  provider_display: string
+  provider_email: string
+  calendar_id: string
+  calendar_name: string
+  is_active: boolean
+  is_token_expired: boolean
+  // Booking settings
+  booking_days_ahead: number
+  business_hours_start: number
+  business_hours_end: number
+  min_notice_hours: number
+  buffer_minutes: number
+  available_days: string
+  available_days_list: number[]
+  timezone: string
+  created_at: string
+  updated_at: string
+}
+
+export interface AvailableCalendar {
+  id: string
+  name: string
+  primary: boolean
+}
+
+export interface CalendarSettingsUpdate {
+  calendar_id?: string
+  calendar_name?: string
+  booking_days_ahead?: number
+  business_hours_start?: number
+  business_hours_end?: number
+  min_notice_hours?: number
+  buffer_minutes?: number
+  available_days?: number[]
+  timezone?: string
+}
+
+// ============================================================================
+// Notifications
+// ============================================================================
+
+export enum NotificationType {
+  // Stage notifications
+  STAGE_SCHEDULED = 'stage_scheduled',
+  STAGE_REMINDER = 'stage_reminder',
+  STAGE_RESCHEDULED = 'stage_rescheduled',
+  STAGE_CANCELLED = 'stage_cancelled',
+  // Assessment notifications
+  ASSESSMENT_ASSIGNED = 'assessment_assigned',
+  ASSESSMENT_REMINDER = 'assessment_reminder',
+  SUBMISSION_RECEIVED = 'submission_received',
+  // Application notifications
+  APPLICATION_RECEIVED = 'application_received',
+  APPLICATION_SHORTLISTED = 'application_shortlisted',
+  APPLICATION_REJECTED = 'application_rejected',
+  OFFER_RECEIVED = 'offer_received',
+}
+
+export const NotificationTypeLabels: Record<NotificationType, string> = {
+  [NotificationType.STAGE_SCHEDULED]: 'Interview Scheduled',
+  [NotificationType.STAGE_REMINDER]: 'Interview Reminder',
+  [NotificationType.STAGE_RESCHEDULED]: 'Interview Rescheduled',
+  [NotificationType.STAGE_CANCELLED]: 'Interview Cancelled',
+  [NotificationType.ASSESSMENT_ASSIGNED]: 'Assessment Assigned',
+  [NotificationType.ASSESSMENT_REMINDER]: 'Assessment Deadline Reminder',
+  [NotificationType.SUBMISSION_RECEIVED]: 'Submission Received',
+  [NotificationType.APPLICATION_RECEIVED]: 'New Application',
+  [NotificationType.APPLICATION_SHORTLISTED]: 'Application Shortlisted',
+  [NotificationType.APPLICATION_REJECTED]: 'Application Update',
+  [NotificationType.OFFER_RECEIVED]: 'Offer Received',
+}
+
+export interface Notification {
+  id: string
+  recipient: string
+  notification_type: NotificationType
+  application: string | null
+  stage_instance: string | null
+  title: string
+  body: string
+  action_url: string
+  is_read: boolean
+  email_sent: boolean
+  sent_at: string
+  created_at: string
 }

@@ -1,0 +1,44 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Assessment Deadline Reminder - {{ stage_name }}{% endblock %}
+
+{% block content %}
+<h1>Assessment Deadline Reminder</h1>
+
+<p>Hi {{ recipient_name }},</p>
+
+<p>This is a friendly reminder that your {{ stage_name }} assessment for the <strong>{{ job_title }}</strong> position at <strong>{{ company_name }}</strong> is due soon.</p>
+
+<div class="warning">
+    <p style="margin: 0; font-size: 16px;"><strong>Deadline: {{ deadline }}</strong></p>
+</div>
+
+<div class="details">
+    <div class="details-row">
+        <span class="details-label">Assessment:</span>
+        <span class="details-value">{{ stage_name }}</span>
+    </div>
+    {% if provider_name %}
+    <div class="details-row">
+        <span class="details-label">Platform:</span>
+        <span class="details-value">{{ provider_name }}</span>
+    </div>
+    {% endif %}
+    <div class="details-row">
+        <span class="details-label">Time Left:</span>
+        <span class="details-value">{{ time_remaining }}</span>
+    </div>
+</div>
+
+{% if assessment_url %}
+<p style="text-align: center;">
+    <a href="{{ assessment_url }}" class="button">Complete Assessment</a>
+</p>
+{% endif %}
+
+<div class="highlight">
+    <p style="margin: 0;"><strong>Reminder:</strong> Make sure to submit before the deadline. Late submissions may not be reviewed.</p>
+</div>
+
+<p>If you're experiencing technical difficulties or need more time, please contact us immediately.</p>
+{% endblock %}

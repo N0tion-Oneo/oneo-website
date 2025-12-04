@@ -1,0 +1,57 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Assessment Assigned - {{ stage_name }}{% endblock %}
+
+{% block content %}
+<h1>You Have a New Assessment</h1>
+
+<p>Hi {{ recipient_name }},</p>
+
+<p>Congratulations on progressing to the next stage! You've been assigned an assessment for the <strong>{{ job_title }}</strong> position at <strong>{{ company_name }}</strong>.</p>
+
+<div class="details">
+    <div class="details-row">
+        <span class="details-label">Assessment:</span>
+        <span class="details-value">{{ stage_name }}</span>
+    </div>
+    {% if deadline %}
+    <div class="details-row">
+        <span class="details-label">Deadline:</span>
+        <span class="details-value">{{ deadline }}</span>
+    </div>
+    {% endif %}
+    {% if provider_name %}
+    <div class="details-row">
+        <span class="details-label">Platform:</span>
+        <span class="details-value">{{ provider_name }}</span>
+    </div>
+    {% endif %}
+</div>
+
+{% if assessment_url %}
+<p style="text-align: center;">
+    <a href="{{ assessment_url }}" class="button">Start Assessment</a>
+</p>
+{% endif %}
+
+{% if instructions %}
+<h2>Instructions</h2>
+<div class="highlight">
+    {{ instructions|linebreaks }}
+</div>
+{% endif %}
+
+<div class="warning">
+    <p style="margin: 0;"><strong>Important:</strong> Please complete this assessment by {{ deadline }}. Late submissions may not be considered.</p>
+</div>
+
+<h2>Tips for Success</h2>
+<ul>
+    <li>Read all instructions carefully before starting</li>
+    <li>Ensure you have a stable internet connection</li>
+    <li>Allocate enough uninterrupted time to complete the assessment</li>
+    <li>If you encounter technical issues, reach out immediately</li>
+</ul>
+
+<p>Best of luck!</p>
+{% endblock %}
