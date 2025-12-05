@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { usePublicBranding } from '@/hooks'
 import api, { setTokens } from '@/services/api'
 import { AxiosError } from 'axios'
 
@@ -36,12 +37,15 @@ interface InvitationValidation {
 export default function ClientSignupPage() {
   const { token } = useParams<{ token: string }>()
   const { updateUser } = useAuth()
+  const { branding } = usePublicBranding()
   const navigate = useNavigate()
   const [serverError, setServerError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [validating, setValidating] = useState(true)
   const [invitationValid, setInvitationValid] = useState(false)
   const [invitationEmail, setInvitationEmail] = useState('')
+
+  const brandName = branding?.company_name || 'Oneo'
 
   const {
     register,
@@ -179,8 +183,12 @@ export default function ClientSignupPage() {
     return (
       <div className="min-h-screen bg-white flex flex-col">
         <header className="p-6">
-          <Link to="/" className="text-xl font-semibold text-gray-900">
-            Oneo
+          <Link to="/" className="flex items-center">
+            {branding?.logo_url ? (
+              <img src={branding.logo_url} alt={brandName} className="h-8 w-auto" />
+            ) : (
+              <span className="text-xl font-semibold text-gray-900">{brandName}</span>
+            )}
           </Link>
         </header>
 
@@ -221,8 +229,12 @@ export default function ClientSignupPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <header className="p-6">
-        <Link to="/" className="text-xl font-semibold text-gray-900">
-          Oneo
+        <Link to="/" className="flex items-center">
+          {branding?.logo_url ? (
+            <img src={branding.logo_url} alt={brandName} className="h-8 w-auto" />
+          ) : (
+            <span className="text-xl font-semibold text-gray-900">{brandName}</span>
+          )}
         </Link>
       </header>
 
@@ -232,7 +244,7 @@ export default function ClientSignupPage() {
             Create client account
           </h1>
           <p className="mt-2 text-[15px] text-gray-500">
-            You've been invited to join Oneo as a client
+            You've been invited to join {brandName} as a client
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8" noValidate>

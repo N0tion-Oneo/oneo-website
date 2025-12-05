@@ -11,12 +11,12 @@ export const statusTabs = [
 export const getStatusBadge = (status: JobStatus) => {
   const badges: Record<
     string,
-    { bg: string; text: string; label: string }
+    { bg: string; text: string; label: string; className?: string }
   > = {
     draft: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Draft' },
-    published: { bg: 'bg-green-100', text: 'text-green-700', label: 'Published' },
-    closed: { bg: 'bg-red-100', text: 'text-red-700', label: 'Closed' },
-    filled: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Filled' },
+    published: { bg: 'bg-success/15', text: 'text-success', label: 'Published', className: 'badge-success' },
+    closed: { bg: 'bg-warning/15', text: 'text-warning', label: 'Closed', className: 'badge-warning' },
+    filled: { bg: 'bg-primary/15', text: 'text-primary', label: 'Filled', className: 'badge-primary' },
     archived: { bg: 'bg-gray-100', text: 'text-gray-500', label: 'Archived' },
   }
   return badges[status] || badges.draft

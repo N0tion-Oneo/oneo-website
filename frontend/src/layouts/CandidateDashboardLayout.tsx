@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePublicBranding } from '@/hooks';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface NavItem {
@@ -11,6 +12,7 @@ interface NavItem {
 
 export default function CandidateDashboardLayout() {
   const { user, logout } = useAuth();
+  const { branding } = usePublicBranding();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -130,6 +132,16 @@ export default function CandidateDashboardLayout() {
         </svg>
       ),
     },
+    {
+      name: 'Notifications',
+      href: '/dashboard/admin/notifications',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
   ] : []
 
   // Admin-only navigation (not visible to recruiters)
@@ -143,6 +155,16 @@ export default function CandidateDashboardLayout() {
           <circle cx="9" cy="7" r="4" />
           <path d="M23 21v-2a4 4 0 0 0-3-3.87" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M16 3.13a4 4 0 0 1 0 7.75" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Branding',
+      href: '/dashboard/admin/branding',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       ),
     },
@@ -222,8 +244,18 @@ export default function CandidateDashboardLayout() {
         {/* Logo & Toggle */}
         <div className="h-14 flex items-center justify-between px-4 border-b border-gray-200">
           {!isMinimized && (
-            <Link to="/" className="text-lg font-semibold text-gray-900">
-              Oneo
+            <Link to="/" className="flex items-center">
+              {branding?.logo_url ? (
+                <img
+                  src={branding.logo_url}
+                  alt={branding.company_name || 'Logo'}
+                  className="h-7 w-auto"
+                />
+              ) : (
+                <span className="text-lg font-semibold text-gray-900">
+                  {branding?.company_name || 'Oneo'}
+                </span>
+              )}
             </Link>
           )}
           <button

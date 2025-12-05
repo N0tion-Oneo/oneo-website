@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProtectedRoute, PublicRoute } from '@/components/auth';
+import { BrandingProvider } from '@/components/branding';
 import {
   LoginPage,
   SignupPage,
@@ -22,6 +23,11 @@ import {
   AdminCandidateEditPage,
   AdminNewJobPage,
   AdminRecruitersPage,
+  NotificationsAdminPage,
+  SendNotificationPage,
+  NotificationTemplatesPage,
+  NotificationTemplateEditPage,
+  BrandingSettingsPage,
   HomePage,
   CandidatesDirectoryPage,
   CandidateProfilePage,
@@ -38,8 +44,9 @@ import './App.css';
 
 function App() {
   return (
-    <AuthProvider>
-      <Routes>
+    <BrandingProvider>
+      <AuthProvider>
+        <Routes>
         {/* Home page - accessible to all */}
         <Route path="/" element={<HomePage />} />
 
@@ -97,6 +104,14 @@ function App() {
           <Route path="admin/jobs" element={<JobsPage mode="admin" />} />
           <Route path="admin/jobs/new" element={<AdminNewJobPage />} />
           <Route path="admin/recruiters" element={<AdminRecruitersPage />} />
+          {/* Notification Admin routes */}
+          <Route path="admin/notifications" element={<NotificationsAdminPage />} />
+          <Route path="admin/notifications/send" element={<SendNotificationPage />} />
+          <Route path="admin/notifications/templates" element={<NotificationTemplatesPage />} />
+          <Route path="admin/notifications/templates/new" element={<NotificationTemplateEditPage />} />
+          <Route path="admin/notifications/templates/:templateId" element={<NotificationTemplateEditPage />} />
+          {/* Branding Settings */}
+          <Route path="admin/branding" element={<BrandingSettingsPage />} />
         </Route>
 
         {/* Public candidates directory */}
@@ -126,8 +141,9 @@ function App() {
 
         {/* 404 - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AuthProvider>
+        </Routes>
+      </AuthProvider>
+    </BrandingProvider>
   );
 }
 

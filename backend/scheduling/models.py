@@ -119,3 +119,59 @@ class UserCalendarConnection(models.Model):
         if self.token_expires_at:
             return timezone.now() >= self.token_expires_at
         return True
+
+
+class BookingToken(models.Model):
+    """
+    Token for candidate self-booking (like Calendly public links).
+    Allows candidates to select a time slot from interviewer's availability.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    stage_instance = models.OneToOneField(
+        'jobs.ApplicationStageInstance',
+        on_delete=models.CASCADE,
+        related_name='booking_token',
+    )
+
+    token = models.CharField(
+        max_length=64,
+        unique=True,
+        help_text='Secure random token for booking URL',
+    )
+    expires_at = models.DateTimeField(
+        help_text='Token expiration time (default: 7 days from creation)',
+    )
+
+    is_used = models.BooleanField(
+        default=False,
+        help_text='Whether the token has been used to book',
+    )
+    used_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When the candidate completed the booking',
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'booking_tokens'
+        indexes = [
+            models.Index(fields=['token']),
+            models.Index(fields=['expires_at']),
+        ]
+
+    def __str__(self):
+        return f"Booking token for {self.stage_instance}"
+
+    @property
+    def is_valid(self):
+        """Check if token is still valid (not used and not expired)."""
+        return not self.is_used and timezone.now() < self.expires_at
+
+    def mark_as_used(self):
+        """Mark the token as used."""
+        self.is_used = True
+        self.used_at = timezone.now()
+        self.save(update_fields=['is_used', 'used_at'])

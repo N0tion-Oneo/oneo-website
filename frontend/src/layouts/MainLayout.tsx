@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/utils/cn';
+import { usePublicBranding } from '@/hooks';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -8,13 +9,23 @@ interface MainLayoutProps {
 }
 
 function Navbar() {
+  const { branding } = usePublicBranding();
+
   return (
     <nav className="bg-primary text-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-bold">Oneo</span>
+            {branding?.logo_url ? (
+              <img
+                src={branding.logo_url}
+                alt={branding.company_name || 'Logo'}
+                className="h-8 w-auto"
+              />
+            ) : (
+              <span className="text-2xl font-bold">{branding?.company_name || 'Oneo'}</span>
+            )}
           </Link>
 
           {/* Navigation Links */}
@@ -62,6 +73,7 @@ function Navbar() {
 
 function Footer() {
   const currentYear = new Date().getFullYear();
+  const { branding } = usePublicBranding();
 
   return (
     <footer className="bg-primary text-white">
@@ -69,9 +81,17 @@ function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1">
-            <h3 className="text-2xl font-bold mb-4">Oneo</h3>
+            {branding?.logo_url ? (
+              <img
+                src={branding.logo_url}
+                alt={branding.company_name || 'Logo'}
+                className="h-8 w-auto mb-4"
+              />
+            ) : (
+              <h3 className="text-2xl font-bold mb-4">{branding?.company_name || 'Oneo'}</h3>
+            )}
             <p className="text-white/70 text-sm">
-              Connecting exceptional talent with innovative companies.
+              {branding?.tagline || 'Connecting exceptional talent with innovative companies.'}
             </p>
           </div>
 
@@ -149,7 +169,7 @@ function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-white/10 mt-8 pt-8 text-center text-sm text-white/60">
-          <p>&copy; {currentYear} Oneo. All rights reserved.</p>
+          <p>&copy; {currentYear} {branding?.company_name || 'Oneo'}. All rights reserved.</p>
         </div>
       </div>
     </footer>

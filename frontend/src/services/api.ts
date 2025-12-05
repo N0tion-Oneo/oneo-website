@@ -2,6 +2,28 @@ import axios, { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'ax
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
+// Extract base URL (without /api/v1) for media files
+export const getBackendBaseUrl = (): string => {
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+  // Remove /api/v1 suffix to get the base URL
+  return apiUrl.replace(/\/api\/v1\/?$/, '');
+};
+
+/**
+ * Convert a relative media URL to an absolute URL.
+ * Handles URLs like "/media/branding/logo.png" by prepending the backend base URL.
+ */
+export const getMediaUrl = (url: string | null | undefined): string => {
+  if (!url) return '';
+  // If already absolute, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // Prepend backend base URL for relative paths
+  const baseUrl = getBackendBaseUrl();
+  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,

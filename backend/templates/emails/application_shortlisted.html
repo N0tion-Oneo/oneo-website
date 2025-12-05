@@ -1,0 +1,35 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Application Shortlisted{% endblock %}
+
+{% block content %}
+<h1>Congratulations! You've Been Shortlisted</h1>
+
+<p>Hi {{ recipient.first_name }},</p>
+
+<p>Great news! Your application for the <strong>{{ job_title }}</strong> position at <strong>{{ company_name }}</strong> has been <strong>shortlisted</strong>.</p>
+
+<div class="highlight">
+    <p style="margin: 0;"><strong>You've made it to the next round!</strong></p>
+    <p style="margin: 8px 0 0 0;">The hiring team was impressed with your profile and would like to move forward with your application.</p>
+</div>
+
+<div class="details">
+    <div class="details-row">
+        <span class="details-label">Position:</span>
+        <span class="details-value">{{ job_title }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Company:</span>
+        <span class="details-value">{{ company_name }}</span>
+    </div>
+</div>
+
+<p>We'll be in touch soon with next steps. In the meantime, please keep an eye on your email for updates.</p>
+
+<p>
+    <a href="{{ site_url }}{{ notification.action_url }}" class="button">View Application</a>
+</p>
+
+<p>Best of luck with the next steps!</p>
+{% endblock %}

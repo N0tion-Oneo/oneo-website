@@ -40,7 +40,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
         params.append('offset', String(currentOffset))
 
         const response = await api.get<Notification[]>(
-          `/jobs/notifications/?${params.toString()}`
+          `/notifications/?${params.toString()}`
         )
 
         if (reset) {
@@ -103,7 +103,7 @@ export function useUnreadCount(): UseUnreadCountReturn {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await api.get<{ unread_count: number }>('/jobs/notifications/unread-count/')
+      const response = await api.get<{ unread_count: number }>('/notifications/unread-count/')
       setCount(response.data.unread_count)
     } catch (err) {
       setError('Failed to load unread count')
@@ -140,7 +140,7 @@ export function useUnreadCountPolling(
 
   const fetchCount = useCallback(async () => {
     try {
-      const response = await api.get<{ unread_count: number }>('/jobs/notifications/unread-count/')
+      const response = await api.get<{ unread_count: number }>('/notifications/unread-count/')
       setCount(response.data.unread_count)
       setError(null)
     } catch (err) {
@@ -193,7 +193,7 @@ export function useNotification(notificationId: string): UseNotificationReturn {
     setError(null)
     try {
       const response = await api.get<Notification>(
-        `/jobs/notifications/${notificationId}/`
+        `/notifications/${notificationId}/`
       )
       setNotification(response.data)
     } catch (err) {
@@ -230,7 +230,7 @@ export function useMarkNotificationsRead(): UseMarkNotificationsReadReturn {
     setIsMarking(true)
     setError(null)
     try {
-      await api.post('/jobs/notifications/mark-read/', {
+      await api.post('/notifications/mark-read/', {
         notification_ids: notificationIds,
       })
     } catch (err) {
@@ -248,7 +248,7 @@ export function useMarkNotificationsRead(): UseMarkNotificationsReadReturn {
     setIsMarking(true)
     setError(null)
     try {
-      await api.post('/jobs/notifications/mark-read/', {
+      await api.post('/notifications/mark-read/', {
         mark_all: true,
       })
     } catch (err) {

@@ -19,4 +19,10 @@ urlpatterns = [
 
     # Scheduling endpoints (calendar integration)
     path('scheduling/', include('scheduling.urls')),
+
+    # Notifications endpoints
+    path('notifications/', include('notifications.urls')),
+
+    # Branding settings
+    path('branding/', include('branding.urls')),
 ]

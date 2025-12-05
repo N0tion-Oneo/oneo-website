@@ -848,6 +848,7 @@ export enum ApplicationStatus {
   IN_PROGRESS = 'in_progress',
   OFFER_MADE = 'offer_made',
   OFFER_ACCEPTED = 'offer_accepted',
+  OFFER_DECLINED = 'offer_declined',
   REJECTED = 'rejected',
 }
 
@@ -1330,40 +1331,154 @@ export interface CalendarSettingsUpdate {
 // ============================================================================
 
 export enum NotificationType {
-  // Stage notifications
+  // Account & Onboarding
+  WELCOME = 'welcome',
+  EMAIL_VERIFICATION = 'email_verification',
+  PASSWORD_RESET = 'password_reset',
+  PASSWORD_CHANGED = 'password_changed',
+  // Invitations
+  TEAM_INVITE = 'team_invite',
+  CLIENT_INVITE = 'client_invite',
+  COMPANY_MEMBER_INVITE = 'company_member_invite',
+  // Stage/Interview
   STAGE_SCHEDULED = 'stage_scheduled',
   STAGE_REMINDER = 'stage_reminder',
   STAGE_RESCHEDULED = 'stage_rescheduled',
   STAGE_CANCELLED = 'stage_cancelled',
-  // Assessment notifications
+  STAGE_COMPLETED = 'stage_completed',
+  STAGE_FEEDBACK_RECEIVED = 'stage_feedback_received',
+  // Booking (self-scheduling)
+  BOOKING_LINK_SENT = 'booking_link_sent',
+  BOOKING_CONFIRMED = 'booking_confirmed',
+  BOOKING_REMINDER = 'booking_reminder',
+  // Assessment
   ASSESSMENT_ASSIGNED = 'assessment_assigned',
   ASSESSMENT_REMINDER = 'assessment_reminder',
   SUBMISSION_RECEIVED = 'submission_received',
-  // Application notifications
+  // Application Lifecycle
   APPLICATION_RECEIVED = 'application_received',
+  APPLICATION_UNDER_REVIEW = 'application_under_review',
   APPLICATION_SHORTLISTED = 'application_shortlisted',
   APPLICATION_REJECTED = 'application_rejected',
+  APPLICATION_WITHDRAWN = 'application_withdrawn',
+  // Stage-Specific Advancement
+  ADVANCED_TO_APPLICATION_SCREEN = 'advanced_to_application_screen',
+  ADVANCED_TO_PHONE_SCREENING = 'advanced_to_phone_screening',
+  ADVANCED_TO_VIDEO_INTERVIEW = 'advanced_to_video_interview',
+  ADVANCED_TO_IN_PERSON_INTERVIEW = 'advanced_to_in_person_interview',
+  ADVANCED_TO_TAKE_HOME_ASSESSMENT = 'advanced_to_take_home_assessment',
+  ADVANCED_TO_IN_PERSON_ASSESSMENT = 'advanced_to_in_person_assessment',
+  ADVANCED_TO_CUSTOM_STAGE = 'advanced_to_custom_stage',
+  // Offers
   OFFER_RECEIVED = 'offer_received',
+  OFFER_ACCEPTED = 'offer_accepted',
+  OFFER_DECLINED = 'offer_declined',
+  // Job Lifecycle
+  JOB_PUBLISHED = 'job_published',
+  JOB_CLOSED = 'job_closed',
+  JOB_FILLED = 'job_filled',
+  JOB_UPDATED = 'job_updated',
+  // Admin/Custom
+  ADMIN_BROADCAST = 'admin_broadcast',
+  CUSTOM = 'custom',
+}
+
+export enum NotificationChannel {
+  EMAIL = 'email',
+  IN_APP = 'in_app',
+  BOTH = 'both',
 }
 
 export const NotificationTypeLabels: Record<NotificationType, string> = {
+  // Account & Onboarding
+  [NotificationType.WELCOME]: 'Welcome',
+  [NotificationType.EMAIL_VERIFICATION]: 'Email Verification',
+  [NotificationType.PASSWORD_RESET]: 'Password Reset',
+  [NotificationType.PASSWORD_CHANGED]: 'Password Changed',
+  // Invitations
+  [NotificationType.TEAM_INVITE]: 'Team Invitation',
+  [NotificationType.CLIENT_INVITE]: 'Client Invitation',
+  [NotificationType.COMPANY_MEMBER_INVITE]: 'Company Invitation',
+  // Stage/Interview
   [NotificationType.STAGE_SCHEDULED]: 'Interview Scheduled',
   [NotificationType.STAGE_REMINDER]: 'Interview Reminder',
   [NotificationType.STAGE_RESCHEDULED]: 'Interview Rescheduled',
   [NotificationType.STAGE_CANCELLED]: 'Interview Cancelled',
+  [NotificationType.STAGE_COMPLETED]: 'Interview Completed',
+  [NotificationType.STAGE_FEEDBACK_RECEIVED]: 'Feedback Received',
+  // Booking
+  [NotificationType.BOOKING_LINK_SENT]: 'Booking Link Sent',
+  [NotificationType.BOOKING_CONFIRMED]: 'Booking Confirmed',
+  [NotificationType.BOOKING_REMINDER]: 'Booking Reminder',
+  // Assessment
   [NotificationType.ASSESSMENT_ASSIGNED]: 'Assessment Assigned',
-  [NotificationType.ASSESSMENT_REMINDER]: 'Assessment Deadline Reminder',
+  [NotificationType.ASSESSMENT_REMINDER]: 'Assessment Reminder',
   [NotificationType.SUBMISSION_RECEIVED]: 'Submission Received',
+  // Application Lifecycle
   [NotificationType.APPLICATION_RECEIVED]: 'New Application',
-  [NotificationType.APPLICATION_SHORTLISTED]: 'Application Shortlisted',
-  [NotificationType.APPLICATION_REJECTED]: 'Application Update',
+  [NotificationType.APPLICATION_UNDER_REVIEW]: 'Under Review',
+  [NotificationType.APPLICATION_SHORTLISTED]: 'Shortlisted',
+  [NotificationType.APPLICATION_REJECTED]: 'Application Rejected',
+  [NotificationType.APPLICATION_WITHDRAWN]: 'Application Withdrawn',
+  // Stage-Specific Advancement
+  [NotificationType.ADVANCED_TO_APPLICATION_SCREEN]: 'Advanced to Application Screen',
+  [NotificationType.ADVANCED_TO_PHONE_SCREENING]: 'Advanced to Phone Screening',
+  [NotificationType.ADVANCED_TO_VIDEO_INTERVIEW]: 'Advanced to Video Interview',
+  [NotificationType.ADVANCED_TO_IN_PERSON_INTERVIEW]: 'Advanced to In-Person Interview',
+  [NotificationType.ADVANCED_TO_TAKE_HOME_ASSESSMENT]: 'Advanced to Take-Home Assessment',
+  [NotificationType.ADVANCED_TO_IN_PERSON_ASSESSMENT]: 'Advanced to In-Person Assessment',
+  [NotificationType.ADVANCED_TO_CUSTOM_STAGE]: 'Advanced to Next Stage',
+  // Offers
   [NotificationType.OFFER_RECEIVED]: 'Offer Received',
+  [NotificationType.OFFER_ACCEPTED]: 'Offer Accepted',
+  [NotificationType.OFFER_DECLINED]: 'Offer Declined',
+  // Job Lifecycle
+  [NotificationType.JOB_PUBLISHED]: 'Job Published',
+  [NotificationType.JOB_CLOSED]: 'Job Closed',
+  [NotificationType.JOB_FILLED]: 'Job Filled',
+  [NotificationType.JOB_UPDATED]: 'Job Updated',
+  // Admin/Custom
+  [NotificationType.ADMIN_BROADCAST]: 'Admin Broadcast',
+  [NotificationType.CUSTOM]: 'Custom Notification',
+}
+
+export const NotificationChannelLabels: Record<NotificationChannel, string> = {
+  [NotificationChannel.EMAIL]: 'Email',
+  [NotificationChannel.IN_APP]: 'In-App',
+  [NotificationChannel.BOTH]: 'Email & In-App',
+}
+
+export enum RecipientType {
+  CANDIDATE = 'candidate',
+  CLIENT = 'client',
+  RECRUITER = 'recruiter',
+  INTERVIEWER = 'interviewer',
+  COMPANY_ADMIN = 'company_admin',
+  COMPANY_EDITOR = 'company_editor',
+  COMPANY_VIEWER = 'company_viewer',
+  COMPANY_TEAM = 'company_team',
+  ALL = 'all',
+}
+
+export const RecipientTypeLabels: Record<RecipientType, string> = {
+  [RecipientType.CANDIDATE]: 'Candidate',
+  [RecipientType.CLIENT]: 'Client',
+  [RecipientType.RECRUITER]: 'Recruiter',
+  [RecipientType.INTERVIEWER]: 'Interviewer',
+  [RecipientType.COMPANY_ADMIN]: 'Company Admin',
+  [RecipientType.COMPANY_EDITOR]: 'Company Editor',
+  [RecipientType.COMPANY_VIEWER]: 'Company Viewer',
+  [RecipientType.COMPANY_TEAM]: 'Company Team (All)',
+  [RecipientType.ALL]: 'All Users',
 }
 
 export interface Notification {
   id: string
   recipient: string
   notification_type: NotificationType
+  notification_type_display?: string
+  channel?: NotificationChannel
+  channel_display?: string
   application: string | null
   stage_instance: string | null
   title: string
@@ -1373,4 +1488,213 @@ export interface Notification {
   email_sent: boolean
   sent_at: string
   created_at: string
+}
+
+export interface AdminNotification extends Notification {
+  recipient_email: string
+  recipient_name: string
+  read_at: string | null
+  email_sent_at: string | null
+  email_error: string
+}
+
+export interface NotificationTemplate {
+  id: string
+  name: string
+  description: string
+  template_type: string
+  recipient_type: RecipientType
+  is_custom: boolean
+  title_template: string
+  body_template: string
+  email_subject_template: string
+  email_body_template: string
+  default_channel: NotificationChannel
+  is_active: boolean
+  created_by: string | null
+  created_by_email?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface SendNotificationInput {
+  recipient_ids: number[]
+  title: string
+  body: string
+  channel: NotificationChannel
+  action_url?: string
+  template_id?: string
+}
+
+export interface UserSearchResult {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  full_name: string
+  role: UserRole
+}
+
+export type RecipientFilter = 'all' | 'candidates' | 'clients' | 'recruiters'
+
+export interface BroadcastInput {
+  recipient_filter: RecipientFilter
+  title: string
+  body: string
+  channel: NotificationChannel
+  action_url?: string
+}
+
+export const RecipientFilterLabels: Record<RecipientFilter, string> = {
+  all: 'All Users',
+  candidates: 'All Candidates',
+  clients: 'All Clients',
+  recruiters: 'Recruiters & Admins',
+}
+
+// ============================================================================
+// Branding Settings
+// ============================================================================
+
+export interface BrandingSettings {
+  id: string
+  // Company Info
+  company_name: string
+  tagline: string
+  // Logo - File uploads
+  logo: string | null
+  logo_dark: string | null
+  favicon: string | null
+  // Logo - URL fallbacks
+  logo_url: string
+  logo_dark_url: string
+  favicon_url: string
+  // Logo - Effective URLs (computed - file takes precedence over URL)
+  effective_logo_url: string
+  effective_logo_dark_url: string
+  effective_favicon_url: string
+  // Typography
+  font_family: string
+  // Primary Colors
+  primary_color: string
+  primary_color_dark: string
+  primary_color_light: string
+  // Secondary Colors
+  secondary_color: string
+  secondary_color_dark: string
+  secondary_color_light: string
+  // Accent Colors
+  accent_color: string
+  accent_color_dark: string
+  accent_color_light: string
+  // Status Colors
+  success_color: string
+  warning_color: string
+  error_color: string
+  // Email settings
+  email_background_color: string
+  email_header_background: string
+  email_footer_text: string
+  // Social Links
+  website_url: string
+  facebook_url: string
+  twitter_url: string
+  linkedin_url: string
+  instagram_url: string
+  has_social_links: boolean
+  // Contact
+  support_email: string
+  contact_phone: string
+  address: string
+  // Legal
+  privacy_policy_url: string
+  terms_of_service_url: string
+  // Advanced
+  custom_css: string
+  // Email Template
+  email_base_template: string
+  // Meta
+  updated_at: string
+}
+
+export interface BrandingSettingsUpdate {
+  // Company Info
+  company_name?: string
+  tagline?: string
+  // Logo - File uploads (File object or null to clear)
+  logo?: File | null
+  logo_dark?: File | null
+  favicon?: File | null
+  // Logo - URL fallbacks
+  logo_url?: string
+  logo_dark_url?: string
+  favicon_url?: string
+  // Typography
+  font_family?: string
+  // Primary Colors
+  primary_color?: string
+  primary_color_dark?: string
+  primary_color_light?: string
+  // Secondary Colors
+  secondary_color?: string
+  secondary_color_dark?: string
+  secondary_color_light?: string
+  // Accent Colors
+  accent_color?: string
+  accent_color_dark?: string
+  accent_color_light?: string
+  // Status Colors
+  success_color?: string
+  warning_color?: string
+  error_color?: string
+  // Email settings
+  email_background_color?: string
+  email_header_background?: string
+  email_footer_text?: string
+  // Social Links
+  website_url?: string
+  facebook_url?: string
+  twitter_url?: string
+  linkedin_url?: string
+  instagram_url?: string
+  // Contact
+  support_email?: string
+  contact_phone?: string
+  address?: string
+  // Legal
+  privacy_policy_url?: string
+  terms_of_service_url?: string
+  // Advanced
+  custom_css?: string
+  // Email Template
+  email_base_template?: string
+}
+
+export interface PublicBranding {
+  company_name: string
+  tagline: string
+  logo_url: string
+  logo_dark_url: string
+  favicon_url: string
+  font_family: string
+  // Primary Colors
+  primary_color: string
+  primary_color_dark: string
+  primary_color_light: string
+  // Secondary Colors
+  secondary_color: string
+  secondary_color_dark: string
+  secondary_color_light: string
+  // Accent Colors
+  accent_color: string
+  accent_color_dark: string
+  accent_color_light: string
+  // Status Colors
+  success_color: string
+  warning_color: string
+  error_color: string
+  // Links
+  website_url: string
+  privacy_policy_url: string
+  terms_of_service_url: string
 }

@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePublicBranding } from '@/hooks';
 import { AxiosError } from 'axios';
 
 const signupSchema = z
@@ -28,9 +29,12 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const { register: registerUser } = useAuth();
+  const { branding } = usePublicBranding();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  const companyName = branding?.company_name || 'Oneo';
 
   const {
     register,
@@ -85,8 +89,16 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <header className="p-6">
-        <Link to="/" className="text-xl font-semibold text-gray-900">
-          Oneo
+        <Link to="/" className="flex items-center">
+          {branding?.logo_url ? (
+            <img
+              src={branding.logo_url}
+              alt={companyName}
+              className="h-8 w-auto"
+            />
+          ) : (
+            <span className="text-xl font-semibold text-gray-900">{companyName}</span>
+          )}
         </Link>
       </header>
 
@@ -96,7 +108,7 @@ export default function SignupPage() {
             Create account
           </h1>
           <p className="mt-2 text-[15px] text-gray-500">
-            Get started with Oneo
+            Get started with {companyName}
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8" noValidate>

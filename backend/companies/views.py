@@ -1,9 +1,16 @@
+import logging
+
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q, Count, Case, When, IntegerField
 from django.contrib.auth import get_user_model
+from django.conf import settings
+
+from notifications.services import NotificationService
+
+logger = logging.getLogger(__name__)
 
 from .models import Company, CompanyUser, CompanyUserRole, Country, City
 from users.models import UserRole
@@ -291,6 +298,21 @@ def invite_company_user(request):
             invited_by=request.user,
             expires_at=timezone.now() + timedelta(days=7),
         )
+
+        # Build signup URL and send invitation email
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        signup_url = f"{frontend_url}/signup/company/{invitation.token}"
+
+        try:
+            NotificationService.notify_company_member_invite(
+                email=email,
+                invited_by=request.user,
+                company_name=company.name,
+                role=role,
+                signup_url=signup_url,
+            )
+        except Exception as e:
+            logger.error(f"Failed to send company member invitation email: {e}")
 
         return Response(
             {'message': 'Invitation sent', 'type': 'invited', 'data': CompanyInvitationSerializer(invitation).data},

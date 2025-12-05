@@ -43,6 +43,7 @@ const getStatusColor = (status: ApplicationStatus) => {
     [ApplicationStatus.IN_PROGRESS]: 'bg-yellow-100 text-yellow-700',
     [ApplicationStatus.OFFER_MADE]: 'bg-purple-100 text-purple-700',
     [ApplicationStatus.OFFER_ACCEPTED]: 'bg-green-100 text-green-700',
+    [ApplicationStatus.OFFER_DECLINED]: 'bg-orange-100 text-orange-700',
     [ApplicationStatus.REJECTED]: 'bg-red-100 text-red-700',
   }
   return colors[status] || 'bg-gray-100 text-gray-700'
@@ -61,6 +62,8 @@ const getKanbanColumnName = (application: Application): string => {
       return 'Offer Made'
     case ApplicationStatus.OFFER_ACCEPTED:
       return 'Offer Accepted'
+    case ApplicationStatus.OFFER_DECLINED:
+      return 'Offer Declined'
     case ApplicationStatus.REJECTED:
       return 'Rejected'
     default:

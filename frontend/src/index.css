@@ -3,17 +3,25 @@
 @theme {
   --font-family-sans: 'Poppins', system-ui, -apple-system, sans-serif;
 
+  /* Primary Colors */
   --color-primary: #003E49;
   --color-primary-dark: #002A32;
   --color-primary-light: #0D646D;
 
+  /* Secondary Colors */
   --color-secondary: #0D646D;
   --color-secondary-dark: #064852;
   --color-secondary-light: #1A7A88;
 
+  /* Accent Colors */
   --color-accent: #FF7B55;
   --color-accent-dark: #E65A35;
   --color-accent-light: #FFAB97;
+
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-warning: #f97316;
+  --color-error: #ef4444;
 }
 
 html {
@@ -23,4 +31,62 @@ html {
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Status Badge Utilities */
+/* These provide consistent styling for status indicators that respect branding */
+
+.badge-success {
+  background-color: color-mix(in srgb, var(--color-success) 15%, white);
+  color: color-mix(in srgb, var(--color-success) 80%, black);
+}
+
+.badge-warning {
+  background-color: color-mix(in srgb, var(--color-warning) 15%, white);
+  color: color-mix(in srgb, var(--color-warning) 80%, black);
+}
+
+.badge-error {
+  background-color: color-mix(in srgb, var(--color-error) 15%, white);
+  color: color-mix(in srgb, var(--color-error) 80%, black);
+}
+
+.badge-primary {
+  background-color: color-mix(in srgb, var(--color-primary) 15%, white);
+  color: color-mix(in srgb, var(--color-primary) 80%, black);
+}
+
+.badge-secondary {
+  background-color: color-mix(in srgb, var(--color-secondary) 15%, white);
+  color: color-mix(in srgb, var(--color-secondary) 80%, black);
+}
+
+.badge-accent {
+  background-color: color-mix(in srgb, var(--color-accent) 15%, white);
+  color: color-mix(in srgb, var(--color-accent) 80%, black);
+}
+
+/* Alert/Notice Box Utilities */
+.alert-success {
+  background-color: color-mix(in srgb, var(--color-success) 10%, white);
+  border-color: color-mix(in srgb, var(--color-success) 30%, white);
+  color: color-mix(in srgb, var(--color-success) 90%, black);
+}
+
+.alert-warning {
+  background-color: color-mix(in srgb, var(--color-warning) 10%, white);
+  border-color: color-mix(in srgb, var(--color-warning) 30%, white);
+  color: color-mix(in srgb, var(--color-warning) 90%, black);
+}
+
+.alert-error {
+  background-color: color-mix(in srgb, var(--color-error) 10%, white);
+  border-color: color-mix(in srgb, var(--color-error) 30%, white);
+  color: color-mix(in srgb, var(--color-error) 90%, black);
+}
+
+.alert-info {
+  background-color: color-mix(in srgb, var(--color-secondary) 10%, white);
+  border-color: color-mix(in srgb, var(--color-secondary) 30%, white);
+  color: color-mix(in srgb, var(--color-secondary) 90%, black);
 }

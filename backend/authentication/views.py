@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -11,6 +13,9 @@ from datetime import timedelta
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from users.models import UserRole
+from notifications.services import NotificationService
+
+logger = logging.getLogger(__name__)
 
 from .models import ClientInvitation, RecruiterInvitation
 from .serializers import (
@@ -100,6 +105,12 @@ def register(request):
     if serializer.is_valid():
         user = serializer.save()
         tokens = get_tokens_for_user(user)
+
+        # Send welcome notification
+        try:
+            NotificationService.send_welcome_notification(user)
+        except Exception as e:
+            logger.error(f"Failed to send welcome notification: {e}")
 
         response_data = {
             'message': 'Registration successful',
@@ -298,6 +309,13 @@ def change_password(request):
     if serializer.is_valid():
         request.user.set_password(serializer.validated_data['new_password'])
         request.user.save()
+
+        # Send password changed notification
+        try:
+            NotificationService.notify_password_changed(request.user)
+        except Exception as e:
+            logger.error(f"Failed to send password changed notification: {e}")
+
         return Response(
             {'message': 'Password changed successfully'},
             status=status.HTTP_200_OK
@@ -326,11 +344,19 @@ def verify_email(request):
     """
     serializer = VerifyEmailSerializer(data=request.data)
     if serializer.is_valid():
-        # TODO: Implement actual email verification
-        # 1. Find user by verification token
-        # 2. Check token is valid and not expired
-        # 3. Set user.is_verified = True
-        # 4. Clear verification token
+        # TODO: Implement email verification flow
+        # Implementation steps:
+        # 1. Add verification_token and verification_token_expires fields to User model
+        # 2. Generate token on registration: token = get_random_string(64)
+        # 3. Send verification email:
+        #    from notifications.services.notification_service import NotificationService
+        #    verification_url = f"{settings.FRONTEND_URL}/verify-email/{token}"
+        #    NotificationService.notify_email_verification(user, verification_url)
+        # 4. In this endpoint:
+        #    - Find user by token
+        #    - Check token not expired
+        #    - Set user.is_verified = True
+        #    - Clear token
         return Response(
             {'message': 'Email verification endpoint (stub)'},
             status=status.HTTP_200_OK
@@ -355,10 +381,18 @@ def forgot_password(request):
     """
     serializer = ForgotPasswordSerializer(data=request.data)
     if serializer.is_valid():
-        # TODO: Implement actual password reset email
-        # 1. Find user by email
-        # 2. Generate reset token
-        # 3. Send reset email
+        # TODO: Implement password reset email flow
+        # Implementation steps:
+        # 1. Add password_reset_token and password_reset_token_expires fields to User model
+        # 2. Find user by email (if exists):
+        #    user = User.objects.filter(email=email).first()
+        #    if user:
+        #        token = get_random_string(64)
+        #        user.password_reset_token = token
+        #        user.password_reset_token_expires = timezone.now() + timedelta(hours=24)
+        #        user.save()
+        #        reset_url = f"{settings.FRONTEND_URL}/reset-password/{token}"
+        #        NotificationService.notify_password_reset(user, reset_url)
         # Always return success to prevent email enumeration
         return Response(
             {'message': 'If an account exists with this email, a password reset link has been sent.'},
@@ -385,11 +419,20 @@ def reset_password(request):
     """
     serializer = ResetPasswordSerializer(data=request.data)
     if serializer.is_valid():
-        # TODO: Implement actual password reset
-        # 1. Find user by reset token
-        # 2. Check token is valid and not expired
-        # 3. Set new password
-        # 4. Clear reset token
+        # TODO: Implement password reset confirmation
+        # Implementation steps:
+        # 1. Find user by token:
+        #    user = User.objects.filter(password_reset_token=token).first()
+        # 2. Check token valid and not expired:
+        #    if not user or user.password_reset_token_expires < timezone.now():
+        #        return Response({'error': 'Invalid or expired token'}, status=400)
+        # 3. Set new password:
+        #    user.set_password(new_password)
+        #    user.password_reset_token = None
+        #    user.password_reset_token_expires = None
+        #    user.save()
+        # 4. Optionally send PASSWORD_CHANGED notification:
+        #    NotificationService.notify_password_changed(user)
         return Response(
             {'message': 'Password reset endpoint (stub)'},
             status=status.HTTP_200_OK
@@ -466,6 +509,17 @@ def create_client_invitation(request):
         # Build signup URL
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
         signup_url = f"{frontend_url}/signup/client/{invitation.token}"
+
+        # Send invitation email if email was provided
+        if invitation.email:
+            try:
+                NotificationService.notify_client_invite(
+                    email=invitation.email,
+                    invited_by=request.user,
+                    signup_url=signup_url,
+                )
+            except Exception as e:
+                logger.error(f"Failed to send client invitation email: {e}")
 
         return Response({
             'token': str(invitation.token),
@@ -584,6 +638,12 @@ def signup_with_invitation(request, token):
                 'name': company_invitation.company.name,
                 'role': company_invitation.role,
             }
+
+        # Send welcome notification
+        try:
+            NotificationService.send_welcome_notification(user)
+        except Exception as e:
+            logger.error(f"Failed to send welcome notification: {e}")
 
         # Generate tokens
         tokens = get_tokens_for_user(user)
@@ -710,6 +770,12 @@ def signup_with_company_invitation(request, token):
         invitation.accepted_at = timezone.now()
         invitation.save()
 
+        # Send welcome notification
+        try:
+            NotificationService.send_welcome_notification(user)
+        except Exception as e:
+            logger.error(f"Failed to send welcome notification: {e}")
+
         # Generate tokens
         tokens = get_tokens_for_user(user)
 
@@ -801,6 +867,17 @@ def create_recruiter_invitation(request):
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
         signup_url = f"{frontend_url}/signup/recruiter/{invitation.token}"
 
+        # Send invitation email if email was provided
+        if invitation.email:
+            try:
+                NotificationService.notify_team_invite(
+                    email=invitation.email,
+                    invited_by=request.user,
+                    signup_url=signup_url,
+                )
+            except Exception as e:
+                logger.error(f"Failed to send recruiter invitation email: {e}")
+
         return Response({
             'token': str(invitation.token),
             'email': invitation.email,
@@ -889,6 +966,12 @@ def signup_with_recruiter_invitation(request, token):
         invitation.used_at = timezone.now()
         invitation.used_by = user
         invitation.save()
+
+        # Send welcome notification
+        try:
+            NotificationService.send_welcome_notification(user)
+        except Exception as e:
+            logger.error(f"Failed to send welcome notification: {e}")
 
         # Generate tokens
         tokens = get_tokens_for_user(user)

@@ -1,0 +1,38 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Job Offer{% endblock %}
+
+{% block content %}
+<h1>Congratulations! You've Received a Job Offer</h1>
+
+<p>Hi {{ recipient.first_name }},</p>
+
+<p>We are thrilled to inform you that you have been selected for the <strong>{{ job_title }}</strong> position at <strong>{{ company_name }}</strong>!</p>
+
+<div class="highlight" style="background-color: #d4edda; border-left-color: #28a745;">
+    <p style="margin: 0; font-size: 18px; color: #155724;"><strong>We would like to offer you this position!</strong></p>
+</div>
+
+<div class="details">
+    <div class="details-row">
+        <span class="details-label">Position:</span>
+        <span class="details-value">{{ job_title }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Company:</span>
+        <span class="details-value">{{ company_name }}</span>
+    </div>
+</div>
+
+<p>Your skills, experience, and interview performance impressed our team, and we believe you would be a great addition to {{ company_name }}.</p>
+
+<p>Please review the offer details and let us know your decision. If you have any questions, don't hesitate to reach out.</p>
+
+<p>
+    <a href="{{ site_url }}{{ notification.action_url }}" class="button" style="background-color: #28a745;">View Offer Details</a>
+</p>
+
+<p>We look forward to welcoming you to the team!</p>
+
+<p>Best regards,<br>The {{ company_name }} Team</p>
+{% endblock %}

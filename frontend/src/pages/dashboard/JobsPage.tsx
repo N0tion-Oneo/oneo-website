@@ -439,7 +439,7 @@ export default function JobsPage({ mode }: JobsPageProps) {
                                   <button
                                     onClick={() => handlePublish(job.id)}
                                     disabled={isSubmitting}
-                                    className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-green-700 hover:bg-green-50"
+                                    className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-success hover:bg-success/10"
                                   >
                                     <Play className="w-4 h-4" />
                                     Publish
@@ -451,7 +451,7 @@ export default function JobsPage({ mode }: JobsPageProps) {
                                     <button
                                       onClick={() => handleClose(job.id)}
                                       disabled={isSubmitting}
-                                      className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-orange-700 hover:bg-orange-50"
+                                      className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-warning hover:bg-warning/10"
                                     >
                                       <Pause className="w-4 h-4" />
                                       Close Job
@@ -459,7 +459,7 @@ export default function JobsPage({ mode }: JobsPageProps) {
                                     <button
                                       onClick={() => handleMarkFilled(job.id)}
                                       disabled={isSubmitting}
-                                      className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-blue-700 hover:bg-blue-50"
+                                      className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-primary hover:bg-primary/10"
                                     >
                                       <CheckCircle className="w-4 h-4" />
                                       Mark as Filled
@@ -471,7 +471,7 @@ export default function JobsPage({ mode }: JobsPageProps) {
                                 <button
                                   onClick={() => handleDelete(job.id)}
                                   disabled={isDeleting}
-                                  className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-red-600 hover:bg-red-50"
+                                  className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-error hover:bg-error/10"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                   Delete Job

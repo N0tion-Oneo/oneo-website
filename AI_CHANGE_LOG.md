@@ -69,3 +69,18 @@ This file tracks all changes made by the AI assistant to the project.
 - Ran frontend startup script in background mode (Vite dev server on http://localhost:5173)
 - Both servers are now running in the background
 
+## 2024-12-19 - Git Push: Calendar Service Refactor
+
+**Time**: Current session
+**Description**: Committed and pushed calendar service refactor and scheduling module addition
+**Reason**: User requested to push latest updates to GitHub
+**Affected Files**:
+- 23 files changed (562 insertions, 414 deletions)
+**Changes**:
+- Staged all changes (modified and untracked files) with `git add -A`
+- Committed changes with message: "Refactor calendar service and add scheduling module"
+- Pushed commit (d3bd4fd) to origin/main branch
+- Created new scheduling module with calendar service moved from jobs/services
+- Updated job models, serializers, views, and frontend components
+- Updated API URLs and settings configuration
+

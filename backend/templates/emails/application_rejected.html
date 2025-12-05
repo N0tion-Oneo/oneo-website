@@ -1,0 +1,37 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Application Update{% endblock %}
+
+{% block content %}
+<h1>Application Update</h1>
+
+<p>Hi {{ recipient.first_name }},</p>
+
+<p>Thank you for your interest in the <strong>{{ job_title }}</strong> position at <strong>{{ company_name }}</strong> and for taking the time to apply.</p>
+
+<p>After careful consideration, we have decided not to move forward with your application at this time. This was a difficult decision as we received many qualified applicants.</p>
+
+<div class="details">
+    <div class="details-row">
+        <span class="details-label">Position:</span>
+        <span class="details-value">{{ job_title }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Company:</span>
+        <span class="details-value">{{ company_name }}</span>
+    </div>
+</div>
+
+<h2>What's Next?</h2>
+
+<p>We encourage you to:</p>
+<ul>
+    <li>Keep an eye on our careers page for future opportunities</li>
+    <li>Continue to develop your skills and experience</li>
+    <li>Feel free to apply for other positions that match your profile</li>
+</ul>
+
+<p>We wish you the best in your job search and future career endeavors.</p>
+
+<p>Kind regards,<br>The {{ company_name }} Team</p>
+{% endblock %}

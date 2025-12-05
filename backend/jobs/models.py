@@ -66,6 +66,14 @@ class Job(models.Model):
         blank=True,
         related_name='jobs_assigned',
     )
+    assigned_client = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='jobs_as_client',
+        help_text='Client user assigned to this job for notifications',
+    )
 
     # Basic Info
     title = models.CharField(max_length=200)
@@ -279,6 +287,7 @@ class ApplicationStatus(models.TextChoices):
     IN_PROGRESS = 'in_progress', 'In Progress'
     OFFER_MADE = 'offer_made', 'Offer Made'
     OFFER_ACCEPTED = 'offer_accepted', 'Offer Accepted'
+    OFFER_DECLINED = 'offer_declined', 'Offer Declined'
     REJECTED = 'rejected', 'Rejected'
 
 
@@ -433,6 +442,13 @@ class Application(models.Model):
         self.status = ApplicationStatus.OFFER_ACCEPTED
         self.final_offer_details = final_details or self.offer_details
         self.offer_accepted_at = timezone.now()
+        self.save()
+
+    def decline_offer(self, reason=''):
+        """Record that candidate declined the offer."""
+        self.status = ApplicationStatus.OFFER_DECLINED
+        self.rejection_reason = reason  # Reuse rejection_reason for decline reason
+        self.rejected_at = timezone.now()  # Reuse rejected_at for declined timestamp
         self.save()
 
     @property
@@ -1178,169 +1194,16 @@ class ApplicationStageInstance(models.Model):
 
 
 # ============================================================================
-# Notifications
+# Notifications - MOVED TO notifications app
 # ============================================================================
-
-class NotificationType(models.TextChoices):
-    """Types of notifications that can be sent."""
-    # Stage/Interview notifications
-    STAGE_SCHEDULED = 'stage_scheduled', 'Interview Scheduled'
-    STAGE_REMINDER = 'stage_reminder', 'Interview Reminder'
-    STAGE_RESCHEDULED = 'stage_rescheduled', 'Interview Rescheduled'
-    STAGE_CANCELLED = 'stage_cancelled', 'Interview Cancelled'
-    # Assessment notifications
-    ASSESSMENT_ASSIGNED = 'assessment_assigned', 'Assessment Assigned'
-    ASSESSMENT_REMINDER = 'assessment_reminder', 'Assessment Deadline Reminder'
-    SUBMISSION_RECEIVED = 'submission_received', 'Submission Received'
-    # Application notifications
-    APPLICATION_RECEIVED = 'application_received', 'Application Received'
-    APPLICATION_SHORTLISTED = 'application_shortlisted', 'Application Shortlisted'
-    APPLICATION_REJECTED = 'application_rejected', 'Application Rejected'
-    OFFER_RECEIVED = 'offer_received', 'Offer Received'
-
-
-class NotificationChannel(models.TextChoices):
-    """Channels through which notifications can be sent."""
-    EMAIL = 'email', 'Email'
-    IN_APP = 'in_app', 'In-App'
-    BOTH = 'both', 'Email & In-App'
-
-
-class Notification(models.Model):
-    """
-    Notification record for users.
-    Supports both email and in-app notifications.
-    """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    recipient = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='notifications',
-    )
-
-    notification_type = models.CharField(
-        max_length=30,
-        choices=NotificationType.choices,
-    )
-    channel = models.CharField(
-        max_length=20,
-        choices=NotificationChannel.choices,
-        default=NotificationChannel.BOTH,
-    )
-
-    # Related objects (optional)
-    application = models.ForeignKey(
-        Application,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='notifications',
-    )
-    stage_instance = models.ForeignKey(
-        ApplicationStageInstance,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='notifications',
-    )
-
-    # Content
-    title = models.CharField(max_length=200)
-    body = models.TextField()
-    action_url = models.URLField(
-        blank=True,
-        help_text='URL to navigate to when notification is clicked',
-    )
-
-    # Status
-    is_read = models.BooleanField(default=False)
-    read_at = models.DateTimeField(null=True, blank=True)
-
-    # Email tracking
-    email_sent = models.BooleanField(default=False)
-    email_sent_at = models.DateTimeField(null=True, blank=True)
-    email_error = models.TextField(
-        blank=True,
-        help_text='Error message if email sending failed',
-    )
-
-    sent_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'notifications'
-        ordering = ['-sent_at']
-        indexes = [
-            models.Index(fields=['recipient', '-sent_at']),
-            models.Index(fields=['recipient', 'is_read']),
-        ]
-
-    def __str__(self):
-        return f"{self.get_notification_type_display()} for {self.recipient.email}"
-
-    def mark_as_read(self):
-        """Mark notification as read."""
-        if not self.is_read:
-            self.is_read = True
-            self.read_at = timezone.now()
-            self.save(update_fields=['is_read', 'read_at'])
+# NOTE: NotificationType, NotificationChannel, and Notification have been moved
+# to the notifications app. Import from notifications.models instead:
+#   from notifications.models import Notification, NotificationType, NotificationChannel
 
 
 # ============================================================================
-# Booking Tokens (Calendly-like self-scheduling)
+# Booking Tokens - MOVED TO scheduling app
 # ============================================================================
-
-class BookingToken(models.Model):
-    """
-    Token for candidate self-booking (like Calendly public links).
-    Allows candidates to select a time slot from interviewer's availability.
-    """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    stage_instance = models.OneToOneField(
-        ApplicationStageInstance,
-        on_delete=models.CASCADE,
-        related_name='booking_token',
-    )
-
-    token = models.CharField(
-        max_length=64,
-        unique=True,
-        help_text='Secure random token for booking URL',
-    )
-    expires_at = models.DateTimeField(
-        help_text='Token expiration time (default: 7 days from creation)',
-    )
-
-    is_used = models.BooleanField(
-        default=False,
-        help_text='Whether the token has been used to book',
-    )
-    used_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text='When the candidate completed the booking',
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'booking_tokens'
-        indexes = [
-            models.Index(fields=['token']),
-            models.Index(fields=['expires_at']),
-        ]
-
-    def __str__(self):
-        return f"Booking token for {self.stage_instance}"
-
-    @property
-    def is_valid(self):
-        """Check if token is still valid (not used and not expired)."""
-        return not self.is_used and timezone.now() < self.expires_at
-
-    def mark_as_used(self):
-        """Mark the token as used."""
-        self.is_used = True
-        self.used_at = timezone.now()
-        self.save(update_fields=['is_used', 'used_at'])
+# NOTE: BookingToken has been moved to the scheduling app.
+# Import from scheduling.models instead:
+#   from scheduling.models import BookingToken

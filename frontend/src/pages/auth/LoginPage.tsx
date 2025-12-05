@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePublicBranding } from '@/hooks';
 import { AxiosError } from 'axios';
 
 const loginSchema = z.object({
@@ -15,10 +16,13 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { branding } = usePublicBranding();
   const navigate = useNavigate();
   const location = useLocation();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  const companyName = branding?.company_name || 'Oneo';
 
   const from = (location.state as { from?: Location })?.from?.pathname || '/dashboard';
 
@@ -48,8 +52,16 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <header className="p-6">
-        <Link to="/" className="text-xl font-semibold text-gray-900">
-          Oneo
+        <Link to="/" className="flex items-center">
+          {branding?.logo_url ? (
+            <img
+              src={branding.logo_url}
+              alt={companyName}
+              className="h-8 w-auto"
+            />
+          ) : (
+            <span className="text-xl font-semibold text-gray-900">{companyName}</span>
+          )}
         </Link>
       </header>
 
@@ -59,7 +71,7 @@ export default function LoginPage() {
             Sign in
           </h1>
           <p className="mt-2 text-[15px] text-gray-500">
-            Welcome back to Oneo
+            Welcome back to {companyName}
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8" noValidate>

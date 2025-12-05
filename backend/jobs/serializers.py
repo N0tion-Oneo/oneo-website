@@ -9,9 +9,10 @@ from .models import (
     # Interview Stage System
     StageType, InterviewStageTemplate, StageInstanceStatus, ApplicationStageInstance,
     # NOTE: CalendarProvider, UserCalendarConnection moved to scheduling app
-    NotificationType, NotificationChannel, Notification,
-    BookingToken,
+    # NOTE: NotificationType, NotificationChannel, Notification moved to notifications app
 )
+# BookingToken moved to scheduling app
+from scheduling.models import BookingToken
 from companies.serializers import CompanyListSerializer, CountrySerializer, CitySerializer, BenefitCategorySerializer
 from companies.models import Country, City
 from candidates.serializers import SkillSerializer, TechnologySerializer, CandidateProfileSerializer
@@ -1549,57 +1550,5 @@ class CompleteStageSerializer(serializers.Serializer):
 
 # NOTE: Calendar Integration Serializers moved to scheduling app
 
-# ==================== Notification Serializers ====================
-
-
-class NotificationSerializer(serializers.ModelSerializer):
-    """Serializer for notifications."""
-    notification_type_display = serializers.CharField(source='get_notification_type_display', read_only=True)
-
-    class Meta:
-        model = Notification
-        fields = [
-            'id',
-            'notification_type',
-            'notification_type_display',
-            'channel',
-            'application',
-            'stage_instance',
-            'title',
-            'body',
-            'action_url',
-            'is_read',
-            'read_at',
-            'email_sent',
-            'email_sent_at',
-            'sent_at',
-        ]
-        read_only_fields = fields
-
-
-class NotificationListSerializer(serializers.ModelSerializer):
-    """Lightweight serializer for notification list."""
-    notification_type_display = serializers.CharField(source='get_notification_type_display', read_only=True)
-
-    class Meta:
-        model = Notification
-        fields = [
-            'id',
-            'notification_type',
-            'notification_type_display',
-            'title',
-            'body',
-            'action_url',
-            'is_read',
-            'sent_at',
-        ]
-        read_only_fields = fields
-
-
-class MarkNotificationReadSerializer(serializers.Serializer):
-    """Serializer for marking notification(s) as read."""
-    notification_ids = serializers.ListField(
-        child=serializers.UUIDField(),
-        required=False,
-        help_text='List of notification IDs to mark as read. If empty, marks all as read.'
-    )
+# NOTE: Notification Serializers moved to notifications app
+# Import from notifications.serializers if needed

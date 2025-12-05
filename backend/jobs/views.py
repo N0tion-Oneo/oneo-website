@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -6,6 +8,8 @@ from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
+logger = logging.getLogger(__name__)
+
 User = get_user_model()
 
 from .models import (
@@ -13,13 +17,14 @@ from .models import (
     ActivityLog, ActivityNote, ActivityType,
     # Interview Stage System
     StageType, InterviewStageTemplate, StageInstanceStatus, ApplicationStageInstance,
-    NotificationType, NotificationChannel, Notification,
-    BookingToken,
+    # NOTE: Notification models moved to notifications app
+    # NOTE: BookingToken moved to scheduling app
 )
 # Calendar models and service moved to scheduling app
-from scheduling.models import CalendarProvider, UserCalendarConnection
+from scheduling.models import CalendarProvider, UserCalendarConnection, BookingToken
 from scheduling.services.calendar_service import CalendarService, CalendarServiceError
-from .services.notification_service import NotificationService
+# Notification service moved to notifications app
+from notifications.services.notification_service import NotificationService
 import secrets
 from datetime import timedelta
 from .serializers import (
@@ -48,9 +53,7 @@ from .serializers import (
     AssignAssessmentSerializer,
     SubmitAssessmentSerializer,
     CompleteStageSerializer,
-    NotificationSerializer,
-    NotificationListSerializer,
-    MarkNotificationReadSerializer,
+    # NOTE: Notification serializers moved to notifications app
 )
 from companies.models import Company, CompanyUser, CompanyUserRole
 from companies.permissions import (
@@ -340,6 +343,11 @@ def job_detail(request, job_id):
         serializer = JobUpdateSerializer(job, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            # Notify active candidates about job update
+            try:
+                NotificationService.notify_job_updated(job)
+            except Exception as e:
+                logger.error(f"Failed to send job update notifications: {e}")
             return Response(JobDetailSerializer(job).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -402,6 +410,12 @@ def publish_job(request, job_id):
     job.published_at = timezone.now()
     job.save()
 
+    # Notify company members that job is published
+    try:
+        NotificationService.notify_job_published(job)
+    except Exception as e:
+        logger.warning(f"Failed to send job published notification: {e}")
+
     return Response(JobDetailSerializer(job).data)
 
 
@@ -443,6 +457,12 @@ def close_job(request, job_id):
     job.status = JobStatus.CLOSED
     job.save()
 
+    # Notify company members and recruiters that job is closed
+    try:
+        NotificationService.notify_job_closed(job)
+    except Exception as e:
+        logger.warning(f"Failed to send job closed notification: {e}")
+
     return Response(JobDetailSerializer(job).data)
 
 
@@ -477,6 +497,12 @@ def mark_job_filled(request, job_id):
 
     job.status = JobStatus.FILLED
     job.save()
+
+    # Notify company members that job is filled
+    try:
+        NotificationService.notify_job_filled(job)
+    except Exception as e:
+        logger.warning(f"Failed to send job filled notification: {e}")
 
     return Response(JobDetailSerializer(job).data)
 
@@ -569,6 +595,9 @@ def apply_to_job(request):
             activity_type=ActivityType.APPLIED,
             new_status=ApplicationStatus.APPLIED,
         )
+
+        # Notify recruiter/hiring manager about new application
+        NotificationService.notify_application_received(application)
 
         return Response(
             ApplicationSerializer(application).data,
@@ -696,6 +725,12 @@ def withdraw_application(request, application_id):
     application.job.applications_count = max(0, application.job.applications_count - 1)
     application.job.save(update_fields=['applications_count'])
 
+    # Notify recruiter/company that candidate withdrew
+    try:
+        NotificationService.notify_application_withdrawn(application)
+    except Exception as e:
+        logger.warning(f"Failed to send withdrawal notification: {e}")
+
     return Response(
         {'message': 'Application withdrawn'},
         status=status.HTTP_200_OK
@@ -798,6 +833,9 @@ def shortlist_application(request, application_id):
         new_status=application.status,
     )
 
+    # Notify candidate they've been shortlisted
+    NotificationService.notify_application_shortlisted(application)
+
     return Response(ApplicationSerializer(application).data)
 
 
@@ -855,6 +893,13 @@ def reject_application(request, application_id):
                 'rejection_reason': reason,
                 'rejection_feedback': feedback,
             },
+        )
+
+        # Notify candidate about rejection
+        NotificationService.notify_application_rejected(
+            application=application,
+            reason=reason,
+            feedback=feedback,
         )
 
         return Response(ApplicationSerializer(application).data)
@@ -916,6 +961,13 @@ def make_offer(request, application_id):
             metadata={'offer_details': offer_details},
         )
 
+        # Notify candidate about the offer (for new offers, not updates)
+        if not is_update:
+            NotificationService.notify_offer_received(
+                application=application,
+                offer_details=offer_details,
+            )
+
         return Response(ApplicationSerializer(application).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -973,8 +1025,86 @@ def accept_offer(request, application_id):
             metadata={'final_offer_details': final_details or application.offer_details},
         )
 
+        # Notify recruiter and client about offer acceptance
+        try:
+            NotificationService.notify_offer_accepted(application)
+        except Exception as e:
+            logger.warning(f"Failed to send offer accepted notification: {e}")
+
+        # Check if job should be marked as filled
+        job = application.job
+        if job.status == JobStatus.OPEN and job.positions_to_fill == 1:
+            job.status = JobStatus.FILLED
+            job.save(update_fields=['status'])
+            try:
+                NotificationService.notify_job_filled(job, hired_candidate=application)
+            except Exception as e:
+                logger.warning(f"Failed to send job filled notification: {e}")
+
         return Response(ApplicationSerializer(application).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def decline_offer(request, application_id):
+    """
+    Record that a candidate declined an offer.
+    Company members or recruiters only.
+    """
+    try:
+        application = Application.objects.select_related(
+            'job', 'job__company'
+        ).get(id=application_id)
+    except Application.DoesNotExist:
+        return Response(
+            {'error': 'Application not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response(
+            {'error': 'You do not have permission to update this application'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Must be in OFFER_MADE status to decline
+    if application.status != ApplicationStatus.OFFER_MADE:
+        return Response(
+            {'error': 'Can only decline an offer that has been made'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    reason = request.data.get('reason', '')
+    previous_status = application.status
+    application.decline_offer(reason=reason)
+
+    # Log the activity
+    log_activity(
+        application=application,
+        user=request.user,
+        activity_type=ActivityType.STATUS_CHANGED,
+        previous_status=previous_status,
+        new_status=application.status,
+        metadata={'decline_reason': reason},
+    )
+
+    # Notify recruiter and client about offer decline
+    try:
+        NotificationService.notify_offer_declined(application, reason=reason)
+    except Exception as e:
+        logger.warning(f"Failed to send offer declined notification: {e}")
+
+    return Response(ApplicationSerializer(application).data)
 
 
 @api_view(['POST'])
@@ -1975,6 +2105,19 @@ def complete_stage(request, application_id, instance_id):
             }
         )
 
+        # Send stage completed notification
+        try:
+            NotificationService.notify_stage_completed(instance, result=data.get('recommendation', ''))
+        except Exception as e:
+            logger.warning(f"Failed to send stage completed notification: {e}")
+
+        # Send feedback notification to candidate if feedback was provided
+        if data.get('feedback'):
+            try:
+                NotificationService.notify_feedback_received(instance)
+            except Exception as e:
+                logger.warning(f"Failed to send feedback notification: {e}")
+
         return Response(ApplicationStageInstanceSerializer(instance).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -2100,7 +2243,9 @@ def assign_assessment(request, application_id, instance_id):
             }
         )
 
-        # TODO: Send notification if data.get('send_notification', True)
+        # Send notification to candidate about the assessment
+        if data.get('send_notification', True):
+            NotificationService.notify_assessment_assigned(instance)
 
         return Response(ApplicationStageInstanceSerializer(instance).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -2154,7 +2299,8 @@ def submit_assessment(request, application_id, instance_id):
             metadata={'action': 'assessment_submitted'}
         )
 
-        # TODO: Send notification to recruiter
+        # Notify recruiter about the submission
+        NotificationService.notify_submission_received(instance)
 
         return Response(ApplicationStageInstanceSerializer(instance).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -2187,6 +2333,14 @@ def move_to_stage_template(request, application_id, template_id):
     if not is_staff and not is_company_editor:
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
+    # Get the previous stage instance (if any)
+    previous_stage_instance = None
+    if application.current_stage_order:
+        previous_stage_instance = ApplicationStageInstance.objects.filter(
+            application=application,
+            stage_template__order=application.current_stage_order
+        ).first()
+
     # Get or create stage instance
     instance, created = ApplicationStageInstance.objects.get_or_create(
         application=application,
@@ -2210,6 +2364,16 @@ def move_to_stage_template(request, application_id, template_id):
         stage_name=template.name,
     )
 
+    # Send stage advancement notification to candidate
+    try:
+        NotificationService.notify_application_stage_advanced(
+            application=application,
+            from_stage=previous_stage_instance,
+            to_stage=instance,
+        )
+    except Exception as e:
+        logger.warning(f"Failed to send stage advancement notification: {e}")
+
     return Response({
         'application': ApplicationSerializer(application).data,
         'stage_instance': ApplicationStageInstanceSerializer(instance).data,
@@ -2217,92 +2381,10 @@ def move_to_stage_template(request, application_id, template_id):
 
 
 # =============================================================================
-# Notification Endpoints
+# Notification Endpoints - MOVED TO notifications app
 # =============================================================================
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def list_notifications(request):
-    """
-    List notifications for the current user.
-    """
-    notifications = Notification.objects.filter(
-        recipient=request.user
-    ).order_by('-sent_at')
-
-    # Filter by read status
-    is_read = request.query_params.get('is_read')
-    if is_read is not None:
-        notifications = notifications.filter(is_read=is_read.lower() == 'true')
-
-    # Limit
-    limit = request.query_params.get('limit', 50)
-    notifications = notifications[:int(limit)]
-
-    serializer = NotificationListSerializer(notifications, many=True)
-
-    # Also return unread count
-    unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
-
-    return Response({
-        'notifications': serializer.data,
-        'unread_count': unread_count,
-    })
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_notification(request, notification_id):
-    """
-    Get a single notification and mark it as read.
-    """
-    try:
-        notification = Notification.objects.get(id=notification_id, recipient=request.user)
-    except Notification.DoesNotExist:
-        return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
-
-    # Mark as read
-    notification.mark_as_read()
-
-    return Response(NotificationSerializer(notification).data)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def mark_notifications_read(request):
-    """
-    Mark notification(s) as read.
-    If notification_ids is empty or not provided, marks all as read.
-    """
-    serializer = MarkNotificationReadSerializer(data=request.data)
-    if serializer.is_valid():
-        notification_ids = serializer.validated_data.get('notification_ids', [])
-
-        if notification_ids:
-            Notification.objects.filter(
-                id__in=notification_ids,
-                recipient=request.user,
-                is_read=False
-            ).update(is_read=True, read_at=timezone.now())
-        else:
-            Notification.objects.filter(
-                recipient=request.user,
-                is_read=False
-            ).update(is_read=True, read_at=timezone.now())
-
-        unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
-        return Response({'unread_count': unread_count})
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_unread_count(request):
-    """
-    Get the count of unread notifications.
-    """
-    unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
-    return Response({'unread_count': unread_count})
+# NOTE: Notification endpoints moved to /api/v1/notifications/
+# Import from notifications.views if needed
 
 
 # =============================================================================
@@ -2610,13 +2692,10 @@ def book_slot(request, token):
         }
     )
 
-    # Send confirmation notification
+    # Send booking confirmation notification (self-scheduled)
     try:
-        notification_service = NotificationService()
-        notification_service.send_interview_scheduled(instance)
+        NotificationService.notify_booking_confirmed(instance)
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.warning(f"Failed to send booking confirmation: {e}")
 
     return Response({

@@ -1,0 +1,34 @@
+{% extends "emails/base.html" %}
+
+{% block title %}New Application Received{% endblock %}
+
+{% block content %}
+<h1>New Application Received</h1>
+
+<p>Hi,</p>
+
+<p>You have received a new application for the <strong>{{ job_title }}</strong> position.</p>
+
+<div class="details">
+    <div class="details-row">
+        <span class="details-label">Candidate:</span>
+        <span class="details-value">{{ candidate_name }}</span>
+    </div>
+    <div class="details-row">
+        <span class="details-label">Position:</span>
+        <span class="details-value">{{ job_title }}</span>
+    </div>
+    {% if applied_at %}
+    <div class="details-row">
+        <span class="details-label">Applied:</span>
+        <span class="details-value">{{ applied_at }}</span>
+    </div>
+    {% endif %}
+</div>
+
+<p>
+    <a href="{{ site_url }}{{ notification.action_url }}" class="button">View Application</a>
+</p>
+
+<p>Review the application to see if this candidate is a good fit for the role.</p>
+{% endblock %}

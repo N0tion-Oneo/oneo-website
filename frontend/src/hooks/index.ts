@@ -128,6 +128,20 @@ export {
   useMarkNotificationsRead,
 } from './useNotifications'
 
+// Admin Notification hooks
+export {
+  useAdminNotifications,
+  useSendNotification,
+  useBroadcast,
+  useBulkDeleteNotifications,
+  useNotificationTemplates,
+  useNotificationTemplate,
+  useCreateTemplate,
+  useUpdateTemplate,
+  useDeleteTemplate,
+  useSearchUsers,
+} from './useNotificationsAdmin'
+
 // Booking hooks (Calendly-like self-scheduling)
 export {
   useBookingInfo,
@@ -135,3 +149,12 @@ export {
   useSendBookingLink,
 } from './useBooking'
 export type { BookingInfo, BookingResult, SendBookingLinkResult } from './useBooking'
+
+// Branding hooks
+export {
+  useBrandingSettings,
+  useUpdateBranding,
+  useResetBranding,
+  usePublicBranding,
+  useBrandingCSS,
+} from './useBranding'

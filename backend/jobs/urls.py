@@ -33,6 +33,7 @@ urlpatterns = [
     path('applications/<uuid:application_id>/reject/', views.reject_application, name='reject-application'),
     path('applications/<uuid:application_id>/offer/', views.make_offer, name='make-offer'),
     path('applications/<uuid:application_id>/accept/', views.accept_offer, name='accept-offer'),
+    path('applications/<uuid:application_id>/decline/', views.decline_offer, name='decline-offer'),
     path('applications/<uuid:application_id>/move/', views.move_to_stage, name='move-to-stage'),
     path('applications/<uuid:application_id>/notes/', views.update_application_notes, name='update-application-notes'),
     path('applications/<uuid:application_id>/activities/', views.list_application_activities, name='list-application-activities'),
@@ -57,11 +58,7 @@ urlpatterns = [
     path('booking/<str:token>/', views.get_booking_info, name='get-booking-info'),
     path('booking/<str:token>/book/', views.book_slot, name='book-slot'),
 
-    # Notification endpoints
-    path('notifications/', views.list_notifications, name='list-notifications'),
-    path('notifications/unread-count/', views.get_unread_count, name='get-unread-count'),
-    path('notifications/mark-read/', views.mark_notifications_read, name='mark-notifications-read'),
-    path('notifications/<uuid:notification_id>/', views.get_notification, name='get-notification'),
+    # NOTE: Notification endpoints moved to notifications app (/api/v1/notifications/)
 
     # Interviewer endpoints (for scheduling)
     # NOTE: Calendar connection endpoints moved to scheduling app (/api/v1/scheduling/)

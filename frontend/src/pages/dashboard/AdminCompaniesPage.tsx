@@ -18,9 +18,9 @@ import {
 
 const getStatusBadge = (isPublished: boolean) => {
   if (isPublished) {
-    return { bg: 'bg-green-100', text: 'text-green-700', label: 'Published' }
+    return { className: 'badge-success', label: 'Published' }
   }
-  return { bg: 'bg-gray-100', text: 'text-gray-500', label: 'Draft' }
+  return { className: 'bg-gray-100 text-gray-500', label: 'Draft' }
 }
 
 const formatDate = (dateString: string) => {
@@ -196,22 +196,22 @@ export default function AdminCompaniesPage() {
                         className="flex flex-col gap-1 items-start"
                       >
                         {company.jobs_published > 0 && (
-                          <span className="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded bg-green-100 text-green-700">
+                          <span className="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded badge-success">
                             {company.jobs_published} Published
                           </span>
                         )}
                         {company.jobs_draft > 0 && (
-                          <span className="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded bg-yellow-100 text-yellow-700">
+                          <span className="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded bg-gray-100 text-gray-600">
                             {company.jobs_draft} Draft
                           </span>
                         )}
                         {company.jobs_closed > 0 && (
-                          <span className="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded bg-red-100 text-red-600">
+                          <span className="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded badge-warning">
                             {company.jobs_closed} Closed
                           </span>
                         )}
                         {company.jobs_filled > 0 && (
-                          <span className="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-100 text-blue-700">
+                          <span className="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded badge-primary">
                             {company.jobs_filled} Filled
                           </span>
                         )}
@@ -219,7 +219,7 @@ export default function AdminCompaniesPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${badge.bg} ${badge.text}`}
+                        className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${badge.className}`}
                       >
                         {badge.label}
                       </span>

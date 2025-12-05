@@ -64,3 +64,14 @@ def send_assessment_deadline_reminders():
     """
     count = NotificationService.send_assessment_deadline_reminders()
     return f"Sent {count} assessment deadline reminders"
+
+
+@shared_task(name="jobs.send_booking_reminders")
+def send_booking_reminders():
+    """
+    Send reminder notifications for candidates who received a booking link
+    but haven't scheduled their interview yet.
+    Should be scheduled to run daily (e.g., at 9 AM).
+    """
+    count = NotificationService.send_booking_reminders()
+    return f"Sent {count} booking reminders"

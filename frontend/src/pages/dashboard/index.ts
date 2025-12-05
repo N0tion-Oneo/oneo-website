@@ -13,3 +13,14 @@ export { default as AdminNewJobPage } from './AdminNewJobPage';
 export { default as AdminRecruitersPage } from './AdminRecruitersPage';
 export { default as ApplicationsPage } from './ApplicationsPage';
 export { default as JobApplicationsPage } from './JobApplicationsPage';
+
+// Notification Admin pages
+export {
+  NotificationsAdminPage,
+  SendNotificationPage,
+  NotificationTemplatesPage,
+  NotificationTemplateEditPage,
+} from './notifications';
+
+// Branding Settings
+export { default as BrandingSettingsPage } from './BrandingSettingsPage';
