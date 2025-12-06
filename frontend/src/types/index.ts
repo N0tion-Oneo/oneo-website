@@ -187,21 +187,65 @@ export interface CandidateProfileSanitized {
   profile_completeness: number
 }
 
-// Admin/recruiter candidate list item
+// Experience for admin list display
+export interface ExperienceListItem {
+  id: string
+  job_title: string
+  company_name: string
+  company_size: string
+  industry: Industry | null
+  start_date: string
+  end_date: string | null
+  is_current: boolean
+  description: string
+  achievements: string
+  skills: Skill[]
+  technologies: Technology[]
+  order: number
+}
+
+// Education for admin list display
+export interface EducationListItem {
+  id: string
+  institution: string
+  degree: string
+  field_of_study: string
+  start_date: string
+  end_date: string | null
+  is_current: boolean
+  grade: string
+  description: string
+  order: number
+}
+
+// Admin/recruiter candidate list item (full profile for management)
 export interface CandidateAdminListItem {
   id: number
   slug: string
   initials: string
   full_name: string
   email: string
+  phone: string | null
   professional_title: string
   headline: string
   seniority: Seniority | ''
+  professional_summary: string
+  years_of_experience: number | null
   location: string
   city: string
   country: string
-  years_of_experience: number | null
   work_preference: WorkPreference | ''
+  willing_to_relocate: boolean
+  preferred_locations: string[]
+  salary_expectation_min: number | null
+  salary_expectation_max: number | null
+  salary_currency: Currency
+  notice_period_days: number | null
+  has_resume: boolean
+  skills: Skill[]
+  industries: Industry[]
+  experiences: ExperienceListItem[]
+  education: EducationListItem[]
   visibility: ProfileVisibility
   profile_completeness: number
   created_at: string

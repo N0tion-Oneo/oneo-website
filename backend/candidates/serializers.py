@@ -611,6 +611,55 @@ class ReorderSerializer(serializers.Serializer):
     )
 
 
+class ExperienceListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Experience list display in admin candidates view.
+    """
+    industry = IndustrySerializer(read_only=True)
+    skills = SkillSerializer(many=True, read_only=True)
+    technologies = TechnologySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Experience
+        fields = [
+            'id',
+            'job_title',
+            'company_name',
+            'company_size',
+            'industry',
+            'start_date',
+            'end_date',
+            'is_current',
+            'description',
+            'achievements',
+            'skills',
+            'technologies',
+            'order',
+        ]
+        read_only_fields = fields
+
+
+class EducationListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Education list display in admin candidates view.
+    """
+    class Meta:
+        model = Education
+        fields = [
+            'id',
+            'institution',
+            'degree',
+            'field_of_study',
+            'start_date',
+            'end_date',
+            'is_current',
+            'grade',
+            'description',
+            'order',
+        ]
+        read_only_fields = fields
+
+
 class CandidateAdminListSerializer(serializers.ModelSerializer):
     """
     Serializer for admin/recruiter candidate listing.
@@ -619,7 +668,13 @@ class CandidateAdminListSerializer(serializers.ModelSerializer):
     initials = serializers.SerializerMethodField()
     full_name = serializers.CharField(read_only=True)
     email = serializers.CharField(read_only=True)
+    phone = serializers.SerializerMethodField()
     location = serializers.CharField(read_only=True)
+    skills = SkillSerializer(many=True, read_only=True)
+    industries = IndustrySerializer(many=True, read_only=True)
+    has_resume = serializers.SerializerMethodField()
+    experiences = ExperienceListSerializer(many=True, read_only=True)
+    education = EducationListSerializer(many=True, read_only=True)
 
     class Meta:
         model = CandidateProfile
@@ -629,14 +684,27 @@ class CandidateAdminListSerializer(serializers.ModelSerializer):
             'initials',
             'full_name',
             'email',
+            'phone',
             'professional_title',
             'headline',
             'seniority',
+            'professional_summary',
+            'years_of_experience',
             'location',
             'city',
             'country',
-            'years_of_experience',
             'work_preference',
+            'willing_to_relocate',
+            'preferred_locations',
+            'salary_expectation_min',
+            'salary_expectation_max',
+            'salary_currency',
+            'notice_period_days',
+            'has_resume',
+            'skills',
+            'industries',
+            'experiences',
+            'education',
             'visibility',
             'profile_completeness',
             'created_at',
@@ -648,3 +716,9 @@ class CandidateAdminListSerializer(serializers.ModelSerializer):
         first_initial = obj.user.first_name[0].upper() if obj.user.first_name else ''
         last_initial = obj.user.last_name[0].upper() if obj.user.last_name else ''
         return f"{first_initial}{last_initial}"
+
+    def get_phone(self, obj):
+        return obj.user.phone if obj.user.phone else None
+
+    def get_has_resume(self, obj):
+        return bool(obj.resume_url)

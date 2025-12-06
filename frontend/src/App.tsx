@@ -10,7 +10,6 @@ import {
   RecruiterSignupPage,
   DashboardPage,
   ProfilePage,
-  SettingsPage,
   InvitationsPage,
   JobsPage,
   NewJobPage,
@@ -37,9 +36,11 @@ import {
   JobsListingPage,
   JobDetailPage,
   CalendarOAuthCallback,
+  ProfileSettingsPage,
+  CalendarSettingsPage,
 } from '@/pages';
 import { BookingPage } from '@/pages/booking';
-import { CandidateDashboardLayout } from '@/layouts';
+import { CandidateDashboardLayout, SettingsLayout } from '@/layouts';
 import './App.css';
 
 function App() {
@@ -95,7 +96,12 @@ function App() {
           <Route path="jobs/:jobId/applications" element={<JobApplicationsPage />} />
           <Route path="applications" element={<ApplicationsPage />} />
           <Route path="invitations" element={<InvitationsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
+          {/* Settings routes with sidebar */}
+          <Route path="settings" element={<SettingsLayout />}>
+            <Route index element={<Navigate to="profile" replace />} />
+            <Route path="profile" element={<ProfileSettingsPage />} />
+            <Route path="calendar" element={<CalendarSettingsPage />} />
+          </Route>
           {/* Admin/Recruiter routes */}
           <Route path="admin/companies" element={<AdminCompaniesPage />} />
           <Route path="admin/companies/:companyId" element={<AdminCompanyEditPage />} />

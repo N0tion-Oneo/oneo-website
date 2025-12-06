@@ -330,8 +330,24 @@ interface UseAllCandidatesOptions {
   visibility?: string
   country?: string
   city?: string
+  skills?: number[]
+  industries?: number[]
+  min_experience?: number
+  max_experience?: number
+  min_completeness?: number
+  min_salary?: number
+  max_salary?: number
+  salary_currency?: string
+  notice_period_min?: number
+  notice_period_max?: number
+  created_after?: string
+  created_before?: string
+  willing_to_relocate?: boolean
+  has_resume?: boolean
   search?: string
+  ordering?: string
   page?: number
+  page_size?: number
 }
 
 interface UseAllCandidatesReturn {
@@ -362,8 +378,24 @@ export function useAllCandidates(options: UseAllCandidatesOptions = {}): UseAllC
       if (options.visibility) params.append('visibility', options.visibility)
       if (options.country) params.append('country', options.country)
       if (options.city) params.append('city', options.city)
+      if (options.skills?.length) params.append('skills', options.skills.join(','))
+      if (options.industries?.length) params.append('industries', options.industries.join(','))
+      if (options.min_experience !== undefined) params.append('min_experience', options.min_experience.toString())
+      if (options.max_experience !== undefined) params.append('max_experience', options.max_experience.toString())
+      if (options.min_completeness !== undefined) params.append('min_completeness', options.min_completeness.toString())
+      if (options.min_salary !== undefined) params.append('min_salary', options.min_salary.toString())
+      if (options.max_salary !== undefined) params.append('max_salary', options.max_salary.toString())
+      if (options.salary_currency) params.append('salary_currency', options.salary_currency)
+      if (options.notice_period_min !== undefined) params.append('notice_period_min', options.notice_period_min.toString())
+      if (options.notice_period_max !== undefined) params.append('notice_period_max', options.notice_period_max.toString())
+      if (options.created_after) params.append('created_after', options.created_after)
+      if (options.created_before) params.append('created_before', options.created_before)
+      if (options.willing_to_relocate !== undefined) params.append('willing_to_relocate', options.willing_to_relocate.toString())
+      if (options.has_resume !== undefined) params.append('has_resume', options.has_resume.toString())
       if (options.search) params.append('search', options.search)
+      if (options.ordering) params.append('ordering', options.ordering)
       if (options.page) params.append('page', options.page.toString())
+      if (options.page_size) params.append('page_size', options.page_size.toString())
 
       const response = await api.get<PaginatedResponse<CandidateAdminListItem>>(
         `/candidates/all/?${params.toString()}`
@@ -384,8 +416,24 @@ export function useAllCandidates(options: UseAllCandidatesOptions = {}): UseAllC
     options.visibility,
     options.country,
     options.city,
+    options.skills,
+    options.industries,
+    options.min_experience,
+    options.max_experience,
+    options.min_completeness,
+    options.min_salary,
+    options.max_salary,
+    options.salary_currency,
+    options.notice_period_min,
+    options.notice_period_max,
+    options.created_after,
+    options.created_before,
+    options.willing_to_relocate,
+    options.has_resume,
     options.search,
+    options.ordering,
     options.page,
+    options.page_size,
   ])
 
   useEffect(() => {

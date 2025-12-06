@@ -306,7 +306,22 @@ def list_candidates(request):
         OpenApiParameter(name='visibility', description='Filter by profile visibility', required=False, type=str),
         OpenApiParameter(name='country', description='Filter by country', required=False, type=str),
         OpenApiParameter(name='city', description='Filter by city', required=False, type=str),
+        OpenApiParameter(name='skills', description='Filter by skill IDs (comma-separated)', required=False, type=str),
+        OpenApiParameter(name='industries', description='Filter by industry IDs (comma-separated)', required=False, type=str),
+        OpenApiParameter(name='min_experience', description='Minimum years of experience', required=False, type=int),
+        OpenApiParameter(name='max_experience', description='Maximum years of experience', required=False, type=int),
+        OpenApiParameter(name='min_completeness', description='Minimum profile completeness %', required=False, type=int),
+        OpenApiParameter(name='min_salary', description='Minimum salary expectation', required=False, type=int),
+        OpenApiParameter(name='max_salary', description='Maximum salary expectation', required=False, type=int),
+        OpenApiParameter(name='salary_currency', description='Filter by salary currency (ZAR, USD, EUR, GBP)', required=False, type=str),
+        OpenApiParameter(name='notice_period_min', description='Minimum notice period in days', required=False, type=int),
+        OpenApiParameter(name='notice_period_max', description='Maximum notice period in days', required=False, type=int),
+        OpenApiParameter(name='created_after', description='Created after date (ISO format)', required=False, type=str),
+        OpenApiParameter(name='created_before', description='Created before date (ISO format)', required=False, type=str),
+        OpenApiParameter(name='willing_to_relocate', description='Filter by willingness to relocate (true/false)', required=False, type=bool),
+        OpenApiParameter(name='has_resume', description='Filter by resume presence (true/false)', required=False, type=bool),
         OpenApiParameter(name='search', description='Search in name, title, headline', required=False, type=str),
+        OpenApiParameter(name='ordering', description='Order by field (e.g., -created_at, profile_completeness)', required=False, type=str),
     ],
 )
 @api_view(['GET'])
@@ -324,7 +339,17 @@ def list_all_candidates(request):
             status=status.HTTP_403_FORBIDDEN
         )
 
-    candidates = CandidateProfile.objects.select_related('user').order_by('-created_at')
+    candidates = CandidateProfile.objects.select_related(
+        'user', 'city_rel', 'country_rel'
+    ).prefetch_related(
+        'skills',
+        'industries',
+        'experiences',
+        'experiences__industry',
+        'experiences__skills',
+        'experiences__technologies',
+        'education',
+    )
 
     # Filter by seniority
     seniority = request.query_params.get('seniority')
@@ -344,12 +369,91 @@ def list_all_candidates(request):
     # Filter by country
     country = request.query_params.get('country')
     if country:
-        candidates = candidates.filter(country__icontains=country)
+        candidates = candidates.filter(
+            Q(country__icontains=country) | Q(country_rel__name__icontains=country)
+        )
 
     # Filter by city
     city = request.query_params.get('city')
     if city:
-        candidates = candidates.filter(city__icontains=city)
+        candidates = candidates.filter(
+            Q(city__icontains=city) | Q(city_rel__name__icontains=city)
+        )
+
+    # Filter by skills
+    skills = request.query_params.get('skills')
+    if skills:
+        skill_ids = [int(s) for s in skills.split(',') if s.isdigit()]
+        if skill_ids:
+            candidates = candidates.filter(skills__id__in=skill_ids).distinct()
+
+    # Filter by industries
+    industries = request.query_params.get('industries')
+    if industries:
+        industry_ids = [int(i) for i in industries.split(',') if i.isdigit()]
+        if industry_ids:
+            candidates = candidates.filter(industries__id__in=industry_ids).distinct()
+
+    # Filter by years of experience
+    min_experience = request.query_params.get('min_experience')
+    if min_experience:
+        candidates = candidates.filter(years_of_experience__gte=int(min_experience))
+
+    max_experience = request.query_params.get('max_experience')
+    if max_experience:
+        candidates = candidates.filter(years_of_experience__lte=int(max_experience))
+
+    # Filter by profile completeness
+    min_completeness = request.query_params.get('min_completeness')
+    if min_completeness:
+        candidates = candidates.filter(profile_completeness__gte=int(min_completeness))
+
+    # Filter by salary expectations
+    min_salary = request.query_params.get('min_salary')
+    if min_salary:
+        candidates = candidates.filter(salary_expectation_min__gte=int(min_salary))
+
+    max_salary = request.query_params.get('max_salary')
+    if max_salary:
+        candidates = candidates.filter(salary_expectation_max__lte=int(max_salary))
+
+    salary_currency = request.query_params.get('salary_currency')
+    if salary_currency:
+        candidates = candidates.filter(salary_currency=salary_currency.upper())
+
+    # Filter by notice period
+    notice_period_min = request.query_params.get('notice_period_min')
+    if notice_period_min:
+        candidates = candidates.filter(notice_period_days__gte=int(notice_period_min))
+
+    notice_period_max = request.query_params.get('notice_period_max')
+    if notice_period_max:
+        candidates = candidates.filter(notice_period_days__lte=int(notice_period_max))
+
+    # Filter by created date range
+    created_after = request.query_params.get('created_after')
+    if created_after:
+        candidates = candidates.filter(created_at__gte=created_after)
+
+    created_before = request.query_params.get('created_before')
+    if created_before:
+        candidates = candidates.filter(created_at__lte=created_before)
+
+    # Filter by willingness to relocate
+    willing_to_relocate = request.query_params.get('willing_to_relocate')
+    if willing_to_relocate is not None:
+        if willing_to_relocate.lower() == 'true':
+            candidates = candidates.filter(willing_to_relocate=True)
+        elif willing_to_relocate.lower() == 'false':
+            candidates = candidates.filter(willing_to_relocate=False)
+
+    # Filter by resume presence
+    has_resume = request.query_params.get('has_resume')
+    if has_resume is not None:
+        if has_resume.lower() == 'true':
+            candidates = candidates.exclude(Q(resume_url__isnull=True) | Q(resume_url=''))
+        elif has_resume.lower() == 'false':
+            candidates = candidates.filter(Q(resume_url__isnull=True) | Q(resume_url=''))
 
     # Search
     search = request.query_params.get('search')
@@ -359,8 +463,18 @@ def list_all_candidates(request):
             Q(user__last_name__icontains=search) |
             Q(user__email__icontains=search) |
             Q(professional_title__icontains=search) |
-            Q(headline__icontains=search)
-        )
+            Q(headline__icontains=search) |
+            Q(skills__name__icontains=search)
+        ).distinct()
+
+    # Ordering
+    ordering = request.query_params.get('ordering', '-created_at')
+    valid_orderings = ['created_at', '-created_at', 'profile_completeness', '-profile_completeness',
+                       'years_of_experience', '-years_of_experience', 'user__first_name', '-user__first_name']
+    if ordering in valid_orderings:
+        candidates = candidates.order_by(ordering)
+    else:
+        candidates = candidates.order_by('-created_at')
 
     # Pagination
     paginator = CandidatePagination()

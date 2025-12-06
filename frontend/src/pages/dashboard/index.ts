@@ -1,6 +1,5 @@
 export { default as DashboardPage } from './DashboardPage';
 export { default as ProfilePage } from './ProfilePage';
-export { default as SettingsPage } from './SettingsPage';
 export { default as InvitationsPage } from './InvitationsPage';
 export { default as JobsPage } from './JobsPage';
 export { default as NewJobPage } from './NewJobPage';
@@ -24,3 +23,6 @@ export {
 
 // Branding Settings
 export { default as BrandingSettingsPage } from './BrandingSettingsPage';
+
+// Settings pages
+export { ProfileSettingsPage, CalendarSettingsPage } from './settings';

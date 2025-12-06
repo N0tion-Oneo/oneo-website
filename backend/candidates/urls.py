@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import export_views
 
 urlpatterns = [
     # Skills
@@ -18,6 +19,7 @@ urlpatterns = [
     # Candidate profiles - public
     path('candidates/', views.list_candidates, name='list-candidates'),
     path('candidates/all/', views.list_all_candidates, name='list-all-candidates'),
+    path('candidates/export/csv/', export_views.export_candidates_csv, name='export-candidates-csv'),
     path('candidates/<slug:slug>/', views.get_candidate, name='get-candidate'),
 
     # Experience - CRUD for authenticated candidates
