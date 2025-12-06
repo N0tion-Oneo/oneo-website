@@ -608,3 +608,107 @@ class CandidateActivityNote(models.Model):
     def __str__(self):
         author_name = self.author.full_name if self.author else 'Unknown'
         return f"Note by {author_name} on {self.activity}"
+
+
+# ============================================================================
+# Profile Suggestions
+# ============================================================================
+
+class ProfileSuggestionStatus(models.TextChoices):
+    """Status options for profile suggestions."""
+    PENDING = 'pending', 'Pending'
+    RESOLVED = 'resolved', 'Resolved'
+    DECLINED = 'declined', 'Declined'
+    CLOSED = 'closed', 'Closed'
+
+
+class ProfileSuggestionFieldType(models.TextChoices):
+    """Types of fields that can receive suggestions."""
+    PROFILE = 'profile', 'Profile'
+    EXPERIENCE = 'experience', 'Experience'
+    EDUCATION = 'education', 'Education'
+
+
+class ProfileSuggestion(models.Model):
+    """
+    Suggestions made by admins/recruiters for candidate profile improvements.
+    Candidates can resolve or decline suggestions.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Core relation
+    candidate = models.ForeignKey(
+        'CandidateProfile',
+        on_delete=models.CASCADE,
+        related_name='profile_suggestions',
+    )
+
+    # Field targeting
+    field_type = models.CharField(
+        max_length=20,
+        choices=ProfileSuggestionFieldType.choices,
+        help_text='Type of field: profile, experience, or education',
+    )
+    field_name = models.CharField(
+        max_length=100,
+        help_text='Field name like headline, description, job_title',
+    )
+    related_object_id = models.UUIDField(
+        null=True,
+        blank=True,
+        help_text='UUID of Experience or Education entry (null for profile fields)',
+    )
+
+    # Suggestion content
+    suggestion_text = models.TextField()
+
+    # Status
+    status = models.CharField(
+        max_length=20,
+        choices=ProfileSuggestionStatus.choices,
+        default=ProfileSuggestionStatus.PENDING,
+    )
+
+    # Created by (admin/recruiter)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_profile_suggestions',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # Resolution tracking
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    resolved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='resolved_profile_suggestions',
+    )
+    resolution_note = models.TextField(
+        blank=True,
+        help_text='Reason for decline or notes on resolution',
+    )
+
+    # Reopen tracking
+    reopened_at = models.DateTimeField(null=True, blank=True)
+    reopened_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reopened_profile_suggestions',
+    )
+
+    class Meta:
+        db_table = 'profile_suggestions'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['candidate', 'status']),
+            models.Index(fields=['field_type', 'related_object_id']),
+        ]
+
+    def __str__(self):
+        return f"Suggestion for {self.candidate} - {self.field_name} ({self.status})"

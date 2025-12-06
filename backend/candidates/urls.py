@@ -68,4 +68,15 @@ urlpatterns = [
     path('admin/candidates/<int:candidate_id>/activity/', views.candidate_activity, name='candidate-activity'),
     path('admin/candidates/<int:candidate_id>/activity/<uuid:activity_id>/notes/', views.add_candidate_activity_note, name='add-candidate-activity-note'),
     path('admin/candidates/<int:candidate_id>/view/', views.record_profile_view, name='record-profile-view'),
+
+    # Profile Suggestions (Admin)
+    path('admin/candidates/<int:candidate_id>/suggestions/', views.admin_list_suggestions, name='admin-list-suggestions'),
+    path('admin/candidates/<int:candidate_id>/suggestions/create/', views.admin_create_suggestion, name='admin-create-suggestion'),
+    path('admin/candidates/<int:candidate_id>/suggestions/<uuid:suggestion_id>/reopen/', views.admin_reopen_suggestion, name='admin-reopen-suggestion'),
+    path('admin/candidates/<int:candidate_id>/suggestions/<uuid:suggestion_id>/close/', views.admin_close_suggestion, name='admin-close-suggestion'),
+
+    # Profile Suggestions (Candidate)
+    path('candidates/me/suggestions/', views.candidate_list_suggestions, name='candidate-list-suggestions'),
+    path('candidates/me/suggestions/<uuid:suggestion_id>/resolve/', views.candidate_resolve_suggestion, name='candidate-resolve-suggestion'),
+    path('candidates/me/suggestions/<uuid:suggestion_id>/decline/', views.candidate_decline_suggestion, name='candidate-decline-suggestion'),
 ]

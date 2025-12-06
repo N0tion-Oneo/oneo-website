@@ -12,13 +12,14 @@ import {
   Pencil,
   Eye
 } from 'lucide-react'
-import type { CandidateProfile, CandidateProfileSanitized, CandidateAdminListItem, Experience, Education, ExperienceListItem, EducationListItem, Industry } from '@/types'
+import type { CandidateProfile, CandidateProfileSanitized, CandidateAdminListItem, Experience, Education, ExperienceListItem, EducationListItem, Industry, ProfileSuggestion, ProfileSuggestionFieldType } from '@/types'
 import {
   aggregateSkillsWithProficiency,
   aggregateTechsWithProficiency,
   getProficiencyStyle,
   formatTotalDuration,
 } from '@/utils/proficiency'
+import { SuggestionIndicator } from '@/components/suggestions'
 
 // Type guard to check if profile is full or sanitized
 type CandidateData = CandidateProfile | CandidateProfileSanitized | CandidateAdminListItem
@@ -53,6 +54,14 @@ interface CandidateProfileCardProps {
   showProfileCompleteness?: boolean
   editLink?: string
   onEdit?: () => void
+  // Suggestion props
+  enableSuggestions?: boolean
+  suggestions?: ProfileSuggestion[]
+  onAddSuggestion?: (
+    fieldType: ProfileSuggestionFieldType,
+    fieldName: string,
+    relatedObjectId?: string
+  ) => void
 }
 
 const formatDate = (dateString: string) => {
@@ -197,9 +206,35 @@ export default function CandidateProfileCard({
   showProfileCompleteness = false,
   editLink,
   onEdit,
+  enableSuggestions = false,
+  suggestions = [],
+  onAddSuggestion,
 }: CandidateProfileCardProps) {
   const isPage = variant === 'page'
   const isFull = isFullProfile(candidate)
+
+  // Helper to wrap content with suggestion indicator when suggestions are enabled
+  const withSuggestion = (
+    fieldType: ProfileSuggestionFieldType,
+    fieldName: string,
+    content: React.ReactNode,
+    relatedObjectId?: string
+  ) => {
+    if (!enableSuggestions || !onAddSuggestion) {
+      return content
+    }
+    return (
+      <SuggestionIndicator
+        fieldType={fieldType}
+        fieldName={fieldName}
+        relatedObjectId={relatedObjectId}
+        suggestions={suggestions}
+        onAddSuggestion={onAddSuggestion}
+      >
+        {content}
+      </SuggestionIndicator>
+    )
+  }
 
   // Use candidate's embedded data if available, otherwise use passed props
   const expData = (isFull && candidate.experiences) || experiences
@@ -677,9 +712,11 @@ export default function CandidateProfileCard({
       {candidate.professional_summary && (
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <h4 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">About</h4>
-          <p className="text-[13px] text-gray-700 leading-relaxed line-clamp-4">
-            {candidate.professional_summary}
-          </p>
+          {withSuggestion('profile', 'professional_summary', (
+            <p className="text-[13px] text-gray-700 leading-relaxed line-clamp-4">
+              {candidate.professional_summary}
+            </p>
+          ))}
         </div>
       )}
 
@@ -759,21 +796,25 @@ export default function CandidateProfileCard({
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-medium text-gray-900 truncate">{exp.job_title}</p>
-                    <p className="text-[12px] text-gray-600 truncate flex items-center gap-1">
-                      <Building2 className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                      {exp.company_name}
-                    </p>
+                    {withSuggestion('experience', 'job_title', (
+                      <p className="text-[13px] font-medium text-gray-900 truncate">{exp.job_title}</p>
+                    ), exp.id)}
+                    {withSuggestion('experience', 'company_name', (
+                      <p className="text-[12px] text-gray-600 truncate flex items-center gap-1">
+                        <Building2 className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                        {exp.company_name}
+                      </p>
+                    ), exp.id)}
                   </div>
                   <span className="text-[11px] text-gray-500 whitespace-nowrap flex-shrink-0">
                     {formatDateRange(exp.start_date, exp.end_date, exp.is_current)}
                   </span>
                 </div>
-                {exp.description && (
+                {exp.description && withSuggestion('experience', 'description', (
                   <p className="text-[12px] text-gray-600 mt-1.5 leading-relaxed line-clamp-2">
                     {exp.description}
                   </p>
-                )}
+                ), exp.id)}
                 {/* Technologies */}
                 {exp.technologies && exp.technologies.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
@@ -818,9 +859,15 @@ export default function CandidateProfileCard({
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-medium text-gray-900 truncate">{edu.degree}</p>
-                    <p className="text-[12px] text-gray-600 truncate">{edu.field_of_study}</p>
-                    <p className="text-[12px] text-gray-500 truncate">{edu.institution}</p>
+                    {withSuggestion('education', 'degree', (
+                      <p className="text-[13px] font-medium text-gray-900 truncate">{edu.degree}</p>
+                    ), edu.id)}
+                    {withSuggestion('education', 'field_of_study', (
+                      <p className="text-[12px] text-gray-600 truncate">{edu.field_of_study}</p>
+                    ), edu.id)}
+                    {withSuggestion('education', 'institution', (
+                      <p className="text-[12px] text-gray-500 truncate">{edu.institution}</p>
+                    ), edu.id)}
                   </div>
                   <span className="text-[11px] text-gray-500 whitespace-nowrap flex-shrink-0">
                     {formatDateRange(edu.start_date, edu.end_date, edu.is_current)}

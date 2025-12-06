@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useMyProfile, useCandidate, useCountries, useCities } from '@/hooks'
+import { useMyProfile, useCandidate, useCountries, useCities, useCandidateSuggestions } from '@/hooks'
 import { IndustryMultiSelect } from '@/components/forms'
 import { ExperienceEditor } from '@/components/experience'
 import { EducationEditor } from '@/components/education'
 import { ResumeImportButton, ResumePreviewModal } from '@/components/resume'
+import { SuggestionsSidebar } from '@/components/suggestions'
 import { importResume, type ResumeImportResult } from '@/services/api'
-import type { Industry, PortfolioLink, CandidateProfile as CandidateProfileType, ParsedResumeData } from '@/types'
+import type { Industry, PortfolioLink, CandidateProfile as CandidateProfileType, ParsedResumeData, ProfileSuggestion } from '@/types'
 import { Seniority, WorkPreference, Currency, ProfileVisibility, UserRole } from '@/types'
 
 type Tab = 'basic' | 'professional' | 'experience' | 'education' | 'preferences' | 'portfolio'
@@ -200,6 +201,16 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
   const myProfile = useMyProfile()
   const adminProfile = useCandidate(candidateSlug || '')
 
+  // Suggestions hook (only for non-admin candidate mode)
+  const {
+    suggestions,
+    isLoading: suggestionsLoading,
+    resolveSuggestion,
+    declineSuggestion,
+    isUpdating: suggestionsUpdating,
+    pendingCount: suggestionsPendingCount,
+  } = useCandidateSuggestions()
+
   // Select the appropriate data source
   const isAdminMode = !!candidateSlug
   const {
@@ -232,6 +243,74 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
   const [activeTab, setActiveTab] = useState<Tab>('basic')
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [highlightedFieldId, setHighlightedFieldId] = useState<string | null>(null)
+
+  // Map suggestion field to the correct tab
+  const getTabForSuggestion = useCallback((suggestion: ProfileSuggestion): Tab => {
+    // Experience and education have their own tabs
+    if (suggestion.field_type === 'experience') return 'experience'
+    if (suggestion.field_type === 'education') return 'education'
+
+    // Profile fields are spread across tabs
+    const fieldName = suggestion.field_name
+    const basicFields = ['professional_title', 'headline', 'city', 'country']
+    const professionalFields = ['professional_summary', 'seniority']
+    const preferencesFields = ['work_preference']
+
+    if (basicFields.includes(fieldName)) return 'basic'
+    if (professionalFields.includes(fieldName)) return 'professional'
+    if (preferencesFields.includes(fieldName)) return 'preferences'
+
+    // Default to basic
+    return 'basic'
+  }, [])
+
+  // Get element ID for a suggestion field
+  const getFieldElementId = useCallback((suggestion: ProfileSuggestion): string => {
+    if (suggestion.field_type === 'experience' && suggestion.related_object_id) {
+      return `experience-${suggestion.related_object_id}`
+    }
+    if (suggestion.field_type === 'education' && suggestion.related_object_id) {
+      return `education-${suggestion.related_object_id}`
+    }
+    return `field-${suggestion.field_name}`
+  }, [])
+
+  // Handle suggestion navigation - switch tab, scroll to field, and highlight
+  const handleSuggestionNavigate = useCallback((suggestion: ProfileSuggestion) => {
+    const targetTab = getTabForSuggestion(suggestion)
+    const fieldId = getFieldElementId(suggestion)
+
+    setActiveTab(targetTab)
+
+    // Wait for tab content to render, then scroll and highlight
+    setTimeout(() => {
+      const element = document.getElementById(fieldId)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+        // Set state for profile fields
+        setHighlightedFieldId(fieldId)
+
+        // Also add classes directly to DOM for experience/education entries
+        element.classList.add('ring-2', 'ring-amber-400', 'ring-offset-2', 'bg-amber-50', 'animate-pulse')
+
+        // Remove highlight after animation
+        setTimeout(() => {
+          setHighlightedFieldId(null)
+          element.classList.remove('ring-2', 'ring-amber-400', 'ring-offset-2', 'bg-amber-50', 'animate-pulse')
+        }, 2000)
+      }
+    }, 100)
+  }, [getTabForSuggestion, getFieldElementId])
+
+  // Get highlight class for a field
+  const getHighlightClass = (fieldId: string) => {
+    if (highlightedFieldId === fieldId) {
+      return 'ring-2 ring-amber-400 ring-offset-2 bg-amber-50 animate-pulse'
+    }
+    return ''
+  }
 
   // Resume import state
   const [showResumePreview, setShowResumePreview] = useState(false)
@@ -535,7 +614,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                 />
               </div>
 
-              <div>
+              <div id="field-professional_title" className={`rounded-md ${getHighlightClass('field-professional_title')}`}>
                 <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
                   Professional Title *
                 </label>
@@ -549,7 +628,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                 />
               </div>
 
-              <div>
+              <div id="field-headline" className={`rounded-md ${getHighlightClass('field-headline')}`}>
                 <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
                   Headline
                 </label>
@@ -564,7 +643,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div id="field-country" className={`rounded-md ${getHighlightClass('field-country')}`}>
                   <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
                     Country
                   </label>
@@ -589,7 +668,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                     ))}
                   </select>
                 </div>
-                <div>
+                <div id="field-city" className={`rounded-md ${getHighlightClass('field-city')}`}>
                   <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
                     City
                   </label>
@@ -637,7 +716,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
           {activeTab === 'professional' && (
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div id="field-seniority" className={`rounded-md ${getHighlightClass('field-seniority')}`}>
                   <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
                     Seniority Level
                   </label>
@@ -671,7 +750,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                 </div>
               </div>
 
-              <div>
+              <div id="field-professional_summary" className={`rounded-md ${getHighlightClass('field-professional_summary')}`}>
                 <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
                   Professional Summary
                 </label>
@@ -703,7 +782,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
           {/* Work Preferences Tab */}
           {activeTab === 'preferences' && (
             <div className="space-y-5">
-              <div>
+              <div id="field-work_preference" className={`rounded-md ${getHighlightClass('field-work_preference')}`}>
                 <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
                   Work Preference
                 </label>
@@ -941,113 +1020,125 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
           </div>
         </div>
 
-        {/* Right Sidebar */}
-        <div className="w-72 flex-shrink-0">
-          <div className="sticky top-6 space-y-4">
-            {/* Resume Import (candidates only, not admin mode) */}
-            {!isAdminMode && (
-              <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                <h3 className="text-[13px] font-medium text-gray-700 mb-2">Quick Import</h3>
-                <p className="text-[12px] text-gray-500 mb-3">
-                  Upload your resume to auto-fill your profile
-                </p>
-                <ResumeImportButton
-                  onImportComplete={handleResumeImportComplete}
-                  onError={handleResumeImportError}
-                  className="w-full justify-center"
-                />
-                {resumeImportError && (
-                  <p className="mt-2 text-[12px] text-red-600">{resumeImportError}</p>
-                )}
-              </div>
-            )}
+        {/* Right Sidebar - Shows suggestions or normal sidebar */}
+        {!isAdminMode && suggestionsPendingCount > 0 ? (
+          <SuggestionsSidebar
+            suggestions={suggestions}
+            profile={profile}
+            isLoading={suggestionsLoading}
+            onResolve={resolveSuggestion}
+            onDecline={declineSuggestion}
+            onNavigate={handleSuggestionNavigate}
+            isUpdating={suggestionsUpdating}
+          />
+        ) : (
+          <div className="w-72 flex-shrink-0">
+            <div className="sticky top-6 space-y-4">
+              {/* Resume Import (candidates only, not admin mode) */}
+              {!isAdminMode && (
+                <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                  <h3 className="text-[13px] font-medium text-gray-700 mb-2">Quick Import</h3>
+                  <p className="text-[12px] text-gray-500 mb-3">
+                    Upload your resume to auto-fill your profile
+                  </p>
+                  <ResumeImportButton
+                    onImportComplete={handleResumeImportComplete}
+                    onError={handleResumeImportError}
+                    className="w-full justify-center"
+                  />
+                  {resumeImportError && (
+                    <p className="mt-2 text-[12px] text-red-600">{resumeImportError}</p>
+                  )}
+                </div>
+              )}
 
-            {/* Profile Completeness */}
-            <div className="p-4 bg-white border border-gray-200 rounded-lg">
-              <h3 className="text-[13px] font-medium text-gray-700 mb-3">Profile Completeness</h3>
-              <div className="relative">
-                <div className="flex items-center justify-center">
-                  <svg className="w-24 h-24 transform -rotate-90">
-                    <circle
-                      cx="48"
-                      cy="48"
-                      r="40"
-                      stroke="#f3f4f6"
-                      strokeWidth="8"
-                      fill="none"
-                    />
-                    <circle
-                      cx="48"
-                      cy="48"
-                      r="40"
-                      stroke="#111827"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeDasharray={`${(profile?.profile_completeness || 0) * 2.51} 251`}
-                    />
-                  </svg>
-                  <span className="absolute text-[20px] font-semibold text-gray-900">
-                    {profile?.profile_completeness || 0}%
+              {/* Profile Completeness */}
+              <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                <h3 className="text-[13px] font-medium text-gray-700 mb-3">Profile Completeness</h3>
+                <div className="relative">
+                  <div className="flex items-center justify-center">
+                    <svg className="w-24 h-24 transform -rotate-90">
+                      <circle
+                        cx="48"
+                        cy="48"
+                        r="40"
+                        stroke="#f3f4f6"
+                        strokeWidth="8"
+                        fill="none"
+                      />
+                      <circle
+                        cx="48"
+                        cy="48"
+                        r="40"
+                        stroke="#111827"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={`${(profile?.profile_completeness || 0) * 2.51} 251`}
+                      />
+                    </svg>
+                    <span className="absolute text-[20px] font-semibold text-gray-900">
+                      {profile?.profile_completeness || 0}%
+                    </span>
+                  </div>
+                </div>
+                <p className="text-[12px] text-gray-500 text-center mt-2">
+                  {(profile?.profile_completeness || 0) < 50
+                    ? 'Add more details to improve visibility'
+                    : (profile?.profile_completeness || 0) < 80
+                    ? 'Good progress! Keep going'
+                    : 'Great job! Your profile is comprehensive'}
+                </p>
+              </div>
+
+              {/* Quick Tips */}
+              <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                <h3 className="text-[13px] font-medium text-gray-700 mb-3">Quick Tips</h3>
+                <ul className="space-y-2 text-[12px] text-gray-600">
+                  <li className="flex items-start gap-2">
+                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Add a professional title and headline
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Include at least 3 work experiences
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Select relevant industries
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Set your profile to public when ready
+                  </li>
+                </ul>
+              </div>
+
+              {/* Visibility Status */}
+              <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                <h3 className="text-[13px] font-medium text-gray-700 mb-2">Profile Status</h3>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      formData.visibility === 'public_sanitised' ? 'bg-green-500' : 'bg-gray-300'
+                    }`}
+                  />
+                  <span className="text-[13px] text-gray-600">
+                    {formData.visibility === 'public_sanitised' ? 'Visible in directory' : 'Private'}
                   </span>
                 </div>
               </div>
-              <p className="text-[12px] text-gray-500 text-center mt-2">
-                {(profile?.profile_completeness || 0) < 50
-                  ? 'Add more details to improve visibility'
-                  : (profile?.profile_completeness || 0) < 80
-                  ? 'Good progress! Keep going'
-                  : 'Great job! Your profile is comprehensive'}
-              </p>
-            </div>
-
-            {/* Quick Tips */}
-            <div className="p-4 bg-white border border-gray-200 rounded-lg">
-              <h3 className="text-[13px] font-medium text-gray-700 mb-3">Quick Tips</h3>
-              <ul className="space-y-2 text-[12px] text-gray-600">
-                <li className="flex items-start gap-2">
-                  <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Add a professional title and headline
-                </li>
-                <li className="flex items-start gap-2">
-                  <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Include at least 3 work experiences
-                </li>
-                <li className="flex items-start gap-2">
-                  <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Select relevant industries
-                </li>
-                <li className="flex items-start gap-2">
-                  <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Set your profile to public when ready
-                </li>
-              </ul>
-            </div>
-
-            {/* Visibility Status */}
-            <div className="p-4 bg-white border border-gray-200 rounded-lg">
-              <h3 className="text-[13px] font-medium text-gray-700 mb-2">Profile Status</h3>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    formData.visibility === 'public_sanitised' ? 'bg-green-500' : 'bg-gray-300'
-                  }`}
-                />
-                <span className="text-[13px] text-gray-600">
-                  {formData.visibility === 'public_sanitised' ? 'Visible in directory' : 'Private'}
-                </span>
-              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Resume Preview Modal */}

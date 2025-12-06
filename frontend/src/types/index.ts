@@ -1782,3 +1782,66 @@ export interface ParsedResumeData {
   all_technologies: string[]
   all_skills: string[]
 }
+
+// ============================================================================
+// Profile Suggestions
+// ============================================================================
+
+export type ProfileSuggestionFieldType = 'profile' | 'experience' | 'education'
+export type ProfileSuggestionStatus = 'pending' | 'resolved' | 'declined' | 'closed'
+
+export interface ProfileSuggestion {
+  id: string
+  candidate: number
+  field_type: ProfileSuggestionFieldType
+  field_name: string
+  related_object_id: string | null
+  suggestion_text: string
+  status: ProfileSuggestionStatus
+  created_by: string | null
+  created_by_name: string | null
+  created_by_email: string | null
+  created_at: string
+  resolved_at: string | null
+  resolved_by: string | null
+  resolved_by_name: string | null
+  resolution_note: string
+  reopened_at: string | null
+  reopened_by: string | null
+  reopened_by_name: string | null
+}
+
+export interface ProfileSuggestionCreate {
+  field_type: ProfileSuggestionFieldType
+  field_name: string
+  related_object_id?: string
+  suggestion_text: string
+}
+
+// Field labels for suggestions display
+export const SUGGESTION_FIELD_LABELS: Record<string, string> = {
+  // Profile fields
+  professional_title: 'Job Title',
+  headline: 'Headline',
+  professional_summary: 'Professional Summary',
+  city: 'City',
+  country: 'Country',
+  work_preference: 'Work Preference',
+  seniority: 'Seniority Level',
+  // Experience fields
+  job_title: 'Job Title',
+  company_name: 'Company Name',
+  description: 'Description',
+  achievements: 'Achievements',
+  // Education fields
+  institution: 'Institution',
+  degree: 'Degree',
+  field_of_study: 'Field of Study',
+}
+
+// Suggestible fields by type
+export const SUGGESTIBLE_FIELDS = {
+  profile: ['professional_title', 'headline', 'professional_summary', 'city', 'country', 'work_preference', 'seniority'],
+  experience: ['job_title', 'company_name', 'description', 'achievements'],
+  education: ['institution', 'degree', 'field_of_study', 'description'],
+}

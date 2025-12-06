@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
 from itertools import chain
 from operator import attrgetter
@@ -12,7 +13,8 @@ from operator import attrgetter
 from users.models import UserRole
 from .models import (
     Skill, Industry, Technology, CandidateProfile, ProfileVisibility,
-    Experience, Education, CandidateActivity, CandidateActivityNote
+    Experience, Education, CandidateActivity, CandidateActivityNote,
+    ProfileSuggestion, ProfileSuggestionStatus,
 )
 from .services import (
     log_profile_updated, log_profile_viewed, log_experience_added, log_experience_updated,
@@ -33,6 +35,9 @@ from .serializers import (
     EducationSerializer,
     EducationCreateUpdateSerializer,
     ReorderSerializer,
+    ProfileSuggestionSerializer,
+    ProfileSuggestionCreateSerializer,
+    ProfileSuggestionDeclineSerializer,
 )
 
 
@@ -1535,3 +1540,241 @@ def record_profile_view(request, candidate_id):
     else:
         # Debounced - already logged recently
         return Response({'logged': False, 'message': 'Already logged recently'}, status=status.HTTP_200_OK)
+
+
+# ============================================================================
+# Profile Suggestions
+# ============================================================================
+
+@extend_schema(
+    responses={200: ProfileSuggestionSerializer(many=True)},
+    tags=['Admin - Profile Suggestions'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_list_suggestions(request, candidate_id):
+    """
+    List all profile suggestions for a candidate.
+    Admin/Recruiter only.
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    candidate = get_object_or_404(CandidateProfile, id=candidate_id)
+    suggestions = ProfileSuggestion.objects.filter(
+        candidate=candidate
+    ).select_related('created_by', 'resolved_by', 'reopened_by').order_by('-created_at')
+
+    serializer = ProfileSuggestionSerializer(suggestions, many=True)
+    return Response(serializer.data)
+
+
+@extend_schema(
+    request=ProfileSuggestionCreateSerializer,
+    responses={201: ProfileSuggestionSerializer},
+    tags=['Admin - Profile Suggestions'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_create_suggestion(request, candidate_id):
+    """
+    Create a profile suggestion for a candidate.
+    Admin/Recruiter only.
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    candidate = get_object_or_404(CandidateProfile, id=candidate_id)
+
+    serializer = ProfileSuggestionCreateSerializer(
+        data=request.data,
+        context={'candidate': candidate, 'request': request}
+    )
+
+    if serializer.is_valid():
+        suggestion = serializer.save()
+        # TODO: Send notification email to candidate
+        return Response(
+            ProfileSuggestionSerializer(suggestion).data,
+            status=status.HTTP_201_CREATED
+        )
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    responses={200: ProfileSuggestionSerializer},
+    tags=['Admin - Profile Suggestions'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_reopen_suggestion(request, candidate_id, suggestion_id):
+    """
+    Reopen a resolved or declined suggestion.
+    Admin/Recruiter only.
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    candidate = get_object_or_404(CandidateProfile, id=candidate_id)
+    suggestion = get_object_or_404(
+        ProfileSuggestion,
+        id=suggestion_id,
+        candidate=candidate
+    )
+
+    if suggestion.status == ProfileSuggestionStatus.PENDING:
+        return Response(
+            {'error': 'Suggestion is already pending.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    suggestion.status = ProfileSuggestionStatus.PENDING
+    suggestion.reopened_at = timezone.now()
+    suggestion.reopened_by = request.user
+    suggestion.save()
+
+    # TODO: Send notification email to candidate
+    return Response(ProfileSuggestionSerializer(suggestion).data)
+
+
+@extend_schema(
+    responses={200: ProfileSuggestionSerializer},
+    tags=['Admin - Profile Suggestions'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_close_suggestion(request, candidate_id, suggestion_id):
+    """
+    Close a suggestion (no longer relevant).
+    Admin/Recruiter only.
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    candidate = get_object_or_404(CandidateProfile, id=candidate_id)
+    suggestion = get_object_or_404(
+        ProfileSuggestion,
+        id=suggestion_id,
+        candidate=candidate
+    )
+
+    suggestion.status = ProfileSuggestionStatus.CLOSED
+    suggestion.save()
+
+    return Response(ProfileSuggestionSerializer(suggestion).data)
+
+
+# ============================================================================
+# Candidate Profile Suggestions (Candidate-facing)
+# ============================================================================
+
+@extend_schema(
+    responses={200: ProfileSuggestionSerializer(many=True)},
+    tags=['Candidate - Profile Suggestions'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def candidate_list_suggestions(request):
+    """
+    List all pending profile suggestions for the authenticated candidate.
+    """
+    if request.user.role != UserRole.CANDIDATE:
+        return Response(
+            {'error': 'Only candidates can access this endpoint.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    profile, _ = CandidateProfile.objects.get_or_create(user=request.user)
+    suggestions = ProfileSuggestion.objects.filter(
+        candidate=profile,
+        status=ProfileSuggestionStatus.PENDING
+    ).select_related('created_by', 'resolved_by', 'reopened_by').order_by('-created_at')
+
+    serializer = ProfileSuggestionSerializer(suggestions, many=True)
+    return Response(serializer.data)
+
+
+@extend_schema(
+    responses={200: ProfileSuggestionSerializer},
+    tags=['Candidate - Profile Suggestions'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def candidate_resolve_suggestion(request, suggestion_id):
+    """
+    Mark a suggestion as resolved.
+    Candidate has made the suggested change.
+    """
+    if request.user.role != UserRole.CANDIDATE:
+        return Response(
+            {'error': 'Only candidates can access this endpoint.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    profile, _ = CandidateProfile.objects.get_or_create(user=request.user)
+    suggestion = get_object_or_404(
+        ProfileSuggestion,
+        id=suggestion_id,
+        candidate=profile,
+        status=ProfileSuggestionStatus.PENDING
+    )
+
+    suggestion.status = ProfileSuggestionStatus.RESOLVED
+    suggestion.resolved_at = timezone.now()
+    suggestion.resolved_by = request.user
+    suggestion.save()
+
+    # TODO: Send notification email to admin/recruiter who created the suggestion
+    return Response(ProfileSuggestionSerializer(suggestion).data)
+
+
+@extend_schema(
+    request=ProfileSuggestionDeclineSerializer,
+    responses={200: ProfileSuggestionSerializer},
+    tags=['Candidate - Profile Suggestions'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def candidate_decline_suggestion(request, suggestion_id):
+    """
+    Decline a suggestion with a reason.
+    """
+    if request.user.role != UserRole.CANDIDATE:
+        return Response(
+            {'error': 'Only candidates can access this endpoint.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    profile, _ = CandidateProfile.objects.get_or_create(user=request.user)
+    suggestion = get_object_or_404(
+        ProfileSuggestion,
+        id=suggestion_id,
+        candidate=profile,
+        status=ProfileSuggestionStatus.PENDING
+    )
+
+    serializer = ProfileSuggestionDeclineSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    suggestion.status = ProfileSuggestionStatus.DECLINED
+    suggestion.resolved_at = timezone.now()
+    suggestion.resolved_by = request.user
+    suggestion.resolution_note = serializer.validated_data['reason']
+    suggestion.save()
+
+    # TODO: Send notification email to admin/recruiter who created the suggestion
+    return Response(ProfileSuggestionSerializer(suggestion).data)

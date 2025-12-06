@@ -4,6 +4,14 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    // Dynamic classes for field highlighting (suggestion navigation)
+    'ring-2',
+    'ring-amber-400',
+    'ring-offset-2',
+    'bg-amber-50',
+    'animate-pulse',
+  ],
   theme: {
     extend: {
       colors: {

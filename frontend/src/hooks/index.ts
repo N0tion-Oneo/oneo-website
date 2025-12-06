@@ -158,3 +158,9 @@ export {
   usePublicBranding,
   useBrandingCSS,
 } from './useBranding'
+
+// Profile Suggestions hooks
+export {
+  useAdminSuggestions,
+  useCandidateSuggestions,
+} from './useProfileSuggestions'

@@ -712,3 +712,90 @@ class CandidateAdminListSerializer(serializers.ModelSerializer):
 
     def get_years_of_experience(self, obj):
         return obj.calculated_years_of_experience
+
+
+# ============================================================================
+# Profile Suggestions Serializers
+# ============================================================================
+
+class ProfileSuggestionSerializer(serializers.ModelSerializer):
+    """Read serializer for profile suggestions."""
+    created_by_name = serializers.SerializerMethodField()
+    created_by_email = serializers.SerializerMethodField()
+    resolved_by_name = serializers.SerializerMethodField()
+    reopened_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        from .models import ProfileSuggestion
+        model = ProfileSuggestion
+        fields = [
+            'id',
+            'candidate',
+            'field_type',
+            'field_name',
+            'related_object_id',
+            'suggestion_text',
+            'status',
+            'created_by',
+            'created_by_name',
+            'created_by_email',
+            'created_at',
+            'resolved_at',
+            'resolved_by',
+            'resolved_by_name',
+            'resolution_note',
+            'reopened_at',
+            'reopened_by',
+            'reopened_by_name',
+        ]
+        read_only_fields = fields
+
+    def get_created_by_name(self, obj):
+        return obj.created_by.full_name if obj.created_by else None
+
+    def get_created_by_email(self, obj):
+        return obj.created_by.email if obj.created_by else None
+
+    def get_resolved_by_name(self, obj):
+        return obj.resolved_by.full_name if obj.resolved_by else None
+
+    def get_reopened_by_name(self, obj):
+        return obj.reopened_by.full_name if obj.reopened_by else None
+
+
+class ProfileSuggestionCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating suggestions (admin/recruiter use)."""
+
+    class Meta:
+        from .models import ProfileSuggestion
+        model = ProfileSuggestion
+        fields = [
+            'field_type',
+            'field_name',
+            'related_object_id',
+            'suggestion_text',
+        ]
+
+    def validate(self, data):
+        # Validate related_object_id is required for experience/education
+        if data['field_type'] in ['experience', 'education']:
+            if not data.get('related_object_id'):
+                raise serializers.ValidationError({
+                    'related_object_id': 'Required for experience/education suggestions'
+                })
+        return data
+
+    def create(self, validated_data):
+        from .models import ProfileSuggestion
+        candidate = self.context['candidate']
+        user = self.context['request'].user
+        return ProfileSuggestion.objects.create(
+            candidate=candidate,
+            created_by=user,
+            **validated_data
+        )
+
+
+class ProfileSuggestionDeclineSerializer(serializers.Serializer):
+    """Serializer for candidate declining a suggestion."""
+    reason = serializers.CharField(required=True, min_length=10)

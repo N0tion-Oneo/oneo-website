@@ -154,6 +154,7 @@ export default function ExperienceEditor({ candidateSlug }: ExperienceEditorProp
               {displayExperiences.map((exp) => (
                 <div
                   key={exp.id}
+                  id={`experience-${exp.id}`}
                   draggable
                   onDragStart={(e) => handleDragStart(e, exp.id)}
                   onDragOver={(e) => handleDragOver(e, exp.id)}

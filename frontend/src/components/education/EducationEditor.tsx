@@ -154,6 +154,7 @@ export default function EducationEditor({ candidateSlug }: EducationEditorProps)
               {displayEducation.map((edu) => (
                 <div
                   key={edu.id}
+                  id={`education-${edu.id}`}
                   draggable
                   onDragStart={(e) => handleDragStart(e, edu.id)}
                   onDragOver={(e) => handleDragOver(e, edu.id)}

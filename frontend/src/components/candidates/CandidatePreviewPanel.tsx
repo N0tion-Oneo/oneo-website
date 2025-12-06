@@ -1,11 +1,22 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { X, User, Activity } from 'lucide-react'
-import { CandidateAdminListItem } from '@/types'
+import { CandidateAdminListItem, ProfileSuggestionFieldType } from '@/types'
+import { SUGGESTION_FIELD_LABELS } from '@/types'
 import api from '@/services/api'
+import { useAdminSuggestions } from '@/hooks'
 import CandidateProfileCard from './CandidateProfileCard'
 import CandidateActivityTab from './CandidateActivityTab'
+import { SuggestionsPanel } from '@/components/suggestions'
 
 type TabType = 'profile' | 'activity'
+
+interface SuggestionPanelState {
+  isOpen: boolean
+  fieldType: ProfileSuggestionFieldType | null
+  fieldName: string | null
+  relatedObjectId?: string
+  relatedObjectLabel?: string
+}
 
 interface CandidatePreviewPanelProps {
   candidate: CandidateAdminListItem | null
@@ -15,10 +26,27 @@ interface CandidatePreviewPanelProps {
 export default function CandidatePreviewPanel({ candidate, onClose }: CandidatePreviewPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>('profile')
   const viewRecordedRef = useRef<number | null>(null)
+  const [suggestionPanel, setSuggestionPanel] = useState<SuggestionPanelState>({
+    isOpen: false,
+    fieldType: null,
+    fieldName: null,
+  })
 
-  // Reset tab when candidate changes
+  // Suggestions hook
+  const {
+    suggestions,
+    isLoading: suggestionsLoading,
+    createSuggestion,
+    reopenSuggestion,
+    closeSuggestion,
+    isCreating,
+    isUpdating,
+  } = useAdminSuggestions(candidate?.id ?? null)
+
+  // Reset tab and close suggestions panel when candidate changes
   useEffect(() => {
     setActiveTab('profile')
+    setSuggestionPanel({ isOpen: false, fieldType: null, fieldName: null })
   }, [candidate?.id])
 
   // Record profile view when panel opens
@@ -32,12 +60,16 @@ export default function CandidatePreviewPanel({ candidate, onClose }: CandidateP
     }
   }, [candidate])
 
-  // Handle escape key
+  // Handle escape key - close suggestions panel first, then main panel
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') {
-      onClose()
+      if (suggestionPanel.isOpen) {
+        setSuggestionPanel({ isOpen: false, fieldType: null, fieldName: null })
+      } else {
+        onClose()
+      }
     }
-  }, [onClose])
+  }, [onClose, suggestionPanel.isOpen])
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown)
@@ -56,12 +88,49 @@ export default function CandidatePreviewPanel({ candidate, onClose }: CandidateP
     }
   }, [candidate])
 
+  // Handle adding a suggestion (opens the suggestions panel)
+  const handleAddSuggestion = useCallback(
+    (fieldType: ProfileSuggestionFieldType, fieldName: string, relatedObjectId?: string) => {
+      // Find related object label for better UX
+      let relatedObjectLabel: string | undefined
+      if (relatedObjectId && candidate) {
+        if (fieldType === 'experience') {
+          const exp = candidate.experiences?.find((e) => e.id === relatedObjectId)
+          if (exp) {
+            relatedObjectLabel = `${exp.job_title} at ${exp.company_name}`
+          }
+        } else if (fieldType === 'education') {
+          const edu = candidate.education?.find((e) => e.id === relatedObjectId)
+          if (edu) {
+            relatedObjectLabel = `${edu.degree} - ${edu.institution}`
+          }
+        }
+      }
+
+      setSuggestionPanel({
+        isOpen: true,
+        fieldType,
+        fieldName,
+        relatedObjectId,
+        relatedObjectLabel,
+      })
+    },
+    [candidate]
+  )
+
+  const handleCloseSuggestionPanel = useCallback(() => {
+    setSuggestionPanel({ isOpen: false, fieldType: null, fieldName: null })
+  }, [])
+
   if (!candidate) return null
 
   const tabs = [
     { id: 'profile' as TabType, label: 'Profile', icon: User },
     { id: 'activity' as TabType, label: 'Activity', icon: Activity },
   ]
+
+  // Calculate pending suggestions count
+  const pendingSuggestionsCount = suggestions.filter((s) => s.status === 'pending').length
 
   return (
     <>
@@ -76,7 +145,14 @@ export default function CandidatePreviewPanel({ candidate, onClose }: CandidateP
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 bg-white">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[16px] font-semibold text-gray-900">Candidate Details</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-[16px] font-semibold text-gray-900">Candidate Details</h2>
+              {pendingSuggestionsCount > 0 && (
+                <span className="px-2 py-0.5 text-[11px] font-medium bg-amber-100 text-amber-700 rounded-full">
+                  {pendingSuggestionsCount} pending suggestion{pendingSuggestionsCount !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
             <button
               onClick={onClose}
               className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
@@ -119,6 +195,9 @@ export default function CandidatePreviewPanel({ candidate, onClose }: CandidateP
               showProfileCompleteness={true}
               editLink={`/dashboard/admin/candidates/${candidate.slug}`}
               hideViewProfileLink={true}
+              enableSuggestions={true}
+              suggestions={suggestions}
+              onAddSuggestion={handleAddSuggestion}
             />
           )}
           {activeTab === 'activity' && (
@@ -133,6 +212,23 @@ export default function CandidatePreviewPanel({ candidate, onClose }: CandidateP
           </p>
         </div>
       </div>
+
+      {/* Suggestions Panel */}
+      <SuggestionsPanel
+        isOpen={suggestionPanel.isOpen}
+        onClose={handleCloseSuggestionPanel}
+        fieldType={suggestionPanel.fieldType}
+        fieldName={suggestionPanel.fieldName}
+        relatedObjectId={suggestionPanel.relatedObjectId}
+        relatedObjectLabel={suggestionPanel.relatedObjectLabel}
+        suggestions={suggestions}
+        candidate={candidate}
+        onCreateSuggestion={createSuggestion}
+        onReopenSuggestion={reopenSuggestion}
+        onCloseSuggestion={closeSuggestion}
+        isCreating={isCreating}
+        isUpdating={isUpdating}
+      />
     </>
   )
 }
