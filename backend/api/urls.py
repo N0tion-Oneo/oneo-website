@@ -25,4 +25,7 @@ urlpatterns = [
 
     # Branding settings
     path('branding/', include('branding.urls')),
+
+    # Resume parser
+    path('resume/', include('resume_parser.urls')),
 ]

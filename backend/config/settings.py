@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'scheduling',
     'notifications',
     'branding',
+    'resume_parser',
 ]
 
 MIDDLEWARE = [
@@ -323,3 +324,7 @@ CELERY_BEAT_SCHEDULE = {
 
 # Template directories (for email templates)
 TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
+
+# OpenAI API (for resume parsing)
+# https://platform.openai.com/api-keys
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')

@@ -41,7 +41,7 @@ class SkillSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Skill
-        fields = ['id', 'name', 'slug', 'category']
+        fields = ['id', 'name', 'slug', 'category', 'is_active', 'needs_review']
         read_only_fields = ['id', 'slug']
 
 
@@ -59,7 +59,7 @@ class TechnologySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Technology
-        fields = ['id', 'name', 'slug', 'category']
+        fields = ['id', 'name', 'slug', 'category', 'is_active', 'needs_review']
         read_only_fields = ['id', 'slug']
 
 

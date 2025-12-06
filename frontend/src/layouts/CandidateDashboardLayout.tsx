@@ -124,55 +124,10 @@ export default function CandidateDashboardLayout() {
         </svg>
       ),
     },
-    {
-      name: 'Client Invitations',
-      href: '/dashboard/invitations',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="8.5" cy="7" r="4" />
-          <line x1="20" y1="8" x2="20" y2="14" strokeLinecap="round" />
-          <line x1="23" y1="11" x2="17" y2="11" strokeLinecap="round" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Notifications',
-      href: '/dashboard/admin/notifications',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-    },
   ] : []
 
   // Admin-only navigation (not visible to recruiters)
-  const adminOnlyNav: NavItem[] = isAdmin ? [
-    {
-      name: 'Recruiters',
-      href: '/dashboard/admin/recruiters',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Branding',
-      href: '/dashboard/admin/branding',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-    },
-  ] : []
+  const adminOnlyNav: NavItem[] = []
 
   // Candidate-specific navigation
   const candidateNav: NavItem[] = !isClient && !isAdminOrRecruiter ? [

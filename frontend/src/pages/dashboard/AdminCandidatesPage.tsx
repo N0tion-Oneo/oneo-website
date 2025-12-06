@@ -510,7 +510,7 @@ export default function AdminCandidatesPage() {
                     {techs.map(tech => (
                       <span
                         key={tech.id}
-                        className={`group/tooltip relative px-1.5 py-0.5 text-[10px] rounded cursor-default ${getProficiencyStyle(tech.count, 'tech')}`}
+                        className={`group/tooltip relative px-1.5 py-0.5 text-[10px] rounded cursor-default ${getProficiencyStyle(tech.totalMonths, 'tech')}`}
                       >
                         {tech.name}
                         <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-[10px] text-white bg-gray-900 rounded shadow-lg whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[9999]">
@@ -537,7 +537,7 @@ export default function AdminCandidatesPage() {
                     {skills.map(skill => (
                       <span
                         key={skill.id}
-                        className={`group/tooltip relative px-1.5 py-0.5 text-[10px] rounded cursor-default ${getProficiencyStyle(skill.count, 'skill')}`}
+                        className={`group/tooltip relative px-1.5 py-0.5 text-[10px] rounded cursor-default ${getProficiencyStyle(skill.totalMonths, 'skill')}`}
                       >
                         {skill.name}
                         <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-[10px] text-white bg-gray-900 rounded shadow-lg whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[9999]">

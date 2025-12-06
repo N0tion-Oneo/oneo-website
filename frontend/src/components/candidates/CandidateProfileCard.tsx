@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Mail,
-  Phone,
   MapPin,
   Briefcase,
   GraduationCap,
@@ -10,11 +9,6 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
-  Calendar,
-  Award,
-  Globe,
-  DollarSign,
-  Clock,
   Pencil,
   Eye
 } from 'lucide-react'
@@ -133,12 +127,12 @@ const formatSalaryExpectation = (min: number | null, max: number | null, currenc
 const formatNoticePeriod = (days: number | null) => {
   if (!days) return null
   if (days === 0) return 'Immediately available'
-  if (days <= 7) return '1 week'
-  if (days <= 14) return '2 weeks'
-  if (days <= 30) return '1 month'
-  if (days <= 60) return '2 months'
-  if (days <= 90) return '3 months'
-  return `${Math.round(days / 30)} months`
+  if (days <= 7) return '1 week notice'
+  if (days <= 14) return '2 weeks notice'
+  if (days <= 30) return '1 month notice'
+  if (days <= 60) return '2 months notice'
+  if (days <= 90) return '3 months notice'
+  return `${Math.round(days / 30)} months notice`
 }
 
 // ============================================================================
@@ -343,7 +337,7 @@ export default function CandidateProfileCard({
                   {aggregatedTechs.map((tech) => (
                     <span
                       key={tech.id}
-                      className={`px-3 py-1.5 text-[13px] rounded ${getProficiencyStyle(tech.count, 'tech')}`}
+                      className={`px-3 py-1.5 text-[13px] rounded ${getProficiencyStyle(tech.totalMonths, 'tech')}`}
                       title={`${tech.count} role${tech.count > 1 ? 's' : ''} • ${formatTotalDuration(tech.totalMonths)} total`}
                     >
                       {tech.name}
@@ -360,7 +354,7 @@ export default function CandidateProfileCard({
                   {aggregatedSkills.map((skill) => (
                     <span
                       key={skill.id}
-                      className={`px-3 py-1.5 text-[13px] rounded ${getProficiencyStyle(skill.count, 'skill')}`}
+                      className={`px-3 py-1.5 text-[13px] rounded ${getProficiencyStyle(skill.totalMonths, 'skill')}`}
                       title={`${skill.count} role${skill.count > 1 ? 's' : ''} • ${formatTotalDuration(skill.totalMonths)} total`}
                     >
                       {skill.name}
@@ -526,164 +520,147 @@ export default function CandidateProfileCard({
   }
 
   // ============================================================================
-  // COMPACT VARIANT (Redesigned)
+  // COMPACT VARIANT (Redesigned - Single Unified Header)
   // ============================================================================
   return (
     <div className="space-y-4">
-      {/* Admin Actions Bar */}
-      {showAdminActions && isFull && (
-        <div className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-          {/* Profile Completeness */}
-          {showProfileCompleteness && hasProfileCompleteness(candidate) && (
-            <div className="flex items-center gap-3 flex-1">
-              <span className="text-[12px] font-medium text-gray-600">Profile</span>
-              <div className="flex-1 max-w-[120px] h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${getCompletenessColor(candidate.profile_completeness)} transition-all`}
-                  style={{ width: `${candidate.profile_completeness}%` }}
-                />
-              </div>
-              <span className="text-[12px] font-medium text-gray-700">{candidate.profile_completeness}%</span>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
-            {editLink ? (
-              <Link
-                to={editLink}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </Link>
-            ) : onEdit && (
-              <button
-                onClick={onEdit}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </button>
-            )}
-            {candidate.slug && (
-              <a
-                href={`/candidates/${candidate.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                View Public
-              </a>
-            )}
-            <a
-              href={`mailto:${candidate.email}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
-            >
-              <Mail className="w-3.5 h-3.5" />
-              Email
-            </a>
-          </div>
-        </div>
-      )}
-
-      {/* Quick Summary Header Card */}
+      {/* Unified Header Card */}
       <div className="bg-white border border-gray-200 rounded-lg p-4">
+        {/* Top Row: Avatar + Name/Role + Actions */}
         <div className="flex items-start gap-4">
           {/* Avatar */}
-          <div className="w-16 h-16 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl flex items-center justify-center text-white text-[18px] font-semibold flex-shrink-0 shadow-sm">
+          <div className="w-14 h-14 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl flex items-center justify-center text-white text-[16px] font-semibold flex-shrink-0">
             {getInitials()}
           </div>
 
           {/* Main Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-[16px] font-semibold text-gray-900 truncate">
-              {isFull ? candidate.full_name : candidate.professional_title || 'Professional'}
-            </h3>
-
-            {/* Current Role - Most Important */}
-            {currentRole && (
-              <p className="text-[13px] text-gray-600 mt-0.5 flex items-center gap-1.5">
-                <Briefcase className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                <span className="truncate">{currentRole.title} at {currentRole.company}</span>
-              </p>
-            )}
-
-            {/* Location */}
-            {candidate.location && (
-              <p className="text-[12px] text-gray-500 mt-1 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                <span>{candidate.location}</span>
-              </p>
-            )}
-          </div>
-
-          {/* Contact Info & Stats - Right Column */}
-          <div className="flex-shrink-0 flex flex-col items-end gap-2">
-            {/* Contact Details */}
-            {showContactInfo && isFull && (
-              <div className="flex flex-col items-end gap-1.5">
-                <a
-                  href={`mailto:${candidate.email}`}
-                  className="flex items-center gap-1.5 text-[12px] text-gray-600 hover:text-gray-900"
-                >
-                  <Mail className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="truncate max-w-[160px]">{candidate.email}</span>
-                </a>
-                {candidate.phone && (
-                  <div className="flex items-center gap-1.5 text-[12px] text-gray-600">
-                    <Phone className="w-3.5 h-3.5 text-gray-400" />
-                    <span>{candidate.phone}</span>
-                  </div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <h3 className="text-[16px] font-semibold text-gray-900 truncate">
+                  {isFull ? candidate.full_name : candidate.professional_title || 'Professional'}
+                </h3>
+                {currentRole && (
+                  <p className="text-[13px] text-gray-600 truncate">
+                    {currentRole.title} at {currentRole.company}
+                  </p>
+                )}
+                {candidate.location && (
+                  <p className="text-[12px] text-gray-500 mt-0.5 flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {candidate.location}
+                  </p>
                 )}
               </div>
-            )}
 
-            {/* Quick Stats - Below Contact */}
-            <div className="flex flex-wrap items-center justify-end gap-2 mt-1">
-              {candidate.seniority && (
-                <div className="flex items-center gap-1 text-[11px]">
-                  <Award className="w-3 h-3 text-gray-400" />
-                  <span className="font-medium text-gray-600">{getSeniorityLabel(candidate.seniority)}</span>
+              {/* Admin Actions (top-right) */}
+              {showAdminActions && isFull && (
+                <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                  {/* Contact Details */}
+                  {showContactInfo && (
+                    <div className="flex flex-col items-end gap-0.5 text-[11px] text-gray-500">
+                      <a href={`mailto:${candidate.email}`} className="hover:text-gray-700">{candidate.email}</a>
+                      {candidate.phone && <span>{candidate.phone}</span>}
+                    </div>
+                  )}
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-1.5">
+                    {editLink ? (
+                      <Link
+                        to={editLink}
+                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                        title="Edit Profile"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Link>
+                    ) : onEdit && (
+                      <button
+                        onClick={onEdit}
+                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                        title="Edit Profile"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    {candidate.slug && (
+                      <a
+                        href={`/candidates/${candidate.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                        title="View Public Profile"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                    <a
+                      href={`mailto:${candidate.email}`}
+                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                      title="Send Email"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
                 </div>
-              )}
-              {candidate.years_of_experience && (
-                <div className="flex items-center gap-1 text-[11px]">
-                  <Calendar className="w-3 h-3 text-gray-400" />
-                  <span className="font-medium text-gray-600">{candidate.years_of_experience}</span>
-                </div>
-              )}
-              {candidate.work_preference && (
-                <div className="flex items-center gap-1 text-[11px]">
-                  <Globe className="w-3 h-3 text-gray-400" />
-                  <span className="font-medium text-gray-600">{getWorkPreferenceLabel(candidate.work_preference)}</span>
-                </div>
-              )}
-              {/* Salary Expectations */}
-              {isFull && formatSalaryExpectation(candidate.salary_expectation_min, candidate.salary_expectation_max, candidate.salary_currency) && (
-                <div className="flex items-center gap-1 text-[11px]">
-                  <DollarSign className="w-3 h-3 text-gray-400" />
-                  <span className="font-medium text-gray-600">
-                    {formatSalaryExpectation(candidate.salary_expectation_min, candidate.salary_expectation_max, candidate.salary_currency)}
-                  </span>
-                </div>
-              )}
-              {/* Notice Period */}
-              {isFull && formatNoticePeriod(candidate.notice_period_days) && (
-                <div className="flex items-center gap-1 text-[11px]">
-                  <Clock className="w-3 h-3 text-gray-400" />
-                  <span className="font-medium text-gray-600">{formatNoticePeriod(candidate.notice_period_days)}</span>
-                </div>
-              )}
-              {candidate.willing_to_relocate && (
-                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-purple-50 text-purple-700 rounded">
-                  Relocate
-                </span>
               )}
             </div>
           </div>
         </div>
+
+        {/* Meta Tags Row */}
+        <div className="flex items-center justify-between gap-4 mt-3 pt-3 border-t border-gray-100 text-[11px]">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            {candidate.seniority && (
+              <span className="font-medium text-gray-600">{getSeniorityLabel(candidate.seniority)}</span>
+            )}
+            {candidate.years_of_experience && (
+              <>
+                <span className="text-gray-300">•</span>
+                <span className="text-gray-500">{candidate.years_of_experience}</span>
+              </>
+            )}
+            {candidate.work_preference && (
+              <>
+                <span className="text-gray-300">•</span>
+                <span className="text-gray-500">{getWorkPreferenceLabel(candidate.work_preference)}</span>
+              </>
+            )}
+            {isFull && formatSalaryExpectation(candidate.salary_expectation_min, candidate.salary_expectation_max, candidate.salary_currency) && (
+              <>
+                <span className="text-gray-300">•</span>
+                <span className="text-gray-500">
+                  {formatSalaryExpectation(candidate.salary_expectation_min, candidate.salary_expectation_max, candidate.salary_currency)}
+                </span>
+              </>
+            )}
+            {isFull && formatNoticePeriod(candidate.notice_period_days) && (
+              <>
+                <span className="text-gray-300">•</span>
+                <span className="text-gray-500">{formatNoticePeriod(candidate.notice_period_days)}</span>
+              </>
+            )}
+            {candidate.willing_to_relocate && (
+              <>
+                <span className="text-gray-300">•</span>
+                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-purple-50 text-purple-700 rounded">Relocate</span>
+              </>
+            )}
+          </div>
+
+          {/* Profile Completeness (right side) */}
+          {showProfileCompleteness && hasProfileCompleteness(candidate) && (
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${getCompletenessColor(candidate.profile_completeness)}`}
+                  style={{ width: `${candidate.profile_completeness}%` }}
+                />
+              </div>
+              <span className="text-[11px] text-gray-500">{candidate.profile_completeness}%</span>
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* Cover Statement - Highlighted */}
@@ -714,20 +691,15 @@ export default function CandidateProfileCard({
             <div className="bg-white border border-gray-200 rounded-lg p-3">
               <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Technologies</h4>
               <div className="flex flex-wrap gap-1">
-                {aggregatedTechs.slice(0, 8).map((tech) => (
+                {aggregatedTechs.map((tech) => (
                   <span
                     key={tech.id}
-                    className={`px-2 py-0.5 text-[11px] rounded ${getProficiencyStyle(tech.count, 'tech')}`}
+                    className={`px-2 py-0.5 text-[11px] rounded ${getProficiencyStyle(tech.totalMonths, 'tech')}`}
                     title={`${tech.count} role${tech.count > 1 ? 's' : ''} • ${formatTotalDuration(tech.totalMonths)}`}
                   >
                     {tech.name}
                   </span>
                 ))}
-                {aggregatedTechs.length > 8 && (
-                  <span className="px-2 py-0.5 text-[11px] text-gray-500 bg-gray-50 rounded">
-                    +{aggregatedTechs.length - 8}
-                  </span>
-                )}
               </div>
             </div>
           )}
@@ -737,20 +709,15 @@ export default function CandidateProfileCard({
             <div className="bg-white border border-gray-200 rounded-lg p-3">
               <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Skills</h4>
               <div className="flex flex-wrap gap-1">
-                {aggregatedSkills.slice(0, 8).map((skill) => (
+                {aggregatedSkills.map((skill) => (
                   <span
                     key={skill.id}
-                    className={`px-2 py-0.5 text-[11px] rounded ${getProficiencyStyle(skill.count, 'skill')}`}
+                    className={`px-2 py-0.5 text-[11px] rounded ${getProficiencyStyle(skill.totalMonths, 'skill')}`}
                     title={`${skill.count} role${skill.count > 1 ? 's' : ''} • ${formatTotalDuration(skill.totalMonths)}`}
                   >
                     {skill.name}
                   </span>
                 ))}
-                {aggregatedSkills.length > 8 && (
-                  <span className="px-2 py-0.5 text-[11px] text-gray-500 bg-gray-50 rounded">
-                    +{aggregatedSkills.length - 8}
-                  </span>
-                )}
               </div>
             </div>
           )}
@@ -760,7 +727,7 @@ export default function CandidateProfileCard({
             <div className="bg-white border border-gray-200 rounded-lg p-3">
               <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Industries</h4>
               <div className="flex flex-wrap gap-1">
-                {candidate.industries.slice(0, 4).map((industry: Industry) => (
+                {candidate.industries.map((industry: Industry) => (
                   <span
                     key={industry.id}
                     className="px-2 py-0.5 text-[11px] text-gray-700 bg-gray-100 rounded"
@@ -768,11 +735,6 @@ export default function CandidateProfileCard({
                     {industry.name}
                   </span>
                 ))}
-                {candidate.industries.length > 4 && (
-                  <span className="px-2 py-0.5 text-[11px] text-gray-500 bg-gray-50 rounded">
-                    +{candidate.industries.length - 4}
-                  </span>
-                )}
               </div>
             </div>
           )}

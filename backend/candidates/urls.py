@@ -49,4 +49,18 @@ urlpatterns = [
     path('candidates/<slug:slug>/education/<uuid:education_id>/', views.update_education, name='admin-update-education'),
     path('candidates/<slug:slug>/education/<uuid:education_id>/delete/', views.delete_education, name='admin-delete-education'),
     path('candidates/<slug:slug>/education/reorder/', views.reorder_education, name='admin-reorder-education'),
+
+    # Admin Skills Management
+    path('admin/skills/', views.admin_list_skills, name='admin-list-skills'),
+    path('admin/skills/create/', views.admin_create_skill, name='admin-create-skill'),
+    path('admin/skills/<int:skill_id>/', views.admin_update_skill, name='admin-update-skill'),
+    path('admin/skills/<int:skill_id>/delete/', views.admin_delete_skill, name='admin-delete-skill'),
+    path('admin/skills/<int:skill_id>/merge/', views.admin_merge_skill, name='admin-merge-skill'),
+
+    # Admin Technologies Management
+    path('admin/technologies/', views.admin_list_technologies, name='admin-list-technologies'),
+    path('admin/technologies/create/', views.admin_create_technology, name='admin-create-technology'),
+    path('admin/technologies/<int:technology_id>/', views.admin_update_technology, name='admin-update-technology'),
+    path('admin/technologies/<int:technology_id>/delete/', views.admin_delete_technology, name='admin-delete-technology'),
+    path('admin/technologies/<int:technology_id>/merge/', views.admin_merge_technology, name='admin-merge-technology'),
 ]

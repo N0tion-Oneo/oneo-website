@@ -264,7 +264,7 @@ export default function NotificationTemplateEditPage() {
         setSuccessMessage('Template created successfully')
         // Navigate to templates list after short delay
         setTimeout(() => {
-          navigate('/dashboard/admin/notifications/templates')
+          navigate('/dashboard/settings/notifications/templates')
         }, 1500)
       }
     } catch {
@@ -288,7 +288,7 @@ export default function NotificationTemplateEditPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          to="/dashboard/admin/notifications/templates"
+          to="/dashboard/settings/notifications/templates"
           className="p-2 hover:bg-gray-100 rounded-md transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -523,7 +523,7 @@ export default function NotificationTemplateEditPage() {
         {/* Submit Button */}
         <div className="flex justify-end gap-3">
           <Link
-            to="/dashboard/admin/notifications/templates"
+            to="/dashboard/settings/notifications/templates"
             className="px-4 py-2 text-[13px] font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
           >
             Cancel

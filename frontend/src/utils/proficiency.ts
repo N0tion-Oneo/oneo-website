@@ -47,7 +47,7 @@ export const aggregateSkillsWithProficiency = (
     })
   })
 
-  return Array.from(skillMap.values()).sort((a, b) => b.count - a.count || b.totalMonths - a.totalMonths)
+  return Array.from(skillMap.values()).sort((a, b) => b.totalMonths - a.totalMonths || b.count - a.count)
 }
 
 /**
@@ -77,13 +77,19 @@ export const aggregateTechsWithProficiency = (
     })
   })
 
-  return Array.from(techMap.values()).sort((a, b) => b.count - a.count || b.totalMonths - a.totalMonths)
+  return Array.from(techMap.values()).sort((a, b) => b.totalMonths - a.totalMonths || b.count - a.count)
 }
 
 /**
- * Get proficiency style based on count (gradient colors)
+ * Get proficiency style based on total months of experience (gradient colors)
+ *
+ * Thresholds:
+ * - < 12 months: Level 1 (beginner)
+ * - 12-36 months: Level 2 (intermediate)
+ * - 36-52 months: Level 3 (experienced)
+ * - 52+ months: Level 4 (expert)
  */
-export const getProficiencyStyle = (count: number, type: 'skill' | 'tech'): string => {
+export const getProficiencyStyle = (totalMonths: number, type: 'skill' | 'tech'): string => {
   const colors = {
     skill: {
       1: 'bg-purple-100 text-purple-700',
@@ -98,7 +104,18 @@ export const getProficiencyStyle = (count: number, type: 'skill' | 'tech'): stri
       4: 'bg-blue-600 text-white',
     },
   }
-  const level = Math.min(count, 4) as 1 | 2 | 3 | 4
+
+  let level: 1 | 2 | 3 | 4
+  if (totalMonths < 24) {
+    level = 1
+  } else if (totalMonths < 48) {
+    level = 2
+  } else if (totalMonths <62) {
+    level = 3
+  } else {
+    level = 4
+  }
+
   return colors[type][level]
 }
 

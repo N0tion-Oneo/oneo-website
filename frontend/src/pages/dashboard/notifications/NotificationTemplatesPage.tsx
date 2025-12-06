@@ -71,7 +71,7 @@ export default function NotificationTemplatesPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link
-            to="/dashboard/admin/notifications"
+            to="/dashboard/settings/notifications"
             className="p-2 hover:bg-gray-100 rounded-md transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -84,7 +84,7 @@ export default function NotificationTemplatesPage() {
         </div>
         {isAdmin && (
           <Link
-            to="/dashboard/admin/notifications/templates/new"
+            to="/dashboard/settings/notifications/templates/new"
             className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
           >
             <Plus className="w-4 h-4" />
@@ -148,7 +148,7 @@ export default function NotificationTemplatesPage() {
             </p>
             {isAdmin && !search && (
               <Link
-                to="/dashboard/admin/notifications/templates/new"
+                to="/dashboard/settings/notifications/templates/new"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
               >
                 <Plus className="w-4 h-4" />
@@ -252,7 +252,7 @@ export default function NotificationTemplatesPage() {
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
                         <Link
-                          to={`/dashboard/admin/notifications/templates/${template.id}`}
+                          to={`/dashboard/settings/notifications/templates/${template.id}`}
                           className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
                           title="Edit"
                         >

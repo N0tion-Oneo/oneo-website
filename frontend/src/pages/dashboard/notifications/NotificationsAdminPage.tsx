@@ -110,21 +110,19 @@ export default function NotificationsAdminPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Bell className="w-6 h-6 text-gray-700" />
-          <h1 className="text-[22px] font-semibold text-gray-900">Notifications</h1>
-          <span className="text-[13px] text-gray-500">({count} total)</span>
-        </div>
+        <p className="text-[13px] text-gray-500">
+          Manage notifications sent to users ({count} total)
+        </p>
         <div className="flex gap-2">
           <Link
-            to="/dashboard/admin/notifications/send"
+            to="/dashboard/settings/notifications/send"
             className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
           >
             <Send className="w-4 h-4" />
             Send
           </Link>
           <Link
-            to="/dashboard/admin/notifications/templates"
+            to="/dashboard/settings/notifications/templates"
             className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-[13px] font-medium rounded-md hover:bg-gray-50"
           >
             <FileText className="w-4 h-4" />

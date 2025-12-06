@@ -66,6 +66,10 @@ class Skill(models.Model):
         default=SkillCategory.OTHER,
     )
     is_active = models.BooleanField(default=True)
+    needs_review = models.BooleanField(
+        default=False,
+        help_text='True if auto-imported from resume and needs admin review'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -127,6 +131,10 @@ class Technology(models.Model):
         default=TechnologyCategory.OTHER,
     )
     is_active = models.BooleanField(default=True)
+    needs_review = models.BooleanField(
+        default=False,
+        help_text='True if auto-imported from resume and needs admin review'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -4,7 +4,9 @@ import { useMyProfile, useCandidate, useCountries, useCities } from '@/hooks'
 import { IndustryMultiSelect } from '@/components/forms'
 import { ExperienceEditor } from '@/components/experience'
 import { EducationEditor } from '@/components/education'
-import type { Industry, PortfolioLink, CandidateProfile as CandidateProfileType } from '@/types'
+import { ResumeImportButton, ResumePreviewModal } from '@/components/resume'
+import { importResume, type ResumeImportResult } from '@/services/api'
+import type { Industry, PortfolioLink, CandidateProfile as CandidateProfileType, ParsedResumeData } from '@/types'
 import { Seniority, WorkPreference, Currency, ProfileVisibility, UserRole } from '@/types'
 
 type Tab = 'basic' | 'professional' | 'experience' | 'education' | 'preferences' | 'portfolio'
@@ -231,6 +233,12 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
+  // Resume import state
+  const [showResumePreview, setShowResumePreview] = useState(false)
+  const [parsedResumeData, setParsedResumeData] = useState<ParsedResumeData | null>(null)
+  const [isImportingResume, setIsImportingResume] = useState(false)
+  const [resumeImportError, setResumeImportError] = useState<string | null>(null)
+
   // Form state
   const [formData, setFormData] = useState({
     // Basic Info
@@ -341,6 +349,56 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
       setTimeout(() => setSaveSuccess(false), 3000)
     } catch {
       setSaveError('Failed to save profile. Please try again.')
+    }
+  }
+
+  const handleResumeImportComplete = (data: ParsedResumeData) => {
+    setParsedResumeData(data)
+    setShowResumePreview(true)
+    setResumeImportError(null)
+  }
+
+  const handleResumeImportError = (error: string) => {
+    setResumeImportError(error)
+    setTimeout(() => setResumeImportError(null), 5000)
+  }
+
+  const handleResumeConfirm = async (data: ParsedResumeData) => {
+    setIsImportingResume(true)
+    try {
+      // Call the import endpoint which handles everything
+      const result: ResumeImportResult = await importResume(data)
+
+      // Close modal
+      setShowResumePreview(false)
+      setParsedResumeData(null)
+
+      // Show success with details
+      const { results } = result
+      const summary = [
+        results.experiences_created > 0 && `${results.experiences_created} experiences`,
+        results.education_created > 0 && `${results.education_created} education entries`,
+      ].filter(Boolean).join(', ')
+
+      setSaveSuccess(true)
+      setSaveError(null)
+
+      // Log unmatched items for debugging
+      if (results.technologies_unmatched.length > 0) {
+        console.log('Unmatched technologies:', results.technologies_unmatched)
+      }
+      if (results.skills_unmatched.length > 0) {
+        console.log('Unmatched skills:', results.skills_unmatched)
+      }
+
+      setTimeout(() => setSaveSuccess(false), 5000)
+
+      // Refresh the profile data to show new experiences/education
+      window.location.reload()
+    } catch {
+      setSaveError('Failed to import resume data. Please try again.')
+    } finally {
+      setIsImportingResume(false)
     }
   }
 
@@ -886,6 +944,24 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
         {/* Right Sidebar */}
         <div className="w-72 flex-shrink-0">
           <div className="sticky top-6 space-y-4">
+            {/* Resume Import (candidates only, not admin mode) */}
+            {!isAdminMode && (
+              <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                <h3 className="text-[13px] font-medium text-gray-700 mb-2">Quick Import</h3>
+                <p className="text-[12px] text-gray-500 mb-3">
+                  Upload your resume to auto-fill your profile
+                </p>
+                <ResumeImportButton
+                  onImportComplete={handleResumeImportComplete}
+                  onError={handleResumeImportError}
+                  className="w-full justify-center"
+                />
+                {resumeImportError && (
+                  <p className="mt-2 text-[12px] text-red-600">{resumeImportError}</p>
+                )}
+              </div>
+            )}
+
             {/* Profile Completeness */}
             <div className="p-4 bg-white border border-gray-200 rounded-lg">
               <h3 className="text-[13px] font-medium text-gray-700 mb-3">Profile Completeness</h3>
@@ -973,6 +1049,20 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
           </div>
         </div>
       </div>
+
+      {/* Resume Preview Modal */}
+      {parsedResumeData && (
+        <ResumePreviewModal
+          data={parsedResumeData}
+          isOpen={showResumePreview}
+          onClose={() => {
+            setShowResumePreview(false)
+            setParsedResumeData(null)
+          }}
+          onConfirm={handleResumeConfirm}
+          isImporting={isImportingResume}
+        />
+      )}
     </div>
   )
 }

@@ -902,3 +902,327 @@ def reorder_education(request, slug=None):
     # Return updated list
     education = profile.education.all()
     return Response(EducationSerializer(education, many=True).data)
+
+
+# ============ Admin Skills Management ============
+
+@extend_schema(
+    responses={200: SkillSerializer(many=True)},
+    parameters=[
+        OpenApiParameter(name='include_inactive', type=bool, description='Include inactive skills'),
+        OpenApiParameter(name='needs_review', type=bool, description='Filter by needs_review status'),
+        OpenApiParameter(name='category', type=str, description='Filter by category'),
+        OpenApiParameter(name='search', type=str, description='Search by name'),
+    ],
+    tags=['Admin - Skills'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_list_skills(request):
+    """
+    List all skills for admin management (includes inactive).
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    skills = Skill.objects.all()
+
+    # Filter by active status
+    include_inactive = request.query_params.get('include_inactive', 'true').lower() == 'true'
+    if not include_inactive:
+        skills = skills.filter(is_active=True)
+
+    # Filter by needs_review
+    needs_review = request.query_params.get('needs_review')
+    if needs_review is not None:
+        skills = skills.filter(needs_review=needs_review.lower() == 'true')
+
+    # Filter by category
+    category = request.query_params.get('category')
+    if category:
+        skills = skills.filter(category=category)
+
+    # Search by name
+    search = request.query_params.get('search')
+    if search:
+        skills = skills.filter(name__icontains=search)
+
+    skills = skills.order_by('-needs_review', 'category', 'name')
+    serializer = SkillSerializer(skills, many=True)
+    return Response(serializer.data)
+
+
+@extend_schema(
+    request=SkillSerializer,
+    responses={201: SkillSerializer},
+    tags=['Admin - Skills'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_create_skill(request):
+    """
+    Create a new skill.
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    serializer = SkillSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    request=SkillSerializer,
+    responses={200: SkillSerializer},
+    tags=['Admin - Skills'],
+)
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def admin_update_skill(request, skill_id):
+    """
+    Update a skill.
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    skill = get_object_or_404(Skill, id=skill_id)
+    serializer = SkillSerializer(skill, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    responses={204: None},
+    tags=['Admin - Skills'],
+)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def admin_delete_skill(request, skill_id):
+    """
+    Delete a skill (soft delete by setting is_active=False).
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    skill = get_object_or_404(Skill, id=skill_id)
+    skill.is_active = False
+    skill.save()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@extend_schema(
+    request={'application/json': {'type': 'object', 'properties': {'target_id': {'type': 'integer'}}}},
+    responses={200: SkillSerializer},
+    tags=['Admin - Skills'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_merge_skill(request, skill_id):
+    """
+    Merge a skill into another (reassign all references, then delete source).
+    Request body: { "target_id": <id of skill to merge into> }
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    source_skill = get_object_or_404(Skill, id=skill_id)
+    target_id = request.data.get('target_id')
+
+    if not target_id:
+        return Response({'error': 'target_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if int(target_id) == skill_id:
+        return Response({'error': 'Cannot merge skill into itself'}, status=status.HTTP_400_BAD_REQUEST)
+
+    target_skill = get_object_or_404(Skill, id=target_id)
+
+    # Get all experiences with the source skill and add target skill
+    for experience in Experience.objects.filter(skills=source_skill):
+        experience.skills.remove(source_skill)
+        experience.skills.add(target_skill)
+
+    # Delete source skill
+    source_skill.delete()
+
+    return Response(SkillSerializer(target_skill).data)
+
+
+# ============ Admin Technologies Management ============
+
+@extend_schema(
+    responses={200: TechnologySerializer(many=True)},
+    parameters=[
+        OpenApiParameter(name='include_inactive', type=bool, description='Include inactive technologies'),
+        OpenApiParameter(name='needs_review', type=bool, description='Filter by needs_review status'),
+        OpenApiParameter(name='category', type=str, description='Filter by category'),
+        OpenApiParameter(name='search', type=str, description='Search by name'),
+    ],
+    tags=['Admin - Technologies'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_list_technologies(request):
+    """
+    List all technologies for admin management (includes inactive).
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    technologies = Technology.objects.all()
+
+    # Filter by active status
+    include_inactive = request.query_params.get('include_inactive', 'true').lower() == 'true'
+    if not include_inactive:
+        technologies = technologies.filter(is_active=True)
+
+    # Filter by needs_review
+    needs_review = request.query_params.get('needs_review')
+    if needs_review is not None:
+        technologies = technologies.filter(needs_review=needs_review.lower() == 'true')
+
+    # Filter by category
+    category = request.query_params.get('category')
+    if category:
+        technologies = technologies.filter(category=category)
+
+    # Search by name
+    search = request.query_params.get('search')
+    if search:
+        technologies = technologies.filter(name__icontains=search)
+
+    technologies = technologies.order_by('-needs_review', 'category', 'name')
+    serializer = TechnologySerializer(technologies, many=True)
+    return Response(serializer.data)
+
+
+@extend_schema(
+    request=TechnologySerializer,
+    responses={201: TechnologySerializer},
+    tags=['Admin - Technologies'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_create_technology(request):
+    """
+    Create a new technology.
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    serializer = TechnologySerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    request=TechnologySerializer,
+    responses={200: TechnologySerializer},
+    tags=['Admin - Technologies'],
+)
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def admin_update_technology(request, technology_id):
+    """
+    Update a technology.
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    technology = get_object_or_404(Technology, id=technology_id)
+    serializer = TechnologySerializer(technology, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    responses={204: None},
+    tags=['Admin - Technologies'],
+)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def admin_delete_technology(request, technology_id):
+    """
+    Delete a technology (soft delete by setting is_active=False).
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    technology = get_object_or_404(Technology, id=technology_id)
+    technology.is_active = False
+    technology.save()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@extend_schema(
+    request={'application/json': {'type': 'object', 'properties': {'target_id': {'type': 'integer'}}}},
+    responses={200: TechnologySerializer},
+    tags=['Admin - Technologies'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_merge_technology(request, technology_id):
+    """
+    Merge a technology into another (reassign all references, then delete source).
+    Request body: { "target_id": <id of technology to merge into> }
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    source_tech = get_object_or_404(Technology, id=technology_id)
+    target_id = request.data.get('target_id')
+
+    if not target_id:
+        return Response({'error': 'target_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if int(target_id) == technology_id:
+        return Response({'error': 'Cannot merge technology into itself'}, status=status.HTTP_400_BAD_REQUEST)
+
+    target_tech = get_object_or_404(Technology, id=target_id)
+
+    # Get all experiences with the source technology and add target technology
+    for experience in Experience.objects.filter(technologies=source_tech):
+        experience.technologies.remove(source_tech)
+        experience.technologies.add(target_tech)
+
+    # Delete source technology
+    source_tech.delete()
+
+    return Response(TechnologySerializer(target_tech).data)

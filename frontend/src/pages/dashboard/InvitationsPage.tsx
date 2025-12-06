@@ -74,12 +74,9 @@ export default function InvitationsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-[22px] font-semibold text-gray-900">Client Invitations</h1>
-        <p className="text-[14px] text-gray-500 mt-0.5">
-          Invite new clients to sign up and create their company profile
-        </p>
-      </div>
+      <p className="text-[13px] text-gray-500">
+        Invite new clients to sign up and create their company profile
+      </p>
 
       {/* Create Invitation Form */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">

@@ -22,6 +22,7 @@ import {
   AdminCandidateEditPage,
   AdminNewJobPage,
   AdminRecruitersPage,
+  AdminSkillsTechnologiesPage,
   NotificationsAdminPage,
   SendNotificationPage,
   NotificationTemplatesPage,
@@ -95,12 +96,20 @@ function App() {
           <Route path="jobs/:jobId" element={<EditJobPage />} />
           <Route path="jobs/:jobId/applications" element={<JobApplicationsPage />} />
           <Route path="applications" element={<ApplicationsPage />} />
-          <Route path="invitations" element={<InvitationsPage />} />
           {/* Settings routes with sidebar */}
           <Route path="settings" element={<SettingsLayout />}>
             <Route index element={<Navigate to="profile" replace />} />
             <Route path="profile" element={<ProfileSettingsPage />} />
             <Route path="calendar" element={<CalendarSettingsPage />} />
+            <Route path="invitations" element={<InvitationsPage />} />
+            <Route path="notifications" element={<NotificationsAdminPage />} />
+            <Route path="notifications/send" element={<SendNotificationPage />} />
+            <Route path="notifications/templates" element={<NotificationTemplatesPage />} />
+            <Route path="notifications/templates/new" element={<NotificationTemplateEditPage />} />
+            <Route path="notifications/templates/:templateId" element={<NotificationTemplateEditPage />} />
+            <Route path="skills-technologies" element={<AdminSkillsTechnologiesPage />} />
+            <Route path="branding" element={<BrandingSettingsPage />} />
+            <Route path="recruiters" element={<AdminRecruitersPage />} />
           </Route>
           {/* Admin/Recruiter routes */}
           <Route path="admin/companies" element={<AdminCompaniesPage />} />
@@ -109,15 +118,6 @@ function App() {
           <Route path="admin/candidates/:slug" element={<AdminCandidateEditPage />} />
           <Route path="admin/jobs" element={<JobsPage mode="admin" />} />
           <Route path="admin/jobs/new" element={<AdminNewJobPage />} />
-          <Route path="admin/recruiters" element={<AdminRecruitersPage />} />
-          {/* Notification Admin routes */}
-          <Route path="admin/notifications" element={<NotificationsAdminPage />} />
-          <Route path="admin/notifications/send" element={<SendNotificationPage />} />
-          <Route path="admin/notifications/templates" element={<NotificationTemplatesPage />} />
-          <Route path="admin/notifications/templates/new" element={<NotificationTemplateEditPage />} />
-          <Route path="admin/notifications/templates/:templateId" element={<NotificationTemplateEditPage />} />
-          {/* Branding Settings */}
-          <Route path="admin/branding" element={<BrandingSettingsPage />} />
         </Route>
 
         {/* Public candidates directory */}

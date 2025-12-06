@@ -1739,3 +1739,46 @@ export interface PublicBranding {
   privacy_policy_url: string
   terms_of_service_url: string
 }
+
+// ============================================================================
+// Resume Parser
+// ============================================================================
+
+export interface ParsedResumeProfile {
+  first_name: string
+  last_name: string
+  professional_title: string
+  headline: string
+  professional_summary: string
+  city: string | null
+  country: string | null
+}
+
+export interface ParsedResumeExperience {
+  job_title: string
+  company_name: string
+  start_date: string
+  end_date: string | null
+  is_current: boolean
+  description: string
+  technologies: string[]
+  skills: string[]
+}
+
+export interface ParsedResumeEducation {
+  institution: string
+  degree: string
+  field_of_study: string
+  start_date: string | null
+  end_date: string | null
+  is_current: boolean
+  grade: string | null
+}
+
+export interface ParsedResumeData {
+  profile: ParsedResumeProfile
+  experiences: ParsedResumeExperience[]
+  education: ParsedResumeEducation[]
+  all_technologies: string[]
+  all_skills: string[]
+}

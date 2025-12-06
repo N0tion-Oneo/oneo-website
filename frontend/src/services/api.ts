@@ -172,4 +172,122 @@ api.interceptors.response.use(
   }
 );
 
+// Resume parsing
+export const parseResume = async (file: File): Promise<import('@/types').ParsedResumeData> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await api.post('/resume/parse/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
+// Resume import
+export interface ResumeImportResult {
+  success: boolean;
+  message: string;
+  results: {
+    profile_updated: boolean;
+    user_updated: boolean;
+    experiences_created: number;
+    education_created: number;
+    technologies_matched: string[];
+    technologies_created: string[];
+    skills_matched: string[];
+    skills_created: string[];
+  };
+}
+
+export const importResume = async (data: import('@/types').ParsedResumeData): Promise<ResumeImportResult> => {
+  const response = await api.post('/resume/import/', data);
+  return response.data;
+};
+
+// Admin Skills API
+export interface AdminSkill {
+  id: number;
+  name: string;
+  slug: string;
+  category: string;
+  is_active?: boolean;
+  needs_review?: boolean;
+}
+
+export const adminGetSkills = async (params?: {
+  include_inactive?: boolean;
+  category?: string;
+  search?: string;
+  needs_review?: boolean;
+}): Promise<AdminSkill[]> => {
+  const response = await api.get('/admin/skills/', { params });
+  return response.data;
+};
+
+export const adminCreateSkill = async (data: { name: string; category: string }): Promise<AdminSkill> => {
+  const response = await api.post('/admin/skills/create/', data);
+  return response.data;
+};
+
+export const adminUpdateSkill = async (
+  skillId: number,
+  data: { name?: string; category?: string; is_active?: boolean; needs_review?: boolean }
+): Promise<AdminSkill> => {
+  const response = await api.patch(`/admin/skills/${skillId}/`, data);
+  return response.data;
+};
+
+export const adminDeleteSkill = async (skillId: number): Promise<void> => {
+  await api.delete(`/admin/skills/${skillId}/delete/`);
+};
+
+export const adminMergeSkill = async (skillId: number, targetId: number): Promise<AdminSkill> => {
+  const response = await api.post(`/admin/skills/${skillId}/merge/`, { target_id: targetId });
+  return response.data;
+};
+
+// Admin Technologies API
+export interface AdminTechnology {
+  id: number;
+  name: string;
+  slug: string;
+  category: string;
+  is_active?: boolean;
+  needs_review?: boolean;
+}
+
+export const adminGetTechnologies = async (params?: {
+  include_inactive?: boolean;
+  category?: string;
+  search?: string;
+  needs_review?: boolean;
+}): Promise<AdminTechnology[]> => {
+  const response = await api.get('/admin/technologies/', { params });
+  return response.data;
+};
+
+export const adminCreateTechnology = async (data: { name: string; category: string }): Promise<AdminTechnology> => {
+  const response = await api.post('/admin/technologies/create/', data);
+  return response.data;
+};
+
+export const adminUpdateTechnology = async (
+  technologyId: number,
+  data: { name?: string; category?: string; is_active?: boolean; needs_review?: boolean }
+): Promise<AdminTechnology> => {
+  const response = await api.patch(`/admin/technologies/${technologyId}/`, data);
+  return response.data;
+};
+
+export const adminDeleteTechnology = async (technologyId: number): Promise<void> => {
+  await api.delete(`/admin/technologies/${technologyId}/delete/`);
+};
+
+export const adminMergeTechnology = async (technologyId: number, targetId: number): Promise<AdminTechnology> => {
+  const response = await api.post(`/admin/technologies/${technologyId}/merge/`, { target_id: targetId });
+  return response.data;
+};
+
 export default api;
