@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Mail,
   Phone,
@@ -15,7 +15,13 @@ import {
   DollarSign,
   Clock
 } from 'lucide-react'
-import type { CandidateProfile, CandidateProfileSanitized, Experience, Education, Skill, Industry } from '@/types'
+import type { CandidateProfile, CandidateProfileSanitized, Experience, Education, Industry } from '@/types'
+import {
+  aggregateSkillsWithProficiency,
+  aggregateTechsWithProficiency,
+  getProficiencyStyle,
+  formatTotalDuration,
+} from '@/utils/proficiency'
 
 // Type guard to check if profile is full or sanitized
 function isFullProfile(profile: CandidateProfile | CandidateProfileSanitized): profile is CandidateProfile {
@@ -179,6 +185,10 @@ export default function CandidateProfileCard({
   const expData = (isFull && candidate.experiences) || experiences
   const eduData = (isFull && candidate.education) || education
 
+  // Aggregate skills and technologies from experiences with proficiency
+  const aggregatedSkills = useMemo(() => aggregateSkillsWithProficiency(expData), [expData])
+  const aggregatedTechs = useMemo(() => aggregateTechsWithProficiency(expData), [expData])
+
   // Get initials for avatar
   const getInitials = () => {
     if (isFull && candidate.first_name && candidate.last_name) {
@@ -254,7 +264,7 @@ export default function CandidateProfileCard({
                 )}
                 {candidate.years_of_experience && (
                   <span className="px-2.5 py-1 text-[12px] font-medium bg-green-50 text-green-700 rounded-md">
-                    {candidate.years_of_experience}+ years experience
+                    {candidate.years_of_experience}
                   </span>
                 )}
                 {candidate.willing_to_relocate && (
@@ -287,17 +297,45 @@ export default function CandidateProfileCard({
           </div>
         )}
 
-        {/* Skills */}
-        {candidate.skills && candidate.skills.length > 0 && (
+        {/* Skills & Technologies (Aggregated from Experience) */}
+        {(aggregatedSkills.length > 0 || aggregatedTechs.length > 0) && (
           <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h4 className="text-[15px] font-medium text-gray-900 mb-3">Skills</h4>
-            <div className="flex flex-wrap gap-1.5">
-              {candidate.skills.map((skill: Skill) => (
-                <span key={skill.id} className="px-3 py-1.5 text-[13px] text-gray-700 bg-gray-100 rounded">
-                  {skill.name}
-                </span>
-              ))}
-            </div>
+            <h4 className="text-[15px] font-medium text-gray-900 mb-3">Skills & Technologies</h4>
+            <p className="text-[12px] text-gray-500 mb-3">Based on experience - darker colors indicate more experience</p>
+
+            {aggregatedTechs.length > 0 && (
+              <div className="mb-4">
+                <p className="text-[12px] font-medium text-gray-500 mb-2">Technologies</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {aggregatedTechs.map((tech) => (
+                    <span
+                      key={tech.id}
+                      className={`px-3 py-1.5 text-[13px] rounded ${getProficiencyStyle(tech.count, 'tech')}`}
+                      title={`${tech.count} role${tech.count > 1 ? 's' : ''} • ${formatTotalDuration(tech.totalMonths)} total`}
+                    >
+                      {tech.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {aggregatedSkills.length > 0 && (
+              <div>
+                <p className="text-[12px] font-medium text-gray-500 mb-2">Skills</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {aggregatedSkills.map((skill) => (
+                    <span
+                      key={skill.id}
+                      className={`px-3 py-1.5 text-[13px] rounded ${getProficiencyStyle(skill.count, 'skill')}`}
+                      title={`${skill.count} role${skill.count > 1 ? 's' : ''} • ${formatTotalDuration(skill.totalMonths)} total`}
+                    >
+                      {skill.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -515,7 +553,7 @@ export default function CandidateProfileCard({
               {candidate.years_of_experience && (
                 <div className="flex items-center gap-1 text-[11px]">
                   <Calendar className="w-3 h-3 text-gray-400" />
-                  <span className="font-medium text-gray-600">{candidate.years_of_experience}+ yrs</span>
+                  <span className="font-medium text-gray-600">{candidate.years_of_experience}</span>
                 </div>
               )}
               {candidate.work_preference && (
@@ -570,25 +608,49 @@ export default function CandidateProfileCard({
         </div>
       )}
 
-      {/* Skills & Industries - Two Column Layout */}
-      {((candidate.skills && candidate.skills.length > 0) || (candidate.industries && candidate.industries.length > 0)) && (
-        <div className="grid grid-cols-2 gap-3">
-          {/* Skills */}
-          {candidate.skills && candidate.skills.length > 0 && (
+      {/* Skills, Technologies & Industries */}
+      {(aggregatedSkills.length > 0 || aggregatedTechs.length > 0 || (candidate.industries && candidate.industries.length > 0)) && (
+        <div className="space-y-3">
+          {/* Technologies (from experience) */}
+          {aggregatedTechs.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-lg p-3">
+              <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Technologies</h4>
+              <div className="flex flex-wrap gap-1">
+                {aggregatedTechs.slice(0, 8).map((tech) => (
+                  <span
+                    key={tech.id}
+                    className={`px-2 py-0.5 text-[11px] rounded ${getProficiencyStyle(tech.count, 'tech')}`}
+                    title={`${tech.count} role${tech.count > 1 ? 's' : ''} • ${formatTotalDuration(tech.totalMonths)}`}
+                  >
+                    {tech.name}
+                  </span>
+                ))}
+                {aggregatedTechs.length > 8 && (
+                  <span className="px-2 py-0.5 text-[11px] text-gray-500 bg-gray-50 rounded">
+                    +{aggregatedTechs.length - 8}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Skills (from experience) */}
+          {aggregatedSkills.length > 0 && (
             <div className="bg-white border border-gray-200 rounded-lg p-3">
               <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Skills</h4>
               <div className="flex flex-wrap gap-1">
-                {candidate.skills.slice(0, 6).map((skill: Skill) => (
+                {aggregatedSkills.slice(0, 8).map((skill) => (
                   <span
                     key={skill.id}
-                    className="px-2 py-0.5 text-[11px] text-gray-700 bg-gray-100 rounded"
+                    className={`px-2 py-0.5 text-[11px] rounded ${getProficiencyStyle(skill.count, 'skill')}`}
+                    title={`${skill.count} role${skill.count > 1 ? 's' : ''} • ${formatTotalDuration(skill.totalMonths)}`}
                   >
                     {skill.name}
                   </span>
                 ))}
-                {candidate.skills.length > 6 && (
+                {aggregatedSkills.length > 8 && (
                   <span className="px-2 py-0.5 text-[11px] text-gray-500 bg-gray-50 rounded">
-                    +{candidate.skills.length - 6}
+                    +{aggregatedSkills.length - 8}
                   </span>
                 )}
               </div>

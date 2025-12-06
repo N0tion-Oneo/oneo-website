@@ -68,7 +68,6 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
     Full serializer for CandidateProfile - used for authenticated users
     viewing their own profile or profiles of users who set visibility to public.
     """
-    skills = SkillSerializer(many=True, read_only=True)
     industries = IndustrySerializer(many=True, read_only=True)
     full_name = serializers.CharField(read_only=True)
     email = serializers.CharField(read_only=True)
@@ -87,6 +86,9 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
     # Nested experiences and education
     experiences = serializers.SerializerMethodField()
     education = serializers.SerializerMethodField()
+
+    # Calculated years of experience
+    years_of_experience = serializers.SerializerMethodField()
 
     class Meta:
         model = CandidateProfile
@@ -119,7 +121,6 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
             'notice_period_days',
             'portfolio_links',
             'resume_url',
-            'skills',
             'industries',
             'experiences',
             'education',
@@ -147,6 +148,9 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
             return obj.user.avatar.url
         return None
 
+    def get_years_of_experience(self, obj):
+        return obj.calculated_years_of_experience
+
 
 class CandidateProfileSanitizedSerializer(serializers.ModelSerializer):
     """
@@ -154,12 +158,14 @@ class CandidateProfileSanitizedSerializer(serializers.ModelSerializer):
     like exact name, email, phone, and salary expectations.
     Used for public directory listings.
     """
-    skills = SkillSerializer(many=True, read_only=True)
     industries = IndustrySerializer(many=True, read_only=True)
     location = serializers.CharField(read_only=True)
 
     # Display initials instead of full name
     initials = serializers.SerializerMethodField()
+
+    # Calculated years of experience
+    years_of_experience = serializers.SerializerMethodField()
 
     class Meta:
         model = CandidateProfile
@@ -177,7 +183,6 @@ class CandidateProfileSanitizedSerializer(serializers.ModelSerializer):
             'location',
             'work_preference',
             'willing_to_relocate',
-            'skills',
             'industries',
             'profile_completeness',
         ]
@@ -188,18 +193,15 @@ class CandidateProfileSanitizedSerializer(serializers.ModelSerializer):
         last_initial = obj.user.last_name[0].upper() if obj.user.last_name else ''
         return f"{first_initial}{last_initial}"
 
+    def get_years_of_experience(self, obj):
+        return obj.calculated_years_of_experience
+
 
 class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for updating candidate profile.
     Handles both profile fields and M2M relationships.
     """
-    skill_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Skill.objects.filter(is_active=True),
-        many=True,
-        write_only=True,
-        required=False,
-    )
     industry_ids = serializers.PrimaryKeyRelatedField(
         queryset=Industry.objects.filter(is_active=True),
         many=True,
@@ -238,7 +240,6 @@ class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
             'headline',
             'seniority',
             'professional_summary',
-            'years_of_experience',
             'city',
             'country',
             'region',
@@ -253,7 +254,6 @@ class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
             'notice_period_days',
             'portfolio_links',
             'resume_url',
-            'skill_ids',
             'industry_ids',
             'visibility',
         ]
@@ -264,14 +264,6 @@ class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
         if min_salary and value and int(value) < int(min_salary):
             raise serializers.ValidationError(
                 "Maximum salary must be greater than minimum salary."
-            )
-        return value
-
-    def validate_years_of_experience(self, value):
-        """Validate years of experience is reasonable."""
-        if value is not None and value > 60:
-            raise serializers.ValidationError(
-                "Years of experience cannot exceed 60."
             )
         return value
 
@@ -287,10 +279,6 @@ class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
         user.save()
 
         # Handle M2M relationships
-        if 'skill_ids' in validated_data:
-            skills = validated_data.pop('skill_ids')
-            instance.skills.set(skills)
-
         if 'industry_ids' in validated_data:
             industries = validated_data.pop('industry_ids')
             instance.industries.set(industries)
@@ -670,11 +658,11 @@ class CandidateAdminListSerializer(serializers.ModelSerializer):
     email = serializers.CharField(read_only=True)
     phone = serializers.SerializerMethodField()
     location = serializers.CharField(read_only=True)
-    skills = SkillSerializer(many=True, read_only=True)
     industries = IndustrySerializer(many=True, read_only=True)
     has_resume = serializers.SerializerMethodField()
     experiences = ExperienceListSerializer(many=True, read_only=True)
     education = EducationListSerializer(many=True, read_only=True)
+    years_of_experience = serializers.SerializerMethodField()
 
     class Meta:
         model = CandidateProfile
@@ -701,7 +689,6 @@ class CandidateAdminListSerializer(serializers.ModelSerializer):
             'salary_currency',
             'notice_period_days',
             'has_resume',
-            'skills',
             'industries',
             'experiences',
             'education',
@@ -722,3 +709,6 @@ class CandidateAdminListSerializer(serializers.ModelSerializer):
 
     def get_has_resume(self, obj):
         return bool(obj.resume_url)
+
+    def get_years_of_experience(self, obj):
+        return obj.calculated_years_of_experience

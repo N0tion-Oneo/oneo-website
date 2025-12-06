@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSkills, useIndustries } from '@/hooks'
+import { useIndustries } from '@/hooks'
 import { Currency } from '@/types'
 import {
   Search,
@@ -52,7 +52,6 @@ export interface CandidateFilters {
   seniority: string
   work_preference: string
   visibility: string
-  skills: number[]
   industries: number[]
   min_completeness: number | undefined
   min_experience: number | undefined
@@ -74,7 +73,6 @@ export const defaultFilters: CandidateFilters = {
   seniority: '',
   work_preference: '',
   visibility: '',
-  skills: [],
   industries: [],
   min_completeness: undefined,
   min_experience: undefined,
@@ -104,7 +102,6 @@ export default function CandidateFilterPanel({
   onClearFilters,
   activeFilterCount,
 }: CandidateFilterPanelProps) {
-  const { skills: allSkills } = useSkills()
   const { industries: allIndustries } = useIndustries()
 
   // Collapsed sections
@@ -125,24 +122,11 @@ export default function CandidateFilterPanel({
     onFiltersChange({ ...filters, [key]: value })
   }
 
-  const toggleSkill = (skillId: number) => {
-    const newSkills = filters.skills.includes(skillId)
-      ? filters.skills.filter(id => id !== skillId)
-      : [...filters.skills, skillId]
-    updateFilter('skills', newSkills)
-  }
-
   const toggleIndustry = (industryId: number) => {
     const newIndustries = filters.industries.includes(industryId)
       ? filters.industries.filter(id => id !== industryId)
       : [...filters.industries, industryId]
     updateFilter('industries', newIndustries)
-  }
-
-  const getSelectedSkillNames = () => {
-    return allSkills
-      .filter(s => filters.skills.includes(s.id))
-      .map(s => s.name)
   }
 
   const getSelectedIndustryNames = () => {
@@ -263,9 +247,9 @@ export default function CandidateFilterPanel({
           </div>
         </CollapsibleSection>
 
-        {/* Experience & Skills Section */}
+        {/* Experience Section */}
         <CollapsibleSection
-          title="Experience & Skills"
+          title="Experience"
           expanded={expandedSections.experience}
           onToggle={() => toggleSection('experience')}
         >
@@ -296,48 +280,6 @@ export default function CandidateFilterPanel({
                   className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
                 />
               </div>
-            </div>
-
-            {/* Skills */}
-            <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
-                Skills
-              </label>
-              {filters.skills.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {getSelectedSkillNames().map((name, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] bg-gray-100 text-gray-700 rounded"
-                    >
-                      {name}
-                      <button
-                        onClick={() => {
-                          const skill = allSkills.find(s => s.name === name)
-                          if (skill) toggleSkill(skill.id)
-                        }}
-                        className="hover:text-gray-900"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <select
-                value=""
-                onChange={(e) => {
-                  if (e.target.value) toggleSkill(parseInt(e.target.value))
-                }}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
-              >
-                <option value="">Add skill filter...</option>
-                {allSkills
-                  .filter(s => !filters.skills.includes(s.id))
-                  .map(skill => (
-                    <option key={skill.id} value={skill.id}>{skill.name}</option>
-                  ))}
-              </select>
             </div>
 
             {/* Industries */}
@@ -544,6 +486,7 @@ export default function CandidateFilterPanel({
                 <option value="false">No</option>
               </select>
             </div>
+
           </div>
         </CollapsibleSection>
       </div>

@@ -56,7 +56,6 @@ export default function SavedFiltersDropdown({
       currentFilters.seniority ||
       currentFilters.work_preference ||
       currentFilters.visibility ||
-      currentFilters.skills.length > 0 ||
       currentFilters.industries.length > 0 ||
       currentFilters.min_completeness !== undefined ||
       currentFilters.min_experience !== undefined ||

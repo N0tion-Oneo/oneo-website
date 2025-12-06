@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useMyProfile, useCandidate, useCountries, useCities } from '@/hooks'
-import { SkillMultiSelect, IndustryMultiSelect } from '@/components/forms'
+import { IndustryMultiSelect } from '@/components/forms'
 import { ExperienceEditor } from '@/components/experience'
 import { EducationEditor } from '@/components/education'
-import type { Skill, Industry, PortfolioLink, CandidateProfile as CandidateProfileType } from '@/types'
+import type { Industry, PortfolioLink, CandidateProfile as CandidateProfileType } from '@/types'
 import { Seniority, WorkPreference, Currency, ProfileVisibility, UserRole } from '@/types'
 
 type Tab = 'basic' | 'professional' | 'experience' | 'education' | 'preferences' | 'portfolio'
@@ -242,8 +242,6 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
     // Professional
     seniority: '' as Seniority | '',
     professional_summary: '',
-    years_of_experience: null as number | null,
-    skills: [] as Skill[],
     industries: [] as Industry[],
     // Location & Preferences
     city_id: null as number | null,
@@ -281,8 +279,6 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
         headline: profile.headline || '',
         seniority: profile.seniority || '',
         professional_summary: profile.professional_summary || '',
-        years_of_experience: profile.years_of_experience,
-        skills: profile.skills || [],
         industries: profile.industries || [],
         city_id: cityId,
         country_id: countryId,
@@ -328,7 +324,6 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
         headline: formData.headline,
         seniority: formData.seniority || undefined,
         professional_summary: formData.professional_summary,
-        years_of_experience: formData.years_of_experience,
         city_id: formData.city_id,
         country_id: formData.country_id,
         work_preference: formData.work_preference || undefined,
@@ -340,7 +335,6 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
         notice_period_days: formData.notice_period_days,
         portfolio_links: formData.portfolio_links,
         visibility: formData.visibility,
-        skill_ids: formData.skills.map((s) => parseInt(s.id as string)),
         industry_ids: formData.industries.map((i) => parseInt(i.id as string)),
       })
       setSaveSuccess(true)
@@ -610,13 +604,12 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                     Years of Experience
                   </label>
                   <input
-                    type="number"
-                    min="0"
-                    max="50"
-                    value={formData.years_of_experience ?? ''}
-                    onChange={(e) => handleNumberChange('years_of_experience', e.target.value)}
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    type="text"
+                    value={profile?.years_of_experience || 'Add work experience to calculate'}
+                    disabled
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
                   />
+                  <p className="text-[12px] text-gray-400 mt-1">Calculated from your work history</p>
                 </div>
               </div>
 
@@ -633,13 +626,6 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                   className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
                 />
               </div>
-
-              <SkillMultiSelect
-                selected={formData.skills}
-                onChange={(skills) => setFormData((prev) => ({ ...prev, skills }))}
-                maxItems={15}
-                label="Skills (max 15)"
-              />
 
               <IndustryMultiSelect
                 selected={formData.industries}
@@ -959,7 +945,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                   <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Select relevant skills and industries
+                  Select relevant industries
                 </li>
                 <li className="flex items-start gap-2">
                   <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

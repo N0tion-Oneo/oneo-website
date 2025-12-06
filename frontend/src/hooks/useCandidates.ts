@@ -173,7 +173,6 @@ export interface ProfileUpdateData {
   headline?: string
   seniority?: string
   professional_summary?: string
-  years_of_experience?: number | null
   // Location (FK IDs)
   city_id?: number | null
   country_id?: number | null
@@ -251,7 +250,6 @@ interface UseCandidatesOptions {
   work_preference?: string
   country?: string
   city?: string
-  skills?: number[]
   industries?: number[]
   search?: string
   page?: number
@@ -284,7 +282,6 @@ export function useCandidates(options: UseCandidatesOptions = {}): UseCandidates
       if (options.work_preference) params.append('work_preference', options.work_preference)
       if (options.country) params.append('country', options.country)
       if (options.city) params.append('city', options.city)
-      if (options.skills?.length) params.append('skills', options.skills.join(','))
       if (options.industries?.length) params.append('industries', options.industries.join(','))
       if (options.search) params.append('search', options.search)
       if (options.page) params.append('page', options.page.toString())
@@ -307,7 +304,6 @@ export function useCandidates(options: UseCandidatesOptions = {}): UseCandidates
     options.work_preference,
     options.country,
     options.city,
-    options.skills,
     options.industries,
     options.search,
     options.page,
@@ -330,7 +326,6 @@ interface UseAllCandidatesOptions {
   visibility?: string
   country?: string
   city?: string
-  skills?: number[]
   industries?: number[]
   min_experience?: number
   max_experience?: number
@@ -378,7 +373,6 @@ export function useAllCandidates(options: UseAllCandidatesOptions = {}): UseAllC
       if (options.visibility) params.append('visibility', options.visibility)
       if (options.country) params.append('country', options.country)
       if (options.city) params.append('city', options.city)
-      if (options.skills?.length) params.append('skills', options.skills.join(','))
       if (options.industries?.length) params.append('industries', options.industries.join(','))
       if (options.min_experience !== undefined) params.append('min_experience', options.min_experience.toString())
       if (options.max_experience !== undefined) params.append('max_experience', options.max_experience.toString())
@@ -416,7 +410,6 @@ export function useAllCandidates(options: UseAllCandidatesOptions = {}): UseAllC
     options.visibility,
     options.country,
     options.city,
-    options.skills,
     options.industries,
     options.min_experience,
     options.max_experience,

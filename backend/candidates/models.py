@@ -222,12 +222,7 @@ class CandidateProfile(models.Model):
         null=True,
     )
 
-    # Skills & Industries (ManyToMany)
-    skills = models.ManyToManyField(
-        Skill,
-        related_name='candidates',
-        blank=True,
-    )
+    # Industries (ManyToMany)
     industries = models.ManyToManyField(
         Industry,
         related_name='candidates',
@@ -273,7 +268,6 @@ class CandidateProfile(models.Model):
             ('headline', 5),
             ('seniority', 10),
             ('professional_summary', 15),
-            ('years_of_experience', 5),
             ('work_preference', 5),
             ('salary_expectation_min', 5),
             ('salary_expectation_max', 5),
@@ -293,15 +287,13 @@ class CandidateProfile(models.Model):
         if self.country_rel or self.country:
             score += 5
 
-        # Check skills (up to 10%)
+        # Check experiences (5% for having work experience)
         if hasattr(self, 'pk') and self.pk:
-            skill_count = self.skills.count()
-            if skill_count >= 5:
-                score += 10
-            elif skill_count > 0:
-                score += skill_count * 2
+            if self.experiences.exists():
+                score += 5
 
-            # Check industries (up to 5%)
+        # Check industries (up to 5%)
+        if hasattr(self, 'pk') and self.pk:
             industry_count = self.industries.count()
             if industry_count >= 2:
                 score += 5
@@ -328,6 +320,46 @@ class CandidateProfile(models.Model):
         country_name = self.country_rel.name if self.country_rel else self.country
         parts = [city_name, country_name]
         return ', '.join(filter(None, parts))
+
+    @property
+    def calculated_years_of_experience(self):
+        """Calculate total years of experience from all experiences.
+        Returns a formatted string like '3 years 6 months' or '8 months'.
+        """
+        if not hasattr(self, 'pk') or not self.pk:
+            return None
+
+        from datetime import date
+
+        total_months = 0
+        experiences = self.experiences.all()
+
+        for exp in experiences:
+            start = exp.start_date
+            if exp.is_current:
+                end = date.today()
+            elif exp.end_date:
+                end = exp.end_date
+            else:
+                end = date.today()
+
+            # Calculate months between dates using standard library
+            months = (end.year - start.year) * 12 + (end.month - start.month)
+            total_months += max(0, months)
+
+        if total_months == 0:
+            return None
+
+        years = total_months // 12
+        remaining_months = total_months % 12
+
+        # Format the result
+        if years == 0:
+            return f"{remaining_months} month{'s' if remaining_months != 1 else ''}"
+        elif remaining_months == 0:
+            return f"{years} year{'s' if years != 1 else ''}"
+        else:
+            return f"{years} year{'s' if years != 1 else ''} {remaining_months} month{'s' if remaining_months != 1 else ''}"
 
 
 class CompanySize(models.TextChoices):

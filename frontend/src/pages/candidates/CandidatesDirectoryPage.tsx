@@ -207,29 +207,11 @@ export default function CandidatesDirectoryPage() {
                   )}
                   {candidate.years_of_experience && (
                     <span className="px-2 py-0.5 text-[11px] font-medium bg-green-50 text-green-700 rounded">
-                      {candidate.years_of_experience}+ years
+                      {candidate.years_of_experience}
                     </span>
                   )}
                 </div>
 
-                {/* Skills */}
-                {candidate.skills && candidate.skills.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1">
-                    {candidate.skills.slice(0, 4).map((skill) => (
-                      <span
-                        key={skill.id}
-                        className="px-2 py-0.5 text-[11px] text-gray-600 bg-gray-50 rounded"
-                      >
-                        {skill.name}
-                      </span>
-                    ))}
-                    {candidate.skills.length > 4 && (
-                      <span className="px-2 py-0.5 text-[11px] text-gray-400">
-                        +{candidate.skills.length - 4} more
-                      </span>
-                    )}
-                  </div>
-                )}
               </Link>
             ))}
           </div>

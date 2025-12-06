@@ -1,6 +1,6 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { CandidateAdminListItem, Seniority, WorkPreference, ProfileVisibility, Currency } from '@/types'
+import { CandidateAdminListItem, ProfileVisibility, Currency } from '@/types'
 import {
   X,
   Pencil,
@@ -14,10 +14,13 @@ import {
   FileText,
   Globe,
   Check,
-  User,
-  Building2,
-  GraduationCap,
 } from 'lucide-react'
+import {
+  aggregateSkillsWithProficiency,
+  aggregateTechsWithProficiency,
+  getProficiencyStyle,
+  formatTotalDuration,
+} from '@/utils/proficiency'
 
 interface CandidatePreviewPanelProps {
   candidate: CandidateAdminListItem | null
@@ -94,6 +97,16 @@ export default function CandidatePreviewPanel({ candidate, onClose }: CandidateP
     }
   }, [candidate])
 
+  // Aggregate skills and technologies from experiences
+  const aggregatedSkills = useMemo(
+    () => (candidate ? aggregateSkillsWithProficiency(candidate.experiences || []) : []),
+    [candidate]
+  )
+  const aggregatedTechs = useMemo(
+    () => (candidate ? aggregateTechsWithProficiency(candidate.experiences || []) : []),
+    [candidate]
+  )
+
   if (!candidate) return null
 
   const location = candidate.location || [candidate.city, candidate.country].filter(Boolean).join(', ') || 'Not specified'
@@ -102,12 +115,12 @@ export default function CandidatePreviewPanel({ candidate, onClose }: CandidateP
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/30 z-40"
+        className="fixed inset-0 bg-black/30 z-[200]"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-xl z-50 flex flex-col">
+      <div className="fixed right-0 top-0 h-full w-1/2 bg-white shadow-xl z-[201] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-[16px] font-semibold text-gray-900">Candidate Details</h2>
@@ -235,7 +248,7 @@ export default function CandidatePreviewPanel({ candidate, onClose }: CandidateP
               <InfoItem
                 icon={<Calendar className="w-4 h-4" />}
                 label="Experience"
-                value={candidate.years_of_experience !== null ? `${candidate.years_of_experience} years` : '-'}
+                value={candidate.years_of_experience || '-'}
               />
               <InfoItem
                 icon={<MapPin className="w-4 h-4" />}
@@ -299,16 +312,42 @@ export default function CandidatePreviewPanel({ candidate, onClose }: CandidateP
             </div>
           )}
 
-          {/* Skills */}
-          {candidate.skills && candidate.skills.length > 0 && (
+          {/* Skills (aggregated from experiences) */}
+          {aggregatedSkills.length > 0 && (
             <div className="px-6 py-4 border-b border-gray-100">
               <h4 className="text-[12px] font-medium text-gray-500 uppercase tracking-wider mb-2">
                 Skills
               </h4>
-              <div className="flex flex-wrap gap-2">
-                {candidate.skills.map(skill => (
-                  <span key={skill.id} className="px-2 py-1 text-[12px] bg-gray-100 text-gray-700 rounded">
+              <div className="flex flex-wrap gap-1.5">
+                {aggregatedSkills.map(skill => (
+                  <span
+                    key={skill.id}
+                    className={`px-2 py-0.5 text-[11px] rounded ${getProficiencyStyle(skill.count, 'skill')}`}
+                    title={`${skill.count} role${skill.count > 1 ? 's' : ''} • ${formatTotalDuration(skill.totalMonths)} total`}
+                  >
                     {skill.name}
+                    {skill.count > 1 && <span className="ml-1 opacity-75">×{skill.count}</span>}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Technologies (aggregated from experiences) */}
+          {aggregatedTechs.length > 0 && (
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h4 className="text-[12px] font-medium text-gray-500 uppercase tracking-wider mb-2">
+                Technologies
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {aggregatedTechs.map(tech => (
+                  <span
+                    key={tech.id}
+                    className={`px-2 py-0.5 text-[11px] rounded ${getProficiencyStyle(tech.count, 'tech')}`}
+                    title={`${tech.count} role${tech.count > 1 ? 's' : ''} • ${formatTotalDuration(tech.totalMonths)} total`}
+                  >
+                    {tech.name}
+                    {tech.count > 1 && <span className="ml-1 opacity-75">×{tech.count}</span>}
                   </span>
                 ))}
               </div>

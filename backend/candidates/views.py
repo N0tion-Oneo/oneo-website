@@ -229,7 +229,6 @@ def update_my_profile(request):
         OpenApiParameter(name='work_preference', description='Filter by work preference', required=False, type=str),
         OpenApiParameter(name='country', description='Filter by country', required=False, type=str),
         OpenApiParameter(name='city', description='Filter by city', required=False, type=str),
-        OpenApiParameter(name='skills', description='Filter by skill IDs (comma-separated)', required=False, type=str),
         OpenApiParameter(name='industries', description='Filter by industry IDs (comma-separated)', required=False, type=str),
         OpenApiParameter(name='search', description='Search in title, headline, summary', required=False, type=str),
     ],
@@ -244,7 +243,7 @@ def list_candidates(request):
     candidates = CandidateProfile.objects.filter(
         visibility=ProfileVisibility.PUBLIC_SANITISED,
         profile_completeness__gte=30,  # Only show profiles with some completion
-    ).select_related('user').prefetch_related('skills', 'industries')
+    ).select_related('user').prefetch_related('industries')
 
     # Filter by seniority
     seniority = request.query_params.get('seniority')
@@ -265,13 +264,6 @@ def list_candidates(request):
     city = request.query_params.get('city')
     if city:
         candidates = candidates.filter(city__icontains=city)
-
-    # Filter by skills
-    skills = request.query_params.get('skills')
-    if skills:
-        skill_ids = [int(s) for s in skills.split(',') if s.isdigit()]
-        if skill_ids:
-            candidates = candidates.filter(skills__id__in=skill_ids).distinct()
 
     # Filter by industries
     industries = request.query_params.get('industries')
@@ -306,7 +298,6 @@ def list_candidates(request):
         OpenApiParameter(name='visibility', description='Filter by profile visibility', required=False, type=str),
         OpenApiParameter(name='country', description='Filter by country', required=False, type=str),
         OpenApiParameter(name='city', description='Filter by city', required=False, type=str),
-        OpenApiParameter(name='skills', description='Filter by skill IDs (comma-separated)', required=False, type=str),
         OpenApiParameter(name='industries', description='Filter by industry IDs (comma-separated)', required=False, type=str),
         OpenApiParameter(name='min_experience', description='Minimum years of experience', required=False, type=int),
         OpenApiParameter(name='max_experience', description='Maximum years of experience', required=False, type=int),
@@ -342,7 +333,6 @@ def list_all_candidates(request):
     candidates = CandidateProfile.objects.select_related(
         'user', 'city_rel', 'country_rel'
     ).prefetch_related(
-        'skills',
         'industries',
         'experiences',
         'experiences__industry',
@@ -379,13 +369,6 @@ def list_all_candidates(request):
         candidates = candidates.filter(
             Q(city__icontains=city) | Q(city_rel__name__icontains=city)
         )
-
-    # Filter by skills
-    skills = request.query_params.get('skills')
-    if skills:
-        skill_ids = [int(s) for s in skills.split(',') if s.isdigit()]
-        if skill_ids:
-            candidates = candidates.filter(skills__id__in=skill_ids).distinct()
 
     # Filter by industries
     industries = request.query_params.get('industries')
@@ -463,8 +446,7 @@ def list_all_candidates(request):
             Q(user__last_name__icontains=search) |
             Q(user__email__icontains=search) |
             Q(professional_title__icontains=search) |
-            Q(headline__icontains=search) |
-            Q(skills__name__icontains=search)
+            Q(headline__icontains=search)
         ).distinct()
 
     # Ordering
@@ -500,7 +482,7 @@ def get_candidate(request, slug):
     PATCH: Admin/Recruiter only - update candidate profile.
     """
     profile = get_object_or_404(
-        CandidateProfile.objects.select_related('user').prefetch_related('skills', 'industries'),
+        CandidateProfile.objects.select_related('user').prefetch_related('industries'),
         slug=slug
     )
 

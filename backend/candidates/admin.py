@@ -41,7 +41,7 @@ class CandidateProfileAdmin(admin.ModelAdmin):
         'country',
     ]
     readonly_fields = ['profile_completeness', 'created_at', 'updated_at', 'slug']
-    filter_horizontal = ['skills', 'industries']
+    filter_horizontal = ['industries']
 
     fieldsets = (
         ('User', {
@@ -77,8 +77,8 @@ class CandidateProfileAdmin(admin.ModelAdmin):
         ('Portfolio & Resume', {
             'fields': ('portfolio_links', 'resume_url')
         }),
-        ('Skills & Industries', {
-            'fields': ('skills', 'industries')
+        ('Industries', {
+            'fields': ('industries',)
         }),
         ('Visibility', {
             'fields': ('visibility', 'profile_completeness')

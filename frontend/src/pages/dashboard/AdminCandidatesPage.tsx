@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import {
   useReactTable,
@@ -13,7 +14,13 @@ import {
 import { useAllCandidates } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole, Seniority, WorkPreference, ProfileVisibility, Currency } from '@/types'
-import type { CandidateAdminListItem, Skill, ExperienceListItem } from '@/types'
+import type { CandidateAdminListItem, ExperienceListItem } from '@/types'
+import {
+  aggregateSkillsWithProficiency,
+  aggregateTechsWithProficiency,
+  getProficiencyStyle,
+  formatTotalDuration,
+} from '@/utils/proficiency'
 import CandidateFilterPanel, {
   CandidateFilters,
   defaultFilters,
@@ -38,6 +45,7 @@ import {
   FileText,
   Briefcase,
   GraduationCap,
+  MoreVertical,
 } from 'lucide-react'
 
 const SENIORITY_OPTIONS = [
@@ -118,95 +126,6 @@ const calculateDuration = (startDate: string, endDate: string | null, isCurrent:
   return `${years}y ${remainingMonths}mo`
 }
 
-const calculateMonths = (startDate: string, endDate: string | null, isCurrent: boolean): number => {
-  const start = new Date(startDate)
-  const end = isCurrent ? new Date() : endDate ? new Date(endDate) : new Date()
-  return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth())
-}
-
-// Proficiency aggregation types and helpers
-interface ItemWithProficiency {
-  id: number
-  name: string
-  count: number
-  totalMonths: number
-}
-
-const aggregateSkillsWithProficiency = (experiences: ExperienceListItem[]): ItemWithProficiency[] => {
-  const skillMap = new Map<number, ItemWithProficiency>()
-
-  experiences.forEach(exp => {
-    const months = calculateMonths(exp.start_date, exp.end_date, exp.is_current)
-    ;(exp.skills || []).forEach(skill => {
-      const existing = skillMap.get(skill.id)
-      if (existing) {
-        existing.count++
-        existing.totalMonths += months
-      } else {
-        skillMap.set(skill.id, {
-          id: skill.id,
-          name: skill.name,
-          count: 1,
-          totalMonths: months,
-        })
-      }
-    })
-  })
-
-  return Array.from(skillMap.values()).sort((a, b) => b.count - a.count || b.totalMonths - a.totalMonths)
-}
-
-const aggregateTechsWithProficiency = (experiences: ExperienceListItem[]): ItemWithProficiency[] => {
-  const techMap = new Map<number, ItemWithProficiency>()
-
-  experiences.forEach(exp => {
-    const months = calculateMonths(exp.start_date, exp.end_date, exp.is_current)
-    ;(exp.technologies || []).forEach(tech => {
-      const existing = techMap.get(tech.id)
-      if (existing) {
-        existing.count++
-        existing.totalMonths += months
-      } else {
-        techMap.set(tech.id, {
-          id: tech.id,
-          name: tech.name,
-          count: 1,
-          totalMonths: months,
-        })
-      }
-    })
-  })
-
-  return Array.from(techMap.values()).sort((a, b) => b.count - a.count || b.totalMonths - a.totalMonths)
-}
-
-const getProficiencyStyle = (count: number, type: 'skill' | 'tech'): string => {
-  const colors = {
-    skill: {
-      1: 'bg-purple-100 text-purple-700',
-      2: 'bg-purple-200 text-purple-800',
-      3: 'bg-purple-400 text-white',
-      4: 'bg-purple-600 text-white',
-    },
-    tech: {
-      1: 'bg-blue-100 text-blue-700',
-      2: 'bg-blue-200 text-blue-800',
-      3: 'bg-blue-400 text-white',
-      4: 'bg-blue-600 text-white',
-    },
-  }
-  const level = Math.min(count, 4) as 1 | 2 | 3 | 4
-  return colors[type][level]
-}
-
-const formatTotalDuration = (months: number): string => {
-  const years = Math.floor(months / 12)
-  const remainingMonths = months % 12
-  if (years === 0) return `${remainingMonths}mo`
-  if (remainingMonths === 0) return `${years}y`
-  return `${years}y ${remainingMonths}mo`
-}
-
 // Column helper for type safety
 const columnHelper = createColumnHelper<CandidateAdminListItem>()
 
@@ -220,6 +139,8 @@ export default function AdminCandidatesPage() {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [previewCandidate, setPreviewCandidate] = useState<CandidateAdminListItem | null>(null)
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({})
+  const [openActionsMenu, setOpenActionsMenu] = useState<string | null>(null)
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null)
 
   // Convert TanStack sorting to API ordering param
   const ordering = useMemo(() => {
@@ -241,7 +162,6 @@ export default function AdminCandidatesPage() {
     seniority: filters.seniority || undefined,
     work_preference: filters.work_preference || undefined,
     visibility: filters.visibility || undefined,
-    skills: filters.skills.length > 0 ? filters.skills : undefined,
     industries: filters.industries.length > 0 ? filters.industries : undefined,
     min_completeness: filters.min_completeness,
     min_experience: filters.min_experience,
@@ -290,7 +210,6 @@ export default function AdminCandidatesPage() {
     if (filters.seniority) count++
     if (filters.work_preference) count++
     if (filters.visibility) count++
-    if (filters.skills.length > 0) count++
     if (filters.industries.length > 0) count++
     if (filters.min_completeness !== undefined) count++
     if (filters.min_experience !== undefined) count++
@@ -398,12 +317,12 @@ export default function AdminCandidatesPage() {
         ),
       }),
       columnHelper.accessor('years_of_experience', {
-        header: 'Exp.',
-        size: 70,
+        header: 'Experience',
+        size: 120,
         enableSorting: true,
         cell: ({ getValue }) => (
           <span className="text-[12px] text-gray-600">
-            {getValue() !== null ? `${getValue()}y` : '-'}
+            {getValue() || '-'}
           </span>
         ),
       }),
@@ -478,26 +397,6 @@ export default function AdminCandidatesPage() {
             <span className="text-[11px] text-gray-400">-</span>
           )
         ),
-      }),
-      columnHelper.accessor('skills', {
-        header: 'Skills',
-        size: 200,
-        cell: ({ getValue }) => {
-          const skills = getValue() || []
-          if (skills.length === 0) return <span className="text-[11px] text-gray-400">-</span>
-          return (
-            <div className="flex flex-wrap gap-1 max-w-[180px]">
-              {skills.slice(0, 3).map((skill: Skill) => (
-                <span key={skill.id} className="px-1.5 py-0.5 text-[10px] bg-gray-100 text-gray-600 rounded">
-                  {skill.name}
-                </span>
-              ))}
-              {skills.length > 3 && (
-                <span className="text-[10px] text-gray-500">+{skills.length - 3}</span>
-              )}
-            </div>
-          )
-        },
       }),
       columnHelper.accessor('industries', {
         header: 'Industries',
@@ -756,40 +655,86 @@ export default function AdminCandidatesPage() {
       // PINNED RIGHT: Actions
       columnHelper.display({
         id: 'actions',
-        header: 'Actions',
-        size: 100,
+        header: '',
+        size: 50,
         enableResizing: false,
         cell: ({ row }) => {
           const candidate = row.original
           return (
-            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-              <Link
-                to={`/dashboard/admin/candidates/${candidate.slug}`}
-                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
-                title="Edit"
+            <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={(e) => {
+                  if (openActionsMenu === candidate.id) {
+                    setOpenActionsMenu(null)
+                    setMenuPosition(null)
+                  } else {
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    setMenuPosition({ top: rect.bottom + 4, left: rect.right - 192 })
+                    setOpenActionsMenu(candidate.id)
+                  }
+                }}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded"
               >
-                <Pencil className="w-3.5 h-3.5" />
-              </Link>
-              <Link
-                to={`/candidates/${candidate.slug}`}
-                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
-                title="View profile"
-              >
-                <Eye className="w-3.5 h-3.5" />
-              </Link>
-              <a
-                href={`mailto:${candidate.email}`}
-                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
-                title="Send email"
-              >
-                <Mail className="w-3.5 h-3.5" />
-              </a>
+                <MoreVertical className="w-4 h-4" />
+              </button>
+              {openActionsMenu === candidate.id && menuPosition && createPortal(
+                <>
+                  <div
+                    className="fixed inset-0 z-[9998]"
+                    onClick={() => {
+                      setOpenActionsMenu(null)
+                      setMenuPosition(null)
+                    }}
+                  />
+                  <div
+                    className="fixed w-48 bg-white border border-gray-200 rounded-md shadow-lg z-[9999]"
+                    style={{ top: menuPosition.top, left: menuPosition.left }}
+                  >
+                    <div className="py-1">
+                      <Link
+                        to={`/dashboard/admin/candidates/${candidate.slug}`}
+                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                        onClick={() => {
+                          setOpenActionsMenu(null)
+                          setMenuPosition(null)
+                        }}
+                      >
+                        <Pencil className="w-4 h-4" />
+                        Edit
+                      </Link>
+                      <Link
+                        to={`/candidates/${candidate.slug}`}
+                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                        onClick={() => {
+                          setOpenActionsMenu(null)
+                          setMenuPosition(null)
+                        }}
+                      >
+                        <Eye className="w-4 h-4" />
+                        View Profile
+                      </Link>
+                      <a
+                        href={`mailto:${candidate.email}`}
+                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                        onClick={() => {
+                          setOpenActionsMenu(null)
+                          setMenuPosition(null)
+                        }}
+                      >
+                        <Mail className="w-4 h-4" />
+                        Send Email
+                      </a>
+                    </div>
+                  </div>
+                </>,
+                document.body
+              )}
             </div>
           )
         },
       }),
     ],
-    []
+    [openActionsMenu, menuPosition]
   )
 
   const table = useReactTable({
@@ -960,6 +905,8 @@ export default function AdminCandidatesPage() {
                       >
                         {headerGroup.headers.map(header => {
                           const isGroupHeader = header.colSpan > 1
+                          const isPinnedLeft = header.id === 'select' || header.id === 'full_name'
+                          const isPinnedRight = header.id === 'actions'
                           return (
                             <th
                               key={header.id}
@@ -968,9 +915,10 @@ export default function AdminCandidatesPage() {
                                 isGroupHeader
                                   ? 'py-1.5 text-gray-700 bg-gray-100 border-b border-gray-200 text-center'
                                   : 'py-2.5 text-gray-500'
-                              }`}
+                              } ${isPinnedLeft ? 'sticky z-20 bg-gray-50' : ''} ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50' : ''}`}
                               style={{
                                 width: header.colSpan === 1 ? header.getSize() : undefined,
+                                left: header.id === 'select' ? 0 : header.id === 'full_name' ? 40 : undefined,
                               }}
                             >
                               {header.isPlaceholder ? null : (
@@ -1018,19 +966,29 @@ export default function AdminCandidatesPage() {
                       <tr
                         key={row.id}
                         className="hover:bg-gray-50 cursor-pointer"
-                        onClick={() => setPreviewCandidate(row.original)}
+                        onClick={() => {
+                          setOpenActionsMenu(null)
+                          setMenuPosition(null)
+                          setPreviewCandidate(row.original)
+                        }}
                       >
-                        {row.getVisibleCells().map(cell => (
-                          <td
-                            key={cell.id}
-                            className="px-3 py-2.5 whitespace-nowrap"
-                            style={{
-                              width: cell.column.getSize(),
-                            }}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        ))}
+                        {row.getVisibleCells().map(cell => {
+                          const colId = cell.column.id
+                          const isPinnedLeft = colId === 'select' || colId === 'full_name'
+                          const isPinnedRight = colId === 'actions'
+                          return (
+                            <td
+                              key={cell.id}
+                              className={`px-3 py-2.5 whitespace-nowrap ${isPinnedLeft ? 'sticky z-10 bg-white' : ''} ${isPinnedRight ? 'sticky right-0 z-[100] bg-white' : ''}`}
+                              style={{
+                                width: cell.column.getSize(),
+                                left: colId === 'select' ? 0 : colId === 'full_name' ? 40 : undefined,
+                              }}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </td>
+                          )
+                        })}
                       </tr>
                     ))}
                   </tbody>

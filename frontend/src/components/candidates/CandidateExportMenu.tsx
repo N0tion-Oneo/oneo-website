@@ -31,7 +31,6 @@ export default function CandidateExportMenu({ filters, totalCount }: CandidateEx
     if (filters.seniority) params.append('seniority', filters.seniority)
     if (filters.work_preference) params.append('work_preference', filters.work_preference)
     if (filters.visibility) params.append('visibility', filters.visibility)
-    if (filters.skills.length > 0) params.append('skills', filters.skills.join(','))
     if (filters.industries.length > 0) params.append('industries', filters.industries.join(','))
     if (filters.min_completeness !== undefined) params.append('min_completeness', filters.min_completeness.toString())
     if (filters.min_experience !== undefined) params.append('min_experience', filters.min_experience.toString())

@@ -133,7 +133,7 @@ export interface CandidateProfile {
   headline: string
   seniority: Seniority | ''
   professional_summary: string
-  years_of_experience: number | null
+  years_of_experience: string | null
   // Location
   city: string
   country: string
@@ -153,8 +153,7 @@ export interface CandidateProfile {
   // Portfolio & Resume
   portfolio_links: PortfolioLink[]
   resume_url: string | null
-  // Skills & Industries
-  skills: Skill[]
+  // Industries
   industries: Industry[]
   // Experience & Education
   experiences?: Experience[]
@@ -176,13 +175,12 @@ export interface CandidateProfileSanitized {
   headline: string
   seniority: Seniority | ''
   professional_summary: string
-  years_of_experience: number | null
+  years_of_experience: string | null
   city: string
   country: string
   location: string
   work_preference: WorkPreference | ''
   willing_to_relocate: boolean
-  skills: Skill[]
   industries: Industry[]
   profile_completeness: number
 }
@@ -230,7 +228,7 @@ export interface CandidateAdminListItem {
   headline: string
   seniority: Seniority | ''
   professional_summary: string
-  years_of_experience: number | null
+  years_of_experience: string | null
   location: string
   city: string
   country: string
@@ -242,7 +240,6 @@ export interface CandidateAdminListItem {
   salary_currency: Currency
   notice_period_days: number | null
   has_resume: boolean
-  skills: Skill[]
   industries: Industry[]
   experiences: ExperienceListItem[]
   education: EducationListItem[]

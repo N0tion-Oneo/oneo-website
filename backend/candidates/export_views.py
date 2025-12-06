@@ -23,7 +23,7 @@ def get_filtered_candidates(request):
     """Apply the same filters as list_all_candidates to get queryset."""
     candidates = CandidateProfile.objects.select_related(
         'user', 'city_rel', 'country_rel'
-    ).prefetch_related('skills', 'industries', 'experiences', 'education')
+    ).prefetch_related('industries', 'experiences', 'education')
 
     # Filter by seniority
     seniority = request.query_params.get('seniority')
@@ -53,13 +53,6 @@ def get_filtered_candidates(request):
         candidates = candidates.filter(
             Q(city__icontains=city) | Q(city_rel__name__icontains=city)
         )
-
-    # Filter by skills
-    skills = request.query_params.get('skills')
-    if skills:
-        skill_ids = [int(s) for s in skills.split(',') if s.isdigit()]
-        if skill_ids:
-            candidates = candidates.filter(skills__id__in=skill_ids).distinct()
 
     # Filter by industries
     industries = request.query_params.get('industries')
@@ -137,8 +130,7 @@ def get_filtered_candidates(request):
             Q(user__last_name__icontains=search) |
             Q(user__email__icontains=search) |
             Q(professional_title__icontains=search) |
-            Q(headline__icontains=search) |
-            Q(skills__name__icontains=search)
+            Q(headline__icontains=search)
         ).distinct()
 
     # Ordering
@@ -202,7 +194,6 @@ def export_candidates_csv(request):
         'Salary Currency',
         'Notice Period (Days)',
         'Has Resume',
-        'Skills',
         'Industries',
         'Experience Count',
         'Experience Summary',
@@ -234,8 +225,7 @@ def export_candidates_csv(request):
                 location_parts.append(candidate.country_rel.name)
             location = ', '.join(location_parts)
 
-            # Get skills and industries
-            skills = ', '.join([s.name for s in candidate.skills.all()])
+            # Get industries
             industries = ', '.join([i.name for i in candidate.industries.all()])
 
             # Get preferred locations
@@ -282,7 +272,6 @@ def export_candidates_csv(request):
                 candidate.salary_currency or '',
                 candidate.notice_period_days if candidate.notice_period_days is not None else '',
                 'Yes' if candidate.resume_url else 'No',
-                skills,
                 industries,
                 exp_count,
                 exp_summary,
