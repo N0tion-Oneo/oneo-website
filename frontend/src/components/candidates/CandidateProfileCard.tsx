@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Mail,
   Phone,
@@ -13,9 +14,11 @@ import {
   Award,
   Globe,
   DollarSign,
-  Clock
+  Clock,
+  Pencil,
+  Eye
 } from 'lucide-react'
-import type { CandidateProfile, CandidateProfileSanitized, Experience, Education, Industry } from '@/types'
+import type { CandidateProfile, CandidateProfileSanitized, CandidateAdminListItem, Experience, Education, ExperienceListItem, EducationListItem, Industry } from '@/types'
 import {
   aggregateSkillsWithProficiency,
   aggregateTechsWithProficiency,
@@ -24,19 +27,38 @@ import {
 } from '@/utils/proficiency'
 
 // Type guard to check if profile is full or sanitized
-function isFullProfile(profile: CandidateProfile | CandidateProfileSanitized): profile is CandidateProfile {
+type CandidateData = CandidateProfile | CandidateProfileSanitized | CandidateAdminListItem
+
+function isFullProfile(profile: CandidateData): profile is CandidateProfile | CandidateAdminListItem {
   return 'email' in profile
 }
 
+function hasProfileCompleteness(profile: CandidateData): profile is CandidateAdminListItem {
+  return 'profile_completeness' in profile
+}
+
+function isCandidateProfile(profile: CandidateData): profile is CandidateProfile {
+  return 'first_name' in profile && 'portfolio_links' in profile
+}
+
+// Union types for experience and education (both admin list items and full items)
+type ExperienceData = Experience | ExperienceListItem
+type EducationData = Education | EducationListItem
+
 interface CandidateProfileCardProps {
-  candidate: CandidateProfile | CandidateProfileSanitized
-  experiences?: Experience[]
-  education?: Education[]
+  candidate: CandidateData
+  experiences?: ExperienceData[]
+  education?: EducationData[]
   showContactInfo?: boolean
   coveringStatement?: string
   variant?: 'page' | 'compact'
   hideViewProfileLink?: boolean
   onContactClick?: () => void
+  // Admin-specific props
+  showAdminActions?: boolean
+  showProfileCompleteness?: boolean
+  editLink?: string
+  onEdit?: () => void
 }
 
 const formatDate = (dateString: string) => {
@@ -177,6 +199,10 @@ export default function CandidateProfileCard({
   variant = 'compact',
   hideViewProfileLink = false,
   onContactClick,
+  showAdminActions = false,
+  showProfileCompleteness = false,
+  editLink,
+  onEdit,
 }: CandidateProfileCardProps) {
   const isPage = variant === 'page'
   const isFull = isFullProfile(candidate)
@@ -191,12 +217,19 @@ export default function CandidateProfileCard({
 
   // Get initials for avatar
   const getInitials = () => {
-    if (isFull && candidate.first_name && candidate.last_name) {
+    // CandidateProfile has first_name and last_name
+    if (isCandidateProfile(candidate) && candidate.first_name && candidate.last_name) {
       return `${candidate.first_name[0]}${candidate.last_name[0]}`
     }
+    // CandidateAdminListItem has initials
+    if ('initials' in candidate && candidate.initials) {
+      return candidate.initials
+    }
+    // CandidateProfileSanitized has initials
     if (!isFull) {
       return (candidate as CandidateProfileSanitized).initials || '?'
     }
+    // Fallback: parse from full_name
     return candidate.full_name
       ?.split(' ')
       .map((n) => n[0])
@@ -457,7 +490,7 @@ export default function CandidateProfileCard({
         )}
 
         {/* Portfolio Links */}
-        {isFull && candidate.portfolio_links && candidate.portfolio_links.length > 0 && (
+        {isCandidateProfile(candidate) && candidate.portfolio_links && candidate.portfolio_links.length > 0 && (
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h4 className="text-[15px] font-medium text-gray-900 mb-3">Portfolio</h4>
             <div className="space-y-2">
@@ -485,11 +518,76 @@ export default function CandidateProfileCard({
     )
   }
 
+  // Get profile completeness color
+  const getCompletenessColor = (percentage: number) => {
+    if (percentage >= 70) return 'bg-green-500'
+    if (percentage >= 40) return 'bg-yellow-500'
+    return 'bg-red-500'
+  }
+
   // ============================================================================
   // COMPACT VARIANT (Redesigned)
   // ============================================================================
   return (
     <div className="space-y-4">
+      {/* Admin Actions Bar */}
+      {showAdminActions && isFull && (
+        <div className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+          {/* Profile Completeness */}
+          {showProfileCompleteness && hasProfileCompleteness(candidate) && (
+            <div className="flex items-center gap-3 flex-1">
+              <span className="text-[12px] font-medium text-gray-600">Profile</span>
+              <div className="flex-1 max-w-[120px] h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${getCompletenessColor(candidate.profile_completeness)} transition-all`}
+                  style={{ width: `${candidate.profile_completeness}%` }}
+                />
+              </div>
+              <span className="text-[12px] font-medium text-gray-700">{candidate.profile_completeness}%</span>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            {editLink ? (
+              <Link
+                to={editLink}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Edit
+              </Link>
+            ) : onEdit && (
+              <button
+                onClick={onEdit}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Edit
+              </button>
+            )}
+            {candidate.slug && (
+              <a
+                href={`/candidates/${candidate.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                View Public
+              </a>
+            )}
+            <a
+              href={`mailto:${candidate.email}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              Email
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Quick Summary Header Card */}
       <div className="bg-white border border-gray-200 rounded-lg p-4">
         <div className="flex items-start gap-4">
@@ -776,7 +874,7 @@ export default function CandidateProfileCard({
       </CollapsibleSection>
 
       {/* Portfolio Links */}
-      {isFull && candidate.portfolio_links && candidate.portfolio_links.length > 0 && (
+      {isCandidateProfile(candidate) && candidate.portfolio_links && candidate.portfolio_links.length > 0 && (
         <div className="bg-white border border-gray-200 rounded-lg p-3">
           <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Portfolio</h4>
           <div className="flex flex-wrap gap-2">
