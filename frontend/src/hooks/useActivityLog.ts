@@ -6,27 +6,66 @@ import type { ActivityLogEntry, ActivityNote } from '@/types'
 // Activity Log Hook
 // ============================================================================
 
+interface UseActivityLogOptions {
+  applicationId?: string | null
+  candidateId?: number | null
+  jobId?: string | null  // For filtering candidate activities by job
+}
+
 interface UseActivityLogReturn {
   activities: ActivityLogEntry[]
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
+  jobs: { id: string; title: string }[]  // Unique jobs for filtering
 }
 
-export function useActivityLog(applicationId: string | null): UseActivityLogReturn {
+export function useActivityLog(options: UseActivityLogOptions | string | null): UseActivityLogReturn {
+  // Support legacy usage with just applicationId string
+  const normalizedOptions: UseActivityLogOptions = typeof options === 'string' || options === null
+    ? { applicationId: options }
+    : options
+
+  const { applicationId, candidateId, jobId } = normalizedOptions
+
   const [activities, setActivities] = useState<ActivityLogEntry[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [jobs, setJobs] = useState<{ id: string; title: string }[]>([])
 
   const fetchActivities = useCallback(async () => {
-    if (!applicationId) return
+    // Need either applicationId or candidateId
+    if (!applicationId && !candidateId) return
 
     setIsLoading(true)
     setError(null)
     try {
-      const response = await api.get<ActivityLogEntry[]>(
-        `/jobs/applications/${applicationId}/activities/`
-      )
+      let response
+      if (candidateId) {
+        // Fetch candidate activities (merged candidate + application activities)
+        const params = new URLSearchParams()
+        if (jobId) {
+          params.append('job_id', jobId)
+        }
+        response = await api.get<ActivityLogEntry[]>(
+          `/admin/candidates/${candidateId}/activity/${params.toString() ? '?' + params.toString() : ''}`
+        )
+
+        // Extract unique jobs for the filter dropdown
+        const jobMap = new Map<string, string>()
+        response.data.forEach((activity: ActivityLogEntry & { job_id?: string; job_title?: string }) => {
+          if (activity.job_id && activity.job_title) {
+            jobMap.set(activity.job_id, activity.job_title)
+          }
+        })
+        setJobs(Array.from(jobMap.entries()).map(([id, title]) => ({ id, title })))
+      } else {
+        // Fetch application activities (existing behavior)
+        response = await api.get<ActivityLogEntry[]>(
+          `/jobs/applications/${applicationId}/activities/`
+        )
+        setJobs([])
+      }
       setActivities(response.data)
     } catch (err) {
       setError('Failed to load activity log')
@@ -34,46 +73,67 @@ export function useActivityLog(applicationId: string | null): UseActivityLogRetu
     } finally {
       setIsLoading(false)
     }
-  }, [applicationId])
+  }, [applicationId, candidateId, jobId])
 
   useEffect(() => {
-    if (applicationId) {
+    if (applicationId || candidateId) {
       fetchActivities()
     } else {
       setActivities([])
+      setJobs([])
     }
-  }, [applicationId, fetchActivities])
+  }, [applicationId, candidateId, jobId, fetchActivities])
 
-  return { activities, isLoading, error, refetch: fetchActivities }
+  return { activities, isLoading, error, refetch: fetchActivities, jobs }
 }
 
 // ============================================================================
 // Add Activity Note Hook
 // ============================================================================
 
+interface UseAddActivityNoteOptions {
+  applicationId?: string | null
+  candidateId?: number | null
+}
+
 interface UseAddActivityNoteReturn {
-  addNote: (activityId: string, content: string) => Promise<ActivityNote>
+  addNote: (activityId: string, content: string, source?: 'application' | 'candidate') => Promise<ActivityNote>
   isLoading: boolean
   error: string | null
 }
 
-export function useAddActivityNote(applicationId: string | null): UseAddActivityNoteReturn {
+export function useAddActivityNote(options: UseAddActivityNoteOptions | string | null): UseAddActivityNoteReturn {
+  // Support legacy usage with just applicationId string
+  const normalizedOptions: UseAddActivityNoteOptions = typeof options === 'string' || options === null
+    ? { applicationId: options }
+    : options
+
+  const { applicationId, candidateId } = normalizedOptions
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const addNote = useCallback(
-    async (activityId: string, content: string): Promise<ActivityNote> => {
-      if (!applicationId) {
-        throw new Error('Application ID is required')
-      }
-
+    async (activityId: string, content: string, source: 'application' | 'candidate' = 'application'): Promise<ActivityNote> => {
       setIsLoading(true)
       setError(null)
       try {
-        const response = await api.post<ActivityNote>(
-          `/jobs/applications/${applicationId}/activities/${activityId}/notes/`,
-          { content }
-        )
+        let response
+        if (source === 'candidate' && candidateId) {
+          // Add note to candidate activity
+          response = await api.post<ActivityNote>(
+            `/admin/candidates/${candidateId}/activity/${activityId}/notes/`,
+            { content }
+          )
+        } else if (applicationId) {
+          // Add note to application activity
+          response = await api.post<ActivityNote>(
+            `/jobs/applications/${applicationId}/activities/${activityId}/notes/`,
+            { content }
+          )
+        } else {
+          throw new Error('Either applicationId or candidateId is required')
+        }
         return response.data
       } catch (err: unknown) {
         const errorMessage =
@@ -85,7 +145,7 @@ export function useAddActivityNote(applicationId: string | null): UseAddActivity
         setIsLoading(false)
       }
     },
-    [applicationId]
+    [applicationId, candidateId]
   )
 
   return { addNote, isLoading, error }

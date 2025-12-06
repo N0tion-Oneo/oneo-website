@@ -290,4 +290,25 @@ export const adminMergeTechnology = async (technologyId: number, targetId: numbe
   return response.data;
 };
 
+// Candidate Activity API
+export interface CandidateActivityItem {
+  id: string;
+  type: 'application' | 'status_change' | 'note' | 'interview' | 'email' | 'profile_view' | 'profile_update';
+  title: string;
+  description?: string;
+  timestamp: string;
+  metadata?: {
+    job_title?: string;
+    company_name?: string;
+    old_status?: string;
+    new_status?: string;
+    user_name?: string;
+  };
+}
+
+export const getCandidateActivity = async (candidateId: number): Promise<CandidateActivityItem[]> => {
+  const response = await api.get(`/admin/candidates/${candidateId}/activity/`);
+  return response.data;
+};
+
 export default api;

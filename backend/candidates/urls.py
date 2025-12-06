@@ -63,4 +63,9 @@ urlpatterns = [
     path('admin/technologies/<int:technology_id>/', views.admin_update_technology, name='admin-update-technology'),
     path('admin/technologies/<int:technology_id>/delete/', views.admin_delete_technology, name='admin-delete-technology'),
     path('admin/technologies/<int:technology_id>/merge/', views.admin_merge_technology, name='admin-merge-technology'),
+
+    # Candidate Activity (Admin)
+    path('admin/candidates/<int:candidate_id>/activity/', views.candidate_activity, name='candidate-activity'),
+    path('admin/candidates/<int:candidate_id>/activity/<uuid:activity_id>/notes/', views.add_candidate_activity_note, name='add-candidate-activity-note'),
+    path('admin/candidates/<int:candidate_id>/view/', views.record_profile_view, name='record-profile-view'),
 ]

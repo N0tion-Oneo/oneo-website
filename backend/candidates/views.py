@@ -6,9 +6,20 @@ from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
+from itertools import chain
+from operator import attrgetter
 
 from users.models import UserRole
-from .models import Skill, Industry, Technology, CandidateProfile, ProfileVisibility, Experience, Education
+from .models import (
+    Skill, Industry, Technology, CandidateProfile, ProfileVisibility,
+    Experience, Education, CandidateActivity, CandidateActivityNote
+)
+from .services import (
+    log_profile_updated, log_profile_viewed, log_experience_added, log_experience_updated,
+    log_education_added, log_education_updated
+)
+from jobs.models import Application, ActivityLog
+from jobs.serializers.activity import ActivityNoteSerializer
 from .serializers import (
     SkillSerializer,
     IndustrySerializer,
@@ -212,7 +223,18 @@ def update_my_profile(request):
     )
 
     if serializer.is_valid():
+        # Track which fields are being updated
+        fields_updated = list(request.data.keys())
+
         serializer.save()
+
+        # Log the profile update activity
+        log_profile_updated(
+            candidate=profile,
+            performed_by=request.user,
+            fields_updated=fields_updated,
+        )
+
         # Return full profile data
         return Response(
             CandidateProfileSerializer(profile, context={'request': request}).data
@@ -534,9 +556,20 @@ def get_candidate(request, slug):
     if request.user.is_authenticated:
         # Authenticated users get full profile (for recruiters/clients viewing candidates)
         serializer = CandidateProfileSerializer(profile, context={'request': request})
+        view_type = 'staff' if request.user.role in [UserRole.ADMIN, UserRole.RECRUITER] else 'public'
     else:
         # Anonymous users get sanitized profile
         serializer = CandidateProfileSanitizedSerializer(profile, context={'request': request})
+        view_type = 'public'
+
+    # Log profile view (with debouncing built into the service)
+    log_profile_viewed(
+        candidate=profile,
+        viewed_by=request.user if request.user.is_authenticated else None,
+        view_type=view_type,
+        ip_address=request.META.get('REMOTE_ADDR'),
+        user_agent=request.META.get('HTTP_USER_AGENT'),
+    )
 
     return Response(serializer.data)
 
@@ -626,6 +659,15 @@ def create_experience(request, slug=None):
 
     if serializer.is_valid():
         experience = serializer.save()
+
+        # Log experience added activity
+        log_experience_added(
+            candidate=profile,
+            job_title=experience.job_title,
+            company_name=experience.company_name,
+            performed_by=request.user,
+        )
+
         return Response(
             ExperienceSerializer(experience).data,
             status=status.HTTP_201_CREATED
@@ -666,6 +708,15 @@ def update_experience(request, experience_id, slug=None):
 
     if serializer.is_valid():
         serializer.save()
+
+        # Log experience updated activity
+        log_experience_updated(
+            candidate=profile,
+            job_title=experience.job_title,
+            company_name=experience.company_name,
+            performed_by=request.user,
+        )
+
         return Response(ExperienceSerializer(experience).data)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -790,6 +841,15 @@ def create_education(request, slug=None):
 
     if serializer.is_valid():
         education = serializer.save()
+
+        # Log education added activity
+        log_education_added(
+            candidate=profile,
+            institution=education.institution,
+            degree=education.degree,
+            performed_by=request.user,
+        )
+
         return Response(
             EducationSerializer(education).data,
             status=status.HTTP_201_CREATED
@@ -830,6 +890,15 @@ def update_education(request, education_id, slug=None):
 
     if serializer.is_valid():
         serializer.save()
+
+        # Log education updated activity
+        log_education_updated(
+            candidate=profile,
+            institution=education.institution,
+            degree=education.degree,
+            performed_by=request.user,
+        )
+
         return Response(EducationSerializer(education).data)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -1226,3 +1295,243 @@ def admin_merge_technology(request, technology_id):
     source_tech.delete()
 
     return Response(TechnologySerializer(target_tech).data)
+
+
+# ============================================================================
+# Candidate Activity
+# ============================================================================
+
+def serialize_candidate_activity_note(note):
+    """Serialize a CandidateActivityNote to match ActivityNote format."""
+    return {
+        'id': str(note.id),
+        'author': str(note.author_id) if note.author_id else None,
+        'author_name': note.author.full_name if note.author else 'Unknown',
+        'author_email': note.author.email if note.author else None,
+        'author_avatar': note.author.avatar.url if note.author and note.author.avatar else None,
+        'content': note.content,
+        'created_at': note.created_at.isoformat(),
+        'updated_at': note.updated_at.isoformat(),
+    }
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def candidate_activity(request, candidate_id):
+    """
+    Get unified activity feed for a specific candidate.
+    Merges CandidateActivity (profile events) and ActivityLog (application events).
+    Returns data in ActivityLogEntry format for frontend compatibility.
+
+    Query params:
+        - job_id: Filter to activities for a specific job application
+                  Use 'none' to filter for activities with no job association
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    candidate = get_object_or_404(CandidateProfile, id=candidate_id)
+    job_id_filter = request.query_params.get('job_id')
+
+    # Build unified activity list in ActivityLogEntry format
+    activities = []
+
+    # -------------------------------------------------------------------------
+    # 1. Get CandidateActivity entries (profile updates, logins, job views, etc.)
+    # -------------------------------------------------------------------------
+    candidate_activities = CandidateActivity.objects.filter(
+        candidate=candidate
+    ).select_related('performed_by', 'job', 'job__company').prefetch_related('notes', 'notes__author')
+
+    # Filter by job if specified
+    if job_id_filter == 'none':
+        # Only activities with no job association (profile-level activities)
+        candidate_activities = candidate_activities.filter(job__isnull=True)
+    elif job_id_filter:
+        # Include activities for that job OR activities with no job
+        candidate_activities = candidate_activities.filter(
+            Q(job_id=job_id_filter) | Q(job__isnull=True)
+        )
+
+    for activity in candidate_activities[:100]:
+        # Build metadata
+        metadata = dict(activity.metadata) if activity.metadata else {}
+        if activity.job:
+            metadata['job_id'] = str(activity.job_id)
+            metadata['job_title'] = activity.job.title
+            metadata['company_name'] = activity.job.company.name if activity.job.company else None
+
+        # Serialize notes
+        notes = [serialize_candidate_activity_note(note) for note in activity.notes.all()]
+
+        activities.append({
+            'id': str(activity.id),
+            'activity_type': activity.activity_type,
+            'application': None,  # No application for candidate-level activities
+            'performed_by': str(activity.performed_by_id) if activity.performed_by_id else None,
+            'performed_by_name': activity.performer_name,
+            'performed_by_email': activity.performed_by.email if activity.performed_by else None,
+            'performed_by_avatar': activity.performed_by.avatar.url if activity.performed_by and activity.performed_by.avatar else None,
+            'previous_status': None,
+            'new_status': None,
+            'previous_stage': None,
+            'new_stage': None,
+            'stage_name': None,
+            'metadata': metadata,
+            'created_at': activity.created_at.isoformat(),
+            'notes': notes,
+            'notes_count': len(notes),
+            # Extra fields for candidate activity context
+            'job_id': str(activity.job_id) if activity.job_id else None,
+            'job_title': activity.job.title if activity.job else None,
+            'source': 'candidate',  # To distinguish from application activities
+        })
+
+    # -------------------------------------------------------------------------
+    # 2. Get Application ActivityLog entries
+    # -------------------------------------------------------------------------
+    # Skip application activities when filtering for "no job" activities
+    if job_id_filter != 'none':
+        applications = Application.objects.filter(candidate=candidate)
+        if job_id_filter:
+            applications = applications.filter(job_id=job_id_filter)
+
+        application_ids = list(applications.values_list('id', flat=True))
+    else:
+        application_ids = []
+
+    if application_ids:
+        activity_logs = ActivityLog.objects.filter(
+            application_id__in=application_ids
+        ).select_related(
+            'performed_by', 'application', 'application__job', 'application__job__company'
+        ).prefetch_related('notes', 'notes__author').order_by('-created_at')[:100]
+
+        for log in activity_logs:
+            # Serialize notes using the existing serializer format
+            notes = []
+            for note in log.notes.all():
+                notes.append({
+                    'id': str(note.id),
+                    'author': str(note.author_id) if note.author_id else None,
+                    'author_name': note.author.full_name if note.author else 'Unknown',
+                    'author_email': note.author.email if note.author else None,
+                    'author_avatar': note.author.avatar.url if note.author and note.author.avatar else None,
+                    'content': note.content,
+                    'created_at': note.created_at.isoformat(),
+                    'updated_at': note.updated_at.isoformat(),
+                })
+
+            # Build metadata including job info
+            metadata = dict(log.metadata) if log.metadata else {}
+            if log.application and log.application.job:
+                metadata['job_id'] = str(log.application.job_id)
+                metadata['job_title'] = log.application.job.title
+                metadata['company_name'] = log.application.job.company.name if log.application.job.company else None
+            metadata['application_id'] = str(log.application_id) if log.application_id else None
+
+            activities.append({
+                'id': str(log.id),
+                'activity_type': log.activity_type,
+                'application': str(log.application_id) if log.application_id else None,
+                'performed_by': str(log.performed_by_id) if log.performed_by_id else None,
+                'performed_by_name': log.performer_name,
+                'performed_by_email': log.performed_by.email if log.performed_by else None,
+                'performed_by_avatar': log.performed_by.avatar.url if log.performed_by and log.performed_by.avatar else None,
+                'previous_status': log.previous_status or None,
+                'new_status': log.new_status or None,
+                'previous_stage': log.previous_stage,
+                'new_stage': log.new_stage,
+                'stage_name': log.stage_name,
+                'metadata': metadata,
+                'created_at': log.created_at.isoformat(),
+                'notes': notes,
+                'notes_count': len(notes),
+                # Extra fields for context
+                'job_id': str(log.application.job_id) if log.application and log.application.job else None,
+                'job_title': log.application.job.title if log.application and log.application.job else None,
+                'source': 'application',
+            })
+
+    # -------------------------------------------------------------------------
+    # 3. Sort by created_at (newest first) and return
+    # -------------------------------------------------------------------------
+    activities.sort(key=lambda x: x['created_at'], reverse=True)
+
+    # Return the most recent 100 activities
+    return Response(activities[:100])
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_candidate_activity_note(request, candidate_id, activity_id):
+    """
+    Add a note to a candidate activity.
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    candidate = get_object_or_404(CandidateProfile, id=candidate_id)
+    activity = get_object_or_404(CandidateActivity, id=activity_id, candidate=candidate)
+
+    content = request.data.get('content', '').strip()
+    if not content:
+        return Response(
+            {'error': 'Note content is required.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    note = CandidateActivityNote.objects.create(
+        activity=activity,
+        author=request.user,
+        content=content,
+    )
+
+    return Response({
+        'id': str(note.id),
+        'author': str(note.author_id),
+        'author_name': note.author.full_name,
+        'author_email': note.author.email,
+        'author_avatar': note.author.avatar.url if note.author.avatar else None,
+        'content': note.content,
+        'created_at': note.created_at.isoformat(),
+        'updated_at': note.updated_at.isoformat(),
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def record_profile_view(request, candidate_id):
+    """
+    Record that someone viewed a candidate's profile.
+    Used by the admin panel when opening a candidate preview.
+    Includes debouncing (same viewer won't log multiple times within 1 hour).
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    candidate = get_object_or_404(CandidateProfile, id=candidate_id)
+
+    # Log the view (debouncing is handled inside log_profile_viewed)
+    activity = log_profile_viewed(
+        candidate=candidate,
+        viewed_by=request.user,
+        view_type='staff',
+        ip_address=request.META.get('REMOTE_ADDR'),
+        user_agent=request.META.get('HTTP_USER_AGENT'),
+    )
+
+    if activity:
+        return Response({'logged': True}, status=status.HTTP_201_CREATED)
+    else:
+        # Debounced - already logged recently
+        return Response({'logged': False, 'message': 'Already logged recently'}, status=status.HTTP_200_OK)

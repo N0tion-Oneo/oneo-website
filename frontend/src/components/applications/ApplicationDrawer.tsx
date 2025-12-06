@@ -412,24 +412,26 @@ export default function ApplicationDrawer({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-[13px] font-medium border-b-2 transition-colors ${
-                  activeTab === tab.id
-                    ? 'text-gray-900 border-gray-900'
-                    : 'text-gray-500 border-transparent hover:text-gray-700'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            )
-          })}
+        <div className="px-6 py-3 border-b border-gray-200">
+          <div className="flex gap-1">
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2 text-[13px] font-medium rounded-md transition-colors ${
+                    activeTab === tab.id
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {/* Content */}

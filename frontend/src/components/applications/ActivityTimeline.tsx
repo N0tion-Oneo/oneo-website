@@ -28,13 +28,17 @@ import {
   Video,
   MapPin,
   Users,
+  LogIn,
+  Briefcase,
+  GraduationCap,
 } from 'lucide-react'
 import { useActivityLog, useAddActivityNote } from '@/hooks'
 import { ActivityType } from '@/types'
 import type { ActivityLogEntry, ActivityNote } from '@/types'
 
 interface ActivityTimelineProps {
-  applicationId: string
+  applicationId?: string
+  candidateId?: number
 }
 
 interface ActivityFilters {
@@ -42,11 +46,9 @@ interface ActivityFilters {
   hideViews: boolean
   hasNotesOnly: boolean
   performer: string | null
-  dateFrom: string | null
-  dateTo: string | null
 }
 
-const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
+const ACTIVITY_TYPE_LABELS: Record<string, string> = {
   [ActivityType.APPLIED]: 'Applied',
   [ActivityType.SHORTLISTED]: 'Shortlisted',
   [ActivityType.STAGE_CHANGED]: 'Stage Changed',
@@ -62,6 +64,17 @@ const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
   [ActivityType.INTERVIEW_SCHEDULED]: 'Interview Scheduled',
   [ActivityType.INTERVIEW_RESCHEDULED]: 'Interview Rescheduled',
   [ActivityType.INTERVIEW_CANCELLED]: 'Interview Cancelled',
+  // Candidate activities
+  profile_updated: 'Profile Updated',
+  profile_viewed: 'Profile Viewed',
+  job_viewed: 'Job Viewed',
+  logged_in: 'Logged In',
+  resume_uploaded: 'Resume Uploaded',
+  resume_parsed: 'Resume Imported',
+  experience_added: 'Experience Added',
+  experience_updated: 'Experience Updated',
+  education_added: 'Education Added',
+  education_updated: 'Education Updated',
 }
 
 const formatDate = (dateString: string) => {
@@ -74,7 +87,7 @@ const formatDate = (dateString: string) => {
   })
 }
 
-const getActivityIcon = (type: ActivityType, metadata?: Record<string, unknown>) => {
+const getActivityIcon = (type: string, metadata?: Record<string, unknown>) => {
   // Check for specific STAGE_CHANGED actions
   if (type === ActivityType.STAGE_CHANGED && metadata?.action) {
     switch (metadata.action) {
@@ -118,12 +131,31 @@ const getActivityIcon = (type: ActivityType, metadata?: Record<string, unknown>)
       return <RefreshCw className="w-4 h-4 text-amber-600" />
     case ActivityType.INTERVIEW_CANCELLED:
       return <CalendarX className="w-4 h-4 text-red-500" />
+    // Candidate activities
+    case 'profile_updated':
+      return <User className="w-4 h-4 text-blue-600" />
+    case 'profile_viewed':
+      return <Eye className="w-4 h-4 text-purple-600" />
+    case 'job_viewed':
+      return <Briefcase className="w-4 h-4 text-purple-600" />
+    case 'logged_in':
+      return <LogIn className="w-4 h-4 text-green-600" />
+    case 'resume_uploaded':
+      return <Upload className="w-4 h-4 text-blue-600" />
+    case 'resume_parsed':
+      return <FileText className="w-4 h-4 text-green-600" />
+    case 'experience_added':
+    case 'experience_updated':
+      return <Briefcase className="w-4 h-4 text-indigo-600" />
+    case 'education_added':
+    case 'education_updated':
+      return <GraduationCap className="w-4 h-4 text-amber-600" />
     default:
       return <FileText className="w-4 h-4 text-gray-600" />
   }
 }
 
-const getActivityColor = (type: ActivityType, metadata?: Record<string, unknown>) => {
+const getActivityColor = (type: string, metadata?: Record<string, unknown>) => {
   // Check for specific STAGE_CHANGED actions
   if (type === ActivityType.STAGE_CHANGED && metadata?.action) {
     switch (metadata.action) {
@@ -167,6 +199,25 @@ const getActivityColor = (type: ActivityType, metadata?: Record<string, unknown>
       return 'bg-amber-100'
     case ActivityType.INTERVIEW_CANCELLED:
       return 'bg-red-50'
+    // Candidate activities
+    case 'profile_updated':
+      return 'bg-blue-100'
+    case 'profile_viewed':
+      return 'bg-purple-100'
+    case 'job_viewed':
+      return 'bg-purple-100'
+    case 'logged_in':
+      return 'bg-green-50'
+    case 'resume_uploaded':
+      return 'bg-blue-100'
+    case 'resume_parsed':
+      return 'bg-green-100'
+    case 'experience_added':
+    case 'experience_updated':
+      return 'bg-indigo-100'
+    case 'education_added':
+    case 'education_updated':
+      return 'bg-amber-100'
     default:
       return 'bg-gray-100'
   }
@@ -205,7 +256,10 @@ const getActivityLabel = (activity: ActivityLogEntry) => {
     }
   }
 
-  switch (activity.activity_type) {
+  // Cast activity_type to string to handle both enum and string values
+  const activityType = activity.activity_type as string
+
+  switch (activityType) {
     case ActivityType.APPLIED:
       return `${performer} submitted application`
     case ActivityType.SHORTLISTED:
@@ -238,8 +292,71 @@ const getActivityLabel = (activity: ActivityLogEntry) => {
       return `${performer} rescheduled ${stageName}`
     case ActivityType.INTERVIEW_CANCELLED:
       return `${performer} cancelled ${stageName}`
+    // Candidate activities
+    case 'profile_updated': {
+      const fields = activity.metadata?.fields_updated as string[]
+      if (fields && fields.length > 0) {
+        return `${performer} updated ${fields.join(', ')}`
+      }
+      return `${performer} updated profile`
+    }
+    case 'profile_viewed': {
+      const viewType = activity.metadata?.view_type as string
+      if (performer === 'System' || !performer) {
+        return viewType === 'public' ? 'Profile viewed (public)' : 'Profile viewed'
+      }
+      return `${performer} viewed this profile`
+    }
+    case 'job_viewed': {
+      const jobTitle = activity.metadata?.job_title as string
+      return jobTitle ? `Viewed job: ${jobTitle}` : 'Viewed a job posting'
+    }
+    case 'logged_in':
+      return 'Logged in'
+    case 'resume_uploaded': {
+      const filename = activity.metadata?.filename as string
+      return filename ? `Uploaded resume: ${filename}` : 'Uploaded resume'
+    }
+    case 'resume_parsed': {
+      const expCount = activity.metadata?.experiences_count as number
+      const eduCount = activity.metadata?.education_count as number
+      const parts = []
+      if (expCount) parts.push(`${expCount} experience${expCount > 1 ? 's' : ''}`)
+      if (eduCount) parts.push(`${eduCount} education record${eduCount > 1 ? 's' : ''}`)
+      return parts.length > 0
+        ? `Imported resume data: ${parts.join(', ')}`
+        : 'Imported resume data'
+    }
+    case 'experience_added': {
+      const jobTitle = activity.metadata?.job_title as string
+      const company = activity.metadata?.company_name as string
+      return jobTitle && company
+        ? `Added experience: ${jobTitle} at ${company}`
+        : 'Added work experience'
+    }
+    case 'experience_updated': {
+      const jobTitle = activity.metadata?.job_title as string
+      const company = activity.metadata?.company_name as string
+      return jobTitle && company
+        ? `Updated experience: ${jobTitle} at ${company}`
+        : 'Updated work experience'
+    }
+    case 'education_added': {
+      const institution = activity.metadata?.institution as string
+      const degree = activity.metadata?.degree as string
+      return institution && degree
+        ? `Added education: ${degree} at ${institution}`
+        : 'Added education'
+    }
+    case 'education_updated': {
+      const institution = activity.metadata?.institution as string
+      const degree = activity.metadata?.degree as string
+      return institution && degree
+        ? `Updated education: ${degree} at ${institution}`
+        : 'Updated education'
+    }
     default:
-      return activity.activity_type
+      return ACTIVITY_TYPE_LABELS[activityType] || activityType
   }
 }
 
@@ -561,23 +678,26 @@ function NoteItem({ note }: { note: ActivityNote }) {
 function ActivityEntry({
   activity,
   applicationId,
+  candidateId,
   onNoteAdded,
   showViewsNormally,
 }: {
-  activity: ActivityLogEntry
-  applicationId: string
+  activity: ActivityLogEntry & { source?: 'application' | 'candidate'; job_title?: string }
+  applicationId?: string
+  candidateId?: number
   onNoteAdded: () => void
   showViewsNormally?: boolean
 }) {
   const [isExpanded, setIsExpanded] = useState(activity.notes_count > 0)
   const [isAddingNote, setIsAddingNote] = useState(false)
   const [newNote, setNewNote] = useState('')
-  const { addNote, isLoading } = useAddActivityNote(applicationId)
+  const { addNote, isLoading } = useAddActivityNote({ applicationId, candidateId })
 
   const handleAddNote = async () => {
     if (!newNote.trim()) return
     try {
-      await addNote(activity.id, newNote)
+      // Use the source from the activity to determine which endpoint to call
+      await addNote(activity.id, newNote, activity.source || 'application')
       setNewNote('')
       setIsAddingNote(false)
       onNoteAdded()
@@ -590,7 +710,8 @@ function ActivityEntry({
   const richMetadata = getRichMetadataDisplay(activity)
 
   // Don't show view events prominently (they clutter the timeline)
-  const isViewEvent = activity.activity_type === ActivityType.APPLICATION_VIEWED
+  const isViewEvent = activity.activity_type === ActivityType.APPLICATION_VIEWED ||
+    (activity.activity_type as string) === 'profile_viewed'
   if (isViewEvent && activity.notes_count === 0 && !showViewsNormally) {
     return (
       <div className="relative flex gap-3 opacity-50">
@@ -601,9 +722,21 @@ function ActivityEntry({
         </div>
         <div className="flex-1 pb-4">
           <div className="flex items-center justify-between">
-            <p className="text-[13px] text-gray-500">
-              {getActivityLabel(activity)}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-[13px] text-gray-500">
+                {getActivityLabel(activity)}
+              </p>
+              {/* Source badge for candidate mode */}
+              {candidateId && (
+                <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${
+                  activity.job_title
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {activity.job_title || 'Profile'}
+                </span>
+              )}
+            </div>
             <span className="text-[11px] text-gray-400">
               {formatDate(activity.created_at)}
             </span>
@@ -625,10 +758,22 @@ function ActivityEntry({
       {/* Content */}
       <div className="flex-1 pb-5">
         <div className="flex items-center justify-between">
-          <p className="text-[14px] font-medium text-gray-900">
-            {getActivityLabel(activity)}
-          </p>
-          <span className="text-[11px] text-gray-500">
+          <div className="flex items-center gap-2">
+            <p className="text-[14px] font-medium text-gray-900">
+              {getActivityLabel(activity)}
+            </p>
+            {/* Source badge for candidate mode */}
+            {candidateId && (
+              <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${
+                activity.job_title
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'bg-gray-100 text-gray-500'
+              }`}>
+                {activity.job_title || 'Profile'}
+              </span>
+            )}
+          </div>
+          <span className="text-[11px] text-gray-500 shrink-0 ml-2">
             {formatDate(activity.created_at)}
           </span>
         </div>
@@ -757,28 +902,37 @@ function ActivityEntry({
 // Filter Bar Component
 // ============================================================================
 
+interface JobOption {
+  id: string
+  title: string
+}
+
 function ActivityFilterBar({
   filters,
   setFilters,
   performers,
   activityTypes,
+  jobs,
+  selectedJobId,
+  onJobChange,
 }: {
   filters: ActivityFilters
   setFilters: (filters: ActivityFilters) => void
   performers: string[]
   activityTypes: ActivityType[]
+  jobs?: JobOption[]
+  selectedJobId?: string | null
+  onJobChange?: (jobId: string | null) => void
 }) {
-  const [isExpanded, setIsExpanded] = useState(false)
-
   const activeFilterCount = useMemo(() => {
     let count = 0
     if (filters.types.length > 0 && filters.types.length < activityTypes.length) count++
     if (filters.hideViews) count++
     if (filters.hasNotesOnly) count++
     if (filters.performer) count++
-    if (filters.dateFrom || filters.dateTo) count++
+    if (selectedJobId) count++
     return count
-  }, [filters, activityTypes.length])
+  }, [filters, activityTypes.length, selectedJobId])
 
   const clearFilters = () => {
     setFilters({
@@ -786,152 +940,114 @@ function ActivityFilterBar({
       hideViews: false,
       hasNotesOnly: false,
       performer: null,
-      dateFrom: null,
-      dateTo: null,
     })
-  }
-
-  const toggleType = (type: ActivityType) => {
-    const newTypes = filters.types.includes(type)
-      ? filters.types.filter((t) => t !== type)
-      : [...filters.types, type]
-    setFilters({ ...filters, types: newTypes })
+    if (onJobChange) {
+      onJobChange(null)
+    }
   }
 
   return (
-    <div className="mb-4 border border-gray-200 rounded-lg bg-white">
-      {/* Filter Header */}
+    <div className="flex flex-wrap items-center gap-2">
+      {/* Quick toggle chips */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-3 py-2 flex items-center justify-between text-[13px] text-gray-700 hover:bg-gray-50"
+        onClick={() => setFilters({ ...filters, hideViews: !filters.hideViews })}
+        className={`px-2 py-1 text-[11px] rounded-md border transition-colors ${
+          filters.hideViews
+            ? 'bg-gray-900 text-white border-gray-900'
+            : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+        }`}
       >
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4" />
-          <span className="font-medium">Filters</span>
-          {activeFilterCount > 0 && (
-            <span className="px-1.5 py-0.5 text-[11px] font-medium bg-gray-900 text-white rounded-full">
-              {activeFilterCount}
-            </span>
-          )}
-        </div>
-        {isExpanded ? (
-          <ChevronUp className="w-4 h-4" />
-        ) : (
-          <ChevronDown className="w-4 h-4" />
-        )}
+        Hide views
+      </button>
+      <button
+        onClick={() => setFilters({ ...filters, hasNotesOnly: !filters.hasNotesOnly })}
+        className={`px-2 py-1 text-[11px] rounded-md border transition-colors ${
+          filters.hasNotesOnly
+            ? 'bg-gray-900 text-white border-gray-900'
+            : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+        }`}
+      >
+        With notes
       </button>
 
-      {/* Filter Content */}
-      {isExpanded && (
-        <div className="px-3 pb-3 border-t border-gray-100 space-y-4">
-          {/* Quick Toggles */}
-          <div className="pt-3 flex flex-wrap gap-2">
-            <button
-              onClick={() => setFilters({ ...filters, hideViews: !filters.hideViews })}
-              className={`px-2.5 py-1 text-[12px] rounded-full border transition-colors ${
-                filters.hideViews
-                  ? 'bg-gray-900 text-white border-gray-900'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              Hide views
-            </button>
-            <button
-              onClick={() => setFilters({ ...filters, hasNotesOnly: !filters.hasNotesOnly })}
-              className={`px-2.5 py-1 text-[12px] rounded-full border transition-colors ${
-                filters.hasNotesOnly
-                  ? 'bg-gray-900 text-white border-gray-900'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              With notes only
-            </button>
-          </div>
+      {/* Divider */}
+      <div className="w-px h-5 bg-gray-200" />
 
-          {/* Activity Types */}
-          <div>
-            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">
-              Activity Type
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {activityTypes
-                .filter((type) => type !== ActivityType.APPLICATION_VIEWED || !filters.hideViews)
-                .map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => toggleType(type)}
-                    className={`px-2 py-1 text-[11px] rounded border transition-colors ${
-                      filters.types.length === 0 || filters.types.includes(type)
-                        ? 'bg-gray-100 text-gray-800 border-gray-200'
-                        : 'bg-white text-gray-400 border-gray-100 hover:border-gray-200'
-                    }`}
-                  >
-                    {ACTIVITY_TYPE_LABELS[type]}
-                  </button>
-                ))}
-            </div>
-          </div>
+      {/* Activity Type dropdown */}
+      <select
+        value={filters.types.length === 1 ? filters.types[0] : ''}
+        onChange={(e) => {
+          const value = e.target.value
+          setFilters({ ...filters, types: value ? [value as ActivityType] : [] })
+        }}
+        className={`px-2 py-1 text-[11px] border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 ${
+          filters.types.length > 0
+            ? 'bg-gray-900 text-white border-gray-900'
+            : 'bg-white text-gray-600 border-gray-200'
+        }`}
+      >
+        <option value="">All types</option>
+        {activityTypes
+          .filter((type) => type !== ActivityType.APPLICATION_VIEWED || !filters.hideViews)
+          .map((type) => (
+            <option key={type} value={type}>
+              {ACTIVITY_TYPE_LABELS[type]}
+            </option>
+          ))}
+      </select>
 
-          {/* Performer Filter */}
-          {performers.length > 1 && (
-            <div>
-              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">
-                Performed By
-              </p>
-              <select
-                value={filters.performer || ''}
-                onChange={(e) =>
-                  setFilters({ ...filters, performer: e.target.value || null })
-                }
-                className="w-full px-2.5 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
-              >
-                <option value="">All users</option>
-                {performers.map((performer) => (
-                  <option key={performer} value={performer}>
-                    {performer}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+      {/* Job Filter (Candidate Mode) */}
+      {jobs && jobs.length > 0 && onJobChange && (
+        <select
+          value={selectedJobId || ''}
+          onChange={(e) => onJobChange(e.target.value || null)}
+          className={`px-2 py-1 text-[11px] border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 max-w-[140px] ${
+            selectedJobId
+              ? 'bg-gray-900 text-white border-gray-900'
+              : 'bg-white text-gray-600 border-gray-200'
+          }`}
+        >
+          <option value="">All jobs</option>
+          <option value="none">Profile only</option>
+          {jobs.map((job) => (
+            <option key={job.id} value={job.id}>
+              {job.title}
+            </option>
+          ))}
+        </select>
+      )}
 
-          {/* Date Range */}
-          <div>
-            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">
-              Date Range
-            </p>
-            <div className="flex gap-2 items-center">
-              <input
-                type="date"
-                value={filters.dateFrom || ''}
-                onChange={(e) =>
-                  setFilters({ ...filters, dateFrom: e.target.value || null })
-                }
-                className="flex-1 px-2.5 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
-              />
-              <span className="text-[12px] text-gray-400">to</span>
-              <input
-                type="date"
-                value={filters.dateTo || ''}
-                onChange={(e) =>
-                  setFilters({ ...filters, dateTo: e.target.value || null })
-                }
-                className="flex-1 px-2.5 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
-              />
-            </div>
-          </div>
+      {/* Performer Filter */}
+      {performers.length > 1 && (
+        <select
+          value={filters.performer || ''}
+          onChange={(e) =>
+            setFilters({ ...filters, performer: e.target.value || null })
+          }
+          className={`px-2 py-1 text-[11px] border rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 max-w-[120px] ${
+            filters.performer
+              ? 'bg-gray-900 text-white border-gray-900'
+              : 'bg-white text-gray-600 border-gray-200'
+          }`}
+        >
+          <option value="">All users</option>
+          {performers.map((performer) => (
+            <option key={performer} value={performer}>
+              {performer}
+            </option>
+          ))}
+        </select>
+      )}
 
-          {/* Clear Filters */}
-          {activeFilterCount > 0 && (
-            <button
-              onClick={clearFilters}
-              className="flex items-center gap-1 text-[12px] text-gray-500 hover:text-gray-700"
-            >
-              <X className="w-3 h-3" />
-              Clear all filters
-            </button>
-          )}
-        </div>
+      {/* Clear Filters */}
+      {activeFilterCount > 0 && (
+        <button
+          onClick={clearFilters}
+          className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+          title="Clear all filters"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
       )}
     </div>
   )
@@ -943,33 +1059,42 @@ function ActivityFilterBar({
 
 export default function ActivityTimeline({
   applicationId,
+  candidateId,
 }: ActivityTimelineProps) {
-  const { activities, isLoading, error, refetch } = useActivityLog(applicationId)
+  // State for job filter in candidate mode
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
+
+  // Use the appropriate mode based on props
+  const { activities, isLoading, error, refetch, jobs } = useActivityLog(
+    candidateId
+      ? { candidateId, jobId: selectedJobId }
+      : { applicationId }
+  )
+
+  const isCandidateMode = !!candidateId
 
   const [filters, setFilters] = useState<ActivityFilters>({
     types: [],
     hideViews: false,
     hasNotesOnly: false,
     performer: null,
-    dateFrom: null,
-    dateTo: null,
   })
 
   // Extract unique performers and activity types from activities
   const { performers, activityTypes } = useMemo(() => {
     const performerSet = new Set<string>()
-    const typeSet = new Set<ActivityType>()
+    const typeSet = new Set<string>()
 
     activities.forEach((activity) => {
       if (activity.performed_by_name) {
         performerSet.add(activity.performed_by_name)
       }
-      typeSet.add(activity.activity_type)
+      typeSet.add(activity.activity_type as string)
     })
 
     return {
       performers: Array.from(performerSet).sort(),
-      activityTypes: Array.from(typeSet),
+      activityTypes: Array.from(typeSet) as ActivityType[],
     }
   }, [activities])
 
@@ -996,25 +1121,6 @@ export default function ActivityTimeline({
         return false
       }
 
-      // Date range filter
-      if (filters.dateFrom) {
-        const activityDate = new Date(activity.created_at)
-        const fromDate = new Date(filters.dateFrom)
-        fromDate.setHours(0, 0, 0, 0)
-        if (activityDate < fromDate) {
-          return false
-        }
-      }
-
-      if (filters.dateTo) {
-        const activityDate = new Date(activity.created_at)
-        const toDate = new Date(filters.dateTo)
-        toDate.setHours(23, 59, 59, 999)
-        if (activityDate > toDate) {
-          return false
-        }
-      }
-
       return true
     })
   }, [activities, filters])
@@ -1039,7 +1145,9 @@ export default function ActivityTimeline({
         <User className="w-10 h-10 text-gray-300 mx-auto mb-3" />
         <p className="text-[14px] text-gray-500">No activity yet</p>
         <p className="text-[12px] text-gray-400 mt-1">
-          Activity will appear here as the application progresses
+          {isCandidateMode
+            ? 'Activity will appear here as the candidate engages with jobs'
+            : 'Activity will appear here as the application progresses'}
         </p>
       </div>
     )
@@ -1047,20 +1155,24 @@ export default function ActivityTimeline({
 
   return (
     <div className="space-y-4">
-      <h4 className="text-[12px] font-medium text-gray-500 uppercase tracking-wider">
-        Activity Log
-      </h4>
-
-      {/* Filters */}
-      <ActivityFilterBar
-        filters={filters}
-        setFilters={setFilters}
-        performers={performers}
-        activityTypes={activityTypes}
-      />
+      {/* Header with filters */}
+      <div className="flex items-center gap-4">
+        <h4 className="text-[12px] font-medium text-gray-500 uppercase tracking-wider shrink-0">
+          Activity Log
+        </h4>
+        <ActivityFilterBar
+          filters={filters}
+          setFilters={setFilters}
+          performers={performers}
+          activityTypes={activityTypes}
+          jobs={isCandidateMode ? jobs : undefined}
+          selectedJobId={isCandidateMode ? selectedJobId : undefined}
+          onJobChange={isCandidateMode ? setSelectedJobId : undefined}
+        />
+      </div>
 
       {/* Results count */}
-      {(filters.hideViews || filters.hasNotesOnly || filters.types.length > 0 || filters.performer || filters.dateFrom || filters.dateTo) && (
+      {(filters.hideViews || filters.hasNotesOnly || filters.types.length > 0 || filters.performer || selectedJobId) && (
         <p className="text-[12px] text-gray-500">
           Showing {filteredActivities.length} of {activities.length} activities
         </p>
@@ -1080,8 +1192,9 @@ export default function ActivityTimeline({
             {filteredActivities.map((activity) => (
               <ActivityEntry
                 key={activity.id}
-                activity={activity}
+                activity={activity as ActivityLogEntry & { source?: 'application' | 'candidate'; job_title?: string }}
                 applicationId={applicationId}
+                candidateId={candidateId}
                 onNoteAdded={refetch}
                 showViewsNormally={filters.types.includes(ActivityType.APPLICATION_VIEWED)}
               />

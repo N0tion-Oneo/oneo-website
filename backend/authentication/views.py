@@ -14,6 +14,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from users.models import UserRole
 from notifications.services import NotificationService
+from candidates.services import log_logged_in
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +147,17 @@ def login(request):
     if serializer.is_valid():
         user = serializer.validated_data['user']
         tokens = get_tokens_for_user(user)
+
+        # Log login activity for candidates
+        if user.role == UserRole.CANDIDATE and hasattr(user, 'candidate_profile'):
+            try:
+                log_logged_in(
+                    candidate=user.candidate_profile,
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                    user_agent=request.META.get('HTTP_USER_AGENT'),
+                )
+            except Exception as e:
+                logger.warning(f"Failed to log login activity: {e}")
 
         response_data = {
             'message': 'Login successful',

@@ -5,6 +5,7 @@ from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.permissions import IsAuthenticated
 from .services import parse_resume
 from .import_service import import_resume_data
+from candidates.services import log_resume_uploaded, log_resume_parsed
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,14 @@ class ResumeParseView(APIView):
 
         try:
             parsed_data = parse_resume(file, candidate_profile)
+
+            # Log resume upload activity
+            log_resume_uploaded(
+                candidate=candidate_profile,
+                filename=file.name,
+                file_size=file.size,
+            )
+
             return Response(parsed_data)
         except ValueError as e:
             logger.error(f"Configuration error parsing resume: {e}")
@@ -103,6 +112,16 @@ class ResumeImportView(APIView):
 
         try:
             results = import_resume_data(candidate_profile, parsed_data)
+
+            # Log resume parsed/imported activity
+            log_resume_parsed(
+                candidate=candidate_profile,
+                experiences_count=results.get('experiences_created', 0),
+                education_count=results.get('education_created', 0),
+                technologies_count=len(results.get('technologies_matched', [])) + len(results.get('technologies_created', [])),
+                skills_count=len(results.get('skills_matched', [])) + len(results.get('skills_created', [])),
+            )
+
             return Response({
                 "success": True,
                 "message": "Resume data imported successfully",

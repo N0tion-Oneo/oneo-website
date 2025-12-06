@@ -4,6 +4,20 @@ from django.utils.text import slugify
 import uuid
 
 
+class CandidateActivityType(models.TextChoices):
+    """Activity types specific to candidate-level events (not application-specific)."""
+    PROFILE_UPDATED = 'profile_updated', 'Profile Updated'
+    PROFILE_VIEWED = 'profile_viewed', 'Profile Viewed'
+    JOB_VIEWED = 'job_viewed', 'Job Viewed'
+    LOGGED_IN = 'logged_in', 'Logged In'
+    RESUME_UPLOADED = 'resume_uploaded', 'Resume Uploaded'
+    RESUME_PARSED = 'resume_parsed', 'Resume Parsed'
+    EXPERIENCE_ADDED = 'experience_added', 'Experience Added'
+    EXPERIENCE_UPDATED = 'experience_updated', 'Experience Updated'
+    EDUCATION_ADDED = 'education_added', 'Education Added'
+    EDUCATION_UPDATED = 'education_updated', 'Education Updated'
+
+
 class Seniority(models.TextChoices):
     INTERN = 'intern', 'Intern'
     JUNIOR = 'junior', 'Junior'
@@ -496,3 +510,101 @@ class Education(models.Model):
             raise ValidationError({'end_date': 'End date must be after start date.'})
         if self.is_current and self.end_date:
             raise ValidationError({'end_date': 'Current education should not have an end date.'})
+
+
+class CandidateActivity(models.Model):
+    """
+    Activity log for candidate-level events (not tied to specific applications).
+    Tracks profile updates, job views, logins, resume uploads, etc.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Core relations
+    candidate = models.ForeignKey(
+        CandidateProfile,
+        on_delete=models.CASCADE,
+        related_name='activities',
+    )
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='candidate_activities_performed',
+        help_text='User who performed this action (may differ from candidate for admin actions)',
+    )
+
+    # Activity details
+    activity_type = models.CharField(
+        max_length=30,
+        choices=CandidateActivityType.choices,
+    )
+
+    # Optional job reference (for job_viewed events)
+    job = models.ForeignKey(
+        'jobs.Job',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='candidate_views',
+    )
+
+    # Flexible metadata for additional context
+    metadata = models.JSONField(default=dict, blank=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'candidate_activities'
+        ordering = ['-created_at']
+        verbose_name = 'Candidate Activity'
+        verbose_name_plural = 'Candidate Activities'
+        indexes = [
+            models.Index(fields=['candidate', '-created_at']),
+            models.Index(fields=['activity_type', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.candidate.full_name} - {self.get_activity_type_display()}"
+
+    @property
+    def performer_name(self):
+        """Get the name of who performed the action."""
+        if self.performed_by:
+            return self.performed_by.full_name or self.performed_by.email
+        return 'System'
+
+
+class CandidateActivityNote(models.Model):
+    """
+    Notes attached to candidate activity log entries.
+    Allows recruiters/admins to add comments on any candidate activity.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    activity = models.ForeignKey(
+        CandidateActivity,
+        on_delete=models.CASCADE,
+        related_name='notes',
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='candidate_activity_notes',
+    )
+
+    content = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'candidate_activity_notes'
+        ordering = ['created_at']
+
+    def __str__(self):
+        author_name = self.author.full_name if self.author else 'Unknown'
+        return f"Note by {author_name} on {self.activity}"
