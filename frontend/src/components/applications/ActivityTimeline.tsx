@@ -294,8 +294,14 @@ const getActivityLabel = (activity: ActivityLogEntry) => {
       return `${performer} cancelled ${stageName}`
     // Candidate activities
     case 'profile_updated': {
+      const changes = activity.metadata?.changes as Array<{field: string, label: string, old: unknown, new: unknown}>
       const fields = activity.metadata?.fields_updated as string[]
-      if (fields && fields.length > 0) {
+      if (changes && changes.length > 0) {
+        // Show detailed changes with labels
+        const changeLabels = changes.map(c => c.label).join(', ')
+        return `${performer} updated ${changeLabels}`
+      } else if (fields && fields.length > 0) {
+        // Fallback to old format for backwards compatibility
         return `${performer} updated ${fields.join(', ')}`
       }
       return `${performer} updated profile`
@@ -337,9 +343,16 @@ const getActivityLabel = (activity: ActivityLogEntry) => {
     case 'experience_updated': {
       const jobTitle = activity.metadata?.job_title as string
       const company = activity.metadata?.company_name as string
-      return jobTitle && company
-        ? `Updated experience: ${jobTitle} at ${company}`
-        : 'Updated work experience'
+      const changes = activity.metadata?.changes as Array<{field: string, label: string, old: unknown, new: unknown}>
+      const fields = activity.metadata?.fields_updated as string[]
+      const baseLabel = jobTitle && company ? `${jobTitle} at ${company}` : 'experience'
+      if (changes && changes.length > 0) {
+        const changeLabels = changes.map(c => c.label).join(', ')
+        return `${performer} updated ${changeLabels} for ${baseLabel}`
+      } else if (fields && fields.length > 0) {
+        return `${performer} updated ${fields.join(', ')} for ${baseLabel}`
+      }
+      return `${performer} updated ${baseLabel}`
     }
     case 'education_added': {
       const institution = activity.metadata?.institution as string
@@ -351,9 +364,16 @@ const getActivityLabel = (activity: ActivityLogEntry) => {
     case 'education_updated': {
       const institution = activity.metadata?.institution as string
       const degree = activity.metadata?.degree as string
-      return institution && degree
-        ? `Updated education: ${degree} at ${institution}`
-        : 'Updated education'
+      const changes = activity.metadata?.changes as Array<{field: string, label: string, old: unknown, new: unknown}>
+      const fields = activity.metadata?.fields_updated as string[]
+      const baseLabel = institution && degree ? `${degree} at ${institution}` : 'education'
+      if (changes && changes.length > 0) {
+        const changeLabels = changes.map(c => c.label).join(', ')
+        return `${performer} updated ${changeLabels} for ${baseLabel}`
+      } else if (fields && fields.length > 0) {
+        return `${performer} updated ${fields.join(', ')} for ${baseLabel}`
+      }
+      return `${performer} updated ${baseLabel}`
     }
     default:
       return ACTIVITY_TYPE_LABELS[activityType] || activityType
@@ -429,9 +449,85 @@ const getSchedulingDetails = (activity: ActivityLogEntry): string | null => {
   }
 }
 
+// Format a value for display (handles arrays, nulls, etc.)
+const formatChangeValue = (value: unknown): string => {
+  if (value === null || value === undefined || value === '') return '(empty)'
+  if (Array.isArray(value)) return value.join(', ') || '(none)'
+  return String(value)
+}
+
 // Get rich metadata display for activities with detailed info
 const getRichMetadataDisplay = (activity: ActivityLogEntry): React.ReactNode | null => {
   const metadata = activity.metadata || {}
+
+  // Handle profile_updated with detailed changes
+  if ((activity.activity_type as string) === 'profile_updated' && metadata.changes) {
+    const changes = metadata.changes as Array<{field: string, label: string, old: unknown, new: unknown}>
+    if (changes.length > 0) {
+      return (
+        <div className="mt-2 p-2.5 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="space-y-2">
+            {changes.map((change, index) => (
+              <div key={index} className="text-[12px]">
+                <span className="font-medium text-gray-700">{change.label}:</span>
+                <div className="flex items-center gap-2 mt-0.5 pl-2">
+                  <span className="text-gray-500 line-through">{formatChangeValue(change.old)}</span>
+                  <ArrowRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-900">{formatChangeValue(change.new)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
+  }
+
+  // Handle experience_updated with detailed changes
+  if ((activity.activity_type as string) === 'experience_updated' && metadata.changes) {
+    const changes = metadata.changes as Array<{field: string, label: string, old: unknown, new: unknown}>
+    if (changes.length > 0) {
+      return (
+        <div className="mt-2 p-2.5 bg-indigo-50 border border-indigo-200 rounded-md">
+          <div className="space-y-2">
+            {changes.map((change, index) => (
+              <div key={index} className="text-[12px]">
+                <span className="font-medium text-gray-700">{change.label}:</span>
+                <div className="flex items-center gap-2 mt-0.5 pl-2">
+                  <span className="text-gray-500 line-through">{formatChangeValue(change.old)}</span>
+                  <ArrowRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-900">{formatChangeValue(change.new)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
+  }
+
+  // Handle education_updated with detailed changes
+  if ((activity.activity_type as string) === 'education_updated' && metadata.changes) {
+    const changes = metadata.changes as Array<{field: string, label: string, old: unknown, new: unknown}>
+    if (changes.length > 0) {
+      return (
+        <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="space-y-2">
+            {changes.map((change, index) => (
+              <div key={index} className="text-[12px]">
+                <span className="font-medium text-gray-700">{change.label}:</span>
+                <div className="flex items-center gap-2 mt-0.5 pl-2">
+                  <span className="text-gray-500 line-through">{formatChangeValue(change.old)}</span>
+                  <ArrowRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-900">{formatChangeValue(change.new)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
+  }
 
   // Handle completed stage with feedback/score
   if (activity.activity_type === ActivityType.STAGE_CHANGED && metadata.action === 'completed') {
@@ -789,47 +885,40 @@ function ActivityEntry({
         {richMetadata}
 
         {/* Generic metadata display (offer details, rejection reason, etc.) - only if no rich metadata */}
-        {!richMetadata && activity.metadata && Object.keys(activity.metadata).length > 0 && (
-          <div className="mt-2 p-2.5 bg-gray-50 rounded-md text-[12px] text-gray-600">
-            {activity.metadata.rejection_reason && (
-              <p>
-                <span className="font-medium">Reason:</span>{' '}
-                {String(activity.metadata.rejection_reason).replace(/_/g, ' ')}
-              </p>
-            )}
-            {activity.metadata.rejection_feedback && (
-              <p className="mt-1">
-                <span className="font-medium">Feedback:</span>{' '}
-                {String(activity.metadata.rejection_feedback)}
-              </p>
-            )}
-            {activity.metadata.offer_details &&
-              typeof activity.metadata.offer_details === 'object' && (
+        {!richMetadata && activity.metadata && Object.keys(activity.metadata).length > 0 && (() => {
+          const rejectionReason = activity.metadata?.rejection_reason as string | undefined
+          const rejectionFeedback = activity.metadata?.rejection_feedback as string | undefined
+          const offerDetails = activity.metadata?.offer_details as Record<string, unknown> | undefined
+          const hasContent = rejectionReason || rejectionFeedback || (offerDetails && offerDetails.salary)
+
+          if (!hasContent) return null
+
+          return (
+            <div className="mt-2 p-2.5 bg-gray-50 rounded-md text-[12px] text-gray-600">
+              {rejectionReason && (
+                <p>
+                  <span className="font-medium">Reason:</span>{' '}
+                  {rejectionReason.replace(/_/g, ' ')}
+                </p>
+              )}
+              {rejectionFeedback && (
+                <p className="mt-1">
+                  <span className="font-medium">Feedback:</span>{' '}
+                  {rejectionFeedback}
+                </p>
+              )}
+              {offerDetails && offerDetails.salary != null && (
                 <div>
-                  {(activity.metadata.offer_details as Record<string, unknown>)
-                    .salary && (
-                    <p>
-                      <span className="font-medium">Salary:</span>{' '}
-                      {(
-                        activity.metadata.offer_details as Record<
-                          string,
-                          unknown
-                        >
-                      ).currency || 'ZAR'}{' '}
-                      {Number(
-                        (
-                          activity.metadata.offer_details as Record<
-                            string,
-                            unknown
-                          >
-                        ).salary
-                      ).toLocaleString()}
-                    </p>
-                  )}
+                  <p>
+                    <span className="font-medium">Salary:</span>{' '}
+                    {String(offerDetails.currency || 'ZAR')}{' '}
+                    {Number(offerDetails.salary).toLocaleString()}
+                  </p>
                 </div>
               )}
-          </div>
-        )}
+            </div>
+          )
+        })()}
 
         {/* Notes section */}
         {activity.notes_count > 0 && (

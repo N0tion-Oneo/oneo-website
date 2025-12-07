@@ -18,7 +18,8 @@ from .models import (
 )
 from .services import (
     log_profile_updated, log_profile_viewed, log_experience_added, log_experience_updated,
-    log_education_added, log_education_updated
+    log_education_added, log_education_updated, detect_profile_changes,
+    detect_experience_changes, detect_education_changes,
 )
 from jobs.models import Application, ActivityLog
 from jobs.serializers.activity import ActivityNoteSerializer
@@ -228,16 +229,16 @@ def update_my_profile(request):
     )
 
     if serializer.is_valid():
-        # Track which fields are being updated
-        fields_updated = list(request.data.keys())
+        # Detect actual changes BEFORE saving
+        changes = detect_profile_changes(profile, serializer.validated_data)
 
         serializer.save()
 
-        # Log the profile update activity
+        # Log the profile update activity (only if there were actual changes)
         log_profile_updated(
             candidate=profile,
             performed_by=request.user,
-            fields_updated=fields_updated,
+            changes=changes,
         )
 
         # Return full profile data
@@ -535,7 +536,18 @@ def get_candidate(request, slug):
         )
 
         if serializer.is_valid():
+            # Detect actual changes BEFORE saving
+            changes = detect_profile_changes(profile, serializer.validated_data)
+
             serializer.save()
+
+            # Log the profile update activity (only if there were actual changes)
+            log_profile_updated(
+                candidate=profile,
+                performed_by=request.user,
+                changes=changes,
+            )
+
             return Response(
                 CandidateProfileSerializer(profile, context={'request': request}).data
             )
@@ -712,14 +724,17 @@ def update_experience(request, experience_id, slug=None):
     )
 
     if serializer.is_valid():
+        # Detect actual changes BEFORE saving
+        changes = detect_experience_changes(experience, serializer.validated_data)
         serializer.save()
 
-        # Log experience updated activity
+        # Log experience updated activity (only if there were actual changes)
         log_experience_updated(
             candidate=profile,
             job_title=experience.job_title,
             company_name=experience.company_name,
             performed_by=request.user,
+            changes=changes,
         )
 
         return Response(ExperienceSerializer(experience).data)
@@ -894,14 +909,17 @@ def update_education(request, education_id, slug=None):
     )
 
     if serializer.is_valid():
+        # Detect actual changes BEFORE saving
+        changes = detect_education_changes(education, serializer.validated_data)
         serializer.save()
 
-        # Log education updated activity
+        # Log education updated activity (only if there were actual changes)
         log_education_updated(
             candidate=profile,
             institution=education.institution,
             degree=education.degree,
             performed_by=request.user,
+            changes=changes,
         )
 
         return Response(EducationSerializer(education).data)
