@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User
+from .models import User, RecruiterProfile
 
 
 @admin.register(User)
@@ -19,5 +19,33 @@ class UserAdmin(BaseUserAdmin):
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
         ('Additional Info', {
             'fields': ('email', 'first_name', 'last_name', 'phone', 'role'),
+        }),
+    )
+
+
+@admin.register(RecruiterProfile)
+class RecruiterProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'professional_title', 'city', 'country', 'years_of_experience', 'updated_at')
+    list_filter = ('industries', 'country')
+    search_fields = ('user__email', 'user__first_name', 'user__last_name', 'professional_title', 'city__name', 'country__name')
+    filter_horizontal = ('industries',)
+    readonly_fields = ('id', 'created_at', 'updated_at')
+
+    fieldsets = (
+        (None, {
+            'fields': ('id', 'user'),
+        }),
+        ('Professional Info', {
+            'fields': ('professional_title', 'bio', 'linkedin_url', 'years_of_experience'),
+        }),
+        ('Location', {
+            'fields': ('country', 'city', 'timezone'),
+        }),
+        ('Specializations', {
+            'fields': ('industries',),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
         }),
     )

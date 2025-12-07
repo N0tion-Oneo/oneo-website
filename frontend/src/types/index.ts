@@ -1845,3 +1845,36 @@ export const SUGGESTIBLE_FIELDS = {
   experience: ['job_title', 'company_name', 'description', 'achievements'],
   education: ['institution', 'degree', 'field_of_study', 'description'],
 }
+
+// ============================================================================
+// Recruiter Profile Types
+// ============================================================================
+
+export interface RecruiterProfile {
+  id: string
+  user_name: string
+  user_email: string
+  user_avatar: string | null
+  user_phone: string | null
+  professional_title: string
+  bio: string
+  linkedin_url: string
+  years_of_experience: number | null
+  country: Country | null
+  city: City | null
+  timezone: string
+  industries: Industry[]
+  created_at: string
+  updated_at: string
+}
+
+export interface RecruiterProfileUpdate {
+  professional_title?: string
+  bio?: string
+  linkedin_url?: string
+  years_of_experience?: number | null
+  country_id?: number | null
+  city_id?: number | null
+  timezone?: string
+  industry_ids?: number[]
+}

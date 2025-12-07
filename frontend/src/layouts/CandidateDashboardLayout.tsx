@@ -46,7 +46,7 @@ export default function CandidateDashboardLayout() {
     },
   ]
 
-  // My Profile link - only for candidates (admins/recruiters/clients access via Settings)
+  // My Profile link - for candidates only (recruiters/admins access their profile via Settings)
   const profileNav: NavItem[] = !isClient && !isAdminOrRecruiter ? [
     {
       name: 'My Profile',
@@ -60,8 +60,8 @@ export default function CandidateDashboardLayout() {
     },
   ] : []
 
-  // Add Company and Jobs links for clients, recruiters, and admins
-  const companyNav: NavItem[] = isClient || isAdminOrRecruiter ? [
+  // Add Company link for clients only
+  const companyNav: NavItem[] = isClient ? [
     {
       name: 'Company',
       href: '/dashboard/company',

@@ -28,4 +28,7 @@ urlpatterns = [
 
     # Resume parser
     path('resume/', include('resume_parser.urls')),
+
+    # Users endpoints (recruiter profiles)
+    path('', include('users.urls')),
 ]

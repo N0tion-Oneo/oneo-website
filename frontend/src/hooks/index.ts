@@ -164,3 +164,6 @@ export {
   useAdminSuggestions,
   useCandidateSuggestions,
 } from './useProfileSuggestions'
+
+// Recruiter Profile hooks
+export { useRecruiterProfile } from './useRecruiterProfile'

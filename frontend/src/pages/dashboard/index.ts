@@ -27,3 +27,6 @@ export { default as BrandingSettingsPage } from './BrandingSettingsPage';
 
 // Settings pages
 export { ProfileSettingsPage, CalendarSettingsPage } from './settings';
+
+// Recruiter Profile
+export { default as RecruiterProfilePage } from './RecruiterProfilePage';
