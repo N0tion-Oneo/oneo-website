@@ -6,6 +6,7 @@ from ..models import (
     Application, ApplicationStatus, RejectionReason,
     ApplicationQuestion, ApplicationAnswer,
     StageInstanceStatus, ApplicationStageInstance,
+    InterviewStageTemplate,
 )
 from scheduling.models import BookingToken
 from companies.serializers import CompanyListSerializer
@@ -23,7 +24,9 @@ class ApplicationListSerializer(serializers.ModelSerializer):
     job_slug = serializers.CharField(source='job.slug', read_only=True)
     company_name = serializers.CharField(source='job.company.name', read_only=True)
     company_logo = serializers.SerializerMethodField()
+    current_stage_order = serializers.IntegerField(read_only=True)
     current_stage_name = serializers.CharField(read_only=True)
+    current_stage_id = serializers.UUIDField(source='current_stage.id', read_only=True, allow_null=True)
     candidate_name = serializers.CharField(source='candidate.full_name', read_only=True)
     candidate_email = serializers.CharField(source='candidate.email', read_only=True)
     current_stage_instance = serializers.SerializerMethodField()
@@ -38,14 +41,14 @@ class ApplicationListSerializer(serializers.ModelSerializer):
         """Return the current stage instance with scheduling info."""
         from django.utils import timezone
 
-        # Only return for IN_PROGRESS applications
-        if obj.status != ApplicationStatus.IN_PROGRESS or obj.current_stage_order < 1:
+        # Only return for IN_PROGRESS applications with a current stage
+        if obj.status != ApplicationStatus.IN_PROGRESS or not obj.current_stage:
             return None
 
         # Find the stage instance for current stage
         instance = ApplicationStageInstance.objects.filter(
             application=obj,
-            stage_template__order=obj.current_stage_order
+            stage_template=obj.current_stage
         ).select_related('stage_template', 'interviewer').first()
 
         if not instance:
@@ -119,6 +122,8 @@ class ApplicationListSerializer(serializers.ModelSerializer):
             'candidate_name',
             'candidate_email',
             'status',
+            'current_stage',
+            'current_stage_id',
             'current_stage_order',
             'current_stage_name',
             'current_stage_instance',
@@ -136,7 +141,9 @@ class ApplicationSerializer(serializers.ModelSerializer):
     job = JobListSerializer(read_only=True)
     candidate = CandidateProfileSerializer(read_only=True)
     referrer = UserProfileSerializer(read_only=True)
+    current_stage_order = serializers.IntegerField(read_only=True)
     current_stage_name = serializers.CharField(read_only=True)
+    current_stage_id = serializers.UUIDField(source='current_stage.id', read_only=True, allow_null=True)
     interview_stages = serializers.SerializerMethodField()
     answers = serializers.SerializerMethodField()
 
@@ -150,6 +157,8 @@ class ApplicationSerializer(serializers.ModelSerializer):
             'covering_statement',
             'resume_url',
             'status',
+            'current_stage',
+            'current_stage_id',
             'current_stage_order',
             'current_stage_name',
             'stage_notes',
@@ -174,8 +183,17 @@ class ApplicationSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'applied_at', 'shortlisted_at', 'last_status_change']
 
     def get_interview_stages(self, obj):
-        """Return the job's interview stages."""
-        return obj.job.interview_stages or []
+        """Return the job's interview stages from InterviewStageTemplate model."""
+        templates = InterviewStageTemplate.objects.filter(job=obj.job).order_by('order')
+        return [
+            {
+                'order': t.order,
+                'name': t.name,
+                'stage_type': t.stage_type,
+                'duration_minutes': t.default_duration_minutes,
+            }
+            for t in templates
+        ]
 
     def get_answers(self, obj):
         """Return the application's answers."""
@@ -340,6 +358,7 @@ class RejectApplicationSerializer(serializers.Serializer):
 class CandidateApplicationListSerializer(serializers.ModelSerializer):
     """Serializer for candidate viewing their applications (includes job details)."""
     job = JobListSerializer(read_only=True)
+    current_stage_order = serializers.IntegerField(read_only=True)
     current_stage_name = serializers.CharField(read_only=True)
     interview_stages = serializers.SerializerMethodField()
     pending_booking = serializers.SerializerMethodField()
@@ -352,6 +371,7 @@ class CandidateApplicationListSerializer(serializers.ModelSerializer):
             'id',
             'job',
             'status',
+            'current_stage',
             'current_stage_order',
             'current_stage_name',
             'interview_stages',
@@ -365,8 +385,17 @@ class CandidateApplicationListSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     def get_interview_stages(self, obj):
-        """Return the job's interview stages."""
-        return obj.job.interview_stages or []
+        """Return the job's interview stages from InterviewStageTemplate model."""
+        templates = InterviewStageTemplate.objects.filter(job=obj.job).order_by('order')
+        return [
+            {
+                'order': t.order,
+                'name': t.name,
+                'stage_type': t.stage_type,
+                'duration_minutes': t.default_duration_minutes,
+            }
+            for t in templates
+        ]
 
     def get_pending_booking(self, obj):
         """Return the pending booking link for this application, if any."""

@@ -14,6 +14,7 @@ export enum UserRole {
 
 export interface User {
   id: string
+  username: string
   email: string
   first_name: string
   last_name: string
@@ -22,6 +23,7 @@ export interface User {
   role: UserRole
   is_verified: boolean
   created_at: string
+  booking_slug?: string  // For recruiters/admins - their public booking URL slug
 }
 
 export interface AuthState {
@@ -713,6 +715,7 @@ export interface InterviewStageTemplate {
 }
 
 export interface InterviewStageTemplateInput {
+  id?: string  // Optional - for updating existing templates
   stage_type: StageType
   name?: string
   order?: number
@@ -1381,6 +1384,7 @@ export enum NotificationType {
   TEAM_INVITE = 'team_invite',
   CLIENT_INVITE = 'client_invite',
   COMPANY_MEMBER_INVITE = 'company_member_invite',
+  CANDIDATE_BOOKING_INVITE = 'candidate_booking_invite',
   // Stage/Interview
   STAGE_SCHEDULED = 'stage_scheduled',
   STAGE_REMINDER = 'stage_reminder',
@@ -1440,6 +1444,7 @@ export const NotificationTypeLabels: Record<NotificationType, string> = {
   [NotificationType.TEAM_INVITE]: 'Team Invitation',
   [NotificationType.CLIENT_INVITE]: 'Client Invitation',
   [NotificationType.COMPANY_MEMBER_INVITE]: 'Company Invitation',
+  [NotificationType.CANDIDATE_BOOKING_INVITE]: 'Candidate Booking Invitation',
   // Stage/Interview
   [NotificationType.STAGE_SCHEDULED]: 'Interview Scheduled',
   [NotificationType.STAGE_REMINDER]: 'Interview Reminder',
@@ -1877,4 +1882,195 @@ export interface RecruiterProfileUpdate {
   city_id?: number | null
   timezone?: string
   industry_ids?: number[]
+}
+
+// ============================================================================
+// Recruiter Public Booking System
+// ============================================================================
+
+export enum RecruiterMeetingCategory {
+  SALES = 'sales',
+  RECRUITMENT = 'recruitment',
+}
+
+export const RecruiterMeetingCategoryLabels: Record<RecruiterMeetingCategory, string> = {
+  [RecruiterMeetingCategory.SALES]: 'Sales',
+  [RecruiterMeetingCategory.RECRUITMENT]: 'Recruitment',
+}
+
+export enum RecruiterBookingStatus {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  CANCELLED = 'cancelled',
+  COMPLETED = 'completed',
+  NO_SHOW = 'no_show',
+}
+
+export const RecruiterBookingStatusLabels: Record<RecruiterBookingStatus, string> = {
+  [RecruiterBookingStatus.PENDING]: 'Pending Approval',
+  [RecruiterBookingStatus.CONFIRMED]: 'Confirmed',
+  [RecruiterBookingStatus.CANCELLED]: 'Cancelled',
+  [RecruiterBookingStatus.COMPLETED]: 'Completed',
+  [RecruiterBookingStatus.NO_SHOW]: 'No Show',
+}
+
+export type RecruiterMeetingLocationType = 'video' | 'phone' | 'in_person'
+
+export const RecruiterMeetingLocationLabels: Record<RecruiterMeetingLocationType, string> = {
+  video: 'Video Call',
+  phone: 'Phone Call',
+  in_person: 'In Person',
+}
+
+export interface RecruiterMeetingType {
+  id: string
+  owner: string
+  owner_name: string
+  owner_email: string
+  name: string
+  slug: string
+  category: RecruiterMeetingCategory
+  category_display: string
+  description: string
+  duration_minutes: number
+  buffer_before_minutes: number
+  buffer_after_minutes: number
+  location_type: RecruiterMeetingLocationType
+  location_type_display: string
+  custom_location: string
+  is_active: boolean
+  requires_approval: boolean
+  max_bookings_per_day: number | null
+  confirmation_message: string
+  redirect_url: string
+  color: string
+  created_at: string
+  updated_at: string
+}
+
+export interface RecruiterMeetingTypeInput {
+  name: string
+  slug?: string
+  category: RecruiterMeetingCategory
+  description?: string
+  duration_minutes?: number
+  buffer_before_minutes?: number
+  buffer_after_minutes?: number
+  location_type?: RecruiterMeetingLocationType
+  custom_location?: string
+  is_active?: boolean
+  requires_approval?: boolean
+  max_bookings_per_day?: number | null
+  confirmation_message?: string
+  redirect_url?: string
+  color?: string
+}
+
+export interface RecruiterMeetingTypePublic {
+  id: string
+  owner_name: string
+  owner_avatar: string | null
+  name: string
+  slug: string
+  category: RecruiterMeetingCategory
+  description: string
+  duration_minutes: number
+  location_type: RecruiterMeetingLocationType
+  location_type_display: string
+  color: string
+}
+
+export interface RecruiterBooking {
+  id: string
+  booking_type?: 'booking' | 'interview'
+  meeting_type: string
+  meeting_type_name: string
+  meeting_type_category: RecruiterMeetingCategory
+  organizer: string
+  organizer_name: string
+  organizer_email: string
+  attendee_user: string | null
+  attendee_name: string
+  attendee_email: string
+  attendee_phone: string
+  attendee_company: string
+  title: string
+  description: string
+  scheduled_at: string
+  end_time: string
+  duration_minutes: number
+  timezone: string
+  location_type: RecruiterMeetingLocationType
+  location_type_display: string
+  meeting_url: string
+  location: string
+  status: RecruiterBookingStatus
+  status_display: string
+  is_upcoming: boolean
+  is_past: boolean
+  notes: string
+  source: 'public' | 'manual' | 'invite' | 'application'
+  created_at: string
+  updated_at: string
+  cancelled_at?: string | null
+  cancellation_reason?: string
+  // Interview-specific fields (when booking_type === 'interview')
+  job_title?: string
+  job_id?: string
+  application_id?: string
+  stage_id?: string
+}
+
+export interface RecruiterBookingInput {
+  meeting_type: string
+  attendee_name: string
+  attendee_email: string
+  attendee_phone?: string
+  attendee_company?: string
+  scheduled_at: string
+  timezone?: string
+}
+
+export interface RecruiterPublicBookingPage {
+  user: {
+    id: string
+    booking_slug: string
+    name: string
+    email: string
+    avatar: string | null
+    professional_title: string | null
+    bio: string | null
+  }
+  meeting_types: RecruiterMeetingTypePublic[]
+}
+
+export interface RecruiterAvailabilitySlot {
+  start: string
+  end: string
+}
+
+export interface RecruiterMeetingAvailability {
+  meeting_type: RecruiterMeetingTypePublic
+  available_slots: RecruiterAvailabilitySlot[]
+  timezone: string
+}
+
+// Candidate Invitation (for booking-triggered invitations)
+export interface CandidateInvitation {
+  id: number
+  token: string
+  email: string
+  name: string
+  created_at: string
+  expires_at: string
+  used_at: string | null
+  is_valid: boolean
+  is_expired: boolean
+  signup_url: string
+  booking_info: {
+    id: string
+    meeting_type: string | null
+    scheduled_at: string | null
+    status: RecruiterBookingStatus
+  } | null
 }

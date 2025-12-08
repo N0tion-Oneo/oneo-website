@@ -18,7 +18,7 @@ from candidates.services import log_logged_in
 
 logger = logging.getLogger(__name__)
 
-from .models import ClientInvitation, RecruiterInvitation
+from .models import ClientInvitation, RecruiterInvitation, CandidateInvitation
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
@@ -37,6 +37,9 @@ from .serializers import (
     RecruiterInvitationResponseSerializer,
     RecruiterInvitationListSerializer,
     RecruiterSignupSerializer,
+    CandidateInvitationValidateSerializer,
+    CandidateInvitationSignupSerializer,
+    CandidateInvitationListSerializer,
 )
 
 
@@ -999,3 +1002,283 @@ def signup_with_recruiter_invitation(request, token):
         return set_auth_cookies(response, tokens)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# =============================================================================
+# Candidate Invitation Endpoints (for booking-triggered invitations)
+# =============================================================================
+
+@extend_schema(
+    responses={
+        200: CandidateInvitationValidateSerializer,
+        400: OpenApiResponse(description="Invalid or expired invitation"),
+        404: OpenApiResponse(description="Invitation not found"),
+    },
+    tags=['Candidate Invitations'],
+)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def validate_candidate_invitation(request, token):
+    """
+    Validate a candidate invitation token.
+
+    Returns whether the invitation is valid, the associated email/name,
+    and information about the upcoming meeting.
+    Used by frontend to check token before showing signup form.
+    """
+    try:
+        invitation = CandidateInvitation.objects.select_related('booking', 'booking__meeting_type', 'created_by').get(token=token)
+    except CandidateInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if not invitation.is_valid:
+        return Response(
+            {'error': 'This invitation has expired or already been used'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Include booking info if available
+    booking_info = None
+    if invitation.booking:
+        booking = invitation.booking
+        booking_info = {
+            'meeting_type': booking.meeting_type.name if booking.meeting_type else None,
+            'scheduled_at': booking.scheduled_at.isoformat(),
+            'duration_minutes': booking.duration_minutes,
+            'organizer_name': booking.organizer.full_name if booking.organizer else None,
+            'attendee_phone': booking.attendee_phone or None,
+        }
+
+    return Response({
+        'valid': True,
+        'email': invitation.email,
+        'name': invitation.name,
+        'booking_info': booking_info,
+    }, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    request=CandidateInvitationSignupSerializer,
+    responses={
+        201: OpenApiResponse(description="Candidate user created successfully"),
+        400: OpenApiResponse(description="Invalid data or invitation"),
+        404: OpenApiResponse(description="Invitation not found"),
+    },
+    tags=['Candidate Invitations'],
+)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signup_with_candidate_invitation(request, token):
+    """
+    Sign up as a new CANDIDATE user using a booking invitation token.
+
+    Creates a new user with CANDIDATE role, creates their candidate profile,
+    and links them to the booking that triggered this invitation.
+    Returns JWT tokens for immediate authentication.
+    """
+    from candidates.models import CandidateProfile
+
+    try:
+        invitation = CandidateInvitation.objects.select_related('booking').get(token=token)
+    except CandidateInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if not invitation.is_valid:
+        return Response(
+            {'error': 'This invitation has expired or already been used'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    serializer = CandidateInvitationSignupSerializer(data=request.data)
+    if serializer.is_valid():
+        # Create the user with CANDIDATE role
+        user = serializer.save()
+
+        # Create candidate profile
+        candidate_profile = CandidateProfile.objects.create(user=user)
+
+        # Mark invitation as used
+        invitation.used_at = timezone.now()
+        invitation.used_by = user
+        invitation.save()
+
+        # Link booking to the new user and candidate profile
+        if invitation.booking:
+            invitation.booking.attendee_user = user
+            invitation.booking.candidate_profile = candidate_profile
+            invitation.booking.save(update_fields=['attendee_user', 'candidate_profile'])
+
+        # Send welcome notification
+        try:
+            NotificationService.send_welcome_notification(user)
+        except Exception as e:
+            logger.error(f"Failed to send welcome notification: {e}")
+
+        # Generate tokens
+        tokens = get_tokens_for_user(user)
+
+        response_data = {
+            'message': 'Registration successful. Welcome! Please complete your profile before your meeting.',
+            'user': UserProfileSerializer(user).data,
+            'access': tokens['access'],
+            'refresh': tokens['refresh'],
+            'redirect_to': '/dashboard/profile',  # Suggest profile completion
+        }
+
+        if invitation.booking:
+            response_data['booking'] = {
+                'id': str(invitation.booking.id),
+                'scheduled_at': invitation.booking.scheduled_at.isoformat(),
+                'meeting_type': invitation.booking.meeting_type.name if invitation.booking.meeting_type else None,
+            }
+
+        response = Response(response_data, status=status.HTTP_201_CREATED)
+        return set_auth_cookies(response, tokens)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    responses={
+        200: CandidateInvitationListSerializer(many=True),
+        403: OpenApiResponse(description="Permission denied"),
+    },
+    tags=['Candidate Invitations'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_candidate_invitations(request):
+    """
+    List all candidate invitations created by the current user.
+
+    Only Admin or Recruiter users can view candidate invitations.
+    Returns invitations ordered by creation date (newest first).
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can view candidate invitations'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    invitations = CandidateInvitation.objects.filter(
+        created_by=request.user
+    ).select_related('booking', 'booking__meeting_type').order_by('-created_at')
+
+    serializer = CandidateInvitationListSerializer(invitations, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    responses={
+        200: OpenApiResponse(description="Invitation resent successfully"),
+        403: OpenApiResponse(description="Permission denied"),
+        404: OpenApiResponse(description="Invitation not found"),
+        400: OpenApiResponse(description="Cannot resend - invitation already used or expired"),
+    },
+    tags=['Candidate Invitations'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def resend_candidate_invitation(request, token):
+    """
+    Resend a candidate invitation email.
+
+    Extends the expiry date and sends a new email notification.
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can resend invitations'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        invitation = CandidateInvitation.objects.select_related('booking').get(
+            token=token,
+            created_by=request.user
+        )
+    except CandidateInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if invitation.used_at:
+        return Response(
+            {'error': 'This invitation has already been used'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Extend expiry by 7 days from now
+    invitation.expires_at = timezone.now() + timedelta(days=7)
+    invitation.save(update_fields=['expires_at'])
+
+    # Build signup URL
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+    signup_url = f"{frontend_url}/signup/candidate/{invitation.token}"
+
+    # Send notification
+    try:
+        booking = invitation.booking
+        if booking:
+            NotificationService.notify_candidate_booking_invite(
+                email=invitation.email,
+                name=invitation.name,
+                recruiter=booking.organizer,
+                meeting_type_name=booking.meeting_type.name if booking.meeting_type else 'Meeting',
+                scheduled_at=booking.scheduled_at,
+                duration_minutes=booking.duration_minutes,
+                signup_url=signup_url,
+            )
+        else:
+            # No booking associated, send a simpler notification
+            logger.warning(f"Resending invitation {invitation.token} without associated booking")
+    except Exception as e:
+        logger.error(f"Failed to resend candidate invitation email: {e}")
+
+    return Response({
+        'message': 'Invitation resent successfully',
+        'expires_at': invitation.expires_at,
+    }, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    responses={
+        204: OpenApiResponse(description="Invitation deleted successfully"),
+        403: OpenApiResponse(description="Permission denied"),
+        404: OpenApiResponse(description="Invitation not found"),
+    },
+    tags=['Candidate Invitations'],
+)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_candidate_invitation(request, token):
+    """
+    Delete a candidate invitation.
+
+    This removes the invitation but does not affect any existing booking.
+    """
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can delete invitations'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        invitation = CandidateInvitation.objects.get(
+            token=token,
+            created_by=request.user
+        )
+    except CandidateInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    invitation.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)

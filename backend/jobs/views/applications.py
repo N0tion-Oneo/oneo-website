@@ -1,5 +1,6 @@
 import logging
 
+from django.db import models
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -256,7 +257,11 @@ def list_job_applications(request, job_id):
     # Filter by stage
     stage = request.query_params.get('stage')
     if stage:
-        applications = applications.filter(current_stage_order=int(stage))
+        stage_int = int(stage)
+        if stage_int == 0:
+            applications = applications.filter(current_stage__isnull=True)
+        else:
+            applications = applications.filter(current_stage__order=stage_int)
 
     serializer = ApplicationListSerializer(applications, many=True)
     return Response(serializer.data)
@@ -632,22 +637,29 @@ def move_to_stage(request, application_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Validate stage exists
-    job_stages = application.job.interview_stages or []
-    max_stage = max((s.get('order', 0) for s in job_stages), default=0)
-
-    if stage_order < 0 or stage_order > max_stage:
-        return Response(
-            {'error': f'Invalid stage_order. Must be between 0 and {max_stage}'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    # Validate stage exists (0 = Applied, otherwise must match a template)
+    stage_template = None
+    if stage_order > 0:
+        stage_template = InterviewStageTemplate.objects.filter(
+            job=application.job,
+            order=stage_order
+        ).first()
+        if not stage_template:
+            max_stage = InterviewStageTemplate.objects.filter(
+                job=application.job
+            ).aggregate(max_order=models.Max('order'))['max_order'] or 0
+            return Response(
+                {'error': f'Invalid stage_order. Must be between 0 and {max_stage}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     # Capture previous state before change
     previous_status = application.status
     previous_stage = application.current_stage_order
 
-    application.current_stage_order = stage_order
-    if stage_order > 0:
+    # Update current_stage FK (None = Applied)
+    application.current_stage = stage_template
+    if stage_template:
         application.status = ApplicationStatus.IN_PROGRESS
     else:
         application.status = ApplicationStatus.APPLIED
@@ -659,12 +671,7 @@ def move_to_stage(request, application_id):
 
     application.save()
 
-    # Get stage name for the activity log
-    stage_name = ''
-    for stage in job_stages:
-        if stage.get('order') == stage_order:
-            stage_name = stage.get('name', '')
-            break
+    stage_name = stage_template.name if stage_template else 'Applied'
 
     # Log the activity
     log_activity(

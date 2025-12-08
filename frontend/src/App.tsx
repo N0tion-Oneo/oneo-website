@@ -8,6 +8,7 @@ import {
   ClientSignupPage,
   CompanySignupPage,
   RecruiterSignupPage,
+  CandidateSignupPage,
   DashboardPage,
   ProfilePage,
   InvitationsPage,
@@ -40,8 +41,9 @@ import {
   ProfileSettingsPage,
   CalendarSettingsPage,
   RecruiterProfilePage,
+  BookingManagementPage,
 } from '@/pages';
-import { BookingPage } from '@/pages/booking';
+import { BookingPage, RecruiterBookingPage } from '@/pages/booking';
 import { CandidateDashboardLayout, SettingsLayout } from '@/layouts';
 import './App.css';
 
@@ -80,6 +82,9 @@ function App() {
         {/* Recruiter signup via invitation link - no auth required */}
         <Route path="/signup/recruiter/:token" element={<RecruiterSignupPage />} />
 
+        {/* Candidate signup via booking invitation link - no auth required */}
+        <Route path="/signup/candidate/:token" element={<CandidateSignupPage />} />
+
         {/* Protected dashboard routes with sidebar layout */}
         <Route
           path="/dashboard"
@@ -97,11 +102,13 @@ function App() {
           <Route path="jobs/:jobId" element={<EditJobPage />} />
           <Route path="jobs/:jobId/applications" element={<JobApplicationsPage />} />
           <Route path="applications" element={<ApplicationsPage />} />
+          <Route path="bookings" element={<BookingManagementPage />} />
           {/* Settings routes with sidebar */}
           <Route path="settings" element={<SettingsLayout />}>
             <Route index element={<Navigate to="profile" replace />} />
             <Route path="profile" element={<ProfileSettingsPage />} />
             <Route path="recruiter-profile" element={<RecruiterProfilePage />} />
+            <Route path="bookings" element={<BookingManagementPage />} />
             <Route path="calendar" element={<CalendarSettingsPage />} />
             <Route path="invitations" element={<InvitationsPage />} />
             <Route path="notifications" element={<NotificationsAdminPage />} />
@@ -134,8 +141,12 @@ function App() {
         <Route path="/jobs" element={<JobsListingPage />} />
         <Route path="/jobs/:slug" element={<JobDetailPage />} />
 
-        {/* Public booking page (Calendly-like self-scheduling) */}
+        {/* Public booking page (Calendly-like self-scheduling for interviews) */}
         <Route path="/book/:token" element={<BookingPage />} />
+
+        {/* Public recruiter booking pages (for sales/recruitment meetings) */}
+        <Route path="/meet/:bookingSlug" element={<RecruiterBookingPage />} />
+        <Route path="/meet/:bookingSlug/:meetingTypeSlug" element={<RecruiterBookingPage />} />
 
         {/* OAuth callback routes (for calendar integration) */}
         <Route

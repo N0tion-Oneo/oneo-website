@@ -37,4 +37,11 @@ urlpatterns = [
     path('recruiter-invitations/create/', views.create_recruiter_invitation, name='create_recruiter_invitation'),
     path('recruiter-invitations/<uuid:token>/validate/', views.validate_recruiter_invitation, name='validate_recruiter_invitation'),
     path('recruiter-invitations/<uuid:token>/signup/', views.signup_with_recruiter_invitation, name='signup_with_recruiter_invitation'),
+
+    # Candidate Invitations (auto-created from bookings)
+    path('candidate-invitations/', views.list_candidate_invitations, name='list_candidate_invitations'),
+    path('candidate-invitations/<uuid:token>/validate/', views.validate_candidate_invitation, name='validate_candidate_invitation'),
+    path('candidate-invitations/<uuid:token>/signup/', views.signup_with_candidate_invitation, name='signup_with_candidate_invitation'),
+    path('candidate-invitations/<uuid:token>/resend/', views.resend_candidate_invitation, name='resend_candidate_invitation'),
+    path('candidate-invitations/<uuid:token>/delete/', views.delete_candidate_invitation, name='delete_candidate_invitation'),
 ]

@@ -20,6 +20,7 @@ class NotificationType(models.TextChoices):
     TEAM_INVITE = 'team_invite', 'Team Member Invitation'
     CLIENT_INVITE = 'client_invite', 'Client Invitation'
     COMPANY_MEMBER_INVITE = 'company_member_invite', 'Company Member Invitation'
+    CANDIDATE_BOOKING_INVITE = 'candidate_booking_invite', 'Candidate Booking Invitation'
 
     # =========================================================================
     # Stage/Interview

@@ -58,6 +58,9 @@ class InterviewStageTemplateSerializer(serializers.ModelSerializer):
 
 class InterviewStageTemplateCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating interview stage templates."""
+    # Optional id for bulk updates - allows updating existing templates by ID
+    id = serializers.UUIDField(required=False)
+
     # Accept default_interviewer_id from frontend and map to default_interviewer
     default_interviewer_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
@@ -69,6 +72,7 @@ class InterviewStageTemplateCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterviewStageTemplate
         fields = [
+            'id',
             'stage_type',
             'name',
             'order',

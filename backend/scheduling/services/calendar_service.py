@@ -20,6 +20,7 @@ import uuid
 from scheduling.models import (
     UserCalendarConnection,
     CalendarProvider,
+    Booking,
 )
 # ApplicationStageInstance stays in jobs app
 from jobs.models import ApplicationStageInstance
@@ -1338,3 +1339,220 @@ Interview Details:
             "event_id": result["id"],
             "meeting_link": meeting_link,
         }
+
+    # =========================================================================
+    # Booking Calendar Events (for public booking system)
+    # =========================================================================
+
+    @classmethod
+    def create_booking_event(
+        cls,
+        booking: Booking,
+        attendee_email: str = None,
+        attendee_name: str = None,
+    ) -> Dict[str, Any]:
+        """
+        Create a calendar event for a booking with auto-generated meeting link.
+
+        Args:
+            booking: The Booking object to create an event for
+            attendee_email: Email address of the person who booked
+            attendee_name: Name of the person who booked
+
+        Returns:
+            Dict with event details including:
+            - event_id: The calendar event ID
+            - meeting_link: Auto-generated meeting link
+            - provider: The calendar provider used
+        """
+        # Get organizer's calendar connection
+        connection = UserCalendarConnection.objects.filter(
+            user=booking.organizer,
+            is_active=True,
+        ).first()
+
+        if not connection:
+            # No calendar connected, can't create event
+            return {"event_id": "", "meeting_link": "", "provider": ""}
+
+        access_token = cls._get_valid_token(connection)
+
+        # Build event details
+        meeting_type = booking.meeting_type
+        start_time = booking.scheduled_at
+        end_time = start_time + timedelta(minutes=booking.duration_minutes)
+
+        # Use attendee name or fall back to email
+        guest_name = attendee_name or attendee_email or "Guest"
+
+        title = f"{meeting_type.name}: {guest_name}"
+        description = f"""
+Booking Details:
+- Meeting Type: {meeting_type.name}
+- Guest: {guest_name}
+{f"- Email: {attendee_email}" if attendee_email else ""}
+- Duration: {booking.duration_minutes} minutes
+{f"- Notes: {booking.notes}" if booking.notes else ""}
+""".strip()
+
+        attendees = [attendee_email] if attendee_email else []
+
+        # Create event with auto-generated video link
+        if connection.provider == CalendarProvider.GOOGLE:
+            result = cls._create_google_event_with_meet(
+                access_token=access_token,
+                calendar_id=connection.calendar_id or "primary",
+                title=title,
+                description=description,
+                start_time=start_time,
+                end_time=end_time,
+                attendees=attendees,
+            )
+        else:
+            result = cls._create_microsoft_event_with_teams(
+                access_token=access_token,
+                title=title,
+                description=description,
+                start_time=start_time,
+                end_time=end_time,
+                attendees=attendees,
+            )
+
+        # Update booking with calendar info
+        booking.calendar_event_id = result["event_id"]
+        booking.calendar_provider = connection.provider
+        booking.meeting_url = result["meeting_link"]
+        booking.save(update_fields=["calendar_event_id", "calendar_provider", "meeting_url"])
+
+        return {
+            "event_id": result["event_id"],
+            "meeting_link": result["meeting_link"],
+            "provider": connection.provider,
+        }
+
+    @classmethod
+    def update_booking_event(
+        cls,
+        booking: Booking,
+        attendee_email: str = None,
+        attendee_name: str = None,
+    ) -> bool:
+        """
+        Update an existing calendar event for a booking.
+
+        Args:
+            booking: The Booking object with updated details
+            attendee_email: Email address of the person who booked
+            attendee_name: Name of the person who booked
+
+        Returns:
+            True if update was successful
+        """
+        if not booking.calendar_event_id:
+            return False
+
+        # Get organizer's calendar connection matching the provider
+        connection = UserCalendarConnection.objects.filter(
+            user=booking.organizer,
+            provider=booking.calendar_provider,
+            is_active=True,
+        ).first()
+
+        if not connection:
+            return False
+
+        access_token = cls._get_valid_token(connection)
+
+        meeting_type = booking.meeting_type
+        start_time = booking.scheduled_at
+        end_time = start_time + timedelta(minutes=booking.duration_minutes)
+
+        guest_name = attendee_name or attendee_email or "Guest"
+
+        title = f"{meeting_type.name}: {guest_name}"
+        description = f"""
+Booking Details:
+- Meeting Type: {meeting_type.name}
+- Guest: {guest_name}
+{f"- Email: {attendee_email}" if attendee_email else ""}
+- Duration: {booking.duration_minutes} minutes
+{f"- Notes: {booking.notes}" if booking.notes else ""}
+""".strip()
+
+        attendees = [attendee_email] if attendee_email else []
+
+        if connection.provider == CalendarProvider.GOOGLE:
+            return cls._update_google_event(
+                access_token=access_token,
+                calendar_id=connection.calendar_id or "primary",
+                event_id=booking.calendar_event_id,
+                title=title,
+                description=description,
+                start_time=start_time,
+                end_time=end_time,
+                meeting_link=booking.meeting_url,
+                attendees=attendees,
+            )
+        else:
+            return cls._update_microsoft_event(
+                access_token=access_token,
+                event_id=booking.calendar_event_id,
+                title=title,
+                description=description,
+                start_time=start_time,
+                end_time=end_time,
+                meeting_link=booking.meeting_url,
+                attendees=attendees,
+            )
+
+    @classmethod
+    def delete_booking_event(cls, booking: Booking) -> bool:
+        """
+        Delete a calendar event for a booking.
+
+        Args:
+            booking: The Booking object with the event to delete
+
+        Returns:
+            True if deletion was successful
+        """
+        if not booking.calendar_event_id:
+            return True
+
+        # Get organizer's calendar connection matching the provider
+        connection = UserCalendarConnection.objects.filter(
+            user=booking.organizer,
+            provider=booking.calendar_provider,
+            is_active=True,
+        ).first()
+
+        if not connection:
+            return False
+
+        access_token = cls._get_valid_token(connection)
+
+        if connection.provider == CalendarProvider.GOOGLE:
+            response = requests.delete(
+                f"{cls.GOOGLE_CALENDAR_API}/calendars/{connection.calendar_id or 'primary'}/events/{booking.calendar_event_id}",
+                headers={"Authorization": f"Bearer {access_token}"},
+                params={"sendUpdates": "all"},
+            )
+
+            if response.status_code in (200, 204, 404):
+                booking.calendar_event_id = ""
+                booking.calendar_provider = ""
+                booking.save(update_fields=["calendar_event_id", "calendar_provider"])
+                return True
+        else:
+            response = requests.delete(
+                f"{cls.MICROSOFT_GRAPH_API}/me/events/{booking.calendar_event_id}",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+
+            if response.status_code in (200, 204, 404):
+                booking.calendar_event_id = ""
+                booking.calendar_provider = ""
+                booking.save(update_fields=["calendar_event_id", "calendar_provider"])
+                return True
+
+        return False

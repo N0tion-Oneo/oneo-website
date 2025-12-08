@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.db import transaction
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
@@ -157,7 +158,11 @@ def stage_template_detail(request, job_id, template_id):
 def bulk_update_stage_templates(request, job_id):
     """
     Bulk create/update stage templates for a job.
-    Replaces all existing templates with the provided list.
+    Protects templates with active interviews from deletion.
+
+    Uses a two-phase approach to avoid unique constraint violations on (job_id, order):
+    1. Set all remaining templates to negative orders (freeing positive slots)
+    2. Update/create templates with final positive orders
     """
     try:
         job = Job.objects.get(id=job_id)
@@ -178,20 +183,108 @@ def bulk_update_stage_templates(request, job_id):
 
     serializer = InterviewStageTemplateBulkSerializer(data=request.data)
     if serializer.is_valid():
-        # Delete existing templates
-        InterviewStageTemplate.objects.filter(job=job).delete()
-
-        # Create new templates
         stages_data = serializer.validated_data['stages']
-        created_templates = []
-        for i, stage_data in enumerate(stages_data):
-            if 'order' not in stage_data:
-                stage_data['order'] = i + 1
-            template = InterviewStageTemplate.objects.create(job=job, **stage_data)
-            created_templates.append(template)
+
+        # Get existing templates indexed by ID (as string for consistent comparison)
+        existing_templates = {str(t.id): t for t in InterviewStageTemplate.objects.filter(job=job)}
+        incoming_ids = {str(s.get('id')) for s in stages_data if s.get('id')}
+
+        # Find templates that would be deleted (not in incoming data)
+        templates_to_delete_ids = set(existing_templates.keys()) - incoming_ids
+        templates_to_delete = [existing_templates[tid] for tid in templates_to_delete_ids]
+
+        # Check for active/scheduled interviews on templates being deleted
+        blocked_templates = []
+        for template in templates_to_delete:
+            active_count = ApplicationStageInstance.objects.filter(
+                stage_template=template,
+                status__in=[
+                    StageInstanceStatus.SCHEDULED,
+                    StageInstanceStatus.IN_PROGRESS,
+                    StageInstanceStatus.AWAITING_SUBMISSION,
+                ]
+            ).count()
+            if active_count > 0:
+                blocked_templates.append({
+                    'name': template.name,
+                    'active_interviews': active_count
+                })
+
+        if blocked_templates:
+            return Response({
+                'error': 'Cannot delete stages with scheduled interviews',
+                'blocked_stages': blocked_templates,
+                'message': 'Please complete or cancel scheduled interviews before removing these stages.'
+            }, status=status.HTTP_409_CONFLICT)
+
+        # Use a transaction to ensure atomicity
+        with transaction.atomic():
+            # Step 1: Delete templates that are safe to delete
+            for template in templates_to_delete:
+                template.delete()
+
+            # Step 2: Set all remaining templates to high temporary orders
+            # This frees up the low order slots (1, 2, 3...) and avoids unique constraint violations
+            # We use 10000 + index to ensure uniqueness among temporary values
+            remaining_templates = list(InterviewStageTemplate.objects.filter(job=job))
+            if remaining_templates:
+                for i, template in enumerate(remaining_templates):
+                    template.order = 10000 + i
+                InterviewStageTemplate.objects.bulk_update(remaining_templates, ['order'])
+
+            # Rebuild the lookup after deletion
+            existing_templates = {str(t.id): t for t in remaining_templates}
+
+            # Step 3: Process stages - collect updates and new templates
+            templates_to_update = []
+            new_templates_data = []
+
+            for i, stage_data in enumerate(stages_data):
+                new_order = i + 1
+                template_id = stage_data.pop('id', None)
+                template_id_str = str(template_id) if template_id else None
+
+                if template_id_str and template_id_str in existing_templates:
+                    # Update existing template
+                    template = existing_templates[template_id_str]
+                    for key, value in stage_data.items():
+                        setattr(template, key, value)
+                    template.order = new_order
+                    templates_to_update.append(template)
+                else:
+                    # Queue for creation (after updates to avoid order conflicts)
+                    stage_data['order'] = new_order
+                    new_templates_data.append(stage_data)
+
+            # Step 4: Bulk update existing templates with final orders
+            if templates_to_update:
+                update_fields = [
+                    'stage_type', 'name', 'order', 'description', 'default_duration_minutes',
+                    'default_interviewer', 'assessment_instructions', 'assessment_instructions_file',
+                    'assessment_external_url', 'assessment_provider_name', 'deadline_days',
+                    'use_company_address', 'custom_location'
+                ]
+                InterviewStageTemplate.objects.bulk_update(templates_to_update, update_fields)
+
+            # Step 5: Create new templates (order slots are now free)
+            new_templates = []
+            for data in new_templates_data:
+                template = InterviewStageTemplate.objects.create(job=job, **data)
+                new_templates.append(template)
+
+            # Note: Applications automatically stay with their stage because they use
+            # a FK to InterviewStageTemplate (current_stage), not an order number.
+            # When stages are reordered, applications remain associated with the same
+            # template and get the updated order via the FK relationship.
+
+            # Combine and sort results by order
+            result_templates = sorted(
+                templates_to_update + new_templates,
+                key=lambda t: t.order
+            )
 
         return Response(
-            InterviewStageTemplateSerializer(created_templates, many=True).data,
+            InterviewStageTemplateSerializer(result_templates, many=True).data,
             status=status.HTTP_200_OK
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -916,10 +1009,10 @@ def move_to_stage_template(request, application_id, template_id):
 
     # Get the previous stage instance (if any)
     previous_stage_instance = None
-    if application.current_stage_order:
+    if application.current_stage:
         previous_stage_instance = ApplicationStageInstance.objects.filter(
             application=application,
-            stage_template__order=application.current_stage_order
+            stage_template=application.current_stage
         ).first()
 
     # Get or create stage instance
@@ -930,8 +1023,8 @@ def move_to_stage_template(request, application_id, template_id):
     )
 
     # Update application's current stage
-    previous_stage = application.current_stage_order
-    application.current_stage_order = template.order
+    previous_stage = application.current_stage_order  # property returns order from FK
+    application.current_stage = template
     application.status = ApplicationStatus.IN_PROGRESS
     application.save()
 

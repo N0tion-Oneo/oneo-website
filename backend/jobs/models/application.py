@@ -74,9 +74,13 @@ class Application(models.Model):
         choices=ApplicationStatus.choices,
         default=ApplicationStatus.APPLIED,
     )
-    current_stage_order = models.PositiveIntegerField(
-        default=0,
-        help_text='0=applied, 1+=corresponds to job.interview_stages[].order',
+    current_stage = models.ForeignKey(
+        'jobs.InterviewStageTemplate',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='applications_at_stage',
+        help_text='Current interview stage (null = Applied/not yet in pipeline)',
     )
     stage_notes = models.JSONField(
         default=dict,
@@ -177,12 +181,15 @@ class Application(models.Model):
         self.save()
 
     @property
+    def current_stage_order(self):
+        """Get the order of the current stage (0 if not in pipeline)."""
+        if self.current_stage:
+            return self.current_stage.order
+        return 0
+
+    @property
     def current_stage_name(self):
         """Get the name of the current interview stage."""
-        if self.current_stage_order == 0:
-            return 'Applied'
-        job_stages = self.job.interview_stages or []
-        for stage in job_stages:
-            if stage.get('order') == self.current_stage_order:
-                return stage.get('name', f'Stage {self.current_stage_order}')
-        return f'Stage {self.current_stage_order}'
+        if self.current_stage:
+            return self.current_stage.name
+        return 'Applied'

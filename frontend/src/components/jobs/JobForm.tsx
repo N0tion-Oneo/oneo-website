@@ -12,7 +12,7 @@ import {
   StageTypeLabels,
 } from '@/types'
 import type { Job, JobInput, BenefitCategory, InterviewStage, ApplicationQuestionInput, InterviewStageTemplateInput } from '@/types'
-import { ChevronLeft, ChevronRight, Loader2, Plus, X, GripVertical, Trash2, ExternalLink, FileText } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, Plus, X, GripVertical, Trash2, ExternalLink, FileText, AlertTriangle, Calendar } from 'lucide-react'
 import QuestionBuilder from './QuestionBuilder'
 import StageTypeSelector from './StageTypeSelector'
 import { StageList } from './StageConfigForm'
@@ -147,13 +147,14 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
 
   const { createJob, isCreating, error: createError } = useCreateJob()
   const { updateJob, isUpdating, error: updateError } = useUpdateJob()
-  const { bulkUpdate: bulkUpdateStages, isUpdating: isUpdatingStages, error: stagesError } = useBulkUpdateStageTemplates()
+  const { bulkUpdate: bulkUpdateStages, isUpdating: isUpdatingStages, error: stagesError, blockedStages, clearError: clearStagesError } = useBulkUpdateStageTemplates()
 
   // Populate stageTemplates from server when editing
   useEffect(() => {
     if (isEditing && existingStageTemplates && existingStageTemplates.length > 0) {
-      // Map server response to input format
+      // Map server response to input format, including id for updates
       const mapped: InterviewStageTemplateInput[] = existingStageTemplates.map((t) => ({
+        id: t.id,  // Include id for bulk update to preserve existing templates
         stage_type: t.stage_type,
         name: t.name,
         order: t.order,
@@ -346,10 +347,41 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
       // Save typed stage templates (new system)
       if (stageTemplates.length > 0) {
         try {
+          console.log('Saving stage templates:', stageTemplates.map(s => ({ id: s.id, name: s.name })))
           await bulkUpdateStages(result.id, stageTemplates)
+          console.log('Stage templates saved successfully')
         } catch (stageErr) {
-          console.error('Error saving stage templates:', stageErr)
-          // Continue even if stages fail - job was saved
+          const axiosError = stageErr as { response?: { status?: number } }
+          console.error('Stage update error:', axiosError.response?.status, stageErr)
+
+          // If 409 conflict (blocked stages), stay on form to show the warning
+          if (axiosError.response?.status === 409) {
+            // Restore stages from server (undo the local deletion)
+            if (existingStageTemplates && existingStageTemplates.length > 0) {
+              const restored: InterviewStageTemplateInput[] = existingStageTemplates.map((t) => ({
+                id: t.id,
+                stage_type: t.stage_type,
+                name: t.name,
+                order: t.order,
+                description: t.description || undefined,
+                default_duration_minutes: t.default_duration_minutes,
+                default_interviewer_id: t.default_interviewer_id || null,
+                assessment_instructions: t.assessment_instructions || undefined,
+                assessment_external_url: t.assessment_external_url || undefined,
+                assessment_provider_name: t.assessment_provider_name || undefined,
+                deadline_days: t.deadline_days,
+                use_company_address: t.use_company_address,
+                custom_location: t.custom_location || undefined,
+              }))
+              setStageTemplates(restored)
+            }
+            // Scroll to top to show the warning
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+            return  // Don't navigate away
+          }
+          // For other errors, stay on form and show error
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return  // Don't navigate away - let the hook's error state show
         }
       }
 
@@ -384,21 +416,27 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
               <button
                 type="button"
                 onClick={() => setCurrentStep(step.id)}
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-medium transition-colors ${
-                  currentStep >= step.id
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-500'
-                }`}
+                className={`flex items-center gap-2 group cursor-pointer`}
               >
-                {step.id}
+                <span
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-medium transition-colors ${
+                    currentStep >= step.id
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
+                  }`}
+                >
+                  {step.id}
+                </span>
+                <span
+                  className={`text-[13px] transition-colors ${
+                    currentStep >= step.id
+                      ? 'text-gray-900 font-medium'
+                      : 'text-gray-500 group-hover:text-gray-700'
+                  }`}
+                >
+                  {step.title}
+                </span>
               </button>
-              <span
-                className={`ml-2 text-[13px] ${
-                  currentStep >= step.id ? 'text-gray-900 font-medium' : 'text-gray-500'
-                }`}
-              >
-                {step.title}
-              </span>
               {index < steps.length - 1 && (
                 <div
                   className={`w-12 mx-4 h-px ${
@@ -415,6 +453,41 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
           <p className="text-[13px] text-red-600">{error}</p>
+        </div>
+      )}
+
+      {/* Blocked Stages Warning - shown when trying to delete stages with scheduled interviews */}
+      {blockedStages && blockedStages.length > 0 && (
+        <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-[14px] font-medium text-amber-800 mb-1">
+                Cannot remove stages with scheduled interviews
+              </h4>
+              <p className="text-[13px] text-amber-700 mb-3">
+                The following stages have active interviews that need to be completed or cancelled first:
+              </p>
+              <ul className="space-y-1.5 mb-3">
+                {blockedStages.map((stage, index) => (
+                  <li key={index} className="flex items-center gap-2 text-[13px] text-amber-800">
+                    <Calendar className="w-4 h-4 text-amber-600" />
+                    <span className="font-medium">{stage.name}</span>
+                    <span className="text-amber-600">
+                      ({stage.active_interviews} scheduled interview{stage.active_interviews !== 1 ? 's' : ''})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={clearStagesError}
+                className="text-[12px] text-amber-700 hover:text-amber-900 underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

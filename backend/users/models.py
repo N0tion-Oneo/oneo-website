@@ -58,6 +58,14 @@ class RecruiterProfile(models.Model):
         related_name='recruiter_profile',
     )
 
+    # Public booking URL slug (e.g., /meet/josh-cowan/)
+    booking_slug = models.SlugField(
+        max_length=100,
+        unique=True,
+        blank=True,
+        help_text='URL slug for public booking page (auto-generated from name)',
+    )
+
     # Professional info
     professional_title = models.CharField(
         max_length=100,
@@ -119,3 +127,20 @@ class RecruiterProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.full_name} - {self.professional_title or 'Recruiter'}"
+
+    def save(self, *args, **kwargs):
+        # Auto-generate booking_slug from user's full name if not set
+        if not self.booking_slug:
+            from django.utils.text import slugify
+            base_slug = slugify(self.user.full_name)
+            if not base_slug:
+                base_slug = slugify(self.user.email.split('@')[0])
+
+            slug = base_slug
+            counter = 1
+            while RecruiterProfile.objects.filter(booking_slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.booking_slug = slug
+
+        super().save(*args, **kwargs)

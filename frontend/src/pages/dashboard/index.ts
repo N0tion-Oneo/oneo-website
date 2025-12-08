@@ -30,3 +30,6 @@ export { ProfileSettingsPage, CalendarSettingsPage } from './settings';
 
 // Recruiter Profile
 export { default as RecruiterProfilePage } from './RecruiterProfilePage';
+
+// Booking Management
+export { default as BookingManagementPage } from './BookingManagementPage';

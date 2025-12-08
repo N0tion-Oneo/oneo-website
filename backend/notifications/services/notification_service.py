@@ -1616,6 +1616,53 @@ class NotificationService:
 
         return None  # No in-app notification for non-users
 
+    @classmethod
+    def notify_candidate_booking_invite(
+        cls,
+        email: str,
+        name: str,
+        recruiter,
+        meeting_type_name: str,
+        scheduled_at,
+        duration_minutes: int,
+        signup_url: str,
+    ) -> Optional[Notification]:
+        """
+        Send candidate booking invitation email.
+        Sent to someone who booked a meeting but doesn't have an account yet.
+        Invites them to sign up and complete their profile before the meeting.
+        """
+        template = cls.get_template(NotificationType.CANDIDATE_BOOKING_INVITE, RecipientType.CANDIDATE)
+        if not template:
+            logger.warning("No CANDIDATE_BOOKING_INVITE template found, skipping notification")
+            return None
+
+        branding = BrandingSettings.get_settings()
+
+        context = {
+            "recipient_name": name.split()[0] if name else "there",
+            "recruiter_name": recruiter.get_full_name() or recruiter.email,
+            "meeting_type_name": meeting_type_name,
+            "scheduled_at": scheduled_at,
+            "duration_minutes": duration_minutes,
+            "signup_url": signup_url,
+            "brand_name": branding.company_name,
+        }
+
+        rendered = template.render(context)
+        try:
+            cls._send_email(
+                to_email=email,
+                subject=rendered['email_subject'],
+                body=rendered['email_body'],
+                action_url=signup_url,
+            )
+            logger.info(f"Sent candidate booking invite to {email}")
+        except Exception as e:
+            logger.error(f"Failed to send candidate booking invite to {email}: {e}")
+
+        return None  # No in-app notification for non-users
+
     # =========================================================================
     # Reminder notification methods
     # =========================================================================

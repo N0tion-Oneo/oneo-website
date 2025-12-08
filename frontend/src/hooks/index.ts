@@ -167,3 +167,14 @@ export {
 
 // Recruiter Profile hooks
 export { useRecruiterProfile } from './useRecruiterProfile'
+
+// Recruiter Booking hooks (public booking pages)
+export {
+  useMeetingTypes,
+  useRecruiterBookings,
+  useRecruiterBooking,
+  usePublicBookingPage,
+  usePublicAvailability,
+  useCreatePublicBooking,
+  useCandidateInvitations,
+} from './useRecruiterBookings'

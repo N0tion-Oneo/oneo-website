@@ -118,11 +118,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
     Serializer for user profile (read and update).
     """
     full_name = serializers.CharField(read_only=True)
+    booking_slug = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id',
+            'username',
             'email',
             'first_name',
             'last_name',
@@ -132,8 +134,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'role',
             'is_verified',
             'date_joined',
+            'booking_slug',
         ]
-        read_only_fields = ['id', 'email', 'role', 'is_verified', 'date_joined']
+        read_only_fields = ['id', 'username', 'email', 'role', 'is_verified', 'date_joined']
+
+    def get_booking_slug(self, obj):
+        """Get booking_slug from recruiter_profile for admins/recruiters."""
+        if obj.role in ['admin', 'recruiter']:
+            profile = getattr(obj, 'recruiter_profile', None)
+            if profile:
+                return profile.booking_slug
+        return None
 
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
@@ -476,6 +487,127 @@ class RecruiterSignupSerializer(serializers.ModelSerializer):
             last_name=validated_data['last_name'],
             phone=validated_data.get('phone'),
             role=UserRole.RECRUITER,  # RECRUITER role for invited users
+            is_verified=False,
+        )
+        return user
+
+
+# =============================================================================
+# Candidate Invitation Serializers (for booking-triggered invitations)
+# =============================================================================
+
+class CandidateInvitationListSerializer(serializers.Serializer):
+    """
+    Serializer for listing candidate invitations.
+    """
+    id = serializers.IntegerField()
+    token = serializers.UUIDField()
+    email = serializers.EmailField()
+    name = serializers.CharField()
+    created_at = serializers.DateTimeField()
+    expires_at = serializers.DateTimeField()
+    used_at = serializers.DateTimeField(allow_null=True)
+    is_valid = serializers.BooleanField()
+    is_expired = serializers.BooleanField()
+    signup_url = serializers.SerializerMethodField()
+    booking_info = serializers.SerializerMethodField()
+
+    def get_signup_url(self, obj):
+        from django.conf import settings
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        return f"{frontend_url}/signup/candidate/{obj.token}"
+
+    def get_booking_info(self, obj):
+        if obj.booking:
+            return {
+                'id': str(obj.booking.id),
+                'meeting_type': obj.booking.meeting_type.name if obj.booking.meeting_type else None,
+                'scheduled_at': obj.booking.scheduled_at.isoformat() if obj.booking.scheduled_at else None,
+                'status': obj.booking.status,
+            }
+        return None
+
+
+class CandidateInvitationValidateSerializer(serializers.Serializer):
+    """
+    Response serializer for candidate invitation validation.
+    """
+    valid = serializers.BooleanField()
+    email = serializers.EmailField()
+    name = serializers.CharField()
+    booking_info = serializers.DictField(required=False)
+
+
+class CandidateInvitationSignupSerializer(serializers.ModelSerializer):
+    """
+    Serializer for candidate signup via booking invitation.
+    Creates a CANDIDATE user and links them to the booking.
+    """
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        validators=[validate_password],
+        style={'input_type': 'password'}
+    )
+    password_confirm = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={'input_type': 'password'}
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            'email',
+            'password',
+            'password_confirm',
+            'first_name',
+            'last_name',
+            'phone',
+        ]
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+        }
+
+    def validate_email(self, value):
+        """Ensure email is unique and lowercase."""
+        email = value.lower()
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return email
+
+    def validate(self, attrs):
+        """Validate that passwords match."""
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError({
+                'password_confirm': "Passwords do not match."
+            })
+        return attrs
+
+    def create(self, validated_data):
+        """Create a new candidate user."""
+        validated_data.pop('password_confirm')
+
+        # Generate username from email
+        email = validated_data['email']
+        username = email.split('@')[0]
+
+        # Ensure username is unique
+        base_username = username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+
+        user = User.objects.create_user(
+            username=username,
+            email=validated_data['email'],
+            password=validated_data['password'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            phone=validated_data.get('phone'),
+            role=UserRole.CANDIDATE,
             is_verified=False,
         )
         return user

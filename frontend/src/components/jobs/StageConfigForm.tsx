@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, GripVertical, Trash2, ChevronDown, ChevronUp, User } from 'lucide-react'
 import {
   StageType,
@@ -15,7 +15,12 @@ interface StageConfigFormProps {
   onChange: (index: number, stage: InterviewStageTemplateInput) => void
   onRemove: (index: number) => void
   isDragging?: boolean
-  dragHandleProps?: Record<string, unknown>
+  isDragOver?: boolean
+  onDragStart?: (e: React.DragEvent) => void
+  onDragEnd?: (e: React.DragEvent) => void
+  onDragOver?: (e: React.DragEvent) => void
+  onDragLeave?: (e: React.DragEvent) => void
+  onDrop?: (e: React.DragEvent) => void
   teamMembers?: CompanyUser[]
 }
 
@@ -25,7 +30,12 @@ export default function StageConfigForm({
   onChange,
   onRemove,
   isDragging = false,
-  dragHandleProps = {},
+  isDragOver = false,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
   teamMembers = [],
 }: StageConfigFormProps) {
   const [isExpanded, setIsExpanded] = useState(true)
@@ -44,16 +54,19 @@ export default function StageConfigForm({
 
   return (
     <div
-      className={`bg-white border rounded-lg transition-shadow ${
-        isDragging ? 'shadow-lg border-gray-300' : 'border-gray-200'
-      }`}
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      className={`bg-white border rounded-lg transition-all ${
+        isDragging ? 'opacity-50 shadow-lg border-gray-300' : ''
+      } ${isDragOver ? 'border-blue-400 border-2 bg-blue-50' : 'border-gray-200'}`}
     >
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
-        <div
-          {...dragHandleProps}
-          className="flex-shrink-0 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
-        >
+        <div className="flex-shrink-0 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600">
           <GripVertical className="w-5 h-5" />
         </div>
 
@@ -277,7 +290,7 @@ export default function StageConfigForm({
   )
 }
 
-// Compact list view of stages
+// Compact list view of stages with drag-and-drop reordering
 interface StageListProps {
   stages: InterviewStageTemplateInput[]
   onChange: (stages: InterviewStageTemplateInput[]) => void
@@ -286,36 +299,57 @@ interface StageListProps {
 }
 
 export function StageList({ stages, onChange, onRemove, teamMembers = [] }: StageListProps) {
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
   const handleStageChange = (index: number, stage: InterviewStageTemplateInput) => {
     const newStages = [...stages]
     newStages[index] = stage
     onChange(newStages)
   }
 
-  const handleMoveUp = (index: number) => {
-    if (index === 0) return
-    const newStages = [...stages]
-    const temp = newStages[index - 1]
-    newStages[index - 1] = newStages[index]
-    newStages[index] = temp
-    // Update order fields
-    newStages.forEach((stage, i) => {
-      stage.order = i + 1
-    })
-    onChange(newStages)
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', index.toString())
   }
 
-  const handleMoveDown = (index: number) => {
-    if (index === stages.length - 1) return
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index)
+    }
+  }
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null)
+  }
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDragOverIndex(null)
+      return
+    }
+
     const newStages = [...stages]
-    const temp = newStages[index + 1]
-    newStages[index + 1] = newStages[index]
-    newStages[index] = temp
+    const [draggedStage] = newStages.splice(draggedIndex, 1)
+    newStages.splice(dropIndex, 0, draggedStage)
+
     // Update order fields
     newStages.forEach((stage, i) => {
       stage.order = i + 1
     })
+
     onChange(newStages)
+    setDraggedIndex(null)
+    setDragOverIndex(null)
   }
 
   if (stages.length === 0) {
@@ -330,15 +364,19 @@ export function StageList({ stages, onChange, onRemove, teamMembers = [] }: Stag
     <div className="space-y-3">
       {stages.map((stage, index) => (
         <StageConfigForm
-          key={index}
+          key={stage.id || index}
           stage={stage}
           index={index}
           onChange={handleStageChange}
           onRemove={onRemove}
           teamMembers={teamMembers}
-          dragHandleProps={{
-            onMouseDown: () => {},
-          }}
+          isDragging={draggedIndex === index}
+          isDragOver={dragOverIndex === index}
+          onDragStart={(e) => handleDragStart(e, index)}
+          onDragEnd={handleDragEnd}
+          onDragOver={(e) => handleDragOver(e, index)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, index)}
         />
       ))}
     </div>

@@ -266,6 +266,10 @@ class MeetingType(models.Model):
         blank=True,
         help_text='Custom message shown after booking confirmation',
     )
+    redirect_url = models.URLField(
+        blank=True,
+        help_text='URL to redirect to after successful booking (optional)',
+    )
     color = models.CharField(
         max_length=7,
         default='#3B82F6',
@@ -319,6 +323,14 @@ class Booking(models.Model):
         blank=True,
         related_name='attended_bookings',
         help_text='Linked user account if attendee is a registered user',
+    )
+    candidate_profile = models.ForeignKey(
+        'candidates.CandidateProfile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bookings',
+        help_text='Linked candidate profile if attendee is a candidate',
     )
     attendee_name = models.CharField(
         max_length=255,

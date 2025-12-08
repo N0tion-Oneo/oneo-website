@@ -71,6 +71,7 @@ class JobDetailSerializer(serializers.ModelSerializer):
     technologies = TechnologySerializer(many=True, read_only=True)
     benefits = BenefitCategorySerializer(many=True, read_only=True)
     questions = serializers.SerializerMethodField()
+    interview_stages = serializers.SerializerMethodField()
 
     class Meta:
         model = Job
@@ -124,6 +125,22 @@ class JobDetailSerializer(serializers.ModelSerializer):
         from .questions import ApplicationQuestionSerializer
         questions = obj.questions.all().order_by('order')
         return ApplicationQuestionSerializer(questions, many=True).data
+
+    def get_interview_stages(self, obj):
+        """Return the job's interview stages from InterviewStageTemplate model."""
+        from ..models import InterviewStageTemplate
+        templates = InterviewStageTemplate.objects.filter(job=obj).order_by('order')
+        return [
+            {
+                'id': str(t.id),
+                'order': t.order,
+                'name': t.name,
+                'stage_type': t.stage_type,
+                'description': t.description or '',
+                'duration_minutes': t.default_duration_minutes,
+            }
+            for t in templates
+        ]
 
 
 class InterviewStageSerializer(serializers.Serializer):

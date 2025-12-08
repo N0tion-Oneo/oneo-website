@@ -166,20 +166,40 @@ export function useDeleteStageTemplate(): UseDeleteStageTemplateReturn {
 // Bulk Update Stage Templates Hook
 // ============================================================================
 
+interface BlockedStage {
+  name: string
+  active_interviews: number
+}
+
+interface BulkUpdateError {
+  error: string
+  message?: string
+  blocked_stages?: BlockedStage[]
+}
+
 interface UseBulkUpdateStageTemplatesReturn {
   bulkUpdate: (jobId: string, templates: InterviewStageTemplateInput[]) => Promise<InterviewStageTemplate[]>
   isUpdating: boolean
   error: string | null
+  blockedStages: BlockedStage[] | null
+  clearError: () => void
 }
 
 export function useBulkUpdateStageTemplates(): UseBulkUpdateStageTemplatesReturn {
   const [isUpdating, setIsUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [blockedStages, setBlockedStages] = useState<BlockedStage[] | null>(null)
+
+  const clearError = useCallback(() => {
+    setError(null)
+    setBlockedStages(null)
+  }, [])
 
   const bulkUpdate = useCallback(
     async (jobId: string, templates: InterviewStageTemplateInput[]): Promise<InterviewStageTemplate[]> => {
       setIsUpdating(true)
       setError(null)
+      setBlockedStages(null)
       try {
         const response = await api.post<InterviewStageTemplate[]>(
           `/jobs/${jobId}/stages/bulk/`,
@@ -187,9 +207,18 @@ export function useBulkUpdateStageTemplates(): UseBulkUpdateStageTemplatesReturn
         )
         return response.data
       } catch (err) {
-        const axiosError = err as { response?: { data?: { error?: string } } }
-        const message = axiosError.response?.data?.error || 'Failed to update stages'
-        setError(message)
+        const axiosError = err as { response?: { status?: number; data?: BulkUpdateError } }
+        const responseData = axiosError.response?.data
+
+        // Handle 409 Conflict - stages with active interviews
+        if (axiosError.response?.status === 409 && responseData?.blocked_stages) {
+          setError(responseData.message || responseData.error || 'Cannot delete stages with scheduled interviews')
+          setBlockedStages(responseData.blocked_stages)
+        } else {
+          const message = responseData?.error || 'Failed to update stages'
+          setError(message)
+        }
+
         console.error('Error bulk updating stage templates:', err)
         throw err
       } finally {
@@ -199,7 +228,7 @@ export function useBulkUpdateStageTemplates(): UseBulkUpdateStageTemplatesReturn
     []
   )
 
-  return { bulkUpdate, isUpdating, error }
+  return { bulkUpdate, isUpdating, error, blockedStages, clearError }
 }
 
 // ============================================================================
