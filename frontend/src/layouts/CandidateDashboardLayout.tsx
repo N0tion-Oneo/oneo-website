@@ -136,6 +136,17 @@ export default function CandidateDashboardLayout() {
         </svg>
       ),
     },
+    {
+      name: 'All Applications',
+      href: '/dashboard/admin/applications',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" strokeLinecap="round" strokeLinejoin="round" />
+          <rect x="9" y="3" width="6" height="4" rx="1" />
+          <path d="M9 12l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
   ] : []
 
   // Admin-only navigation (not visible to recruiters)

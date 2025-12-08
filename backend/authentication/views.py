@@ -40,6 +40,7 @@ from .serializers import (
     CandidateInvitationValidateSerializer,
     CandidateInvitationSignupSerializer,
     CandidateInvitationListSerializer,
+    RecruiterListSerializer,
 )
 
 
@@ -272,6 +273,42 @@ def me(request):
     Get the current authenticated user's profile.
     """
     serializer = UserProfileSerializer(request.user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    responses={
+        200: RecruiterListSerializer(many=True),
+        403: OpenApiResponse(description="Permission denied"),
+    },
+    tags=['Users'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_recruiters(request):
+    """
+    List all active recruiters and admins.
+
+    Only Admin users can list recruiters/admins.
+    Returns users ordered by name for dropdown selection.
+    """
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    # Only Admin can list recruiters
+    if request.user.role != UserRole.ADMIN:
+        return Response(
+            {'error': 'Only administrators can list recruiters'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Include both recruiters and admins
+    recruiters = User.objects.filter(
+        role__in=[UserRole.RECRUITER, UserRole.ADMIN],
+        is_active=True
+    ).order_by('first_name', 'last_name')
+
+    serializer = RecruiterListSerializer(recruiters, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 

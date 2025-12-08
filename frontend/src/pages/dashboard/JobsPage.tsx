@@ -315,6 +315,12 @@ export default function JobsPage({ mode }: JobsPageProps) {
                 <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                   Applications
                 </th>
+                {/* Admin mode: Assigned column */}
+                {isAdminMode && (
+                  <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    Assigned
+                  </th>
+                )}
                 {/* Company mode: Views column */}
                 {!isAdminMode && (
                   <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
@@ -383,6 +389,36 @@ export default function JobsPage({ mode }: JobsPageProps) {
                         {job.applications_count || 0} applications
                       </Link>
                     </td>
+                    {/* Admin mode: Assigned column */}
+                    {isAdminMode && (
+                      <td className="px-4 py-3">
+                        {job.assigned_recruiters && job.assigned_recruiters.length > 0 ? (
+                          <div className="flex -space-x-2">
+                            {job.assigned_recruiters.map((recruiter) => (
+                              <div
+                                key={recruiter.id}
+                                title={`${recruiter.first_name} ${recruiter.last_name}`}
+                                className="relative"
+                              >
+                                {recruiter.avatar ? (
+                                  <img
+                                    src={recruiter.avatar}
+                                    alt={`${recruiter.first_name} ${recruiter.last_name}`}
+                                    className="w-6 h-6 rounded-full border-2 border-white object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[10px] font-medium text-gray-600">
+                                    {recruiter.first_name?.[0]}{recruiter.last_name?.[0]}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-[12px] text-gray-400">Unassigned</span>
+                        )}
+                      </td>
+                    )}
                     {/* Company mode: Views column */}
                     {!isAdminMode && (
                       <td className="px-4 py-3 text-[13px] text-gray-600">

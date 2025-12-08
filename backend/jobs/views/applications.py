@@ -735,6 +735,152 @@ def update_application_notes(request, application_id):
     return Response(ApplicationSerializer(application).data)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_all_applications(request):
+    """
+    List all applications across all jobs.
+    Admin/Recruiter only - scoped to their accessible jobs.
+
+    Query Parameters:
+    - status: Filter by application status
+    - stage: Filter by current stage order (0 = Applied)
+    - job: Filter by job ID
+    - job_status: Filter by job status (published, closed, etc.)
+    - company: Filter by company ID
+    - recruiter: Filter by assigned recruiter ID (job.created_by)
+    - applied_after: Date range start
+    - applied_before: Date range end
+    - search: Text search (candidate name, job title)
+    - ordering: Sort field (default: -applied_at)
+    - page: Page number
+    - page_size: Results per page (default: 20, max: 100)
+    """
+    from django.db.models import Q, F, Value, CharField
+    from django.db.models.functions import Concat
+    from django.core.paginator import Paginator, EmptyPage
+
+    # Check permission - admin or recruiter only
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only admins and recruiters can access this endpoint'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Base queryset with select_related for performance
+    applications = Application.objects.select_related(
+        'job', 'job__company', 'job__created_by',
+        'candidate', 'candidate__user',
+        'current_stage',
+    ).prefetch_related(
+        'job__assigned_recruiters',
+    ).order_by('-applied_at')
+
+    # Scope to accessible jobs based on role
+    if request.user.role == UserRole.RECRUITER:
+        # Recruiters see applications for jobs they created or are assigned to
+        from django.db.models import Q
+        applications = applications.filter(
+            Q(job__created_by=request.user) | Q(job__assigned_recruiters=request.user)
+        )
+
+    # Filter by status
+    app_status = request.query_params.get('status')
+    if app_status:
+        applications = applications.filter(status=app_status)
+
+    # Filter by stage (0 = Applied, >0 = stage order)
+    stage = request.query_params.get('stage')
+    if stage is not None and stage != '':
+        try:
+            stage_int = int(stage)
+            if stage_int == 0:
+                applications = applications.filter(current_stage__isnull=True)
+            else:
+                applications = applications.filter(current_stage__order=stage_int)
+        except ValueError:
+            pass
+
+    # Filter by job
+    job_id = request.query_params.get('job')
+    if job_id:
+        applications = applications.filter(job_id=job_id)
+
+    # Filter by job status
+    job_status_filter = request.query_params.get('job_status')
+    if job_status_filter:
+        applications = applications.filter(job__status=job_status_filter)
+
+    # Filter by company
+    company_id = request.query_params.get('company')
+    if company_id:
+        applications = applications.filter(job__company_id=company_id)
+
+    # Filter by recruiter (job creator)
+    recruiter_id = request.query_params.get('recruiter')
+    if recruiter_id:
+        applications = applications.filter(job__created_by_id=recruiter_id)
+
+    # Filter by date range
+    applied_after = request.query_params.get('applied_after')
+    if applied_after:
+        applications = applications.filter(applied_at__date__gte=applied_after)
+
+    applied_before = request.query_params.get('applied_before')
+    if applied_before:
+        applications = applications.filter(applied_at__date__lte=applied_before)
+
+    # Text search (candidate name, email, job title)
+    search = request.query_params.get('search')
+    if search:
+        applications = applications.filter(
+            Q(candidate__user__first_name__icontains=search) |
+            Q(candidate__user__last_name__icontains=search) |
+            Q(candidate__user__email__icontains=search) |
+            Q(job__title__icontains=search)
+        )
+
+    # Ordering
+    ordering = request.query_params.get('ordering', '-applied_at')
+    valid_orderings = {
+        'applied_at': 'applied_at',
+        '-applied_at': '-applied_at',
+        'candidate_name': 'candidate__user__first_name',
+        '-candidate_name': '-candidate__user__first_name',
+        'job_title': 'job__title',
+        '-job_title': '-job__title',
+        'status': 'status',
+        '-status': '-status',
+        'company_name': 'job__company__name',
+        '-company_name': '-job__company__name',
+    }
+    if ordering in valid_orderings:
+        applications = applications.order_by(valid_orderings[ordering])
+
+    # Pagination
+    page = request.query_params.get('page', 1)
+    page_size = min(int(request.query_params.get('page_size', 20)), 100)
+
+    paginator = Paginator(applications, page_size)
+    try:
+        page_obj = paginator.page(page)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # Serialize
+    serializer = ApplicationListSerializer(page_obj.object_list, many=True)
+
+    return Response({
+        'results': serializer.data,
+        'count': paginator.count,
+        'page': page_obj.number,
+        'page_size': page_size,
+        'total_pages': paginator.num_pages,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+    })
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def record_application_view(request, application_id):

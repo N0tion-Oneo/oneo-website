@@ -30,12 +30,27 @@ class ApplicationListSerializer(serializers.ModelSerializer):
     candidate_name = serializers.CharField(source='candidate.full_name', read_only=True)
     candidate_email = serializers.CharField(source='candidate.email', read_only=True)
     current_stage_instance = serializers.SerializerMethodField()
+    assigned_recruiters = serializers.SerializerMethodField()
 
     def get_company_logo(self, obj):
         """Safely get company logo URL."""
         if obj.job.company and obj.job.company.logo:
             return obj.job.company.logo.url
         return None
+
+    def get_assigned_recruiters(self, obj):
+        """Return assigned recruiters for the job."""
+        recruiters = obj.job.assigned_recruiters.all()
+        return [
+            {
+                'id': str(r.id),
+                'first_name': r.first_name,
+                'last_name': r.last_name,
+                'full_name': r.full_name,
+                'avatar': r.avatar.url if r.avatar else None,
+            }
+            for r in recruiters
+        ]
 
     def get_current_stage_instance(self, obj):
         """Return the current stage instance with scheduling info."""
@@ -127,6 +142,7 @@ class ApplicationListSerializer(serializers.ModelSerializer):
             'current_stage_order',
             'current_stage_name',
             'current_stage_instance',
+            'assigned_recruiters',
             'source',
             'applied_at',
             'shortlisted_at',

@@ -23,6 +23,7 @@ class JobListSerializer(serializers.ModelSerializer):
     salary_display = serializers.CharField(read_only=True)
     required_skills = SkillSerializer(many=True, read_only=True)
     technologies = TechnologySerializer(many=True, read_only=True)
+    assigned_recruiters = UserProfileSerializer(many=True, read_only=True)
 
     class Meta:
         model = Job
@@ -48,6 +49,7 @@ class JobListSerializer(serializers.ModelSerializer):
             'equity_offered',
             'required_skills',
             'technologies',
+            'assigned_recruiters',
             'views_count',
             'applications_count',
             'published_at',
@@ -61,7 +63,7 @@ class JobDetailSerializer(serializers.ModelSerializer):
     """Serializer for job detail view (full data)."""
     company = CompanyListSerializer(read_only=True)
     created_by = UserProfileSerializer(read_only=True)
-    assigned_recruiter = UserProfileSerializer(read_only=True)
+    assigned_recruiters = UserProfileSerializer(many=True, read_only=True)
     location_city = CitySerializer(read_only=True)
     location_country = CountrySerializer(read_only=True)
     location_display = serializers.CharField(read_only=True)
@@ -81,7 +83,7 @@ class JobDetailSerializer(serializers.ModelSerializer):
             'title',
             'company',
             'created_by',
-            'assigned_recruiter',
+            'assigned_recruiters',
             'seniority',
             'job_type',
             'status',
@@ -154,6 +156,12 @@ class InterviewStageSerializer(serializers.Serializer):
 
 class JobCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating a new job."""
+    assigned_recruiter_ids = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(role__in=['recruiter', 'admin'], is_active=True),
+        many=True,
+        write_only=True,
+        required=False,
+    )
     location_city_id = serializers.PrimaryKeyRelatedField(
         queryset=City.objects.filter(is_active=True),
         source='location_city',
@@ -212,6 +220,7 @@ class JobCreateSerializer(serializers.ModelSerializer):
             'requirements',
             'nice_to_haves',
             'responsibilities',
+            'assigned_recruiter_ids',
             'location_city_id',
             'location_country_id',
             'work_mode',
@@ -268,6 +277,7 @@ class JobCreateSerializer(serializers.ModelSerializer):
         required_skill_ids = validated_data.pop('required_skill_ids', [])
         nice_to_have_skill_ids = validated_data.pop('nice_to_have_skill_ids', [])
         technology_ids = validated_data.pop('technology_ids', [])
+        assigned_recruiter_ids = validated_data.pop('assigned_recruiter_ids', [])
         questions_data = validated_data.pop('questions', [])
         template_id = validated_data.pop('question_template_id', None)
 
@@ -279,6 +289,8 @@ class JobCreateSerializer(serializers.ModelSerializer):
             job.nice_to_have_skills.set(nice_to_have_skill_ids)
         if technology_ids:
             job.technologies.set(technology_ids)
+        if assigned_recruiter_ids:
+            job.assigned_recruiters.set(assigned_recruiter_ids)
 
         # Create questions from template if provided
         if template_id:
@@ -318,6 +330,12 @@ class JobCreateSerializer(serializers.ModelSerializer):
 
 class JobUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating an existing job."""
+    assigned_recruiter_ids = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(role__in=['recruiter', 'admin'], is_active=True),
+        many=True,
+        write_only=True,
+        required=False,
+    )
     location_city_id = serializers.PrimaryKeyRelatedField(
         queryset=City.objects.filter(is_active=True),
         source='location_city',
@@ -373,6 +391,7 @@ class JobUpdateSerializer(serializers.ModelSerializer):
             'requirements',
             'nice_to_haves',
             'responsibilities',
+            'assigned_recruiter_ids',
             'location_city_id',
             'location_country_id',
             'work_mode',
@@ -428,6 +447,7 @@ class JobUpdateSerializer(serializers.ModelSerializer):
         required_skill_ids = validated_data.pop('required_skill_ids', None)
         nice_to_have_skill_ids = validated_data.pop('nice_to_have_skill_ids', None)
         technology_ids = validated_data.pop('technology_ids', None)
+        assigned_recruiter_ids = validated_data.pop('assigned_recruiter_ids', None)
         questions_data = validated_data.pop('questions', None)
 
         instance = super().update(instance, validated_data)
@@ -438,6 +458,8 @@ class JobUpdateSerializer(serializers.ModelSerializer):
             instance.nice_to_have_skills.set(nice_to_have_skill_ids)
         if technology_ids is not None:
             instance.technologies.set(technology_ids)
+        if assigned_recruiter_ids is not None:
+            instance.assigned_recruiters.set(assigned_recruiter_ids)
 
         if questions_data is not None:
             instance.questions.all().delete()

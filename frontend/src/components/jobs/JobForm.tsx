@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSkills, useTechnologies, useCountries, useCities, useQuestionTemplates, useBulkUpdateStageTemplates, useCompanyUsers, useStageTemplates } from '@/hooks'
+import { useSkills, useTechnologies, useCountries, useCities, useQuestionTemplates, useBulkUpdateStageTemplates, useCompanyUsers, useStageTemplates, useRecruiters } from '@/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import { useCreateJob, useUpdateJob } from '@/hooks/useJobs'
 import {
   Seniority,
@@ -10,6 +11,7 @@ import {
   Currency,
   StageType,
   StageTypeLabels,
+  UserRole,
 } from '@/types'
 import type { Job, JobInput, BenefitCategory, InterviewStage, ApplicationQuestionInput, InterviewStageTemplateInput } from '@/types'
 import { ChevronLeft, ChevronRight, Loader2, Plus, X, GripVertical, Trash2, ExternalLink, FileText, AlertTriangle, Calendar } from 'lucide-react'
@@ -89,7 +91,9 @@ const defaultStageTemplates: InterviewStageTemplateInput[] = [
 
 export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const isEditing = !!job
+  const isAdmin = user?.role === UserRole.ADMIN
 
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<JobInput>({
@@ -125,6 +129,7 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
       is_required: q.is_required,
       order: q.order,
     })) || [],
+    assigned_recruiter_ids: job?.assigned_recruiters?.map((r) => r.id) || [],
   })
 
   // Stage templates state (new typed system)
@@ -141,6 +146,7 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
   })
   const { templates: questionTemplates } = useQuestionTemplates({ is_active: true })
   const { users: teamMembers } = useCompanyUsers(companyId)
+  const { recruiters } = useRecruiters()
 
   // Load existing stage templates when editing a job
   const { templates: existingStageTemplates, isLoading: isLoadingStages } = useStageTemplates(job?.id || '')
@@ -644,6 +650,46 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
               className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             />
           </div>
+
+          {/* Recruiter Assignment - Admin Only */}
+          {isAdmin && recruiters.length > 0 && (
+            <div>
+              <label className="block text-[13px] font-medium text-gray-700 mb-2">
+                Assigned Recruiters/Admins
+              </label>
+              <div className="flex flex-wrap gap-2 p-3 border border-gray-200 rounded-md max-h-32 overflow-y-auto">
+                {recruiters.map((recruiter) => {
+                  const isSelected = formData.assigned_recruiter_ids?.includes(recruiter.id) || false
+                  return (
+                    <button
+                      key={recruiter.id}
+                      type="button"
+                      onClick={() => {
+                        const currentIds = formData.assigned_recruiter_ids || []
+                        const newIds = isSelected
+                          ? currentIds.filter((id) => id !== recruiter.id)
+                          : [...currentIds, recruiter.id]
+                        setFormData((prev) => ({
+                          ...prev,
+                          assigned_recruiter_ids: newIds,
+                        }))
+                      }}
+                      className={`px-2.5 py-1 text-[12px] font-medium rounded transition-colors ${
+                        isSelected
+                          ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                          : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
+                      }`}
+                    >
+                      {recruiter.full_name}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-[12px] text-gray-500 mt-1">
+                Select one or more recruiters/admins to manage this job's applications
+              </p>
+            </div>
+          )}
         </div>
       )}
 

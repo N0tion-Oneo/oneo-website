@@ -38,6 +38,7 @@ export {
   useCreateRecruiterInvitation,
   useValidateRecruiterInvitation,
   useRecruiterSignup,
+  useRecruiters,
 } from './useInvitations'
 export type { RecruiterInvitation, CreateRecruiterInvitationResponse } from './useInvitations'
 
@@ -51,7 +52,9 @@ export {
   useUpdateJob,
   useDeleteJob,
   useJobStatus,
+  useJobStages,
 } from './useJobs'
+export type { JobStage } from './useJobs'
 
 // Application hooks
 export {
@@ -60,6 +63,7 @@ export {
   useApplication,
   useWithdrawApplication,
   useJobApplications,
+  useAllApplications,
   useShortlistApplication,
   useRejectApplication,
   useMakeOffer,

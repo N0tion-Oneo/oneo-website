@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import api from '@/services/api'
+import type { RecruiterListItem } from '@/types'
 
 // ============================================================================
 // Types
@@ -298,4 +299,46 @@ export function useRecruiterSignup(): UseRecruiterSignupReturn {
   }, [])
 
   return { signup, isSigningUp, error }
+}
+
+// ============================================================================
+// List Recruiters Hook (for admin job assignment)
+// ============================================================================
+
+interface UseRecruitersReturn {
+  recruiters: RecruiterListItem[]
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export function useRecruiters(): UseRecruitersReturn {
+  const [recruiters, setRecruiters] = useState<RecruiterListItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchRecruiters = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await api.get<RecruiterListItem[]>('/auth/recruiters/')
+      setRecruiters(response.data)
+    } catch (err) {
+      const axiosError = err as { response?: { status?: number; data?: { error?: string } } }
+      if (axiosError.response?.status === 403) {
+        setError('You do not have permission to view recruiters')
+      } else {
+        setError(axiosError.response?.data?.error || 'Failed to load recruiters')
+      }
+      console.error('Error fetching recruiters:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchRecruiters()
+  }, [fetchRecruiters])
+
+  return { recruiters, isLoading, error, refetch: fetchRecruiters }
 }

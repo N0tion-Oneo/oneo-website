@@ -26,6 +26,7 @@ urlpatterns = [
 
     # Application endpoints
     path('applications/', views.apply_to_job, name='apply-to-job'),
+    path('applications/all/', views.list_all_applications, name='list-all-applications'),
     path('applications/my/', views.list_my_applications, name='list-my-applications'),
     path('applications/<uuid:application_id>/', views.get_application, name='get-application'),
     path('applications/<uuid:application_id>/withdraw/', views.withdraw_application, name='withdraw-application'),

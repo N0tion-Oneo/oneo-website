@@ -421,3 +421,53 @@ export function useAllJobs(options: UseAllJobsOptions = {}): UseAllJobsReturn {
 
   return { jobs, isLoading, error, refetch: fetchJobs }
 }
+
+// ============================================================================
+// Job Stages Hook (fetch interview stages for a job)
+// ============================================================================
+
+export interface JobStage {
+  id: string
+  order: number
+  name: string
+  stage_type: string
+  description: string
+  default_duration_minutes: number
+}
+
+interface UseJobStagesReturn {
+  stages: JobStage[]
+  isLoading: boolean
+  error: string | null
+}
+
+export function useJobStages(jobId: string | null): UseJobStagesReturn {
+  const [stages, setStages] = useState<JobStage[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!jobId) {
+      setStages([])
+      return
+    }
+
+    const fetchStages = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const response = await api.get<JobStage[]>(`/jobs/${jobId}/stages/`)
+        setStages(response.data)
+      } catch (err) {
+        setError('Failed to load job stages')
+        console.error('Error fetching job stages:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchStages()
+  }, [jobId])
+
+  return { stages, isLoading, error }
+}

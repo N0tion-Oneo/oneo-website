@@ -126,10 +126,10 @@ def get_job(request, slug):
     """
     try:
         job = Job.objects.select_related(
-            'company', 'company__industry', 'created_by', 'assigned_recruiter',
+            'company', 'company__industry', 'created_by',
             'location_city', 'location_country'
         ).prefetch_related(
-            'required_skills', 'nice_to_have_skills', 'technologies'
+            'required_skills', 'nice_to_have_skills', 'technologies', 'assigned_recruiters'
         ).get(slug=slug)
     except Job.DoesNotExist:
         return Response(
@@ -261,10 +261,10 @@ def job_detail(request, job_id):
     """
     try:
         job = Job.objects.select_related(
-            'company', 'created_by', 'assigned_recruiter',
+            'company', 'created_by',
             'location_city', 'location_country'
         ).prefetch_related(
-            'required_skills', 'nice_to_have_skills', 'technologies'
+            'required_skills', 'nice_to_have_skills', 'technologies', 'assigned_recruiters'
         ).get(id=job_id)
     except Job.DoesNotExist:
         return Response(

@@ -147,6 +147,25 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return None
 
 
+class RecruiterListSerializer(serializers.ModelSerializer):
+    """
+    Lightweight serializer for listing recruiters (for dropdowns).
+    """
+    full_name = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'full_name',
+            'avatar',
+        ]
+        read_only_fields = fields
+
+
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for updating user profile.

@@ -59,12 +59,11 @@ class Job(models.Model):
         null=True,
         related_name='jobs_created',
     )
-    assigned_recruiter = models.ForeignKey(
+    assigned_recruiters = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
         blank=True,
         related_name='jobs_assigned',
+        help_text='Recruiters and admins assigned to manage this job',
     )
     assigned_client = models.ForeignKey(
         settings.AUTH_USER_MODEL,

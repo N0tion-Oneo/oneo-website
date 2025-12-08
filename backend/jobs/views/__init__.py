@@ -15,6 +15,7 @@ from .jobs import (
 from .applications import (
     apply_to_job,
     list_my_applications,
+    list_all_applications,
     get_application,
     withdraw_application,
     list_job_applications,
@@ -72,6 +73,7 @@ __all__ = [
     # Applications
     'apply_to_job',
     'list_my_applications',
+    'list_all_applications',
     'get_application',
     'withdraw_application',
     'list_job_applications',

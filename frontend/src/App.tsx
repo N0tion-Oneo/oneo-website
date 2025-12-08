@@ -21,6 +21,7 @@ import {
   AdminCompanyEditPage,
   AdminCandidatesPage,
   AdminCandidateEditPage,
+  AdminApplicationsPage,
   AdminNewJobPage,
   AdminRecruitersPage,
   AdminSkillsTechnologiesPage,
@@ -127,6 +128,7 @@ function App() {
           <Route path="admin/candidates/:slug" element={<AdminCandidateEditPage />} />
           <Route path="admin/jobs" element={<JobsPage mode="admin" />} />
           <Route path="admin/jobs/new" element={<AdminNewJobPage />} />
+          <Route path="admin/applications" element={<AdminApplicationsPage />} />
         </Route>
 
         {/* Public candidates directory */}

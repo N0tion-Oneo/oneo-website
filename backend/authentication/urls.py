@@ -15,6 +15,9 @@ urlpatterns = [
     path('me/update/', views.update_profile, name='update_profile'),
     path('me/change-password/', views.change_password, name='change_password'),
 
+    # User Lists
+    path('recruiters/', views.list_recruiters, name='list_recruiters'),
+
     # Email Verification (stub)
     path('verify-email/', views.verify_email, name='verify_email'),
 

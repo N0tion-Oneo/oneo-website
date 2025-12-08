@@ -477,3 +477,127 @@ export function useUpdateApplicationNotes(): UseUpdateApplicationNotesReturn {
 
   return { updateNotes, isLoading, error }
 }
+
+// ============================================================================
+// All Applications Hook (Admin/Recruiter - All Jobs)
+// ============================================================================
+
+interface UseAllApplicationsOptions {
+  status?: ApplicationStatus
+  stage?: number | string
+  job?: string
+  job_status?: string
+  company?: string
+  recruiter?: string
+  applied_after?: string
+  applied_before?: string
+  search?: string
+  ordering?: string
+  page?: number
+  page_size?: number
+}
+
+interface AllApplicationsResponse {
+  results: ApplicationListItem[]
+  count: number
+  page: number
+  page_size: number
+  total_pages: number
+  has_next: boolean
+  has_previous: boolean
+}
+
+interface UseAllApplicationsReturn {
+  applications: ApplicationListItem[]
+  count: number
+  page: number
+  totalPages: number
+  hasNext: boolean
+  hasPrevious: boolean
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export function useAllApplications(options: UseAllApplicationsOptions = {}): UseAllApplicationsReturn {
+  const [applications, setApplications] = useState<ApplicationListItem[]>([])
+  const [count, setCount] = useState(0)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrevious, setHasPrevious] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchApplications = useCallback(async (isRefetch = false) => {
+    if (!isRefetch) {
+      setIsLoading(true)
+    }
+    setError(null)
+
+    try {
+      const params = new URLSearchParams()
+      if (options.status) params.append('status', options.status)
+      if (options.stage !== undefined && options.stage !== '') params.append('stage', String(options.stage))
+      if (options.job) params.append('job', options.job)
+      if (options.job_status) params.append('job_status', options.job_status)
+      if (options.company) params.append('company', options.company)
+      if (options.recruiter) params.append('recruiter', options.recruiter)
+      if (options.applied_after) params.append('applied_after', options.applied_after)
+      if (options.applied_before) params.append('applied_before', options.applied_before)
+      if (options.search) params.append('search', options.search)
+      if (options.ordering) params.append('ordering', options.ordering)
+      if (options.page) params.append('page', String(options.page))
+      if (options.page_size) params.append('page_size', String(options.page_size))
+
+      const response = await api.get<AllApplicationsResponse>(
+        `/jobs/applications/all/?${params.toString()}`
+      )
+
+      setApplications(response.data.results)
+      setCount(response.data.count)
+      setPage(response.data.page)
+      setTotalPages(response.data.total_pages)
+      setHasNext(response.data.has_next)
+      setHasPrevious(response.data.has_previous)
+    } catch (err) {
+      setError('Failed to load applications')
+      console.error('Error fetching all applications:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [
+    options.status,
+    options.stage,
+    options.job,
+    options.job_status,
+    options.company,
+    options.recruiter,
+    options.applied_after,
+    options.applied_before,
+    options.search,
+    options.ordering,
+    options.page,
+    options.page_size,
+  ])
+
+  useEffect(() => {
+    fetchApplications(false)
+  }, [fetchApplications])
+
+  const refetch = useCallback(() => {
+    return fetchApplications(true)
+  }, [fetchApplications])
+
+  return {
+    applications,
+    count,
+    page,
+    totalPages,
+    hasNext,
+    hasPrevious,
+    isLoading,
+    error,
+    refetch,
+  }
+}

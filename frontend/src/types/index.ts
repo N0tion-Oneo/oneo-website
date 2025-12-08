@@ -32,6 +32,16 @@ export interface AuthState {
   isLoading: boolean
 }
 
+// Lightweight recruiter info for dropdowns
+export interface RecruiterListItem {
+  id: string
+  email: string
+  first_name: string
+  last_name: string
+  full_name: string
+  avatar: string | null
+}
+
 export interface LoginCredentials {
   email: string
   password: string
@@ -562,6 +572,7 @@ export interface JobListItem {
   equity_offered: boolean
   required_skills: Skill[]
   technologies: Technology[]
+  assigned_recruiters: User[]
   views_count: number
   applications_count: number
   published_at: string | null
@@ -825,7 +836,7 @@ export interface CompleteStageInput {
 
 export interface Job extends JobListItem {
   created_by: User | null
-  assigned_recruiter: User | null
+  assigned_recruiters: User[]
   description: string
   requirements: string
   nice_to_haves: string
@@ -865,6 +876,7 @@ export interface JobInput {
   nice_to_have_skill_ids?: string[]
   technology_ids?: string[]
   application_deadline?: string | null
+  assigned_recruiter_ids?: string[]
 }
 
 export interface JobFilters {
@@ -1051,6 +1063,14 @@ export interface CurrentStageInstance {
   } | null
 }
 
+export interface ApplicationRecruiter {
+  id: string
+  first_name: string
+  last_name: string
+  full_name: string
+  avatar: string | null
+}
+
 export interface ApplicationListItem {
   id: string
   job: string
@@ -1065,6 +1085,7 @@ export interface ApplicationListItem {
   current_stage_order: number
   current_stage_name: string
   current_stage_instance: CurrentStageInstance | null
+  assigned_recruiters: ApplicationRecruiter[]
   source: ApplicationSource
   applied_at: string
   shortlisted_at: string | null
