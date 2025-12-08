@@ -4,6 +4,7 @@ import {
   Calendar,
   Clock,
   User,
+  Users,
   Video,
   Phone,
   MapPin,
@@ -131,32 +132,92 @@ function BookingCard({
             {booking.meeting_type_name}
           </p>
 
-          {/* Job context for interviews */}
-          {isInterviewBooking && booking.job_title && (
-            <div className="flex items-center gap-1.5 text-[13px] text-purple-600 mb-2">
-              <Briefcase className="w-4 h-4" />
-              {booking.job_title}
+          {/* Job and Company context for interviews */}
+          {isInterviewBooking && (booking.job_title || booking.company_name) && (
+            <div className="flex items-center gap-3 text-[13px] text-purple-600 mb-2">
+              {booking.job_title && (
+                <span className="flex items-center gap-1.5">
+                  <Briefcase className="w-4 h-4" />
+                  {booking.job_title}
+                </span>
+              )}
+              {booking.company_name && (
+                <span className="flex items-center gap-1.5 text-gray-500">
+                  <Building2 className="w-4 h-4" />
+                  {booking.company_name}
+                </span>
+              )}
             </div>
           )}
 
-          {/* Attendee */}
-          <div className="flex items-center gap-4 text-[13px] text-gray-500">
+          {/* Host/Organizer info */}
+          <div className="flex items-center gap-4 text-[13px] text-gray-500 mb-2">
             <span className="flex items-center gap-1.5">
-              <User className="w-4 h-4" />
-              {booking.attendee_name}
+              <User className="w-4 h-4 text-blue-500" />
+              <span className="text-gray-600">Host:</span>
+              <span className="font-medium text-gray-700">{booking.organizer_name}</span>
             </span>
+            {booking.organizer_email && (
+              <span className="flex items-center gap-1.5">
+                <Mail className="w-4 h-4" />
+                {booking.organizer_email}
+              </span>
+            )}
+          </div>
+
+          {/* Attendee/Candidate info */}
+          <div className="flex items-center gap-4 text-[13px] text-gray-500 mb-2">
+            <span className="flex items-center gap-1.5">
+              <User className="w-4 h-4 text-green-500" />
+              <span className="text-gray-600">{isInterviewBooking ? 'Candidate:' : 'Attendee:'}</span>
+              <span className="font-medium text-gray-700">{booking.attendee_name}</span>
+              {booking.candidate_info?.professional_title && (
+                <span className="text-gray-400">({booking.candidate_info.professional_title})</span>
+              )}
+            </span>
+          </div>
+
+          {/* Attendee contact details */}
+          <div className="flex items-center gap-4 text-[13px] text-gray-500 mb-2">
+            {booking.attendee_email && (
+              <span className="flex items-center gap-1.5">
+                <Mail className="w-4 h-4" />
+                {booking.attendee_email}
+              </span>
+            )}
             {booking.attendee_phone && (
               <span className="flex items-center gap-1.5">
                 <Phone className="w-4 h-4" />
                 {booking.attendee_phone}
               </span>
             )}
-            {booking.attendee_company && (
+            {!isInterviewBooking && booking.attendee_company && (
               <span className="flex items-center gap-1.5">
                 <Building2 className="w-4 h-4" />
                 {booking.attendee_company}
               </span>
             )}
+          </div>
+
+          {/* Additional Participants (for interviews with multiple interviewers) */}
+          {isInterviewBooking && booking.participants && booking.participants.length > 1 && (
+            <div className="flex items-center gap-2 text-[13px] text-gray-500 mb-2">
+              <Users className="w-4 h-4" />
+              <span className="font-medium text-gray-600">Panel:</span>
+              <span>
+                {booking.participants.map((p, idx) => (
+                  <span key={p.id}>
+                    {p.name}
+                    {p.role === 'interviewer' && <span className="text-blue-600 text-[11px] ml-1">(Lead)</span>}
+                    {idx < booking.participants!.length - 1 && ', '}
+                  </span>
+                ))}
+              </span>
+            </div>
+          )}
+
+          {/* Location info */}
+          <div className="flex items-center gap-4 text-[13px] text-gray-500">
             <span className="flex items-center gap-1.5">
               <LocationIcon type={booking.location_type} />
               {booking.location_type_display}

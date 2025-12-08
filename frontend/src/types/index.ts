@@ -2001,6 +2001,19 @@ export interface RecruiterMeetingTypePublic {
   color: string
 }
 
+export interface RecruiterBookingParticipant {
+  id: string
+  name: string
+  email: string
+  role: 'interviewer' | 'participant'
+}
+
+export interface RecruiterBookingCandidateInfo {
+  name: string
+  slug: string
+  professional_title?: string
+}
+
 export interface RecruiterBooking {
   id: string
   booking_type?: 'booking' | 'interview'
@@ -2015,6 +2028,8 @@ export interface RecruiterBooking {
   attendee_email: string
   attendee_phone: string
   attendee_company: string
+  candidate_profile?: string | null
+  candidate_info?: RecruiterBookingCandidateInfo | null
   title: string
   description: string
   scheduled_at: string
@@ -2040,6 +2055,9 @@ export interface RecruiterBooking {
   job_id?: string
   application_id?: string
   stage_id?: string
+  company_name?: string
+  company_id?: string
+  participants?: RecruiterBookingParticipant[]
 }
 
 export interface RecruiterBookingInput {

@@ -530,7 +530,11 @@ def bookings_list(request):
     # =========================================================================
     # 1. Get Booking objects
     # =========================================================================
-    if user.role in ['admin', 'recruiter']:
+    if user.role == 'admin':
+        # Admins see ALL bookings
+        bookings = Booking.objects.all()
+    elif user.role == 'recruiter':
+        # Recruiters see only their own bookings
         bookings = Booking.objects.filter(organizer=user)
     else:
         q_filter = Q(attendee_user=user)
@@ -563,25 +567,34 @@ def bookings_list(request):
     # 2. Get ApplicationStageInstance objects (interviews/meetings)
     # =========================================================================
     # Only include scheduled stages (those with scheduled_at set)
-    if user.role in ['admin', 'recruiter']:
-        # Recruiters see stages where they are:
-        # - The interviewer or participant, OR
-        # - Created the job, OR
-        # - Are assigned as the job's recruiter
+    if user.role == 'admin':
+        # Admins see ALL scheduled stages
+        stages = ApplicationStageInstance.objects.filter(
+            scheduled_at__isnull=False
+        ).select_related(
+            'application__candidate__user',
+            'application__job',
+            'application__job__company',
+            'stage_template',
+            'interviewer'
+        ).prefetch_related('participants').distinct()
+    elif user.role == 'recruiter':
+        # Recruiters see stages where they are directly involved:
+        # - The interviewer, OR
+        # - A participant in the interview
         stage_q = (
             Q(interviewer=user) |
-            Q(participants=user) |
-            Q(application__job__created_by=user) |
-            Q(application__job__assigned_recruiter=user)
+            Q(participants=user)
         )
         stages = ApplicationStageInstance.objects.filter(stage_q).filter(
             scheduled_at__isnull=False
         ).select_related(
             'application__candidate__user',
             'application__job',
+            'application__job__company',
             'stage_template',
             'interviewer'
-        ).distinct()
+        ).prefetch_related('participants').distinct()
     elif user.role == 'client':
         # Clients see stages for applications to their company's jobs
         if hasattr(user, 'company_memberships'):
@@ -592,9 +605,10 @@ def bookings_list(request):
             ).select_related(
                 'application__candidate__user',
                 'application__job',
+                'application__job__company',
                 'stage_template',
                 'interviewer'
-            )
+            ).prefetch_related('participants')
         else:
             stages = ApplicationStageInstance.objects.none()
     else:
@@ -605,9 +619,10 @@ def bookings_list(request):
                 scheduled_at__isnull=False
             ).select_related(
                 'application__job',
+                'application__job__company',
                 'stage_template',
                 'interviewer'
-            )
+            ).prefetch_related('participants')
         else:
             stages = ApplicationStageInstance.objects.none()
 
@@ -642,10 +657,28 @@ def bookings_list(request):
         app = stage.application
         candidate = app.candidate
         job = app.job
+        company = job.company if job else None
         template = stage.stage_template
         end_time = None
         if stage.scheduled_at and stage.duration_minutes:
             end_time = stage.scheduled_at + timezone.timedelta(minutes=stage.duration_minutes)
+
+        # Build participants list (interviewer + additional participants)
+        participants_list = []
+        if stage.interviewer:
+            participants_list.append({
+                'id': str(stage.interviewer.id),
+                'name': stage.interviewer.full_name,
+                'email': stage.interviewer.email,
+                'role': 'interviewer',
+            })
+        for participant in stage.participants.all():
+            participants_list.append({
+                'id': str(participant.id),
+                'name': participant.full_name,
+                'email': participant.email,
+                'role': 'participant',
+            })
 
         stage_data = {
             'id': str(stage.id),
@@ -665,6 +698,7 @@ def bookings_list(request):
             'candidate_info': {
                 'name': candidate.full_name if candidate else '',
                 'slug': candidate.slug if candidate else '',
+                'professional_title': candidate.professional_title if candidate else '',
             } if candidate else None,
             'title': f"{template.name if template else 'Interview'} - {job.title if job else 'Application'}",
             'description': f"Interview for {job.title}" if job else 'Application Interview',
@@ -689,6 +723,11 @@ def bookings_list(request):
             'job_id': str(job.id) if job else None,
             'application_id': str(app.id) if app else None,
             'stage_id': str(stage.id),
+            # Company info
+            'company_name': company.name if company else '',
+            'company_id': str(company.id) if company else None,
+            # Participants info
+            'participants': participants_list,
         }
         results.append(stage_data)
 
@@ -791,7 +830,7 @@ def interview_cancel(request, stage_id):
         has_access = (
             stage.interviewer == user or
             stage.application.job.created_by == user or
-            stage.application.job.assigned_recruiter == user
+            stage.application.job.assigned_recruiters.filter(pk=user.pk).exists()
         )
     elif user.role == 'client':
         company_ids = list(user.company_memberships.values_list('company_id', flat=True))
@@ -828,7 +867,7 @@ def interview_complete(request, stage_id):
         has_access = (
             stage.interviewer == user or
             stage.application.job.created_by == user or
-            stage.application.job.assigned_recruiter == user
+            stage.application.job.assigned_recruiters.filter(pk=user.pk).exists()
         )
     elif user.role == 'client':
         company_ids = list(user.company_memberships.values_list('company_id', flat=True))
@@ -866,7 +905,7 @@ def interview_no_show(request, stage_id):
         has_access = (
             stage.interviewer == user or
             stage.application.job.created_by == user or
-            stage.application.job.assigned_recruiter == user
+            stage.application.job.assigned_recruiters.filter(pk=user.pk).exists()
         )
     elif user.role == 'client':
         company_ids = list(user.company_memberships.values_list('company_id', flat=True))

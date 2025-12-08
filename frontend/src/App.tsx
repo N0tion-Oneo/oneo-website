@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProtectedRoute, PublicRoute } from '@/components/auth';
 import { BrandingProvider } from '@/components/branding';
@@ -16,7 +17,6 @@ import {
   NewJobPage,
   EditJobPage,
   ApplicationsPage,
-  JobApplicationsPage,
   AdminCompaniesPage,
   AdminCompanyEditPage,
   AdminCandidatesPage,
@@ -47,6 +47,22 @@ import {
 import { BookingPage, RecruiterBookingPage } from '@/pages/booking';
 import { CandidateDashboardLayout, SettingsLayout } from '@/layouts';
 import './App.css';
+
+// Redirect component for old job applications route
+function JobApplicationsRedirect() {
+  const { jobId } = useParams<{ jobId: string }>()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (jobId) {
+      navigate(`/dashboard/applications?job=${jobId}`, { replace: true })
+    } else {
+      navigate('/dashboard/applications', { replace: true })
+    }
+  }, [jobId, navigate])
+
+  return null
+}
 
 function App() {
   return (
@@ -101,8 +117,9 @@ function App() {
           <Route path="jobs" element={<JobsPage />} />
           <Route path="jobs/new" element={<NewJobPage />} />
           <Route path="jobs/:jobId" element={<EditJobPage />} />
-          <Route path="jobs/:jobId/applications" element={<JobApplicationsPage />} />
-          <Route path="applications" element={<ApplicationsPage />} />
+          <Route path="jobs/:jobId/applications" element={<JobApplicationsRedirect />} />
+          <Route path="applications" element={<AdminApplicationsPage />} />
+          <Route path="my-applications" element={<ApplicationsPage />} />
           <Route path="bookings" element={<BookingManagementPage />} />
           {/* Settings routes with sidebar */}
           <Route path="settings" element={<SettingsLayout />}>
@@ -128,7 +145,8 @@ function App() {
           <Route path="admin/candidates/:slug" element={<AdminCandidateEditPage />} />
           <Route path="admin/jobs" element={<JobsPage mode="admin" />} />
           <Route path="admin/jobs/new" element={<AdminNewJobPage />} />
-          <Route path="admin/applications" element={<AdminApplicationsPage />} />
+          {/* Redirect old admin/applications URL */}
+          <Route path="admin/applications" element={<Navigate to="/dashboard/applications" replace />} />
         </Route>
 
         {/* Public candidates directory */}

@@ -13,7 +13,7 @@ export { default as AdminNewJobPage } from './AdminNewJobPage';
 export { default as AdminRecruitersPage } from './AdminRecruitersPage';
 export { default as AdminSkillsTechnologiesPage } from './AdminSkillsTechnologiesPage';
 export { default as ApplicationsPage } from './ApplicationsPage';
-export { default as JobApplicationsPage } from './JobApplicationsPage';
+// JobApplicationsPage is deprecated - use AdminApplicationsPage with ?job= param instead
 
 // Notification Admin pages
 export {

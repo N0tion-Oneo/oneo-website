@@ -760,10 +760,10 @@ def list_all_applications(request):
     from django.db.models.functions import Concat
     from django.core.paginator import Paginator, EmptyPage
 
-    # Check permission - admin or recruiter only
-    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+    # Check permission - admin, recruiter, or client
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER, UserRole.CLIENT]:
         return Response(
-            {'error': 'Only admins and recruiters can access this endpoint'},
+            {'error': 'Only admins, recruiters, and clients can access this endpoint'},
             status=status.HTTP_403_FORBIDDEN
         )
 
@@ -783,6 +783,13 @@ def list_all_applications(request):
         applications = applications.filter(
             Q(job__created_by=request.user) | Q(job__assigned_recruiters=request.user)
         )
+    elif request.user.role == UserRole.CLIENT:
+        # Clients see applications for their company's jobs only
+        company_membership = request.user.company_memberships.first()
+        if company_membership:
+            applications = applications.filter(job__company=company_membership.company)
+        else:
+            applications = applications.none()
 
     # Filter by status
     app_status = request.query_params.get('status')

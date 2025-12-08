@@ -476,10 +476,11 @@ def mark_job_filled(request, job_id):
 @permission_classes([IsAuthenticated])
 def list_all_jobs(request):
     """
-    List ALL jobs across all companies.
-    Admin/Recruiter only.
+    List jobs based on user role:
+    - Admin/Recruiter: ALL jobs across all companies
+    - Client: Jobs for their company only
     """
-    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER, UserRole.CLIENT]:
         return Response(
             {'error': 'Permission denied'},
             status=status.HTTP_403_FORBIDDEN
@@ -490,6 +491,15 @@ def list_all_jobs(request):
     ).prefetch_related(
         'required_skills', 'technologies'
     ).order_by('-created_at')
+
+    # Clients can only see their company's jobs
+    if request.user.role == UserRole.CLIENT:
+        # Get user's company through CompanyUser membership
+        company_membership = request.user.company_memberships.first()
+        if company_membership:
+            jobs = jobs.filter(company=company_membership.company)
+        else:
+            jobs = jobs.none()
 
     # Filter by status
     job_status = request.query_params.get('status')

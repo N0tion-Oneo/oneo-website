@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams, Navigate } from 'react-router-dom'
 import {
   useReactTable,
   getCoreRowModel,
@@ -98,7 +98,16 @@ const columnHelper = createColumnHelper<ApplicationListItem>()
 
 export default function AdminApplicationsPage() {
   const { user } = useAuth()
-  const [filters, setFilters] = useState<ApplicationFilters>(defaultFilters)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Get job from URL params
+  const jobIdFromUrl = searchParams.get('job')
+
+  // Initialize filters with job from URL if present
+  const [filters, setFilters] = useState<ApplicationFilters>(() => ({
+    ...defaultFilters,
+    job: jobIdFromUrl || '',
+  }))
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [showFilters, setShowFilters] = useState(true)
@@ -107,7 +116,8 @@ export default function AdminApplicationsPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null)
   const [openActionsMenu, setOpenActionsMenu] = useState<string | null>(null)
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null)
-  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table')
+  // Default to kanban when job is pre-selected from URL
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>(jobIdFromUrl ? 'kanban' : 'table')
 
   // Action hooks
   const { shortlist, isLoading: isShortlisting } = useShortlistApplication()
@@ -222,8 +232,13 @@ export default function AdminApplicationsPage() {
     [localApplications, refetch]
   )
 
-  // Check if user has admin/recruiter access
-  if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
+  // Auto-redirect candidates to their personal applications page
+  if (user?.role === UserRole.CANDIDATE) {
+    return <Navigate to="/dashboard/my-applications" replace />
+  }
+
+  // Check if user has access (admin, recruiter, or client)
+  if (!user || ![UserRole.ADMIN, UserRole.RECRUITER, UserRole.CLIENT].includes(user.role)) {
     return (
       <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
@@ -240,11 +255,32 @@ export default function AdminApplicationsPage() {
   const handleFiltersChange = (newFilters: ApplicationFilters) => {
     setFilters(newFilters)
     setPage(1)
+
+    // Sync job filter to URL params
+    if (newFilters.job !== filters.job) {
+      if (newFilters.job) {
+        setSearchParams({ job: newFilters.job })
+      } else {
+        setSearchParams({})
+      }
+    }
   }
+
+  // Sync filters when URL params change externally (e.g., navigation)
+  useEffect(() => {
+    const urlJobId = searchParams.get('job')
+    if (urlJobId !== filters.job) {
+      setFilters((prev) => ({ ...prev, job: urlJobId || '' }))
+      if (urlJobId) {
+        setViewMode('kanban') // Switch to kanban when job is selected via URL
+      }
+    }
+  }, [searchParams])
 
   const handleClearFilters = () => {
     setFilters(defaultFilters)
     setPage(1)
+    setSearchParams({}) // Clear URL params
   }
 
   const activeFilterCount = useMemo(() => {
