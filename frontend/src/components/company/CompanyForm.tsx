@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
-import { IndustryMultiSelect, TechnologyMultiSelect } from '@/components/forms'
+import { IndustryMultiSelect, TechnologyMultiSelect, AssignedToSelect } from '@/components/forms'
 import BenefitsEditor from './BenefitsEditor'
 import ValuesEditor from './ValuesEditor'
 import { useCountries, useCities } from '@/hooks'
-import type { Company, CompanyInput, Industry, BenefitCategory, Technology, RemoteWorkPolicy } from '@/types'
+import { useAuth } from '@/contexts/AuthContext'
+import type { Company, CompanyInput, Industry, BenefitCategory, Technology, RemoteWorkPolicy, AssignedUser } from '@/types'
+import { UserRole } from '@/types'
 import { Upload, X } from 'lucide-react'
 
 type Tab = 'basic' | 'culture' | 'benefits' | 'tech' | 'visibility'
@@ -12,9 +14,12 @@ interface CompanyFormProps {
   company?: Company
   onSave: (data: CompanyInput) => Promise<void>
   isSubmitting?: boolean
+  isAdmin?: boolean
 }
 
-export default function CompanyForm({ company, onSave, isSubmitting = false }: CompanyFormProps) {
+export default function CompanyForm({ company, onSave, isSubmitting = false, isAdmin = false }: CompanyFormProps) {
+  const { user } = useAuth()
+  const isStaffUser = user?.role && [UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)
   const [activeTab, setActiveTab] = useState<Tab>('basic')
   const [formData, setFormData] = useState<CompanyInput>({
     name: '',
@@ -52,6 +57,7 @@ export default function CompanyForm({ company, onSave, isSubmitting = false }: C
   const [selectedTechnologies, setSelectedTechnologies] = useState<Technology[]>([])
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [assignedTo, setAssignedTo] = useState<AssignedUser[]>([])
 
   // Location hooks
   const { countries } = useCountries()
@@ -99,6 +105,9 @@ export default function CompanyForm({ company, onSave, isSubmitting = false }: C
       }
       if (company.logo) {
         setLogoPreview(company.logo)
+      }
+      if (company.assigned_to) {
+        setAssignedTo(company.assigned_to)
       }
     }
   }, [company])
@@ -186,7 +195,12 @@ export default function CompanyForm({ company, onSave, isSubmitting = false }: C
 
   const handleSubmit = async () => {
     if (!validate()) return
-    await onSave(formData)
+    const dataToSave = {
+      ...formData,
+      // Include assigned_to_ids only when user is a platform admin/recruiter
+      ...(isStaffUser && { assigned_to_ids: assignedTo.map(u => u.id) }),
+    }
+    await onSave(dataToSave)
   }
 
   const currentYear = new Date().getFullYear()
@@ -269,6 +283,15 @@ export default function CompanyForm({ company, onSave, isSubmitting = false }: C
                 </div>
               </div>
             </div>
+
+            {/* Assigned To (Platform Admin/Recruiter only) */}
+            {isStaffUser && (
+              <AssignedToSelect
+                selected={assignedTo}
+                onChange={setAssignedTo}
+                placeholder="Assign recruiters..."
+              />
+            )}
 
             {/* Name and Tagline */}
             <div className="grid grid-cols-2 gap-4">

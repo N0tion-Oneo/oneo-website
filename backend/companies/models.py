@@ -175,6 +175,24 @@ class Company(models.Model):
     billing_contact_email = models.EmailField(blank=True)
     billing_contact_phone = models.CharField(max_length=30, blank=True)
 
+    # Assigned recruiters/admins - dedicated contact points
+    assigned_to = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name='assigned_companies',
+        help_text='Assigned recruiters or admins as dedicated contact points',
+    )
+
+    # Onboarding tracking
+    onboarding_stage = models.ForeignKey(
+        'core.OnboardingStage',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        limit_choices_to={'entity_type': 'company'},
+        related_name='companies',
+    )
+
     # Meta
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

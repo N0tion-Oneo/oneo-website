@@ -532,10 +532,28 @@ export function useCities(options: UseCitiesOptions = {}): UseCitiesReturn {
 interface UseAllCompaniesOptions {
   search?: string
   is_published?: boolean
+  industry?: string
+  company_size?: string
+  has_jobs?: boolean
+  created_after?: string
+  created_before?: string
+  ordering?: string
+  page?: number
+  page_size?: number
+}
+
+interface PaginatedCompaniesResponse {
+  results: AdminCompanyListItem[]
+  count: number
+  next: string | null
+  previous: string | null
 }
 
 interface UseAllCompaniesReturn {
   companies: AdminCompanyListItem[]
+  count: number
+  hasNext: boolean
+  hasPrevious: boolean
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
@@ -543,6 +561,9 @@ interface UseAllCompaniesReturn {
 
 export function useAllCompanies(options: UseAllCompaniesOptions = {}): UseAllCompaniesReturn {
   const [companies, setCompanies] = useState<AdminCompanyListItem[]>([])
+  const [count, setCount] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrevious, setHasPrevious] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -553,9 +574,29 @@ export function useAllCompanies(options: UseAllCompaniesOptions = {}): UseAllCom
       const params = new URLSearchParams()
       if (options.search) params.append('search', options.search)
       if (options.is_published !== undefined) params.append('is_published', String(options.is_published))
+      if (options.industry) params.append('industry', options.industry)
+      if (options.company_size) params.append('company_size', options.company_size)
+      if (options.has_jobs !== undefined) params.append('has_jobs', String(options.has_jobs))
+      if (options.created_after) params.append('created_after', options.created_after)
+      if (options.created_before) params.append('created_before', options.created_before)
+      if (options.ordering) params.append('ordering', options.ordering)
+      if (options.page) params.append('page', String(options.page))
+      if (options.page_size) params.append('page_size', String(options.page_size))
 
-      const response = await api.get<AdminCompanyListItem[]>(`/companies/all/?${params.toString()}`)
-      setCompanies(response.data)
+      const response = await api.get<PaginatedCompaniesResponse | AdminCompanyListItem[]>(`/companies/all/?${params.toString()}`)
+
+      // Handle both paginated and non-paginated responses
+      if (Array.isArray(response.data)) {
+        setCompanies(response.data)
+        setCount(response.data.length)
+        setHasNext(false)
+        setHasPrevious(false)
+      } else {
+        setCompanies(response.data.results)
+        setCount(response.data.count)
+        setHasNext(!!response.data.next)
+        setHasPrevious(!!response.data.previous)
+      }
     } catch (err) {
       const axiosError = err as { response?: { status?: number } }
       if (axiosError.response?.status === 403) {
@@ -567,13 +608,13 @@ export function useAllCompanies(options: UseAllCompaniesOptions = {}): UseAllCom
     } finally {
       setIsLoading(false)
     }
-  }, [options.search, options.is_published])
+  }, [options.search, options.is_published, options.industry, options.company_size, options.has_jobs, options.created_after, options.created_before, options.ordering, options.page, options.page_size])
 
   useEffect(() => {
     fetchCompanies()
   }, [fetchCompanies])
 
-  return { companies, isLoading, error, refetch: fetchCompanies }
+  return { companies, count, hasNext, hasPrevious, isLoading, error, refetch: fetchCompanies }
 }
 
 // ============================================================================

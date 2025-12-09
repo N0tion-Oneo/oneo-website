@@ -12,7 +12,7 @@ import {
   Pencil,
   Eye
 } from 'lucide-react'
-import type { CandidateProfile, CandidateProfileSanitized, CandidateAdminListItem, Experience, Education, ExperienceListItem, EducationListItem, Industry, ProfileSuggestion, ProfileSuggestionFieldType } from '@/types'
+import type { CandidateProfile, CandidateProfileSanitized, CandidateAdminListItem, Experience, Education, ExperienceListItem, EducationListItem, Industry, ProfileSuggestion, ProfileSuggestionFieldType, AssignedUser } from '@/types'
 import {
   aggregateSkillsWithProficiency,
   aggregateTechsWithProficiency,
@@ -20,6 +20,7 @@ import {
   formatTotalDuration,
 } from '@/utils/proficiency'
 import { SuggestionIndicator } from '@/components/suggestions'
+import { AssignedToSelect } from '@/components/forms'
 
 // Type guard to check if profile is full or sanitized
 type CandidateData = CandidateProfile | CandidateProfileSanitized | CandidateAdminListItem
@@ -30,6 +31,14 @@ function isFullProfile(profile: CandidateData): profile is CandidateProfile | Ca
 
 function hasProfileCompleteness(profile: CandidateData): profile is CandidateAdminListItem {
   return 'profile_completeness' in profile
+}
+
+function hasAssignedTo(profile: CandidateData): profile is CandidateAdminListItem {
+  return 'assigned_to' in profile
+}
+
+function hasOnboardingStage(profile: CandidateData): profile is CandidateAdminListItem {
+  return 'onboarding_stage' in profile
 }
 
 function isCandidateProfile(profile: CandidateData): profile is CandidateProfile {
@@ -62,6 +71,8 @@ interface CandidateProfileCardProps {
     fieldName: string,
     relatedObjectId?: string
   ) => void
+  // Assigned staff props
+  onAssignedToChange?: (assignedTo: AssignedUser[]) => void
 }
 
 const formatDate = (dateString: string) => {
@@ -209,6 +220,7 @@ export default function CandidateProfileCard({
   enableSuggestions = false,
   suggestions = [],
   onAddSuggestion,
+  onAssignedToChange,
 }: CandidateProfileCardProps) {
   const isPage = variant === 'page'
   const isFull = isFullProfile(candidate)
@@ -682,18 +694,44 @@ export default function CandidateProfileCard({
             )}
           </div>
 
-          {/* Profile Completeness (right side) */}
-          {showProfileCompleteness && hasProfileCompleteness(candidate) && (
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${getCompletenessColor(candidate.profile_completeness)}`}
-                  style={{ width: `${candidate.profile_completeness}%` }}
-                />
+          {/* Onboarding Stage, Assigned To & Profile Completeness (right side) */}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            {/* Onboarding Stage */}
+            {showAdminActions && hasOnboardingStage(candidate) && candidate.onboarding_stage && (
+              <span
+                className="px-2 py-0.5 text-[10px] font-medium rounded-full"
+                style={{
+                  backgroundColor: `${candidate.onboarding_stage.color}15`,
+                  color: candidate.onboarding_stage.color,
+                  border: `1px solid ${candidate.onboarding_stage.color}40`,
+                }}
+              >
+                {candidate.onboarding_stage.name}
+              </span>
+            )}
+
+            {/* Assigned To (when callback is provided) */}
+            {onAssignedToChange && hasAssignedTo(candidate) && (
+              <AssignedToSelect
+                selected={candidate.assigned_to || []}
+                onChange={onAssignedToChange}
+                compact
+              />
+            )}
+
+            {/* Profile Completeness */}
+            {showProfileCompleteness && hasProfileCompleteness(candidate) && (
+              <div className="flex items-center gap-2">
+                <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${getCompletenessColor(candidate.profile_completeness)}`}
+                    style={{ width: `${candidate.profile_completeness}%` }}
+                  />
+                </div>
+                <span className="text-[11px] text-gray-500">{candidate.profile_completeness}%</span>
               </div>
-              <span className="text-[11px] text-gray-500">{candidate.profile_completeness}%</span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
       </div>

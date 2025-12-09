@@ -1,0 +1,560 @@
+import { useState, useEffect, useRef } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { UserRole, OnboardingStage, OnboardingEntityType } from '@/types'
+import {
+  getOnboardingStages,
+  createOnboardingStage,
+  updateOnboardingStage,
+  deleteOnboardingStage,
+  reorderOnboardingStages,
+} from '@/services/api'
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  X,
+  GripVertical,
+  Building2,
+  User,
+  AlertCircle,
+  CheckCircle,
+  Flag,
+} from 'lucide-react'
+
+type TabType = 'company' | 'candidate'
+
+// Preset colors for stages
+const PRESET_COLORS = [
+  '#3B82F6', // Blue
+  '#8B5CF6', // Purple
+  '#6366F1', // Indigo
+  '#10B981', // Emerald
+  '#14B8A6', // Teal
+  '#06B6D4', // Cyan
+  '#22C55E', // Green
+  '#EF4444', // Red
+  '#F59E0B', // Amber
+  '#EC4899', // Pink
+  '#6B7280', // Gray
+]
+
+interface EditModalProps {
+  isOpen: boolean
+  onClose: () => void
+  stage: OnboardingStage | null
+  entityType: TabType
+  onSave: (data: { name: string; color: string; is_terminal: boolean }) => Promise<void>
+  isCreating?: boolean
+}
+
+function EditModal({ isOpen, onClose, stage, entityType, onSave, isCreating }: EditModalProps) {
+  const [name, setName] = useState(stage?.name || '')
+  const [color, setColor] = useState(stage?.color || '#3B82F6')
+  const [isTerminal, setIsTerminal] = useState(stage?.is_terminal || false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (stage) {
+      setName(stage.name)
+      setColor(stage.color)
+      setIsTerminal(stage.is_terminal)
+    } else {
+      setName('')
+      setColor('#3B82F6')
+      setIsTerminal(false)
+    }
+    setError('')
+  }, [stage])
+
+  if (!isOpen) return null
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name.trim()) {
+      setError('Name is required')
+      return
+    }
+    setSaving(true)
+    setError('')
+    try {
+      await onSave({ name: name.trim(), color, is_terminal: isTerminal })
+      onClose()
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { name?: string[]; error?: string } } }
+      setError(error.response?.data?.name?.[0] || error.response?.data?.error || 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h3 className="text-lg font-semibold">
+            {isCreating ? 'Create' : 'Edit'} {entityType === 'company' ? 'Company' : 'Candidate'} Stage
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Stage Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300"
+              placeholder="e.g., Meeting Booked"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Color</label>
+            <div className="flex flex-wrap gap-2">
+              {PRESET_COLORS.map((presetColor) => (
+                <button
+                  key={presetColor}
+                  type="button"
+                  onClick={() => setColor(presetColor)}
+                  className={`w-8 h-8 rounded-full border-2 transition-all ${
+                    color === presetColor ? 'border-gray-900 scale-110' : 'border-transparent'
+                  }`}
+                  style={{ backgroundColor: presetColor }}
+                />
+              ))}
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="w-10 h-10 rounded cursor-pointer"
+              />
+              <input
+                type="text"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="flex-1 px-3 py-2 border rounded-md text-sm font-mono"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
+          <div className="mb-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isTerminal}
+                onChange={(e) => setIsTerminal(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+              />
+              <span className="text-sm font-medium text-gray-700">Terminal stage</span>
+              <Flag className="w-4 h-4 text-gray-400" />
+            </label>
+            <p className="ml-6 text-xs text-gray-500 mt-1">
+              Terminal stages (e.g., "Onboarded", "Not Onboarded") represent the end of the onboarding process.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 text-sm bg-gray-900 text-white rounded-md hover:bg-gray-800 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+interface DeleteConfirmModalProps {
+  isOpen: boolean
+  onClose: () => void
+  stage: OnboardingStage | null
+  onConfirm: () => Promise<void>
+}
+
+function DeleteConfirmModal({ isOpen, onClose, stage, onConfirm }: DeleteConfirmModalProps) {
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState('')
+
+  if (!isOpen || !stage) return null
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    setError('')
+    try {
+      await onConfirm()
+      onClose()
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } }
+      setError(error.response?.data?.error || 'Failed to delete stage')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h3 className="text-lg font-semibold text-red-600">Delete Stage</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+          <p className="text-gray-600 mb-6">
+            Are you sure you want to delete <span className="font-semibold">"{stage.name}"</span>?
+            This will deactivate the stage and it will no longer appear in the onboarding workflow.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function OnboardingStagesSettingsPage() {
+  const { user } = useAuth()
+  const [activeTab, setActiveTab] = useState<TabType>('company')
+
+  // Company stages state
+  const [companyStages, setCompanyStages] = useState<OnboardingStage[]>([])
+  const [companyLoading, setCompanyLoading] = useState(true)
+  const [companyError, setCompanyError] = useState('')
+
+  // Candidate stages state
+  const [candidateStages, setCandidateStages] = useState<OnboardingStage[]>([])
+  const [candidateLoading, setCandidateLoading] = useState(true)
+  const [candidateError, setCandidateError] = useState('')
+
+  // Modal state
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [selectedStage, setSelectedStage] = useState<OnboardingStage | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
+
+  // Drag state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
+  // Permission check
+  if (user?.role !== UserRole.ADMIN && user?.role !== UserRole.RECRUITER) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">You don't have permission to view this page.</p>
+      </div>
+    )
+  }
+
+  // Fetch company stages
+  const fetchCompanyStages = async () => {
+    setCompanyLoading(true)
+    setCompanyError('')
+    try {
+      const data = await getOnboardingStages({ entity_type: 'company' })
+      setCompanyStages(data)
+    } catch {
+      setCompanyError('Failed to load company stages')
+    } finally {
+      setCompanyLoading(false)
+    }
+  }
+
+  // Fetch candidate stages
+  const fetchCandidateStages = async () => {
+    setCandidateLoading(true)
+    setCandidateError('')
+    try {
+      const data = await getOnboardingStages({ entity_type: 'candidate' })
+      setCandidateStages(data)
+    } catch {
+      setCandidateError('Failed to load candidate stages')
+    } finally {
+      setCandidateLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchCompanyStages()
+    fetchCandidateStages()
+  }, [])
+
+  const stages = activeTab === 'company' ? companyStages : candidateStages
+  const setStages = activeTab === 'company' ? setCompanyStages : setCandidateStages
+  const loading = activeTab === 'company' ? companyLoading : candidateLoading
+  const error = activeTab === 'company' ? companyError : candidateError
+  const fetchStages = activeTab === 'company' ? fetchCompanyStages : fetchCandidateStages
+
+  // Handle create
+  const handleCreate = () => {
+    setSelectedStage(null)
+    setIsCreating(true)
+    setEditModalOpen(true)
+  }
+
+  // Handle edit
+  const handleEdit = (stage: OnboardingStage) => {
+    setSelectedStage(stage)
+    setIsCreating(false)
+    setEditModalOpen(true)
+  }
+
+  // Handle delete
+  const handleDelete = (stage: OnboardingStage) => {
+    setSelectedStage(stage)
+    setDeleteModalOpen(true)
+  }
+
+  // Save handler
+  const handleSave = async (data: { name: string; color: string; is_terminal: boolean }) => {
+    if (isCreating) {
+      const nextOrder = stages.length > 0 ? Math.max(...stages.map(s => s.order)) + 1 : 0
+      await createOnboardingStage({
+        name: data.name,
+        entity_type: activeTab,
+        color: data.color,
+        is_terminal: data.is_terminal,
+        order: nextOrder,
+      })
+    } else if (selectedStage) {
+      await updateOnboardingStage(selectedStage.id, {
+        name: data.name,
+        color: data.color,
+        is_terminal: data.is_terminal,
+      })
+    }
+    await fetchStages()
+  }
+
+  // Delete confirm handler
+  const handleConfirmDelete = async () => {
+    if (selectedStage) {
+      await deleteOnboardingStage(selectedStage.id)
+      await fetchStages()
+    }
+  }
+
+  // Drag handlers
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index)
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    setDragOverIndex(index)
+  }
+
+  const handleDragEnd = async () => {
+    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+      const newStages = [...stages]
+      const [removed] = newStages.splice(draggedIndex, 1)
+      newStages.splice(dragOverIndex, 0, removed)
+
+      // Update local state immediately
+      setStages(newStages)
+
+      // Reorder on server
+      try {
+        await reorderOnboardingStages(
+          activeTab,
+          newStages.map(s => s.id)
+        )
+      } catch {
+        // Revert on error
+        await fetchStages()
+      }
+    }
+
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Onboarding Stages</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Configure the onboarding workflow stages for companies and candidates.
+        </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b mb-6">
+        <button
+          onClick={() => setActiveTab('company')}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'company'
+              ? 'border-gray-900 text-gray-900'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Building2 className="w-4 h-4" />
+          Company Stages
+        </button>
+        <button
+          onClick={() => setActiveTab('candidate')}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'candidate'
+              ? 'border-gray-900 text-gray-900'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <User className="w-4 h-4" />
+          Candidate Stages
+        </button>
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={handleCreate}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800"
+        >
+          <Plus className="w-4 h-4" />
+          Add Stage
+        </button>
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center h-48 text-red-600">
+          <AlertCircle className="w-5 h-5 mr-2" />
+          {error}
+        </div>
+      ) : stages.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <p>No stages configured yet.</p>
+          <p className="text-sm mt-1">Click "Add Stage" to create your first onboarding stage.</p>
+        </div>
+      ) : (
+        <div className="bg-white border rounded-lg overflow-hidden">
+          <div className="divide-y">
+            {stages.map((stage, index) => (
+              <div
+                key={stage.id}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`flex items-center gap-4 px-4 py-3 bg-white transition-colors ${
+                  dragOverIndex === index ? 'bg-gray-50' : ''
+                } ${draggedIndex === index ? 'opacity-50' : ''}`}
+              >
+                {/* Drag handle */}
+                <div className="cursor-grab text-gray-400 hover:text-gray-600">
+                  <GripVertical className="w-5 h-5" />
+                </div>
+
+                {/* Order number */}
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-600">
+                  {index + 1}
+                </div>
+
+                {/* Color indicator */}
+                <div
+                  className="w-4 h-4 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: stage.color }}
+                />
+
+                {/* Name */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-900">{stage.name}</span>
+                    {stage.is_terminal && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                        <Flag className="w-3 h-3" />
+                        Terminal
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleEdit(stage)}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                    title="Edit"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(stage)}
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Help text */}
+      <p className="mt-4 text-xs text-gray-500">
+        Drag and drop stages to reorder them. The order determines the progression of the onboarding workflow.
+      </p>
+
+      {/* Modals */}
+      <EditModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        stage={selectedStage}
+        entityType={activeTab}
+        onSave={handleSave}
+        isCreating={isCreating}
+      />
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        stage={selectedStage}
+        onConfirm={handleConfirmDelete}
+      />
+    </div>
+  )
+}

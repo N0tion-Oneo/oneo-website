@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_extensions',
     # Local apps
+    'core',
     'users',
     'api',
     'authentication',

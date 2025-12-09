@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { X, User, Activity } from 'lucide-react'
-import { CandidateAdminListItem, ProfileSuggestionFieldType } from '@/types'
+import { CandidateAdminListItem, ProfileSuggestionFieldType, AssignedUser } from '@/types'
 import { SUGGESTION_FIELD_LABELS } from '@/types'
 import api from '@/services/api'
 import { useAdminSuggestions } from '@/hooks'
@@ -21,9 +21,10 @@ interface SuggestionPanelState {
 interface CandidatePreviewPanelProps {
   candidate: CandidateAdminListItem | null
   onClose: () => void
+  onRefresh?: () => void
 }
 
-export default function CandidatePreviewPanel({ candidate, onClose }: CandidatePreviewPanelProps) {
+export default function CandidatePreviewPanel({ candidate, onClose, onRefresh }: CandidatePreviewPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>('profile')
   const viewRecordedRef = useRef<number | null>(null)
   const [suggestionPanel, setSuggestionPanel] = useState<SuggestionPanelState>({
@@ -122,6 +123,20 @@ export default function CandidatePreviewPanel({ candidate, onClose }: CandidateP
     setSuggestionPanel({ isOpen: false, fieldType: null, fieldName: null })
   }, [])
 
+  // Handle assigned_to changes
+  const handleAssignedToChange = useCallback(async (newAssigned: AssignedUser[]) => {
+    if (!candidate) return
+    try {
+      await api.patch(`/candidates/${candidate.slug}/`, {
+        assigned_to_ids: newAssigned.map(u => u.id),
+      })
+      // Trigger parent to refresh data
+      onRefresh?.()
+    } catch (err) {
+      console.error('Failed to update assigned_to:', err)
+    }
+  }, [candidate, onRefresh])
+
   if (!candidate) return null
 
   const tabs = [
@@ -198,6 +213,7 @@ export default function CandidatePreviewPanel({ candidate, onClose }: CandidateP
               enableSuggestions={true}
               suggestions={suggestions}
               onAddSuggestion={handleAddSuggestion}
+              onAssignedToChange={handleAssignedToChange}
             />
           )}
           {activeTab === 'activity' && (

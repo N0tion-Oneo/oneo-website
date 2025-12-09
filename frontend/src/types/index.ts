@@ -26,6 +26,25 @@ export interface User {
   booking_slug?: string  // For recruiters/admins - their public booking URL slug
 }
 
+export interface AssignedUser {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  full_name: string
+}
+
+// Staff user for assignment dropdowns (includes avatar)
+export interface StaffUser {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  full_name: string
+  avatar: string | null
+  role: UserRole
+}
+
 export interface AuthState {
   user: User | null
   isAuthenticated: boolean
@@ -173,6 +192,10 @@ export interface CandidateProfile {
   // Visibility & Completeness
   visibility: ProfileVisibility
   profile_completeness: number
+  // Assigned staff (for admin view)
+  assigned_to?: AssignedUser[]
+  // Onboarding stage
+  onboarding_stage?: OnboardingStageMinimal | null
   // Timestamps
   created_at: string
   updated_at: string
@@ -257,6 +280,8 @@ export interface CandidateAdminListItem {
   education: EducationListItem[]
   visibility: ProfileVisibility
   profile_completeness: number
+  assigned_to: AssignedUser[]
+  onboarding_stage: OnboardingStageMinimal | null
   created_at: string
   updated_at: string
 }
@@ -414,8 +439,18 @@ export interface Company {
   billing_contact_phone: string
   // Meta
   is_published: boolean
+  // Assigned staff (for admin view)
+  assigned_to?: AssignedUser[]
   created_at: string
   updated_at: string
+}
+
+export interface CompanyJobSummary {
+  id: string
+  title: string
+  slug: string
+  status: JobStatus
+  applications_count: number
 }
 
 export interface AdminCompanyListItem {
@@ -434,6 +469,9 @@ export interface AdminCompanyListItem {
   jobs_published: number
   jobs_closed: number
   jobs_filled: number
+  jobs: CompanyJobSummary[]
+  assigned_to: AssignedUser[]
+  onboarding_stage: OnboardingStageMinimal | null
 }
 
 export interface CompanyInput {
@@ -469,6 +507,8 @@ export interface CompanyInput {
   billing_contact_phone?: string
   // Meta
   is_published?: boolean
+  // Assigned staff (admin only)
+  assigned_to_ids?: number[]
 }
 
 export interface CompanyLocation {
@@ -2112,4 +2152,60 @@ export interface CandidateInvitation {
     scheduled_at: string | null
     status: RecruiterBookingStatus
   } | null
+}
+
+// ============================================================================
+// Onboarding Stages
+// ============================================================================
+
+export type OnboardingEntityType = 'company' | 'candidate'
+
+export interface OnboardingStage {
+  id: number
+  name: string
+  slug: string
+  entity_type: OnboardingEntityType
+  order: number
+  color: string
+  is_terminal: boolean
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface OnboardingStageMinimal {
+  id: number
+  name: string
+  slug: string
+  color: string
+  is_terminal: boolean
+  order: number
+}
+
+export interface OnboardingStageInput {
+  name: string
+  entity_type: OnboardingEntityType
+  order?: number
+  color?: string
+  is_terminal?: boolean
+}
+
+export interface OnboardingStageUpdateInput {
+  name?: string
+  order?: number
+  color?: string
+  is_terminal?: boolean
+  is_active?: boolean
+}
+
+export interface OnboardingHistory {
+  id: number
+  entity_type: OnboardingEntityType
+  entity_id: number
+  from_stage: OnboardingStage | null
+  to_stage: OnboardingStage
+  changed_by: number | null
+  changed_by_name: string | null
+  notes: string
+  created_at: string
 }

@@ -114,7 +114,7 @@ def get_company(request, slug):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-    serializer = CompanyDetailSerializer(company)
+    serializer = CompanyDetailSerializer(company, context={'request': request})
     return Response(serializer.data)
 
 
@@ -136,7 +136,7 @@ def get_my_company(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    serializer = CompanyDetailSerializer(company)
+    serializer = CompanyDetailSerializer(company, context={'request': request})
     return Response(serializer.data)
 
 
@@ -158,7 +158,7 @@ def update_my_company(request):
     if serializer.is_valid():
         serializer.save()
         # Return full company details
-        return Response(CompanyDetailSerializer(company).data)
+        return Response(CompanyDetailSerializer(company, context={'request': request}).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -561,7 +561,7 @@ def create_company(request):
         )
 
         return Response(
-            CompanyDetailSerializer(company).data,
+            CompanyDetailSerializer(company, context={'request': request}).data,
             status=status.HTTP_201_CREATED
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -616,6 +616,16 @@ def list_all_companies(request):
         ),
     )
 
+    # Prefetch jobs for each company (applications_count is already a field on Job model)
+    from jobs.models import Job
+    from django.db.models import Prefetch
+
+    jobs_queryset = Job.objects.order_by('-created_at')
+
+    companies = companies.prefetch_related(
+        Prefetch('jobs', queryset=jobs_queryset, to_attr='prefetched_jobs')
+    )
+
     serializer = CompanyAdminListSerializer(companies, many=True)
     return Response(serializer.data)
 
@@ -642,14 +652,14 @@ def company_detail_by_id(request, company_id):
         )
 
     if request.method == 'GET':
-        serializer = CompanyDetailSerializer(company)
+        serializer = CompanyDetailSerializer(company, context={'request': request})
         return Response(serializer.data)
 
     elif request.method == 'PATCH':
         serializer = CompanyUpdateSerializer(company, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(CompanyDetailSerializer(company).data)
+            return Response(CompanyDetailSerializer(company, context={'request': request}).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

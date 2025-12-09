@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import Company, CompanyUser, CompanySize, FundingStage, CompanyUserRole, Country, City, RemoteWorkPolicy
 from candidates.serializers import IndustrySerializer, TechnologySerializer
 from candidates.models import Industry, Technology
+from core.serializers import OnboardingStageMinimalSerializer
+from core.models import OnboardingStage
 
 
 class CompanyLocationSerializer(serializers.Serializer):
@@ -60,8 +62,26 @@ class CompanyListSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'slug']
 
 
+class CompanyJobSummarySerializer(serializers.Serializer):
+    """Minimal job serializer for company admin list view."""
+    id = serializers.UUIDField()
+    title = serializers.CharField()
+    slug = serializers.CharField()
+    status = serializers.CharField()
+    applications_count = serializers.IntegerField()
+
+
+class AssignedUserSerializer(serializers.Serializer):
+    """Minimal serializer for assigned user info."""
+    id = serializers.IntegerField()
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    full_name = serializers.CharField()
+
+
 class CompanyAdminListSerializer(serializers.ModelSerializer):
-    """Serializer for admin company list view with job counts."""
+    """Serializer for admin company list view with job counts and job list."""
     industry = IndustrySerializer(read_only=True)
     headquarters_location = serializers.CharField(read_only=True)
     jobs_total = serializers.IntegerField(read_only=True)
@@ -69,6 +89,9 @@ class CompanyAdminListSerializer(serializers.ModelSerializer):
     jobs_published = serializers.IntegerField(read_only=True)
     jobs_closed = serializers.IntegerField(read_only=True)
     jobs_filled = serializers.IntegerField(read_only=True)
+    jobs = serializers.SerializerMethodField()
+    assigned_to = AssignedUserSerializer(many=True, read_only=True)
+    onboarding_stage = OnboardingStageMinimalSerializer(read_only=True)
 
     class Meta:
         model = Company
@@ -88,8 +111,29 @@ class CompanyAdminListSerializer(serializers.ModelSerializer):
             'jobs_published',
             'jobs_closed',
             'jobs_filled',
+            'jobs',
+            'assigned_to',
+            'onboarding_stage',
         ]
         read_only_fields = ['id', 'slug', 'created_at']
+
+    def get_jobs(self, obj):
+        """Return a list of jobs with their status and applications count."""
+        # Get jobs from prefetched data if available, otherwise query
+        jobs = getattr(obj, 'prefetched_jobs', None)
+        if jobs is None:
+            jobs = obj.jobs.all()
+
+        return CompanyJobSummarySerializer([
+            {
+                'id': job.id,
+                'title': job.title,
+                'slug': job.slug,
+                'status': job.status,
+                'applications_count': job.applications_count,  # Field on Job model
+            }
+            for job in jobs
+        ], many=True).data
 
 
 class CompanyDetailSerializer(serializers.ModelSerializer):
@@ -109,6 +153,8 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
     locations = CompanyLocationSerializer(many=True, required=False)
     benefits = BenefitCategorySerializer(many=True, required=False)
     technologies = TechnologySerializer(many=True, read_only=True)
+    assigned_to = serializers.SerializerMethodField()
+    onboarding_stage = OnboardingStageMinimalSerializer(read_only=True)
 
     class Meta:
         model = Company
@@ -149,10 +195,31 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             'billing_contact_phone',
             # Meta
             'is_published',
+            # Assigned staff (for admin view)
+            'assigned_to',
+            # Onboarding
+            'onboarding_stage',
             'created_at',
             'updated_at',
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
+
+    def get_assigned_to(self, obj):
+        from users.models import UserRole
+        request = self.context.get('request')
+        # Only return assigned_to for staff users
+        if request and request.user.is_authenticated and request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]:
+            return [
+                {
+                    'id': user.id,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'full_name': user.full_name,
+                }
+                for user in obj.assigned_to.all()
+            ]
+        return []
 
 
 class CompanyUpdateSerializer(serializers.ModelSerializer):
@@ -187,6 +254,13 @@ class CompanyUpdateSerializer(serializers.ModelSerializer):
     billing_country_id = serializers.PrimaryKeyRelatedField(
         queryset=Country.objects.filter(is_active=True),
         source='billing_country',
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    onboarding_stage_id = serializers.PrimaryKeyRelatedField(
+        queryset=OnboardingStage.objects.filter(entity_type='company', is_active=True),
+        source='onboarding_stage',
         write_only=True,
         required=False,
         allow_null=True,
@@ -229,7 +303,25 @@ class CompanyUpdateSerializer(serializers.ModelSerializer):
             'billing_contact_phone',
             # Meta
             'is_published',
+            # Onboarding
+            'onboarding_stage_id',
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add assigned_to_ids field dynamically to avoid circular import
+        from django.contrib.auth import get_user_model
+        from users.models import UserRole
+        User = get_user_model()
+        self.fields['assigned_to_ids'] = serializers.PrimaryKeyRelatedField(
+            queryset=User.objects.filter(
+                role__in=[UserRole.RECRUITER, UserRole.ADMIN],
+                is_active=True,
+            ),
+            many=True,
+            write_only=True,
+            required=False,
+        )
 
     def validate_locations(self, value):
         """Validate locations format."""
@@ -250,11 +342,33 @@ class CompanyUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
-        """Handle M2M technology_ids separately."""
+        """Handle M2M fields and onboarding stage history."""
+        from core.models import OnboardingHistory
+
         technology_ids = validated_data.pop('technology_ids', None)
+        assigned_to_ids = validated_data.pop('assigned_to_ids', None)
+
+        # Track onboarding stage change before update
+        old_stage = instance.onboarding_stage
+        new_stage = validated_data.get('onboarding_stage')
+
         instance = super().update(instance, validated_data)
+
+        # Create history record if stage changed
+        if new_stage is not None and new_stage != old_stage:
+            request = self.context.get('request')
+            OnboardingHistory.objects.create(
+                entity_type='company',
+                entity_id=instance.id,
+                from_stage=old_stage,
+                to_stage=new_stage,
+                changed_by=request.user if request else None,
+            )
+
         if technology_ids is not None:
             instance.technologies.set(technology_ids)
+        if assigned_to_ids is not None:
+            instance.assigned_to.set(assigned_to_ids)
         return instance
 
 

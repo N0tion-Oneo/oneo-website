@@ -196,6 +196,8 @@ export interface ProfileUpdateData {
   industry_ids?: number[]
   // Visibility
   visibility?: string
+  // Assigned staff (admin/recruiter only)
+  assigned_to_ids?: number[]
 }
 
 export function useMyProfile(): UseMyProfileReturn {

@@ -311,4 +311,76 @@ export const getCandidateActivity = async (candidateId: number): Promise<Candida
   return response.data;
 };
 
+// ============================================================================
+// Company Update API
+// ============================================================================
+
+export const updateCompany = async (
+  companyId: string,
+  data: { onboarding_stage_id?: number | null; assigned_to_ids?: number[] }
+): Promise<void> => {
+  await api.patch(`/companies/${companyId}/detail/`, data);
+};
+
+// ============================================================================
+// Candidate Update API
+// ============================================================================
+
+export const updateCandidate = async (
+  candidateSlug: string,
+  data: { onboarding_stage_id?: number | null; assigned_to_ids?: number[] }
+): Promise<void> => {
+  await api.patch(`/candidates/${candidateSlug}/`, data);
+};
+
+// ============================================================================
+// Onboarding Stages API
+// ============================================================================
+
+import type { OnboardingStage, OnboardingEntityType, OnboardingStageInput, OnboardingStageUpdateInput, OnboardingHistory } from '@/types';
+
+export const getOnboardingStages = async (params?: {
+  entity_type?: OnboardingEntityType;
+  include_inactive?: boolean;
+}): Promise<OnboardingStage[]> => {
+  const response = await api.get('/onboarding-stages/', { params });
+  return response.data;
+};
+
+export const createOnboardingStage = async (data: OnboardingStageInput): Promise<OnboardingStage> => {
+  const response = await api.post('/onboarding-stages/create/', data);
+  return response.data;
+};
+
+export const updateOnboardingStage = async (
+  stageId: number,
+  data: OnboardingStageUpdateInput
+): Promise<OnboardingStage> => {
+  const response = await api.patch(`/onboarding-stages/${stageId}/`, data);
+  return response.data;
+};
+
+export const deleteOnboardingStage = async (stageId: number): Promise<void> => {
+  await api.delete(`/onboarding-stages/${stageId}/delete/`);
+};
+
+export const reorderOnboardingStages = async (
+  entityType: OnboardingEntityType,
+  stageIds: number[]
+): Promise<OnboardingStage[]> => {
+  const response = await api.post('/onboarding-stages/reorder/', {
+    entity_type: entityType,
+    stage_ids: stageIds,
+  });
+  return response.data;
+};
+
+export const getOnboardingHistory = async (
+  entityType: OnboardingEntityType,
+  entityId: number
+): Promise<OnboardingHistory[]> => {
+  const response = await api.get(`/onboarding-history/${entityType}/${entityId}/`);
+  return response.data;
+};
+
 export default api;

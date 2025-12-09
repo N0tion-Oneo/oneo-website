@@ -80,6 +80,49 @@ def update_my_recruiter_profile(request):
 
 
 @extend_schema(
+    responses={200: OpenApiResponse(description='List of staff users')},
+    tags=['Users'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_staff_users(request):
+    """
+    List all recruiters and admins for assignment dropdowns.
+    Only accessible to admin and recruiter users.
+    """
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    if not is_recruiter_or_admin(request.user):
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Get all users who are recruiters or admins
+    staff_users = User.objects.filter(
+        role__in=[UserRole.RECRUITER, UserRole.ADMIN],
+        is_active=True,
+    ).order_by('first_name', 'last_name')
+
+    # Return minimal user info for dropdowns
+    data = [
+        {
+            'id': user.id,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'full_name': user.full_name,
+            'avatar': request.build_absolute_uri(user.avatar.url) if user.avatar else None,
+            'role': user.role,
+        }
+        for user in staff_users
+    ]
+
+    return Response(data)
+
+
+@extend_schema(
     responses={
         200: RecruiterProfileSerializer,
         404: OpenApiResponse(description='Profile not found'),

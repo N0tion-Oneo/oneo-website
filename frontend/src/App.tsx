@@ -22,9 +22,11 @@ import {
   AdminCandidatesPage,
   AdminCandidateEditPage,
   AdminApplicationsPage,
+  AdminJobsPage,
   AdminNewJobPage,
   AdminRecruitersPage,
   AdminSkillsTechnologiesPage,
+  OnboardingStagesSettingsPage,
   NotificationsAdminPage,
   SendNotificationPage,
   NotificationTemplatesPage,
@@ -135,6 +137,7 @@ function App() {
             <Route path="notifications/templates/new" element={<NotificationTemplateEditPage />} />
             <Route path="notifications/templates/:templateId" element={<NotificationTemplateEditPage />} />
             <Route path="skills-technologies" element={<AdminSkillsTechnologiesPage />} />
+            <Route path="onboarding-stages" element={<OnboardingStagesSettingsPage />} />
             <Route path="branding" element={<BrandingSettingsPage />} />
             <Route path="recruiters" element={<AdminRecruitersPage />} />
           </Route>
@@ -143,7 +146,7 @@ function App() {
           <Route path="admin/companies/:companyId" element={<AdminCompanyEditPage />} />
           <Route path="admin/candidates" element={<AdminCandidatesPage />} />
           <Route path="admin/candidates/:slug" element={<AdminCandidateEditPage />} />
-          <Route path="admin/jobs" element={<JobsPage mode="admin" />} />
+          <Route path="admin/jobs" element={<AdminJobsPage />} />
           <Route path="admin/jobs/new" element={<AdminNewJobPage />} />
           {/* Redirect old admin/applications URL */}
           <Route path="admin/applications" element={<Navigate to="/dashboard/applications" replace />} />

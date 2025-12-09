@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useMyProfile, useCandidate, useCountries, useCities, useCandidateSuggestions } from '@/hooks'
-import { IndustryMultiSelect } from '@/components/forms'
+import { IndustryMultiSelect, AssignedToSelect } from '@/components/forms'
 import { ExperienceEditor } from '@/components/experience'
 import { EducationEditor } from '@/components/education'
 import { ResumeImportButton, ResumePreviewModal } from '@/components/resume'
 import { SuggestionsSidebar } from '@/components/suggestions'
 import { importResume, type ResumeImportResult } from '@/services/api'
-import type { Industry, PortfolioLink, CandidateProfile as CandidateProfileType, ParsedResumeData, ProfileSuggestion } from '@/types'
+import type { Industry, PortfolioLink, CandidateProfile as CandidateProfileType, ParsedResumeData, ProfileSuggestion, AssignedUser } from '@/types'
 import { Seniority, WorkPreference, Currency, ProfileVisibility, UserRole } from '@/types'
 
 type Tab = 'basic' | 'professional' | 'experience' | 'education' | 'preferences' | 'portfolio'
@@ -346,6 +346,32 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
     // Visibility
     visibility: 'private' as ProfileVisibility,
   })
+
+  // Assigned staff state (separate from form - updates independently)
+  const [assignedTo, setAssignedTo] = useState<AssignedUser[]>([])
+
+  // Populate assigned_to from profile
+  useEffect(() => {
+    if (profile?.assigned_to) {
+      setAssignedTo(profile.assigned_to)
+    }
+  }, [profile?.assigned_to])
+
+  // Handle assigned_to changes (save immediately)
+  const handleAssignedToChange = async (newAssigned: AssignedUser[]) => {
+    setAssignedTo(newAssigned)
+    try {
+      await updateProfile({
+        assigned_to_ids: newAssigned.map(u => u.id),
+      })
+    } catch (err) {
+      console.error('Failed to update assigned_to:', err)
+      // Revert on error
+      if (profile?.assigned_to) {
+        setAssignedTo(profile.assigned_to)
+      }
+    }
+  }
 
   // Populate form when profile loads
   useEffect(() => {
@@ -1049,6 +1075,17 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                   {resumeImportError && (
                     <p className="mt-2 text-[12px] text-red-600">{resumeImportError}</p>
                   )}
+                </div>
+              )}
+
+              {/* Assigned To (admin mode only) */}
+              {isAdminMode && (
+                <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                  <AssignedToSelect
+                    selected={assignedTo}
+                    onChange={handleAssignedToChange}
+                    placeholder="Assign recruiters..."
+                  />
                 </div>
               )}
 

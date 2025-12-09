@@ -15,6 +15,8 @@ from .models import (
     CompanySize,
 )
 from companies.models import City, Country
+from core.serializers import OnboardingStageMinimalSerializer
+from core.models import OnboardingStage
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -90,6 +92,12 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
     # Calculated years of experience
     years_of_experience = serializers.SerializerMethodField()
 
+    # Assigned staff (for admin view)
+    assigned_to = serializers.SerializerMethodField()
+
+    # Onboarding stage
+    onboarding_stage = OnboardingStageMinimalSerializer(read_only=True)
+
     class Meta:
         model = CandidateProfile
         fields = [
@@ -126,6 +134,8 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
             'education',
             'visibility',
             'profile_completeness',
+            'assigned_to',
+            'onboarding_stage',
             'created_at',
             'updated_at',
         ]
@@ -150,6 +160,23 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
 
     def get_years_of_experience(self, obj):
         return obj.calculated_years_of_experience
+
+    def get_assigned_to(self, obj):
+        from users.models import UserRole
+        request = self.context.get('request')
+        # Only return assigned_to for staff users
+        if request and request.user.is_authenticated and request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]:
+            return [
+                {
+                    'id': user.id,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'full_name': user.full_name,
+                }
+                for user in obj.assigned_to.all()
+            ]
+        return []
 
 
 class CandidateProfileSanitizedSerializer(serializers.ModelSerializer):
@@ -230,6 +257,15 @@ class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(required=False, write_only=True)
     phone = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
+    # Onboarding stage
+    onboarding_stage_id = serializers.PrimaryKeyRelatedField(
+        queryset=OnboardingStage.objects.filter(entity_type='candidate', is_active=True),
+        source='onboarding_stage',
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
     class Meta:
         model = CandidateProfile
         fields = [
@@ -256,7 +292,24 @@ class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
             'resume_url',
             'industry_ids',
             'visibility',
+            'onboarding_stage_id',
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add assigned_to_ids field dynamically to avoid circular import
+        from django.contrib.auth import get_user_model
+        from users.models import UserRole
+        User = get_user_model()
+        self.fields['assigned_to_ids'] = serializers.PrimaryKeyRelatedField(
+            queryset=User.objects.filter(
+                role__in=[UserRole.RECRUITER, UserRole.ADMIN],
+                is_active=True,
+            ),
+            many=True,
+            write_only=True,
+            required=False,
+        )
 
     def validate_salary_expectation_max(self, value):
         """Ensure max salary is greater than min salary."""
@@ -268,6 +321,8 @@ class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
+        from core.models import OnboardingHistory
+
         # Handle user fields
         user = instance.user
         if 'first_name' in validated_data:
@@ -283,11 +338,32 @@ class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
             industries = validated_data.pop('industry_ids')
             instance.industries.set(industries)
 
+        # Handle assigned_to M2M
+        if 'assigned_to_ids' in validated_data:
+            assigned_users = validated_data.pop('assigned_to_ids')
+            instance.assigned_to.set(assigned_users)
+
+        # Track onboarding stage change
+        old_stage = instance.onboarding_stage
+        new_stage = validated_data.get('onboarding_stage')
+
         # Update remaining profile fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
         instance.save()
+
+        # Create history record if stage changed
+        if new_stage is not None and new_stage != old_stage:
+            request = self.context.get('request')
+            OnboardingHistory.objects.create(
+                entity_type='candidate',
+                entity_id=instance.id,
+                from_stage=old_stage,
+                to_stage=new_stage,
+                changed_by=request.user if request else None,
+            )
+
         return instance
 
 
@@ -648,6 +724,15 @@ class EducationListSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class AssignedUserSerializer(serializers.Serializer):
+    """Minimal serializer for assigned user info."""
+    id = serializers.IntegerField()
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    full_name = serializers.CharField()
+
+
 class CandidateAdminListSerializer(serializers.ModelSerializer):
     """
     Serializer for admin/recruiter candidate listing.
@@ -663,6 +748,8 @@ class CandidateAdminListSerializer(serializers.ModelSerializer):
     experiences = ExperienceListSerializer(many=True, read_only=True)
     education = EducationListSerializer(many=True, read_only=True)
     years_of_experience = serializers.SerializerMethodField()
+    assigned_to = AssignedUserSerializer(many=True, read_only=True)
+    onboarding_stage = OnboardingStageMinimalSerializer(read_only=True)
 
     class Meta:
         model = CandidateProfile
@@ -694,6 +781,8 @@ class CandidateAdminListSerializer(serializers.ModelSerializer):
             'education',
             'visibility',
             'profile_completeness',
+            'assigned_to',
+            'onboarding_stage',
             'created_at',
             'updated_at',
         ]

@@ -377,10 +377,30 @@ interface UseAllJobsOptions {
   status?: JobStatus
   company?: string
   search?: string
+  seniority?: string
+  job_type?: string
+  work_mode?: string
+  department?: string
+  recruiter?: string
+  created_after?: string
+  created_before?: string
+  ordering?: string
+  page?: number
+  page_size?: number
+}
+
+interface PaginatedJobsResponse {
+  results: JobListItem[]
+  count: number
+  next: string | null
+  previous: string | null
 }
 
 interface UseAllJobsReturn {
   jobs: JobListItem[]
+  count: number
+  hasNext: boolean
+  hasPrevious: boolean
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
@@ -388,6 +408,9 @@ interface UseAllJobsReturn {
 
 export function useAllJobs(options: UseAllJobsOptions = {}): UseAllJobsReturn {
   const [jobs, setJobs] = useState<JobListItem[]>([])
+  const [count, setCount] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrevious, setHasPrevious] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -399,9 +422,31 @@ export function useAllJobs(options: UseAllJobsOptions = {}): UseAllJobsReturn {
       if (options.status) params.append('status', options.status)
       if (options.company) params.append('company', options.company)
       if (options.search) params.append('search', options.search)
+      if (options.seniority) params.append('seniority', options.seniority)
+      if (options.job_type) params.append('job_type', options.job_type)
+      if (options.work_mode) params.append('work_mode', options.work_mode)
+      if (options.department) params.append('department', options.department)
+      if (options.recruiter) params.append('recruiter', options.recruiter)
+      if (options.created_after) params.append('created_after', options.created_after)
+      if (options.created_before) params.append('created_before', options.created_before)
+      if (options.ordering) params.append('ordering', options.ordering)
+      if (options.page) params.append('page', String(options.page))
+      if (options.page_size) params.append('page_size', String(options.page_size))
 
-      const response = await api.get<JobListItem[]>(`/jobs/all/?${params.toString()}`)
-      setJobs(response.data)
+      const response = await api.get<PaginatedJobsResponse | JobListItem[]>(`/jobs/all/?${params.toString()}`)
+
+      // Handle both paginated and non-paginated responses
+      if (Array.isArray(response.data)) {
+        setJobs(response.data)
+        setCount(response.data.length)
+        setHasNext(false)
+        setHasPrevious(false)
+      } else {
+        setJobs(response.data.results)
+        setCount(response.data.count)
+        setHasNext(!!response.data.next)
+        setHasPrevious(!!response.data.previous)
+      }
     } catch (err) {
       const axiosError = err as { response?: { status?: number } }
       if (axiosError.response?.status === 403) {
@@ -413,13 +458,13 @@ export function useAllJobs(options: UseAllJobsOptions = {}): UseAllJobsReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [options.status, options.company, options.search])
+  }, [options.status, options.company, options.search, options.seniority, options.job_type, options.work_mode, options.department, options.recruiter, options.created_after, options.created_before, options.ordering, options.page, options.page_size])
 
   useEffect(() => {
     fetchJobs()
   }, [fetchJobs])
 
-  return { jobs, isLoading, error, refetch: fetchJobs }
+  return { jobs, count, hasNext, hasPrevious, isLoading, error, refetch: fetchJobs }
 }
 
 // ============================================================================

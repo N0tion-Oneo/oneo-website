@@ -30,6 +30,10 @@ import ColumnVisibilityMenu from '@/components/candidates/ColumnVisibilityMenu'
 import CandidateBulkActions from '@/components/candidates/CandidateBulkActions'
 import CandidateExportMenu from '@/components/candidates/CandidateExportMenu'
 import CandidatePreviewPanel from '@/components/candidates/CandidatePreviewPanel'
+import CandidateKanbanBoard from '@/components/candidates/CandidateKanbanBoard'
+import { AssignedToSelect } from '@/components/forms'
+import api from '@/services/api'
+import type { AssignedUser } from '@/types'
 import {
   User,
   Eye,
@@ -46,6 +50,8 @@ import {
   Briefcase,
   GraduationCap,
   MoreVertical,
+  LayoutList,
+  Columns3,
 } from 'lucide-react'
 
 const SENIORITY_OPTIONS = [
@@ -71,6 +77,8 @@ const VISIBILITY_OPTIONS = [
 ]
 
 const PAGE_SIZE_OPTIONS = [20, 30, 50]
+
+type ViewMode = 'table' | 'kanban'
 
 const getSeniorityLabel = (seniority: Seniority | ''): string => {
   return SENIORITY_OPTIONS.find(o => o.value === seniority)?.label || '-'
@@ -141,6 +149,7 @@ export default function AdminCandidatesPage() {
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({})
   const [openActionsMenu, setOpenActionsMenu] = useState<string | null>(null)
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null)
+  const [viewMode, setViewMode] = useState<ViewMode>('table')
 
   // Convert TanStack sorting to API ordering param
   const ordering = useMemo(() => {
@@ -157,7 +166,7 @@ export default function AdminCandidatesPage() {
     return sort.desc ? `-${field}` : field
   }, [sorting, filters.ordering])
 
-  const { candidates, count, hasNext, hasPrevious, isLoading, error } = useAllCandidates({
+  const { candidates, count, hasNext, hasPrevious, isLoading, error, refetch } = useAllCandidates({
     search: filters.search || undefined,
     seniority: filters.seniority || undefined,
     work_preference: filters.work_preference || undefined,
@@ -179,6 +188,16 @@ export default function AdminCandidatesPage() {
     page,
     page_size: pageSize,
   })
+
+  // Sync previewCandidate with candidates array when data changes
+  useEffect(() => {
+    if (previewCandidate) {
+      const updated = candidates.find(c => c.id === previewCandidate.id)
+      if (updated && JSON.stringify(updated) !== JSON.stringify(previewCandidate)) {
+        setPreviewCandidate(updated)
+      }
+    }
+  }, [candidates, previewCandidate])
 
   // Check if user has admin/recruiter access
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
@@ -231,6 +250,18 @@ export default function AdminCandidatesPage() {
     setPage(1)
   }
 
+  // Handler for changing assigned users on a candidate
+  const handleAssignedToChange = async (candidateSlug: string, assignedTo: AssignedUser[]) => {
+    try {
+      await api.patch(`/candidates/${candidateSlug}/`, {
+        assigned_to_ids: assignedTo.map(u => u.id),
+      })
+      refetch()
+    } catch (err) {
+      console.error('Failed to update assigned users:', err)
+    }
+  }
+
   // Define columns with TanStack Table
   const columns = useMemo<ColumnDef<CandidateAdminListItem, any>[]>(
     () => [
@@ -258,6 +289,25 @@ export default function AdminCandidatesPage() {
           </div>
         ),
       },
+      // PINNED LEFT: Assigned To
+      columnHelper.accessor('assigned_to', {
+        header: 'Assigned To',
+        size: 160,
+        cell: ({ row }) => {
+          const candidate = row.original
+          const assignedUsers = candidate.assigned_to || []
+          return (
+            <div onClick={(e) => e.stopPropagation()}>
+              <AssignedToSelect
+                selected={assignedUsers}
+                onChange={(newAssigned) => handleAssignedToChange(candidate.slug, newAssigned)}
+                compact
+                placeholder="Assign"
+              />
+            </div>
+          )
+        },
+      }),
       // PINNED LEFT: Candidate info
       columnHelper.accessor('full_name', {
         header: 'Candidate',
@@ -787,6 +837,27 @@ export default function AdminCandidatesPage() {
           <ColumnVisibilityMenu table={table} />
           {/* Export */}
           <CandidateExportMenu filters={filters} totalCount={count} />
+          {/* View Toggle */}
+          <div className="flex border border-gray-200 rounded-md overflow-hidden">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] transition-colors ${
+                viewMode === 'table' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'
+              }`}
+              title="Table view"
+            >
+              <LayoutList className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] border-l border-gray-200 transition-colors ${
+                viewMode === 'kanban' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'
+              }`}
+              title="Kanban view"
+            >
+              <Columns3 className="w-4 h-4" />
+            </button>
+          </div>
           {/* Page Size Selector */}
           <div className="flex items-center gap-1.5">
             <span className="text-[12px] text-gray-500">Show:</span>
@@ -888,8 +959,17 @@ export default function AdminCandidatesPage() {
             </div>
           )}
 
-          {/* TanStack Table */}
-          {!isLoading && !error && candidates.length > 0 && (
+          {/* Kanban View */}
+          {!isLoading && !error && candidates.length > 0 && viewMode === 'kanban' && (
+            <CandidateKanbanBoard
+              candidates={candidates}
+              onStageChange={refetch}
+              onCandidateClick={(candidate) => setPreviewCandidate(candidate)}
+            />
+          )}
+
+          {/* Table View */}
+          {!isLoading && !error && candidates.length > 0 && viewMode === 'table' && (
             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-max border-collapse">
@@ -997,8 +1077,8 @@ export default function AdminCandidatesPage() {
             </div>
           )}
 
-          {/* Pagination */}
-          {!isLoading && !error && totalPages > 1 && (
+          {/* Pagination (Table View Only) */}
+          {!isLoading && !error && totalPages > 1 && viewMode === 'table' && (
             <div className="flex items-center justify-between mt-4">
               <p className="text-[13px] text-gray-500">
                 Page {page} of {totalPages} ({count} total)
@@ -1030,6 +1110,7 @@ export default function AdminCandidatesPage() {
       <CandidatePreviewPanel
         candidate={previewCandidate}
         onClose={() => setPreviewCandidate(null)}
+        onRefresh={refetch}
       />
     </div>
   )

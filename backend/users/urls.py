@@ -2,6 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Staff users (for assignment dropdowns)
+    path('staff/', views.list_staff_users, name='list_staff_users'),
+
     # Recruiter profile endpoints
     path('recruiter/profile/', views.get_my_recruiter_profile, name='my_recruiter_profile'),
     path('recruiter/profile/update/', views.update_my_recruiter_profile, name='update_recruiter_profile'),

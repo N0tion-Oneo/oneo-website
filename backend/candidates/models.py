@@ -259,6 +259,24 @@ class CandidateProfile(models.Model):
     )
     profile_completeness = models.PositiveIntegerField(default=0)
 
+    # Assigned recruiters/admins - dedicated contact points
+    assigned_to = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name='assigned_candidates',
+        help_text='Assigned recruiters or admins as dedicated contact points',
+    )
+
+    # Onboarding tracking
+    onboarding_stage = models.ForeignKey(
+        'core.OnboardingStage',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        limit_choices_to={'entity_type': 'candidate'},
+        related_name='candidates',
+    )
+
     # Meta
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

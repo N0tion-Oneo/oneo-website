@@ -74,7 +74,7 @@ export default function CompanyTabs({
 
       {/* Content */}
       {activeTab === 'profile' && (
-        <CompanyForm company={company} onSave={onSave} isSubmitting={isUpdating} />
+        <CompanyForm company={company} onSave={onSave} isSubmitting={isUpdating} isAdmin={isAdmin} />
       )}
 
       {activeTab === 'team' && (

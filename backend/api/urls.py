@@ -31,4 +31,7 @@ urlpatterns = [
 
     # Users endpoints (recruiter profiles)
     path('', include('users.urls')),
+
+    # Core endpoints (onboarding stages)
+    path('', include('core.urls')),
 ]

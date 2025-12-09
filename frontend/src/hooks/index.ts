@@ -172,6 +172,9 @@ export {
 // Recruiter Profile hooks
 export { useRecruiterProfile } from './useRecruiterProfile'
 
+// Staff Users hooks (for assignment dropdowns)
+export { useStaffUsers } from './useStaffUsers'
+
 // Recruiter Booking hooks (public booking pages)
 export {
   useMeetingTypes,

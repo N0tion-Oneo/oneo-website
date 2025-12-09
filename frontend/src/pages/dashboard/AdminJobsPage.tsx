@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,20 +10,18 @@ import {
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table'
-import { useAllCompanies } from '@/hooks/useCompanies'
+import { useAllJobs, useJobStatus, useDeleteJob } from '@/hooks/useJobs'
 import { useAuth } from '@/contexts/AuthContext'
-import { UserRole } from '@/types'
-import type { AdminCompanyListItem, AssignedUser } from '@/types'
-import { AssignedToSelect } from '@/components/forms'
-import api from '@/services/api'
-import CompanyFilterPanel, {
-  CompanyFilters,
+import { JobStatus, UserRole } from '@/types'
+import type { JobListItem, User } from '@/types'
+import JobFilterPanel, {
+  JobFilters,
   defaultFilters,
-} from '@/components/companies/CompanyFilterPanel'
-import CompanyBulkActions from '@/components/companies/CompanyBulkActions'
-import CompanyKanbanBoard from '@/components/companies/CompanyKanbanBoard'
+} from '@/components/jobs/JobFilterPanel'
+import JobBulkActions from '@/components/jobs/JobBulkActions'
+import { getStatusBadge, formatJobDate } from '@/utils/jobs'
 import {
-  Building2,
+  Briefcase,
   Eye,
   Edit,
   AlertCircle,
@@ -33,53 +31,31 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
-  Briefcase,
+  Building2,
   Plus,
   MoreVertical,
   Users,
-  LayoutList,
-  Columns3,
+  Play,
+  Pause,
+  CheckCircle,
+  Trash2,
 } from 'lucide-react'
-
-type ViewMode = 'table' | 'kanban'
 
 const PAGE_SIZE_OPTIONS = [20, 30, 50]
 
-const getStatusBadge = (isPublished: boolean) => {
-  if (isPublished) {
-    return { bg: 'bg-green-100', text: 'text-green-700', label: 'Published' }
-  }
-  return { bg: 'bg-gray-100', text: 'text-gray-500', label: 'Draft' }
-}
+const columnHelper = createColumnHelper<JobListItem>()
 
-const getJobStatusBadge = (status: string) => {
-  switch (status) {
-    case 'published':
-      return { bg: 'bg-green-100', text: 'text-green-700', label: 'Live' }
-    case 'draft':
-      return { bg: 'bg-gray-100', text: 'text-gray-500', label: 'Draft' }
-    case 'closed':
-      return { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Closed' }
-    case 'filled':
-      return { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Filled' }
-    default:
-      return { bg: 'bg-gray-100', text: 'text-gray-500', label: status }
-  }
-}
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
-const columnHelper = createColumnHelper<AdminCompanyListItem>()
-
-export default function AdminCompaniesPage() {
+export default function AdminJobsPage() {
   const { user } = useAuth()
-  const [filters, setFilters] = useState<CompanyFilters>(defaultFilters)
+  const [searchParams] = useSearchParams()
+  const [filters, setFilters] = useState<JobFilters>(() => {
+    // Initialize company filter from URL params
+    const companyFromUrl = searchParams.get('company')
+    return {
+      ...defaultFilters,
+      company: companyFromUrl || '',
+    }
+  })
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [showFilters, setShowFilters] = useState(true)
@@ -87,7 +63,9 @@ export default function AdminCompaniesPage() {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [openActionsMenu, setOpenActionsMenu] = useState<string | null>(null)
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null)
-  const [viewMode, setViewMode] = useState<ViewMode>('table')
+
+  const { publishJob, closeJob, markJobFilled, isSubmitting } = useJobStatus()
+  const { deleteJob, isDeleting } = useDeleteJob()
 
   // Convert TanStack sorting to API ordering param
   const ordering = useMemo(() => {
@@ -95,20 +73,24 @@ export default function AdminCompaniesPage() {
     const sortItem = sorting[0]
     if (!sortItem) return filters.ordering
     const fieldMap: Record<string, string> = {
-      name: 'name',
+      title: 'title',
       created_at: 'created_at',
-      jobs_total: 'jobs_total',
+      applications_count: 'applications_count',
+      views_count: 'views_count',
     }
     const field = fieldMap[sortItem.id] || sortItem.id
     return sortItem.desc ? `-${field}` : field
   }, [sorting, filters.ordering])
 
-  const { companies, count, hasNext, hasPrevious, isLoading, error, refetch } = useAllCompanies({
+  const { jobs, count, hasNext, hasPrevious, isLoading, error, refetch } = useAllJobs({
     search: filters.search || undefined,
-    is_published: filters.is_published,
-    industry: filters.industry || undefined,
-    company_size: filters.company_size || undefined,
-    has_jobs: filters.has_jobs,
+    status: filters.status as JobStatus | undefined,
+    company: filters.company || undefined,
+    seniority: filters.seniority || undefined,
+    job_type: filters.job_type || undefined,
+    work_mode: filters.work_mode || undefined,
+    department: filters.department || undefined,
+    recruiter: filters.recruiter || undefined,
     created_after: filters.created_after || undefined,
     created_before: filters.created_before || undefined,
     ordering,
@@ -131,7 +113,7 @@ export default function AdminCompaniesPage() {
 
   const totalPages = Math.ceil(count / pageSize)
 
-  const handleFiltersChange = (newFilters: CompanyFilters) => {
+  const handleFiltersChange = (newFilters: JobFilters) => {
     setFilters(newFilters)
     setPage(1)
   }
@@ -143,10 +125,13 @@ export default function AdminCompaniesPage() {
 
   const activeFilterCount = useMemo(() => {
     let filterCount = 0
-    if (filters.is_published !== undefined) filterCount++
-    if (filters.industry) filterCount++
-    if (filters.company_size) filterCount++
-    if (filters.has_jobs !== undefined) filterCount++
+    if (filters.status) filterCount++
+    if (filters.company) filterCount++
+    if (filters.seniority) filterCount++
+    if (filters.job_type) filterCount++
+    if (filters.work_mode) filterCount++
+    if (filters.department) filterCount++
+    if (filters.recruiter) filterCount++
     if (filters.created_after) filterCount++
     if (filters.created_before) filterCount++
     return filterCount
@@ -157,20 +142,55 @@ export default function AdminCompaniesPage() {
     setPage(1)
   }
 
-  // Handler for changing assigned users on a company
-  const handleAssignedToChange = async (companyId: string, assignedTo: AssignedUser[]) => {
+  const handlePublish = async (jobId: string) => {
     try {
-      await api.patch(`/companies/${companyId}/detail/`, {
-        assigned_to_ids: assignedTo.map(u => u.id),
-      })
+      await publishJob(jobId)
       refetch()
+      setOpenActionsMenu(null)
+      setMenuPosition(null)
     } catch (err) {
-      console.error('Failed to update assigned users:', err)
+      console.error('Failed to publish job:', err)
+    }
+  }
+
+  const handleClose = async (jobId: string) => {
+    try {
+      await closeJob(jobId)
+      refetch()
+      setOpenActionsMenu(null)
+      setMenuPosition(null)
+    } catch (err) {
+      console.error('Failed to close job:', err)
+    }
+  }
+
+  const handleMarkFilled = async (jobId: string) => {
+    try {
+      await markJobFilled(jobId)
+      refetch()
+      setOpenActionsMenu(null)
+      setMenuPosition(null)
+    } catch (err) {
+      console.error('Failed to mark job as filled:', err)
+    }
+  }
+
+  const handleDelete = async (jobId: string) => {
+    if (!window.confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+      return
+    }
+    try {
+      await deleteJob(jobId)
+      refetch()
+      setOpenActionsMenu(null)
+      setMenuPosition(null)
+    } catch (err) {
+      console.error('Failed to delete job:', err)
     }
   }
 
   // Define columns
-  const columns = useMemo<ColumnDef<AdminCompanyListItem, any>[]>(
+  const columns = useMemo<ColumnDef<JobListItem, any>[]>(
     () => [
       // Selection checkbox
       {
@@ -196,152 +216,141 @@ export default function AdminCompaniesPage() {
           </div>
         ),
       },
-      // Assigned To (pinned to front)
-      columnHelper.accessor('assigned_to', {
-        header: 'Assigned To',
-        size: 160,
+      // Job Title
+      columnHelper.accessor('title', {
+        header: 'Job Title',
+        size: 220,
+        enableSorting: true,
         cell: ({ row }) => {
-          const company = row.original
-          const assignedUsers = company.assigned_to || []
+          const job = row.original
           return (
-            <div onClick={(e) => e.stopPropagation()}>
-              <AssignedToSelect
-                selected={assignedUsers}
-                onChange={(newAssigned) => handleAssignedToChange(company.id, newAssigned)}
-                compact
-                placeholder="Assign"
-              />
+            <div className="min-w-0">
+              <Link
+                to={`/dashboard/jobs/${job.id}`}
+                className="text-[13px] font-medium text-gray-900 hover:text-gray-700 truncate block"
+              >
+                {job.title}
+              </Link>
+              <p className="text-[11px] text-gray-500 truncate">
+                {job.location_display || 'No location'}
+              </p>
             </div>
           )
         },
       }),
       // Company
-      columnHelper.accessor('name', {
+      columnHelper.accessor('company', {
         header: 'Company',
-        size: 250,
-        enableSorting: true,
-        cell: ({ row }) => {
-          const company = row.original
+        size: 160,
+        cell: ({ getValue }) => {
+          const company = getValue()
           return (
-            <div className="flex items-center gap-3">
-              {company.logo ? (
+            <div className="flex items-center gap-2">
+              {company?.logo ? (
                 <img
                   src={company.logo}
                   alt={company.name}
-                  className="w-8 h-8 rounded object-cover flex-shrink-0"
+                  className="w-6 h-6 rounded object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
-                  <Building2 className="w-4 h-4 text-gray-400" />
+                <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <Building2 className="w-3 h-3 text-gray-400" />
                 </div>
               )}
-              <div className="min-w-0">
-                <Link
-                  to={`/dashboard/admin/companies/${company.id}`}
-                  className="text-[13px] font-medium text-gray-900 hover:text-gray-700 truncate block"
-                >
-                  {company.name}
-                </Link>
-                {company.tagline && (
-                  <p className="text-[11px] text-gray-500 truncate max-w-[200px]">
-                    {company.tagline}
-                  </p>
-                )}
-              </div>
+              <span className="text-[12px] text-gray-600 truncate">
+                {company?.name || 'Unknown'}
+              </span>
             </div>
           )
         },
       }),
-      // Industry
-      columnHelper.accessor('industry', {
-        header: 'Industry',
-        size: 140,
-        cell: ({ getValue }) => {
-          const industry = getValue()
-          return (
-            <span className="text-[12px] text-gray-600">
-              {industry?.name || '-'}
-            </span>
-          )
-        },
-      }),
-      // Company Size
-      columnHelper.accessor('company_size', {
-        header: 'Size',
-        size: 100,
-        cell: ({ getValue }) => {
-          const size = getValue()
-          return (
-            <span className="text-[12px] text-gray-600">
-              {size ? size.replace('_', '-') : '-'}
-            </span>
-          )
-        },
-      }),
-      // Location
-      columnHelper.accessor('headquarters_location', {
-        header: 'Location',
-        size: 140,
+      // Seniority
+      columnHelper.accessor('seniority', {
+        header: 'Seniority',
+        size: 90,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600 truncate block max-w-[120px]">
+          <span className="text-[12px] text-gray-600 capitalize">
+            {getValue()?.replace('_', ' ') || '-'}
+          </span>
+        ),
+      }),
+      // Work Mode
+      columnHelper.accessor('work_mode', {
+        header: 'Work Mode',
+        size: 90,
+        cell: ({ getValue }) => (
+          <span className="text-[12px] text-gray-600 capitalize">
             {getValue() || '-'}
           </span>
         ),
       }),
-      // Jobs
-      columnHelper.accessor('jobs', {
-        header: 'Jobs',
-        size: 280,
-        enableSorting: false,
-        cell: ({ row }) => {
-          const company = row.original
-          const jobs = company.jobs || []
-
-          if (jobs.length === 0) {
-            return <span className="text-[11px] text-gray-400">No jobs</span>
-          }
-
-          return (
-            <div className="flex flex-col gap-1.5 max-h-[100px] overflow-y-auto">
-              {jobs.map(job => {
-                const statusBadge = getJobStatusBadge(job.status)
-                return (
-                  <div key={job.id} className="flex items-center gap-2 group">
-                    <Link
-                      to={`/dashboard/admin/jobs/${job.id}`}
-                      className="text-[12px] text-gray-700 hover:text-gray-900 hover:underline truncate max-w-[130px]"
-                      title={job.title}
-                    >
-                      {job.title}
-                    </Link>
-                    <span className={`inline-flex px-1.5 py-0.5 text-[9px] font-medium rounded ${statusBadge.bg} ${statusBadge.text}`}>
-                      {statusBadge.label}
-                    </span>
-                    <Link
-                      to={`/dashboard/applications?job=${job.id}`}
-                      className="inline-flex items-center gap-0.5 text-[10px] text-gray-500 hover:text-gray-700"
-                      title={`${job.applications_count} application${job.applications_count !== 1 ? 's' : ''}`}
-                    >
-                      <Users className="w-3 h-3" />
-                      {job.applications_count}
-                    </Link>
-                  </div>
-                )
-              })}
-            </div>
-          )
-        },
-      }),
       // Status
-      columnHelper.accessor('is_published', {
+      columnHelper.accessor('status', {
         header: 'Status',
         size: 100,
         cell: ({ getValue }) => {
-          const badge = getStatusBadge(getValue())
+          const status = getValue()
+          const badge = getStatusBadge(status)
           return (
-            <span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${badge.bg} ${badge.text}`}>
-              {badge.label}
+            <span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${badge?.bg || 'bg-gray-100'} ${badge?.text || 'text-gray-700'}`}>
+              {badge?.label || status}
             </span>
+          )
+        },
+      }),
+      // Applications
+      columnHelper.accessor('applications_count', {
+        header: 'Applications',
+        size: 100,
+        enableSorting: true,
+        cell: ({ row }) => {
+          const job = row.original
+          return (
+            <Link
+              to={`/dashboard/jobs/${job.id}/applications`}
+              className="text-[12px] text-gray-600 hover:text-gray-900 hover:underline"
+            >
+              {job.applications_count || 0}
+            </Link>
+          )
+        },
+      }),
+      // Assigned Recruiters
+      columnHelper.accessor('assigned_recruiters', {
+        header: 'Assigned',
+        size: 100,
+        cell: ({ getValue }) => {
+          const recruiters = getValue()
+          if (!recruiters || recruiters.length === 0) {
+            return <span className="text-[11px] text-gray-400">Unassigned</span>
+          }
+          return (
+            <div className="flex -space-x-2">
+              {recruiters.slice(0, 3).map((recruiter: User) => (
+                <div
+                  key={recruiter.id}
+                  title={`${recruiter.first_name} ${recruiter.last_name}`}
+                  className="relative"
+                >
+                  {recruiter.avatar ? (
+                    <img
+                      src={recruiter.avatar}
+                      alt={`${recruiter.first_name} ${recruiter.last_name}`}
+                      className="w-6 h-6 rounded-full border-2 border-white object-cover"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[9px] font-medium text-gray-600">
+                      {recruiter.first_name?.[0]}{recruiter.last_name?.[0]}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {recruiters.length > 3 && (
+                <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[9px] font-medium text-gray-500">
+                  +{recruiters.length - 3}
+                </div>
+              )}
+            </div>
           )
         },
       }),
@@ -351,7 +360,7 @@ export default function AdminCompaniesPage() {
         size: 100,
         enableSorting: true,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-500">{formatDate(getValue())}</span>
+          <span className="text-[12px] text-gray-500">{formatJobDate(getValue())}</span>
         ),
       }),
       // Actions
@@ -361,25 +370,25 @@ export default function AdminCompaniesPage() {
         size: 50,
         enableResizing: false,
         cell: ({ row }) => {
-          const company = row.original
+          const job = row.original
           return (
             <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={(e) => {
-                  if (openActionsMenu === company.id) {
+                  if (openActionsMenu === job.id) {
                     setOpenActionsMenu(null)
                     setMenuPosition(null)
                   } else {
                     const rect = e.currentTarget.getBoundingClientRect()
                     setMenuPosition({ top: rect.bottom + 4, left: rect.right - 192 })
-                    setOpenActionsMenu(company.id)
+                    setOpenActionsMenu(job.id)
                   }
                 }}
                 className="p-1 text-gray-400 hover:text-gray-600 rounded"
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
-              {openActionsMenu === company.id && menuPosition && createPortal(
+              {openActionsMenu === job.id && menuPosition && createPortal(
                 <>
                   <div
                     className="fixed inset-0 z-[9998]"
@@ -393,9 +402,9 @@ export default function AdminCompaniesPage() {
                     style={{ top: menuPosition.top, left: menuPosition.left }}
                   >
                     <div className="py-1">
-                      {company.is_published && (
+                      {job.status === JobStatus.PUBLISHED && (
                         <Link
-                          to={`/companies/${company.slug}`}
+                          to={`/jobs/${job.slug}`}
                           className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
                           onClick={() => {
                             setOpenActionsMenu(null)
@@ -403,11 +412,11 @@ export default function AdminCompaniesPage() {
                           }}
                         >
                           <Eye className="w-4 h-4" />
-                          View Public Profile
+                          View Listing
                         </Link>
                       )}
                       <Link
-                        to={`/dashboard/admin/companies/${company.id}`}
+                        to={`/dashboard/jobs/${job.id}`}
                         className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
                         onClick={() => {
                           setOpenActionsMenu(null)
@@ -415,30 +424,61 @@ export default function AdminCompaniesPage() {
                         }}
                       >
                         <Edit className="w-4 h-4" />
-                        Edit Company
+                        Edit Job
                       </Link>
                       <Link
-                        to={`/dashboard/admin/jobs?company=${company.id}`}
+                        to={`/dashboard/jobs/${job.id}/applications`}
                         className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
                         onClick={() => {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
                         }}
                       >
-                        <Briefcase className="w-4 h-4" />
-                        View Jobs
+                        <Users className="w-4 h-4" />
+                        View Applications
                       </Link>
-                      <Link
-                        to={`/dashboard/admin/jobs/new?company=${company.id}`}
-                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
-                        onClick={() => {
-                          setOpenActionsMenu(null)
-                          setMenuPosition(null)
-                        }}
+
+                      {job.status === JobStatus.DRAFT && (
+                        <button
+                          onClick={() => handlePublish(job.id)}
+                          disabled={isSubmitting}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-green-600 hover:bg-green-50"
+                        >
+                          <Play className="w-4 h-4" />
+                          Publish
+                        </button>
+                      )}
+
+                      {job.status === JobStatus.PUBLISHED && (
+                        <>
+                          <button
+                            onClick={() => handleClose(job.id)}
+                            disabled={isSubmitting}
+                            className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-orange-600 hover:bg-orange-50"
+                          >
+                            <Pause className="w-4 h-4" />
+                            Close Job
+                          </button>
+                          <button
+                            onClick={() => handleMarkFilled(job.id)}
+                            disabled={isSubmitting}
+                            className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-blue-600 hover:bg-blue-50"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            Mark as Filled
+                          </button>
+                        </>
+                      )}
+
+                      <hr className="my-1" />
+                      <button
+                        onClick={() => handleDelete(job.id)}
+                        disabled={isDeleting}
+                        className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-red-600 hover:bg-red-50"
                       >
-                        <Plus className="w-4 h-4" />
-                        Create Job
-                      </Link>
+                        <Trash2 className="w-4 h-4" />
+                        Delete Job
+                      </button>
                     </div>
                   </div>
                 </>,
@@ -449,11 +489,11 @@ export default function AdminCompaniesPage() {
         },
       }),
     ],
-    [openActionsMenu, menuPosition]
+    [openActionsMenu, menuPosition, isSubmitting, isDeleting]
   )
 
   const table = useReactTable({
-    data: companies,
+    data: jobs,
     columns,
     state: {
       sorting,
@@ -469,8 +509,8 @@ export default function AdminCompaniesPage() {
     enableRowSelection: true,
   })
 
-  // Get selected companies
-  const selectedCompanies = useMemo(() => {
+  // Get selected jobs
+  const selectedJobs = useMemo(() => {
     return table.getSelectedRowModel().rows.map(row => row.original)
   }, [table.getSelectedRowModel().rows])
 
@@ -483,9 +523,9 @@ export default function AdminCompaniesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">All Companies</h1>
+          <h1 className="text-[20px] font-semibold text-gray-900">All Jobs</h1>
           <p className="text-[13px] text-gray-500 mt-0.5">
-            {count} compan{count !== 1 ? 'ies' : 'y'} found
+            {count} job{count !== 1 ? 's' : ''} found
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -502,27 +542,6 @@ export default function AdminCompaniesPage() {
               ))}
             </select>
           </div>
-          {/* View Toggle */}
-          <div className="flex border border-gray-200 rounded-md overflow-hidden">
-            <button
-              onClick={() => setViewMode('table')}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] transition-colors ${
-                viewMode === 'table' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'
-              }`}
-              title="Table view"
-            >
-              <LayoutList className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] border-l border-gray-200 transition-colors ${
-                viewMode === 'kanban' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'
-              }`}
-              title="Kanban view"
-            >
-              <Columns3 className="w-4 h-4" />
-            </button>
-          </div>
           {/* Toggle Filters */}
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -538,6 +557,14 @@ export default function AdminCompaniesPage() {
               </span>
             )}
           </button>
+          {/* Create Job */}
+          <Link
+            to="/dashboard/admin/jobs/new"
+            className="flex items-center gap-2 px-4 py-1.5 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
+          >
+            <Plus className="w-4 h-4" />
+            Create Job
+          </Link>
         </div>
       </div>
 
@@ -545,7 +572,7 @@ export default function AdminCompaniesPage() {
         {/* Filter Sidebar */}
         {showFilters && (
           <div className="w-72 flex-shrink-0">
-            <CompanyFilterPanel
+            <JobFilterPanel
               filters={filters}
               onFiltersChange={handleFiltersChange}
               onClearFilters={handleClearFilters}
@@ -572,8 +599,8 @@ export default function AdminCompaniesPage() {
           )}
 
           {/* Bulk Actions */}
-          <CompanyBulkActions
-            selectedCompanies={selectedCompanies}
+          <JobBulkActions
+            selectedJobs={selectedJobs}
             onClearSelection={clearSelection}
             totalCount={count}
           />
@@ -581,7 +608,7 @@ export default function AdminCompaniesPage() {
           {/* Loading State */}
           {isLoading && (
             <div className="text-center py-12">
-              <p className="text-[14px] text-gray-500">Loading companies...</p>
+              <p className="text-[14px] text-gray-500">Loading jobs...</p>
             </div>
           )}
 
@@ -593,12 +620,12 @@ export default function AdminCompaniesPage() {
           )}
 
           {/* Empty State */}
-          {!isLoading && !error && companies.length === 0 && (
+          {!isLoading && !error && jobs.length === 0 && (
             <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-              <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-[15px] text-gray-700 mb-1">No companies found</p>
+              <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-[15px] text-gray-700 mb-1">No jobs found</p>
               <p className="text-[13px] text-gray-500">
-                {activeFilterCount > 0 || filters.search ? 'Try adjusting your filters' : 'No companies have been created yet'}
+                {activeFilterCount > 0 || filters.search ? 'Try adjusting your filters' : 'No jobs have been created yet'}
               </p>
               {activeFilterCount > 0 && (
                 <button
@@ -611,8 +638,8 @@ export default function AdminCompaniesPage() {
             </div>
           )}
 
-          {/* Table View */}
-          {viewMode === 'table' && !isLoading && !error && companies.length > 0 && (
+          {/* Table */}
+          {!isLoading && !error && jobs.length > 0 && (
             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
@@ -671,15 +698,6 @@ export default function AdminCompaniesPage() {
                 </table>
               </div>
             </div>
-          )}
-
-          {/* Kanban View */}
-          {viewMode === 'kanban' && !isLoading && !error && (
-            <CompanyKanbanBoard
-              companies={companies}
-              isLoading={isLoading}
-              onStageChange={refetch}
-            />
           )}
 
           {/* Pagination */}
