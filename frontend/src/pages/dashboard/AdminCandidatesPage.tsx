@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import {
@@ -11,7 +11,7 @@ import {
   RowSelectionState,
   ColumnSizingState,
 } from '@tanstack/react-table'
-import { useAllCandidates } from '@/hooks'
+import { useAllCandidates, useAssignedUpdate } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole, Seniority, WorkPreference, ProfileVisibility, Currency } from '@/types'
 import type { CandidateAdminListItem, ExperienceListItem } from '@/types'
@@ -31,7 +31,7 @@ import CandidateBulkActions from '@/components/candidates/CandidateBulkActions'
 import CandidateExportMenu from '@/components/candidates/CandidateExportMenu'
 import CandidatePreviewPanel from '@/components/candidates/CandidatePreviewPanel'
 import CandidateKanbanBoard from '@/components/candidates/CandidateKanbanBoard'
-import { AssignedToSelect } from '@/components/forms'
+import { AssignedSelect } from '@/components/forms'
 import api from '@/services/api'
 import type { AssignedUser } from '@/types'
 import {
@@ -189,15 +189,25 @@ export default function AdminCandidatesPage() {
     page_size: pageSize,
   })
 
+  // Local state for optimistic updates
+  const [localCandidates, setLocalCandidates] = useState<CandidateAdminListItem[]>([])
+
+  // Sync local state with fetched data
+  useEffect(() => {
+    if (candidates) {
+      setLocalCandidates(candidates)
+    }
+  }, [candidates])
+
   // Sync previewCandidate with candidates array when data changes
   useEffect(() => {
     if (previewCandidate) {
-      const updated = candidates.find(c => c.id === previewCandidate.id)
+      const updated = localCandidates.find(c => c.id === previewCandidate.id)
       if (updated && JSON.stringify(updated) !== JSON.stringify(previewCandidate)) {
         setPreviewCandidate(updated)
       }
     }
-  }, [candidates, previewCandidate])
+  }, [localCandidates, previewCandidate])
 
   // Check if user has admin/recruiter access
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
@@ -250,17 +260,23 @@ export default function AdminCandidatesPage() {
     setPage(1)
   }
 
-  // Handler for changing assigned users on a candidate
-  const handleAssignedToChange = async (candidateSlug: string, assignedTo: AssignedUser[]) => {
-    try {
-      await api.patch(`/candidates/${candidateSlug}/`, {
+  // Hook for optimistic updates with toast notifications
+  const { updateAssigned } = useAssignedUpdate<CandidateAdminListItem>()
+
+  // Handler for changing assigned users on a candidate (optimistic)
+  const handleAssignedToChange = useCallback((candidateSlug: string, assignedTo: AssignedUser[]) => {
+    updateAssigned(
+      localCandidates,
+      setLocalCandidates,
+      candidateSlug,
+      'slug',
+      'assigned_to',
+      assignedTo,
+      () => api.patch(`/candidates/${candidateSlug}/`, {
         assigned_to_ids: assignedTo.map(u => u.id),
       })
-      refetch()
-    } catch (err) {
-      console.error('Failed to update assigned users:', err)
-    }
-  }
+    )
+  }, [localCandidates, updateAssigned])
 
   // Define columns with TanStack Table
   const columns = useMemo<ColumnDef<CandidateAdminListItem, any>[]>(
@@ -298,7 +314,7 @@ export default function AdminCandidatesPage() {
           const assignedUsers = candidate.assigned_to || []
           return (
             <div onClick={(e) => e.stopPropagation()}>
-              <AssignedToSelect
+              <AssignedSelect
                 selected={assignedUsers}
                 onChange={(newAssigned) => handleAssignedToChange(candidate.slug, newAssigned)}
                 compact
@@ -788,7 +804,7 @@ export default function AdminCandidatesPage() {
   )
 
   const table = useReactTable({
-    data: candidates,
+    data: localCandidates,
     columns,
     state: {
       sorting,
@@ -960,16 +976,16 @@ export default function AdminCandidatesPage() {
           )}
 
           {/* Kanban View */}
-          {!isLoading && !error && candidates.length > 0 && viewMode === 'kanban' && (
+          {!isLoading && !error && localCandidates.length > 0 && viewMode === 'kanban' && (
             <CandidateKanbanBoard
-              candidates={candidates}
+              candidates={localCandidates}
               onStageChange={refetch}
               onCandidateClick={(candidate) => setPreviewCandidate(candidate)}
             />
           )}
 
           {/* Table View */}
-          {!isLoading && !error && candidates.length > 0 && viewMode === 'table' && (
+          {!isLoading && !error && localCandidates.length > 0 && viewMode === 'table' && (
             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-max border-collapse">

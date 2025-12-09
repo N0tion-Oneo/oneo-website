@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
@@ -10,15 +10,18 @@ import {
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table'
-import { useAllJobs, useJobStatus, useDeleteJob } from '@/hooks/useJobs'
+import { useAllJobs, useJobStatus, useDeleteJob, useUpdateJob } from '@/hooks/useJobs'
+import { useAssignedUpdate } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { JobStatus, UserRole } from '@/types'
-import type { JobListItem, User } from '@/types'
+import type { JobListItem, User, AssignedUser } from '@/types'
 import JobFilterPanel, {
   JobFilters,
   defaultFilters,
 } from '@/components/jobs/JobFilterPanel'
 import JobBulkActions from '@/components/jobs/JobBulkActions'
+import JobDrawer from '@/components/jobs/JobDrawer'
+import { AssignedSelect } from '@/components/forms'
 import { getStatusBadge, formatJobDate } from '@/utils/jobs'
 import {
   Briefcase,
@@ -64,8 +67,13 @@ export default function AdminJobsPage() {
   const [openActionsMenu, setOpenActionsMenu] = useState<string | null>(null)
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null)
 
+  // Job Drawer state
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
+
   const { publishJob, closeJob, markJobFilled, isSubmitting } = useJobStatus()
   const { deleteJob, isDeleting } = useDeleteJob()
+  const { updateJob } = useUpdateJob()
 
   // Convert TanStack sorting to API ordering param
   const ordering = useMemo(() => {
@@ -97,6 +105,16 @@ export default function AdminJobsPage() {
     page,
     page_size: pageSize,
   })
+
+  // Local state for optimistic updates
+  const [localJobs, setLocalJobs] = useState<JobListItem[]>([])
+
+  // Sync local state with fetched data
+  useEffect(() => {
+    if (jobs) {
+      setLocalJobs(jobs)
+    }
+  }, [jobs])
 
   // Check if user has admin/recruiter access
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
@@ -189,10 +207,42 @@ export default function AdminJobsPage() {
     }
   }
 
+  // Drawer handlers
+  const handleOpenDrawer = useCallback((jobId: string | null = null) => {
+    setSelectedJobId(jobId)
+    setIsDrawerOpen(true)
+  }, [])
+
+  const handleCloseDrawer = useCallback(() => {
+    setIsDrawerOpen(false)
+    setSelectedJobId(null)
+  }, [])
+
+  const handleDrawerSuccess = useCallback(() => {
+    refetch()
+    handleCloseDrawer()
+  }, [refetch, handleCloseDrawer])
+
+  // Hook for optimistic updates with toast notifications
+  const { updateAssigned } = useAssignedUpdate<JobListItem>()
+
+  // Handler for updating assigned recruiters inline (optimistic)
+  const handleAssignedChange = useCallback((jobId: string, assignedUsers: AssignedUser[]) => {
+    updateAssigned(
+      localJobs,
+      setLocalJobs,
+      jobId,
+      'id',
+      'assigned_recruiters',
+      assignedUsers,
+      () => updateJob(jobId, { assigned_recruiter_ids: assignedUsers.map(u => u.id) })
+    )
+  }, [localJobs, updateAssigned, updateJob])
+
   // Define columns
   const columns = useMemo<ColumnDef<JobListItem, any>[]>(
     () => [
-      // Selection checkbox
+      // Selection checkbox - PINNED LEFT
       {
         id: 'select',
         size: 40,
@@ -216,7 +266,33 @@ export default function AdminJobsPage() {
           </div>
         ),
       },
-      // Job Title
+      // Assigned Recruiters - PINNED LEFT
+      columnHelper.accessor('assigned_recruiters', {
+        header: 'Assigned',
+        size: 140,
+        cell: ({ row }) => {
+          const job = row.original
+          const recruiters = job.assigned_recruiters || []
+          const assignedUsers = recruiters.map((r: User) => ({
+            id: r.id,
+            email: r.email,
+            first_name: r.first_name,
+            last_name: r.last_name,
+            full_name: `${r.first_name} ${r.last_name}`,
+          }))
+          return (
+            <div onClick={(e) => e.stopPropagation()}>
+              <AssignedSelect
+                selected={assignedUsers}
+                onChange={(users) => handleAssignedChange(job.id, users)}
+                compact
+                placeholder="Assign"
+              />
+            </div>
+          )
+        },
+      }),
+      // Job Title - PINNED LEFT
       columnHelper.accessor('title', {
         header: 'Job Title',
         size: 220,
@@ -225,12 +301,9 @@ export default function AdminJobsPage() {
           const job = row.original
           return (
             <div className="min-w-0">
-              <Link
-                to={`/dashboard/jobs/${job.id}`}
-                className="text-[13px] font-medium text-gray-900 hover:text-gray-700 truncate block"
-              >
+              <span className="text-[13px] font-medium text-gray-900 truncate block">
                 {job.title}
-              </Link>
+              </span>
               <p className="text-[11px] text-gray-500 truncate">
                 {job.location_display || 'No location'}
               </p>
@@ -309,48 +382,10 @@ export default function AdminJobsPage() {
             <Link
               to={`/dashboard/jobs/${job.id}/applications`}
               className="text-[12px] text-gray-600 hover:text-gray-900 hover:underline"
+              onClick={(e) => e.stopPropagation()}
             >
               {job.applications_count || 0}
             </Link>
-          )
-        },
-      }),
-      // Assigned Recruiters
-      columnHelper.accessor('assigned_recruiters', {
-        header: 'Assigned',
-        size: 100,
-        cell: ({ getValue }) => {
-          const recruiters = getValue()
-          if (!recruiters || recruiters.length === 0) {
-            return <span className="text-[11px] text-gray-400">Unassigned</span>
-          }
-          return (
-            <div className="flex -space-x-2">
-              {recruiters.slice(0, 3).map((recruiter: User) => (
-                <div
-                  key={recruiter.id}
-                  title={`${recruiter.first_name} ${recruiter.last_name}`}
-                  className="relative"
-                >
-                  {recruiter.avatar ? (
-                    <img
-                      src={recruiter.avatar}
-                      alt={`${recruiter.first_name} ${recruiter.last_name}`}
-                      className="w-6 h-6 rounded-full border-2 border-white object-cover"
-                    />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[9px] font-medium text-gray-600">
-                      {recruiter.first_name?.[0]}{recruiter.last_name?.[0]}
-                    </div>
-                  )}
-                </div>
-              ))}
-              {recruiters.length > 3 && (
-                <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[9px] font-medium text-gray-500">
-                  +{recruiters.length - 3}
-                </div>
-              )}
-            </div>
           )
         },
       }),
@@ -415,17 +450,17 @@ export default function AdminJobsPage() {
                           View Listing
                         </Link>
                       )}
-                      <Link
-                        to={`/dashboard/jobs/${job.id}`}
-                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                      <button
                         onClick={() => {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
+                          handleOpenDrawer(job.id)
                         }}
+                        className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
                       >
                         <Edit className="w-4 h-4" />
                         Edit Job
-                      </Link>
+                      </button>
                       <Link
                         to={`/dashboard/jobs/${job.id}/applications`}
                         className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
@@ -489,11 +524,11 @@ export default function AdminJobsPage() {
         },
       }),
     ],
-    [openActionsMenu, menuPosition, isSubmitting, isDeleting]
+    [openActionsMenu, menuPosition, isSubmitting, isDeleting, handleAssignedChange]
   )
 
   const table = useReactTable({
-    data: jobs,
+    data: localJobs,
     columns,
     state: {
       sorting,
@@ -558,13 +593,13 @@ export default function AdminJobsPage() {
             )}
           </button>
           {/* Create Job */}
-          <Link
-            to="/dashboard/admin/jobs/new"
+          <button
+            onClick={() => handleOpenDrawer(null)}
             className="flex items-center gap-2 px-4 py-1.5 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
           >
             <Plus className="w-4 h-4" />
             Create Job
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -646,34 +681,43 @@ export default function AdminJobsPage() {
                   <thead>
                     {table.getHeaderGroups().map(headerGroup => (
                       <tr key={headerGroup.id} className="border-b border-gray-200 bg-gray-50">
-                        {headerGroup.headers.map(header => (
-                          <th
-                            key={header.id}
-                            className="px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                            style={{ width: header.getSize() }}
-                          >
-                            {header.isPlaceholder ? null : (
-                              <div
-                                className={`flex items-center gap-1 ${
-                                  header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700' : ''
-                                }`}
-                                onClick={header.column.getToggleSortingHandler()}
-                              >
-                                {flexRender(header.column.columnDef.header, header.getContext())}
-                                {header.column.getCanSort() && (
-                                  <span className="ml-0.5">
-                                    {{
-                                      asc: <ArrowUp className="w-3 h-3" />,
-                                      desc: <ArrowDown className="w-3 h-3" />,
-                                    }[header.column.getIsSorted() as string] ?? (
-                                      <ArrowUpDown className="w-3 h-3 opacity-40" />
-                                    )}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </th>
-                        ))}
+                        {headerGroup.headers.map(header => {
+                          const isPinnedLeft = header.id === 'select' || header.id === 'assigned_recruiters' || header.id === 'title'
+                          const isPinnedRight = header.id === 'actions'
+                          return (
+                            <th
+                              key={header.id}
+                              className={`px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
+                                isPinnedLeft ? 'sticky z-20 bg-gray-50' : ''
+                              } ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50' : ''}`}
+                              style={{
+                                width: header.getSize(),
+                                left: header.id === 'select' ? 0 : header.id === 'assigned_recruiters' ? 40 : header.id === 'title' ? 180 : undefined,
+                              }}
+                            >
+                              {header.isPlaceholder ? null : (
+                                <div
+                                  className={`flex items-center gap-1 ${
+                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700' : ''
+                                  }`}
+                                  onClick={header.column.getToggleSortingHandler()}
+                                >
+                                  {flexRender(header.column.columnDef.header, header.getContext())}
+                                  {header.column.getCanSort() && (
+                                    <span className="ml-0.5">
+                                      {{
+                                        asc: <ArrowUp className="w-3 h-3" />,
+                                        desc: <ArrowDown className="w-3 h-3" />,
+                                      }[header.column.getIsSorted() as string] ?? (
+                                        <ArrowUpDown className="w-3 h-3 opacity-40" />
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </th>
+                          )
+                        })}
                       </tr>
                     ))}
                   </thead>
@@ -681,17 +725,28 @@ export default function AdminJobsPage() {
                     {table.getRowModel().rows.map(row => (
                       <tr
                         key={row.id}
-                        className="hover:bg-gray-50"
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleOpenDrawer(row.original.id)}
                       >
-                        {row.getVisibleCells().map(cell => (
-                          <td
-                            key={cell.id}
-                            className="px-3 py-2.5 whitespace-nowrap"
-                            style={{ width: cell.column.getSize() }}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        ))}
+                        {row.getVisibleCells().map(cell => {
+                          const colId = cell.column.id
+                          const isPinnedLeft = colId === 'select' || colId === 'assigned_recruiters' || colId === 'title'
+                          const isPinnedRight = colId === 'actions'
+                          return (
+                            <td
+                              key={cell.id}
+                              className={`px-3 py-2.5 whitespace-nowrap ${
+                                isPinnedLeft ? 'sticky z-10 bg-white' : ''
+                              } ${isPinnedRight ? 'sticky right-0 z-10 bg-white' : ''}`}
+                              style={{
+                                width: cell.column.getSize(),
+                                left: colId === 'select' ? 0 : colId === 'assigned_recruiters' ? 40 : colId === 'title' ? 180 : undefined,
+                              }}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </td>
+                          )
+                        })}
                       </tr>
                     ))}
                   </tbody>
@@ -728,6 +783,14 @@ export default function AdminJobsPage() {
           )}
         </div>
       </div>
+
+      {/* Job Drawer */}
+      <JobDrawer
+        jobId={selectedJobId}
+        isOpen={isDrawerOpen}
+        onClose={handleCloseDrawer}
+        onSuccess={handleDrawerSuccess}
+      />
     </div>
   )
 }

@@ -262,12 +262,12 @@ export default function ApplicationDrawer({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/30 z-40 transition-opacity"
+        className="fixed inset-0 bg-black/30 z-[200] transition-opacity"
         onClick={onClose}
       />
 
       {/* Drawer - 50% width */}
-      <div className="fixed inset-y-0 right-0 w-1/2 min-w-[500px] bg-white shadow-xl z-50 flex flex-col">
+      <div className="fixed inset-y-0 right-0 w-1/2 min-w-[500px] bg-white shadow-xl z-[201] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div>

@@ -1112,14 +1112,17 @@ def signup_with_candidate_invitation(request, token):
     """
     Sign up as a new CANDIDATE user using a booking invitation token.
 
-    Creates a new user with CANDIDATE role, creates their candidate profile,
-    and links them to the booking that triggered this invitation.
+    If a pending user was created during booking (linked via invitation.pending_user),
+    this activates that user. Otherwise creates a new CANDIDATE user.
+    Creates or links candidate profile and connects to the booking.
     Returns JWT tokens for immediate authentication.
     """
     from candidates.models import CandidateProfile
 
     try:
-        invitation = CandidateInvitation.objects.select_related('booking').get(token=token)
+        invitation = CandidateInvitation.objects.select_related(
+            'booking', 'pending_user', 'pending_user__candidate_profile'
+        ).get(token=token)
     except CandidateInvitation.DoesNotExist:
         return Response(
             {'error': 'Invitation not found'},
@@ -1134,22 +1137,33 @@ def signup_with_candidate_invitation(request, token):
 
     serializer = CandidateInvitationSignupSerializer(data=request.data)
     if serializer.is_valid():
-        # Create the user with CANDIDATE role
+        # The serializer handles both cases:
+        # 1. If pending user exists (is_pending_signup=True), it updates and activates them
+        # 2. Otherwise, it creates a new user
         user = serializer.save()
 
-        # Create candidate profile
-        candidate_profile = CandidateProfile.objects.create(user=user)
+        # Check if there's already a candidate profile (created when booking was made)
+        candidate_profile = getattr(user, 'candidate_profile', None)
+        if not candidate_profile:
+            # Create candidate profile if it doesn't exist
+            candidate_profile = CandidateProfile.objects.create(user=user)
 
         # Mark invitation as used
         invitation.used_at = timezone.now()
         invitation.used_by = user
         invitation.save()
 
-        # Link booking to the new user and candidate profile
+        # Link booking to the user and candidate profile if not already linked
         if invitation.booking:
-            invitation.booking.attendee_user = user
-            invitation.booking.candidate_profile = candidate_profile
-            invitation.booking.save(update_fields=['attendee_user', 'candidate_profile'])
+            booking_updated = False
+            if not invitation.booking.attendee_user:
+                invitation.booking.attendee_user = user
+                booking_updated = True
+            if not invitation.booking.candidate_profile:
+                invitation.booking.candidate_profile = candidate_profile
+                booking_updated = True
+            if booking_updated:
+                invitation.booking.save(update_fields=['attendee_user', 'candidate_profile'])
 
         # Send welcome notification
         try:

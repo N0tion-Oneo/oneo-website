@@ -348,9 +348,16 @@ class ClientSignupSerializer(serializers.ModelSerializer):
         }
 
     def validate_email(self, value):
-        """Ensure email is unique and lowercase."""
+        """
+        Ensure email is unique and lowercase.
+        Allows pending users (created from bookings) to complete signup.
+        """
         email = value.lower()
-        if User.objects.filter(email=email).exists():
+        existing_user = User.objects.filter(email=email).first()
+        if existing_user:
+            # Allow if user is pending signup (created from a booking)
+            if existing_user.is_pending_signup:
+                return email
             raise serializers.ValidationError("A user with this email already exists.")
         return email
 
@@ -363,11 +370,33 @@ class ClientSignupSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        """Create a new client user."""
+        """
+        Create a new client user or update a pending user.
+        If user was created from a booking (is_pending_signup=True),
+        we update that user instead of creating a new one.
+        """
         validated_data.pop('password_confirm')
-
-        # Generate username from email
         email = validated_data['email']
+
+        # Check if there's a pending user to update
+        pending_user = User.objects.filter(
+            email=email,
+            is_pending_signup=True
+        ).first()
+
+        if pending_user:
+            # Update the pending user
+            pending_user.first_name = validated_data['first_name']
+            pending_user.last_name = validated_data['last_name']
+            pending_user.phone = validated_data.get('phone')
+            pending_user.set_password(validated_data['password'])
+            pending_user.is_active = True
+            pending_user.is_pending_signup = False
+            pending_user.save()
+            return pending_user
+
+        # Create new user
+        # Generate username from email
         username = email.split('@')[0]
 
         # Ensure username is unique
@@ -590,9 +619,16 @@ class CandidateInvitationSignupSerializer(serializers.ModelSerializer):
         }
 
     def validate_email(self, value):
-        """Ensure email is unique and lowercase."""
+        """
+        Ensure email is unique and lowercase.
+        Allows pending users (created from bookings) to complete signup.
+        """
         email = value.lower()
-        if User.objects.filter(email=email).exists():
+        existing_user = User.objects.filter(email=email).first()
+        if existing_user:
+            # Allow if user is pending signup (created from a booking)
+            if existing_user.is_pending_signup:
+                return email
             raise serializers.ValidationError("A user with this email already exists.")
         return email
 
@@ -605,11 +641,33 @@ class CandidateInvitationSignupSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        """Create a new candidate user."""
+        """
+        Create a new candidate user or update a pending user.
+        If user was created from a booking (is_pending_signup=True),
+        we update that user instead of creating a new one.
+        """
         validated_data.pop('password_confirm')
-
-        # Generate username from email
         email = validated_data['email']
+
+        # Check if there's a pending user to update
+        pending_user = User.objects.filter(
+            email=email,
+            is_pending_signup=True
+        ).first()
+
+        if pending_user:
+            # Update the pending user
+            pending_user.first_name = validated_data['first_name']
+            pending_user.last_name = validated_data['last_name']
+            pending_user.phone = validated_data.get('phone')
+            pending_user.set_password(validated_data['password'])
+            pending_user.is_active = True
+            pending_user.is_pending_signup = False
+            pending_user.save()
+            return pending_user
+
+        # Create new user
+        # Generate username from email
         username = email.split('@')[0]
 
         # Ensure username is unique

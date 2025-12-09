@@ -122,19 +122,22 @@ def list_my_applications(request):
     return Response(serializer.data)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def get_application(request, application_id):
     """
-    Get a single application.
-    Candidate can view own, company/recruiter can view for their jobs.
+    Get or update a single application.
+    GET: Candidate can view own, company/recruiter can view for their jobs.
+    PATCH: Staff can update assigned recruiters.
     """
     from candidates.models import CandidateProfile
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
 
     try:
         application = Application.objects.select_related(
             'job', 'job__company', 'candidate', 'candidate__user', 'referrer'
-        ).get(id=application_id)
+        ).prefetch_related('assigned_recruiters').get(id=application_id)
     except Application.DoesNotExist:
         return Response(
             {'error': 'Application not found'},
@@ -158,6 +161,26 @@ def get_application(request, application_id):
             {'error': 'You do not have permission to view this application'},
             status=status.HTTP_403_FORBIDDEN
         )
+
+    if request.method == 'PATCH':
+        # Only staff can update assigned recruiters
+        if not is_staff:
+            return Response(
+                {'error': 'Only staff can update application assignments'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Handle assigned_recruiter_ids update
+        assigned_recruiter_ids = request.data.get('assigned_recruiter_ids')
+        if assigned_recruiter_ids is not None:
+            # Validate and set assigned recruiters
+            recruiters = User.objects.filter(
+                id__in=assigned_recruiter_ids,
+                role__in=[UserRole.ADMIN, UserRole.RECRUITER]
+            )
+            application.assigned_recruiters.set(recruiters)
+
+        return Response(ApplicationListSerializer(application).data)
 
     serializer = ApplicationSerializer(application)
     return Response(serializer.data)
@@ -515,9 +538,8 @@ def accept_offer(request, application_id):
 
         # Check if job should be marked as filled
         job = application.job
-        if job.status == JobStatus.PUBLISHED and getattr(job, 'positions_to_fill', 1) == 1:
-            job.status = JobStatus.FILLED
-            job.save(update_fields=['status'])
+        if job.update_fill_status():
+            # Job was just marked as FILLED
             try:
                 NotificationService.notify_job_filled(job, hired_candidate=application)
             except Exception as e:
@@ -773,7 +795,7 @@ def list_all_applications(request):
         'candidate', 'candidate__user',
         'current_stage',
     ).prefetch_related(
-        'job__assigned_recruiters',
+        'assigned_recruiters',
     ).order_by('-applied_at')
 
     # Scope to accessible jobs based on role

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ToastProvider } from '@/contexts/ToastContext';
 import { ProtectedRoute, PublicRoute } from '@/components/auth';
 import { BrandingProvider } from '@/components/branding';
 import {
@@ -27,6 +28,7 @@ import {
   AdminRecruitersPage,
   AdminSkillsTechnologiesPage,
   OnboardingStagesSettingsPage,
+  DashboardSettingsPage,
   NotificationsAdminPage,
   SendNotificationPage,
   NotificationTemplatesPage,
@@ -45,6 +47,7 @@ import {
   CalendarSettingsPage,
   RecruiterProfilePage,
   BookingManagementPage,
+  AnalyticsPage,
 } from '@/pages';
 import { BookingPage, RecruiterBookingPage } from '@/pages/booking';
 import { CandidateDashboardLayout, SettingsLayout } from '@/layouts';
@@ -70,6 +73,7 @@ function App() {
   return (
     <BrandingProvider>
       <AuthProvider>
+        <ToastProvider>
         <Routes>
         {/* Home page - accessible to all */}
         <Route path="/" element={<HomePage />} />
@@ -140,6 +144,7 @@ function App() {
             <Route path="onboarding-stages" element={<OnboardingStagesSettingsPage />} />
             <Route path="branding" element={<BrandingSettingsPage />} />
             <Route path="recruiters" element={<AdminRecruitersPage />} />
+            <Route path="dashboard" element={<DashboardSettingsPage />} />
           </Route>
           {/* Admin/Recruiter routes */}
           <Route path="admin/companies" element={<AdminCompaniesPage />} />
@@ -148,6 +153,7 @@ function App() {
           <Route path="admin/candidates/:slug" element={<AdminCandidateEditPage />} />
           <Route path="admin/jobs" element={<AdminJobsPage />} />
           <Route path="admin/jobs/new" element={<AdminNewJobPage />} />
+          <Route path="admin/analytics" element={<AnalyticsPage />} />
           {/* Redirect old admin/applications URL */}
           <Route path="admin/applications" element={<Navigate to="/dashboard/applications" replace />} />
         </Route>
@@ -184,6 +190,7 @@ function App() {
         {/* 404 - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </ToastProvider>
       </AuthProvider>
     </BrandingProvider>
   );

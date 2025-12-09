@@ -183,18 +183,32 @@ class MeetingCategory(models.TextChoices):
     RECRUITMENT = 'recruitment', 'Recruitment'
 
 
+class StageChangeBehavior(models.TextChoices):
+    """How to handle stage changes when booking is created."""
+    ALWAYS = 'always', 'Always set to this stage'
+    ONLY_FORWARD = 'only_forward', 'Only move forward (never go backwards)'
+    ONLY_IF_NOT_SET = 'only_if_not_set', 'Only if no stage is currently set'
+
+
 class MeetingType(models.Model):
     """
     Configurable meeting types for recruiter/admin booking pages.
-    Each user can have multiple meeting types (e.g., Sales Call, Recruitment Consultation).
+    Only admins can create meeting types. Recruiters are granted access via allowed_users.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='meeting_types',
-        help_text='The recruiter/admin who owns this meeting type',
+        related_name='owned_meeting_types',
+        help_text='The admin who created this meeting type',
+    )
+
+    allowed_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name='accessible_meeting_types',
+        help_text='Recruiters/admins who can use this meeting type for their booking pages',
     )
 
     name = models.CharField(
@@ -203,7 +217,8 @@ class MeetingType(models.Model):
     )
     slug = models.SlugField(
         max_length=100,
-        help_text='URL-friendly identifier',
+        unique=True,
+        help_text='URL-friendly identifier (globally unique)',
     )
     category = models.CharField(
         max_length=20,
@@ -251,6 +266,10 @@ class MeetingType(models.Model):
         default=True,
         help_text='Whether this meeting type is available for booking',
     )
+    show_on_dashboard = models.BooleanField(
+        default=False,
+        help_text='Show this meeting type on candidate/company dashboards for booking with assigned contacts',
+    )
     requires_approval = models.BooleanField(
         default=False,
         help_text='Whether bookings require manual approval',
@@ -276,16 +295,41 @@ class MeetingType(models.Model):
         help_text='Color for calendar display (hex)',
     )
 
+    # Onboarding stage settings
+    # Stage for unauthenticated/new users (e.g., "Lead" or "New Application")
+    target_onboarding_stage = models.ForeignKey(
+        'core.OnboardingStage',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='meeting_types_unauthenticated',
+        help_text='Move candidate/company to this stage when booking is created by unauthenticated user',
+    )
+    # Stage for authenticated/existing users (e.g., "Interview Scheduled")
+    target_onboarding_stage_authenticated = models.ForeignKey(
+        'core.OnboardingStage',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='meeting_types_authenticated',
+        help_text='Move candidate/company to this stage when booking is created by authenticated user',
+    )
+    stage_change_behavior = models.CharField(
+        max_length=20,
+        choices=StageChangeBehavior.choices,
+        default=StageChangeBehavior.ONLY_FORWARD,
+        help_text='How to handle stage changes',
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'meeting_types'
-        unique_together = ['owner', 'slug']
         ordering = ['category', 'name']
 
     def __str__(self):
-        return f"{self.name} ({self.owner.full_name})"
+        return self.name
 
 
 class BookingStatus(models.TextChoices):

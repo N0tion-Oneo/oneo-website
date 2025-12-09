@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import OnboardingStage, OnboardingHistory
+from .models import OnboardingStage, OnboardingHistory, DashboardSettings
 
 
 class OnboardingStageSerializer(serializers.ModelSerializer):
@@ -127,3 +127,17 @@ class OnboardingStageMinimalSerializer(serializers.ModelSerializer):
     class Meta:
         model = OnboardingStage
         fields = ['id', 'name', 'slug', 'color', 'is_terminal', 'order']
+
+
+class DashboardSettingsSerializer(serializers.ModelSerializer):
+    """Serializer for DashboardSettings singleton model."""
+
+    class Meta:
+        model = DashboardSettings
+        fields = [
+            'days_without_contact',
+            'days_stuck_in_stage',
+            'days_before_interview_prep',
+            'updated_at',
+        ]
+        read_only_fields = ['updated_at']

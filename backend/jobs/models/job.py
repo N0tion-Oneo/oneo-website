@@ -204,6 +204,12 @@ class Job(models.Model):
         blank=True,
     )
 
+    # Hiring
+    positions_to_fill = models.PositiveIntegerField(
+        default=1,
+        help_text='Number of positions to fill for this job',
+    )
+
     # Statistics
     views_count = models.PositiveIntegerField(default=0)
     applications_count = models.PositiveIntegerField(default=0)
@@ -278,3 +284,38 @@ class Job(models.Model):
         if self.salary_min:
             return f"{self.salary_currency} {self.salary_min:,}+"
         return f"Up to {self.salary_currency} {self.salary_max:,}"
+
+    @property
+    def hired_count(self):
+        """Returns count of hired candidates (OFFER_ACCEPTED applications)."""
+        from .application import ApplicationStatus
+        return self.applications.filter(status=ApplicationStatus.OFFER_ACCEPTED).count()
+
+    @property
+    def is_fully_filled(self):
+        """Returns True if hired count has reached positions_to_fill."""
+        return self.hired_count >= self.positions_to_fill
+
+    @property
+    def remaining_positions(self):
+        """Returns the number of positions still to be filled."""
+        return max(0, self.positions_to_fill - self.hired_count)
+
+    def update_fill_status(self):
+        """
+        Update job status based on hired count vs positions_to_fill.
+        - Marks as FILLED if hired_count >= positions_to_fill and job is PUBLISHED
+        - Marks as PUBLISHED if positions_to_fill increased and job was FILLED but now has open spots
+        Returns True if status changed, False otherwise.
+        """
+        if self.is_fully_filled:
+            if self.status == JobStatus.PUBLISHED:
+                self.status = JobStatus.FILLED
+                self.save(update_fields=['status'])
+                return True
+        else:
+            if self.status == JobStatus.FILLED:
+                self.status = JobStatus.PUBLISHED
+                self.save(update_fields=['status'])
+                return True
+        return False

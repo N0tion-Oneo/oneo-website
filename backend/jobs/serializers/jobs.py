@@ -24,6 +24,8 @@ class JobListSerializer(serializers.ModelSerializer):
     required_skills = SkillSerializer(many=True, read_only=True)
     technologies = TechnologySerializer(many=True, read_only=True)
     assigned_recruiters = UserProfileSerializer(many=True, read_only=True)
+    hired_count = serializers.IntegerField(read_only=True)
+    remaining_positions = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Job
@@ -50,13 +52,16 @@ class JobListSerializer(serializers.ModelSerializer):
             'required_skills',
             'technologies',
             'assigned_recruiters',
+            'positions_to_fill',
+            'hired_count',
+            'remaining_positions',
             'views_count',
             'applications_count',
             'published_at',
             'application_deadline',
             'created_at',
         ]
-        read_only_fields = ['id', 'slug', 'created_at', 'views_count', 'applications_count']
+        read_only_fields = ['id', 'slug', 'created_at', 'views_count', 'applications_count', 'hired_count', 'remaining_positions']
 
 
 class JobDetailSerializer(serializers.ModelSerializer):
@@ -74,6 +79,9 @@ class JobDetailSerializer(serializers.ModelSerializer):
     benefits = BenefitCategorySerializer(many=True, read_only=True)
     questions = serializers.SerializerMethodField()
     interview_stages = serializers.SerializerMethodField()
+    hired_count = serializers.IntegerField(read_only=True)
+    remaining_positions = serializers.IntegerField(read_only=True)
+    is_fully_filled = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Job
@@ -110,6 +118,10 @@ class JobDetailSerializer(serializers.ModelSerializer):
             'technologies',
             'interview_stages',
             'questions',
+            'positions_to_fill',
+            'hired_count',
+            'remaining_positions',
+            'is_fully_filled',
             'views_count',
             'applications_count',
             'published_at',
@@ -119,7 +131,8 @@ class JobDetailSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             'id', 'slug', 'created_at', 'updated_at',
-            'views_count', 'applications_count', 'published_at'
+            'views_count', 'applications_count', 'published_at',
+            'hired_count', 'remaining_positions', 'is_fully_filled'
         ]
 
     def get_questions(self, obj):
@@ -238,6 +251,7 @@ class JobCreateSerializer(serializers.ModelSerializer):
             'nice_to_have_skill_ids',
             'technology_ids',
             'application_deadline',
+            'positions_to_fill',
         ]
 
     def validate_interview_stages(self, value):
@@ -408,6 +422,7 @@ class JobUpdateSerializer(serializers.ModelSerializer):
             'nice_to_have_skill_ids',
             'technology_ids',
             'application_deadline',
+            'positions_to_fill',
         ]
 
     def validate_interview_stages(self, value):
@@ -443,12 +458,15 @@ class JobUpdateSerializer(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
-        """Handle M2M fields and questions separately."""
+        """Handle M2M fields, questions, and dynamic fill status."""
         required_skill_ids = validated_data.pop('required_skill_ids', None)
         nice_to_have_skill_ids = validated_data.pop('nice_to_have_skill_ids', None)
         technology_ids = validated_data.pop('technology_ids', None)
         assigned_recruiter_ids = validated_data.pop('assigned_recruiter_ids', None)
         questions_data = validated_data.pop('questions', None)
+
+        # Track if positions_to_fill is changing
+        positions_changed = 'positions_to_fill' in validated_data
 
         instance = super().update(instance, validated_data)
 
@@ -474,6 +492,10 @@ class JobUpdateSerializer(serializers.ModelSerializer):
                     is_required=q_data.get('is_required', False),
                     order=q_data.get('order', i + 1),
                 )
+
+        # Re-check fill status if positions_to_fill changed
+        if positions_changed:
+            instance.update_fill_status()
 
         return instance
 

@@ -32,6 +32,7 @@ export interface AssignedUser {
   first_name: string
   last_name: string
   full_name: string
+  booking_slug?: string  // For scheduling with this contact
 }
 
 // Staff user for assignment dropdowns (includes avatar)
@@ -613,6 +614,9 @@ export interface JobListItem {
   required_skills: Skill[]
   technologies: Technology[]
   assigned_recruiters: User[]
+  positions_to_fill: number
+  hired_count: number
+  remaining_positions: number
   views_count: number
   applications_count: number
   published_at: string | null
@@ -886,6 +890,7 @@ export interface Job extends JobListItem {
   nice_to_have_skills: Skill[]
   interview_stages: InterviewStage[]
   questions: ApplicationQuestion[]
+  is_fully_filled: boolean
   updated_at: string
 }
 
@@ -917,6 +922,7 @@ export interface JobInput {
   technology_ids?: string[]
   application_deadline?: string | null
   assigned_recruiter_ids?: string[]
+  positions_to_fill?: number
 }
 
 export interface JobFilters {
@@ -1104,11 +1110,11 @@ export interface CurrentStageInstance {
 }
 
 export interface ApplicationRecruiter {
-  id: string
+  id: number
+  email: string
   first_name: string
   last_name: string
   full_name: string
-  avatar: string | null
 }
 
 export interface ApplicationListItem {
@@ -1983,6 +1989,23 @@ export const RecruiterMeetingLocationLabels: Record<RecruiterMeetingLocationType
   in_person: 'In Person',
 }
 
+export type StageChangeBehavior = 'always' | 'only_forward' | 'only_if_not_set'
+
+export const StageChangeBehaviorLabels: Record<StageChangeBehavior, string> = {
+  always: 'Always set to this stage',
+  only_forward: 'Only move forward (never go backwards)',
+  only_if_not_set: 'Only if no stage is currently set',
+}
+
+export interface OnboardingStageMinimal {
+  id: number
+  name: string
+  slug: string
+  entity_type: 'candidate' | 'company'
+  color: string
+  order: number
+}
+
 export interface RecruiterMeetingType {
   id: string
   owner: string
@@ -2000,13 +2023,31 @@ export interface RecruiterMeetingType {
   location_type_display: string
   custom_location: string
   is_active: boolean
+  show_on_dashboard: boolean
   requires_approval: boolean
   max_bookings_per_day: number | null
   confirmation_message: string
   redirect_url: string
   color: string
+  // Onboarding stage settings
+  target_onboarding_stage: number | null
+  target_onboarding_stage_details: OnboardingStageMinimal | null
+  target_onboarding_stage_authenticated: number | null
+  target_onboarding_stage_authenticated_details: OnboardingStageMinimal | null
+  stage_change_behavior: StageChangeBehavior
+  stage_change_behavior_display: string
+  // Allowed users
+  allowed_users_details: MeetingTypeAllowedUser[]
   created_at: string
   updated_at: string
+}
+
+export interface MeetingTypeAllowedUser {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  full_name: string
 }
 
 export interface RecruiterMeetingTypeInput {
@@ -2020,11 +2061,18 @@ export interface RecruiterMeetingTypeInput {
   location_type?: RecruiterMeetingLocationType
   custom_location?: string
   is_active?: boolean
+  show_on_dashboard?: boolean
   requires_approval?: boolean
   max_bookings_per_day?: number | null
   confirmation_message?: string
   redirect_url?: string
   color?: string
+  // Onboarding stage settings
+  target_onboarding_stage?: number | null
+  target_onboarding_stage_authenticated?: number | null
+  stage_change_behavior?: StageChangeBehavior
+  // Allowed users (admins only)
+  allowed_user_ids?: number[]
 }
 
 export interface RecruiterMeetingTypePublic {
@@ -2102,8 +2150,8 @@ export interface RecruiterBooking {
 
 export interface RecruiterBookingInput {
   meeting_type: string
-  attendee_name: string
-  attendee_email: string
+  attendee_name?: string  // Optional for authenticated users
+  attendee_email?: string // Optional for authenticated users
   attendee_phone?: string
   attendee_company?: string
   scheduled_at: string
@@ -2209,3 +2257,9 @@ export interface OnboardingHistory {
   notes: string
   created_at: string
 }
+
+// ============================================================================
+// Analytics
+// ============================================================================
+
+export * from './analytics'

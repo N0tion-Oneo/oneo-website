@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { useStaffUsers } from '@/hooks'
 import type { StaffUser, AssignedUser } from '@/types'
 
-interface AssignedToSelectProps {
+interface AssignedSelectProps {
   label?: string
   selected: AssignedUser[]
   onChange: (selected: AssignedUser[]) => void
@@ -13,15 +13,15 @@ interface AssignedToSelectProps {
   disabled?: boolean
 }
 
-export default function AssignedToSelect({
-  label = 'Assigned To',
+export default function AssignedSelect({
+  label = 'Assigned',
   selected,
   onChange,
   placeholder = 'Search staff...',
   maxItems,
   compact = false,
   disabled = false,
-}: AssignedToSelectProps) {
+}: AssignedSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null)

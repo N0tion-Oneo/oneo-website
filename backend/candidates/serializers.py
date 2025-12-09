@@ -164,18 +164,32 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
     def get_assigned_to(self, obj):
         from users.models import UserRole
         request = self.context.get('request')
-        # Only return assigned_to for staff users
-        if request and request.user.is_authenticated and request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]:
-            return [
-                {
-                    'id': user.id,
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'full_name': user.full_name,
+        if not request or not request.user.is_authenticated:
+            return []
+
+        user = request.user
+
+        # Return assigned_to for:
+        # 1. Staff users (admin/recruiter) - full visibility
+        # 2. The candidate themselves (for dashboard scheduling card)
+        is_staff = user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+        is_own_profile = hasattr(obj, 'user') and obj.user_id == user.id
+
+        if is_staff or is_own_profile:
+            result = []
+            for assigned_user in obj.assigned_to.select_related('recruiter_profile').all():
+                data = {
+                    'id': assigned_user.id,
+                    'email': assigned_user.email,
+                    'first_name': assigned_user.first_name,
+                    'last_name': assigned_user.last_name,
+                    'full_name': assigned_user.full_name,
                 }
-                for user in obj.assigned_to.all()
-            ]
+                # Include booking_slug if the assigned user has a recruiter profile
+                if hasattr(assigned_user, 'recruiter_profile') and assigned_user.recruiter_profile:
+                    data['booking_slug'] = assigned_user.recruiter_profile.booking_slug
+                result.append(data)
+            return result
         return []
 
 

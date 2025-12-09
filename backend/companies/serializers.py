@@ -78,6 +78,13 @@ class AssignedUserSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     full_name = serializers.CharField()
+    booking_slug = serializers.SerializerMethodField()
+
+    def get_booking_slug(self, obj):
+        """Get booking_slug from recruiter_profile if available."""
+        if hasattr(obj, 'recruiter_profile') and obj.recruiter_profile:
+            return obj.recruiter_profile.booking_slug
+        return None
 
 
 class CompanyAdminListSerializer(serializers.ModelSerializer):
@@ -206,19 +213,36 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
 
     def get_assigned_to(self, obj):
         from users.models import UserRole
+        from .models import CompanyUser
         request = self.context.get('request')
-        # Only return assigned_to for staff users
-        if request and request.user.is_authenticated and request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]:
-            return [
-                {
-                    'id': user.id,
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'full_name': user.full_name,
+        if not request or not request.user.is_authenticated:
+            return []
+
+        user = request.user
+
+        # Return assigned_to for:
+        # 1. Staff users (admin/recruiter) - full visibility
+        # 2. Client users who are members of this company (for dashboard scheduling card)
+        is_staff = user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+        is_company_member = user.role == UserRole.CLIENT and CompanyUser.objects.filter(
+            user=user, company=obj
+        ).exists()
+
+        if is_staff or is_company_member:
+            result = []
+            for assigned_user in obj.assigned_to.select_related('recruiter_profile').all():
+                data = {
+                    'id': assigned_user.id,
+                    'email': assigned_user.email,
+                    'first_name': assigned_user.first_name,
+                    'last_name': assigned_user.last_name,
+                    'full_name': assigned_user.full_name,
                 }
-                for user in obj.assigned_to.all()
-            ]
+                # Include booking_slug if the assigned user has a recruiter profile
+                if hasattr(assigned_user, 'recruiter_profile') and assigned_user.recruiter_profile:
+                    data['booking_slug'] = assigned_user.recruiter_profile.booking_slug
+                result.append(data)
+            return result
         return []
 
 

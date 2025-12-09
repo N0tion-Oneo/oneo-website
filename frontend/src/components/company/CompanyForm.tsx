@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { IndustryMultiSelect, TechnologyMultiSelect, AssignedToSelect } from '@/components/forms'
+import { IndustryMultiSelect, TechnologyMultiSelect, AssignedSelect } from '@/components/forms'
 import BenefitsEditor from './BenefitsEditor'
 import ValuesEditor from './ValuesEditor'
 import { useCountries, useCities } from '@/hooks'
@@ -284,9 +284,9 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
               </div>
             </div>
 
-            {/* Assigned To (Platform Admin/Recruiter only) */}
+            {/* Assigned (Platform Admin/Recruiter only) */}
             {isStaffUser && (
-              <AssignedToSelect
+              <AssignedSelect
                 selected={assignedTo}
                 onChange={setAssignedTo}
                 placeholder="Assign recruiters..."

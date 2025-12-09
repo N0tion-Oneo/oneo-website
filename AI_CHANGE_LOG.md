@@ -84,3 +84,87 @@ This file tracks all changes made by the AI assistant to the project.
 - Updated job models, serializers, views, and frontend components
 - Updated API URLs and settings configuration
 
+## 2024-12-19 - Git Push: Assigned To Fields and Onboarding Stages
+
+**Time**: Current session
+**Description**: Committed and pushed assigned_to fields and onboarding stages feature for candidates and companies
+**Reason**: User requested to push latest code to GitHub
+**Affected Files**:
+- 53 files changed (5,162 insertions, 286 deletions)
+**Changes**:
+- Staged all changes (modified and untracked files) with `git add .`
+- Committed changes with message: "Add assigned_to fields and onboarding stages for candidates and companies"
+- Pushed commit (27126ec) to origin/main branch
+- Added assigned_to ManyToMany fields to CandidateProfile and Company models
+- Added onboarding_stage fields to both models
+- Created migrations for assigned_to and onboarding_stage changes
+- Added new frontend components: AssignedToSelect, CandidateKanbanBoard, JobBulkActions, JobFilterPanel
+- Added new admin pages: AdminJobsPage, OnboardingStagesSettingsPage
+- Created new core Django app with onboarding stage models
+- Updated API endpoints, serializers, and views to support new fields
+- Added useStaffUsers hook for staff user management
+
+## 2024-12-19 - Start Development Servers
+
+**Time**: Current session
+**Description**: Started both backend and frontend development servers
+**Reason**: User requested to start both development servers
+**Affected Files**:
+- `scripts/start-backend.sh` - Executed (no changes to file)
+- `scripts/start-frontend.sh` - Executed (no changes to file)
+**Changes**:
+- Started Django backend server in background mode (http://localhost:8000)
+- Started React frontend server in background mode (http://localhost:5173)
+- Both servers are running in the background
+
+## 2024-12-19 - Fix Backend Server Port Conflict
+
+**Time**: Current session
+**Description**: Fixed backend server startup issue caused by port 8000 being in use
+**Reason**: Backend script failed to start due to port conflict
+**Affected Files**:
+- No file changes
+**Changes**:
+- Identified that port 8000 was occupied by previous processes (PIDs: 72558, 98525)
+- Killed the processes blocking port 8000 using `kill -9`
+- Restarted backend server successfully (new PID: 74506)
+- Backend server is now running at http://localhost:8000
+
+## 2024-12-19 - Kill All Development Server Processes
+
+**Time**: Current session
+**Description**: Terminated all development server processes and freed ports
+**Reason**: User requested to kill all ports
+**Affected Files**:
+- No file changes
+**Changes**:
+- Killed processes on port 8000 (PIDs: 74592, 97124)
+- Killed Node/Vite frontend processes (PIDs: 57362, 57348, 74104, 74090)
+- Verified ports 8000 and 5173 are now free
+- Confirmed no development server processes are running
+
+## 2024-12-19 - Start Development Servers (After Cleanup)
+
+**Time**: Current session
+**Description**: Started both backend and frontend development servers after port cleanup
+**Reason**: User requested to run both startup scripts
+**Affected Files**:
+- `scripts/start-backend.sh` - Executed (no changes to file)
+- `scripts/start-frontend.sh` - Executed (no changes to file)
+**Changes**:
+- Started Django backend server in background mode (PID: 77271, http://localhost:8000)
+- Started React frontend server in background mode (PID: 77299, http://localhost:5173)
+- Both servers verified as running successfully
+
+## 2024-12-19 - Start Backend Server
+
+**Time**: Current session
+**Description**: Started Django backend development server
+**Reason**: User requested to start backend server
+**Affected Files**:
+- `scripts/start-backend.sh` - Executed (no changes to file)
+**Changes**:
+- Started Django backend server in background mode
+- Backend server is running on port 8000 (PIDs: 77061, 87782)
+- Server available at http://localhost:8000
+

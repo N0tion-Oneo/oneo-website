@@ -28,6 +28,12 @@ class User(AbstractUser):
     is_verified = models.BooleanField(default=False)
     verification_token = models.CharField(max_length=255, blank=True, null=True)
 
+    # Track users created from bookings who haven't completed signup
+    is_pending_signup = models.BooleanField(
+        default=False,
+        help_text='True if user was auto-created from booking and has not completed signup',
+    )
+
     # Use email as the username field for authentication
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']

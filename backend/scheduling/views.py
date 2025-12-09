@@ -6,7 +6,7 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 
-from .models import UserCalendarConnection, MeetingType, Booking, BookingStatus
+from .models import UserCalendarConnection, MeetingType, Booking, BookingStatus, MeetingCategory, StageChangeBehavior
 from .serializers import (
     UserCalendarConnectionSerializer,
     CalendarConnectionUpdateSerializer,
@@ -217,15 +217,30 @@ def update_calendar_settings(request, provider):
 @permission_classes([IsAuthenticated])
 def meeting_types_list_create(request):
     """
-    GET: List the current user's meeting types.
-    POST: Create a new meeting type.
+    GET: List meeting types accessible to the current user.
+         - Admins see all meeting types
+         - Recruiters see meeting types they have been granted access to
+    POST: Create a new meeting type (admins only).
     """
+    user = request.user
+
     if request.method == 'GET':
-        meeting_types = MeetingType.objects.filter(owner=request.user)
+        if user.role == 'admin':
+            # Admins see all meeting types
+            meeting_types = MeetingType.objects.all()
+        else:
+            # Recruiters see only meeting types they have access to
+            meeting_types = MeetingType.objects.filter(allowed_users=user)
         serializer = MeetingTypeSerializer(meeting_types, many=True)
         return Response(serializer.data)
 
-    # POST - Create
+    # POST - Create (admins only)
+    if user.role != 'admin':
+        return Response(
+            {'error': 'Only admins can create meeting types'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
     serializer = MeetingTypeCreateUpdateSerializer(
         data=request.data,
         context={'request': request}
@@ -244,14 +259,33 @@ def meeting_types_list_create(request):
 def meeting_type_detail(request, meeting_type_id):
     """
     GET: Retrieve a meeting type.
-    PATCH: Update a meeting type.
-    DELETE: Delete a meeting type.
+         - Admins can view any meeting type
+         - Recruiters can view meeting types they have access to
+    PATCH: Update a meeting type (admins only).
+    DELETE: Delete a meeting type (admins only).
     """
-    meeting_type = get_object_or_404(MeetingType, id=meeting_type_id, owner=request.user)
+    user = request.user
+    meeting_type = get_object_or_404(MeetingType, id=meeting_type_id)
+
+    # Check access
+    if user.role == 'admin':
+        has_access = True
+    else:
+        has_access = meeting_type.allowed_users.filter(pk=user.pk).exists()
+
+    if not has_access:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         serializer = MeetingTypeSerializer(meeting_type)
         return Response(serializer.data)
+
+    # PATCH and DELETE require admin role
+    if user.role != 'admin':
+        return Response(
+            {'error': 'Only admins can modify meeting types'},
+            status=status.HTTP_403_FORBIDDEN
+        )
 
     if request.method == 'PATCH':
         serializer = MeetingTypeCreateUpdateSerializer(
@@ -270,6 +304,33 @@ def meeting_type_detail(request, meeting_type_id):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_meeting_type(request, category):
+    """
+    Get the meeting type that should be shown on dashboards for a given category.
+    Returns the first active meeting type with show_on_dashboard=True for the category.
+
+    Used by candidates (recruitment category) and clients (sales category) to get
+    the meeting type they can use to book with their assigned contacts.
+    """
+    if category not in ['recruitment', 'sales']:
+        return Response({'error': 'Invalid category'}, status=status.HTTP_400_BAD_REQUEST)
+
+    meeting_type = MeetingType.objects.filter(
+        category=category,
+        is_active=True,
+        show_on_dashboard=True
+    ).first()
+
+    if not meeting_type:
+        return Response({'meeting_type': None})
+
+    return Response({
+        'meeting_type': MeetingTypePublicSerializer(meeting_type).data
+    })
+
+
 # ============================================================================
 # Public Booking Page Views
 # ============================================================================
@@ -279,6 +340,8 @@ def meeting_type_detail(request, meeting_type_id):
 def public_recruiter_booking_page(request, booking_slug):
     """
     Get recruiter's public booking page info and available meeting types.
+    Meeting types shown are those the user has been granted access to (via allowed_users).
+    Admins automatically have access to all meeting types.
     """
     profile = get_object_or_404(
         RecruiterProfile.objects.select_related('user'),
@@ -287,11 +350,11 @@ def public_recruiter_booking_page(request, booking_slug):
     )
     user = profile.user
 
-    # Get user's active meeting types
-    meeting_types = MeetingType.objects.filter(owner=user, is_active=True)
-
-    # Get recruiter profile info if available
-    recruiter_profile = getattr(user, 'recruiter_profile', None)
+    # Get meeting types this user has access to
+    if user.role == 'admin':
+        meeting_types = MeetingType.objects.filter(is_active=True)
+    else:
+        meeting_types = MeetingType.objects.filter(allowed_users=user, is_active=True)
 
     return Response({
         'user': {
@@ -324,12 +387,13 @@ def public_meeting_type_availability(request, booking_slug, meeting_type_slug):
         user__role__in=['admin', 'recruiter']
     )
     user = profile.user
-    meeting_type = get_object_or_404(
-        MeetingType,
-        owner=user,
-        slug=meeting_type_slug,
-        is_active=True
-    )
+
+    # Get meeting type and verify user has access
+    meeting_type = get_object_or_404(MeetingType, slug=meeting_type_slug, is_active=True)
+
+    # Check user has access to this meeting type
+    if user.role != 'admin' and not meeting_type.allowed_users.filter(pk=user.pk).exists():
+        return Response({'error': 'Meeting type not available'}, status=status.HTTP_404_NOT_FOUND)
 
     # Get user's calendar connection for availability
     try:
@@ -368,6 +432,70 @@ def public_meeting_type_availability(request, booking_slug, meeting_type_slug):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+def _handle_booking_assignment_and_stage(booking, meeting_type, organizer, candidate_profile=None, company=None, is_authenticated=False):
+    """
+    Handle auto-assignment of organizer and onboarding stage changes.
+    Called after a booking is created.
+
+    Args:
+        is_authenticated: Whether the booking was made by an authenticated user.
+                         Used to determine which target stage to use.
+    """
+    from core.models import OnboardingHistory
+
+    entity = candidate_profile or company
+    if not entity:
+        return
+
+    # 1. Auto-assign the organizer to the candidate/company
+    if organizer not in entity.assigned_to.all():
+        entity.assigned_to.add(organizer)
+
+    # 2. Handle onboarding stage change if configured
+    # Use authenticated stage if user is authenticated, otherwise use default stage
+    if is_authenticated:
+        target_stage = meeting_type.target_onboarding_stage_authenticated or meeting_type.target_onboarding_stage
+    else:
+        target_stage = meeting_type.target_onboarding_stage
+
+    if not target_stage:
+        return
+
+    # Validate stage entity type matches
+    expected_entity_type = 'candidate' if candidate_profile else 'company'
+    if target_stage.entity_type != expected_entity_type:
+        return
+
+    current_stage = entity.onboarding_stage
+    should_change = False
+
+    if meeting_type.stage_change_behavior == StageChangeBehavior.ALWAYS:
+        should_change = True
+    elif meeting_type.stage_change_behavior == StageChangeBehavior.ONLY_IF_NOT_SET:
+        should_change = current_stage is None
+    elif meeting_type.stage_change_behavior == StageChangeBehavior.ONLY_FORWARD:
+        if current_stage is None:
+            should_change = True
+        else:
+            # Only change if target stage is further in the pipeline
+            should_change = target_stage.order > current_stage.order
+
+    if should_change and entity.onboarding_stage != target_stage:
+        old_stage = entity.onboarding_stage
+        entity.onboarding_stage = target_stage
+        entity.save(update_fields=['onboarding_stage'])
+
+        # Record in OnboardingHistory
+        OnboardingHistory.objects.create(
+            entity_type=expected_entity_type,
+            entity_id=entity.id,
+            from_stage=old_stage,
+            to_stage=target_stage,
+            changed_by=None,  # System change
+            notes=f'Automatically set when booking "{meeting_type.name}" was created',
+        )
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def public_create_booking(request, booking_slug, meeting_type_slug):
@@ -375,15 +503,26 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
     Create a booking for a public meeting type.
     No authentication required - anyone can book.
 
-    If the attendee email matches an existing user with a candidate profile,
-    the booking is linked to that candidate. If no user exists, a candidate
-    invitation is created and sent.
+    For RECRUITMENT meetings:
+    - Links to existing candidate profile if found
+    - Creates CandidateInvitation if no user exists
+
+    For SALES meetings:
+    - Links to existing company user if found
+    - Creates a pending CLIENT user if no user exists (for later invitation)
+
+    Both types:
+    - Auto-assigns the organizer to the candidate/company record
+    - Changes onboarding stage based on meeting type configuration
     """
     from .services.calendar_service import CalendarService
     from authentication.models import CandidateInvitation
     from candidates.models import CandidateProfile
+    from companies.models import Company
+    from users.models import UserRole
     from datetime import timedelta
     from django.utils import timezone
+    import uuid
 
     profile = get_object_or_404(
         RecruiterProfile.objects.select_related('user'),
@@ -391,12 +530,13 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
         user__role__in=['admin', 'recruiter']
     )
     organizer = profile.user
-    meeting_type = get_object_or_404(
-        MeetingType,
-        owner=organizer,
-        slug=meeting_type_slug,
-        is_active=True
-    )
+
+    # Get meeting type and verify organizer has access
+    meeting_type = get_object_or_404(MeetingType, slug=meeting_type_slug, is_active=True)
+
+    # Check organizer has access to this meeting type
+    if organizer.role != 'admin' and not meeting_type.allowed_users.filter(pk=organizer.pk).exists():
+        return Response({'error': 'Meeting type not available'}, status=status.HTTP_404_NOT_FOUND)
 
     # Add meeting_type to request data
     data = request.data.copy()
@@ -411,70 +551,153 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
 
     booking = serializer.save()
 
-    # Check if attendee email matches an existing user
+    # Track state for response
     attendee_email = booking.attendee_email.lower()
     invitation_created = False
     invitation_token = None
+    candidate_profile = None
+    company = None
 
-    try:
-        existing_user = User.objects.get(email__iexact=attendee_email)
-        # Link to existing user
-        booking.attendee_user = existing_user
+    is_recruitment = meeting_type.category == MeetingCategory.RECRUITMENT
+    is_sales = meeting_type.category == MeetingCategory.SALES
 
-        # Check if user has a candidate profile
-        candidate_profile = getattr(existing_user, 'candidate_profile', None)
-        if candidate_profile:
-            booking.candidate_profile = candidate_profile
+    # Check if user is already authenticated (serializer links them)
+    # or if attendee email matches an existing user
+    existing_user = booking.attendee_user
+
+    if not existing_user:
+        try:
+            existing_user = User.objects.get(email__iexact=attendee_email)
+            booking.attendee_user = existing_user
+        except User.DoesNotExist:
+            existing_user = None
+
+    if existing_user:
+        # User exists - link their profile
+        if is_recruitment:
+            candidate_profile = getattr(existing_user, 'candidate_profile', None)
+            if candidate_profile:
+                booking.candidate_profile = candidate_profile
+
+        elif is_sales:
+            if existing_user.role == UserRole.CLIENT:
+                company_membership = existing_user.company_memberships.first()
+                if company_membership:
+                    company = company_membership.company
 
         booking.save(update_fields=['attendee_user', 'candidate_profile'])
 
-    except User.DoesNotExist:
-        # No existing user - create invitation for them to sign up
-        # Set expiration to 7 days before the meeting (or 24 hours minimum)
+    else:
+        # No existing user - handle differently based on meeting type
         meeting_time = booking.scheduled_at
         days_until_meeting = (meeting_time - timezone.now()).days
 
         if days_until_meeting > 7:
             expires_at = timezone.now() + timedelta(days=7)
         else:
-            # At least 24 hours before meeting, or 24 hours from now if meeting is sooner
             expires_at = min(
                 meeting_time - timedelta(hours=24),
                 timezone.now() + timedelta(days=7)
             )
-            # Ensure at least 24 hours from now
             if expires_at < timezone.now() + timedelta(hours=24):
                 expires_at = timezone.now() + timedelta(hours=24)
 
-        invitation = CandidateInvitation.objects.create(
-            email=attendee_email,
-            name=booking.attendee_name,
-            created_by=organizer,
-            booking=booking,
-            expires_at=expires_at,
-        )
-        invitation_created = True
-        invitation_token = str(invitation.token)
+        if is_recruitment:
+            # Create a pending CANDIDATE user (similar to how sales creates pending CLIENT)
+            from candidates.models import CandidateProfile
 
-        # Send invitation email with meeting context
-        try:
-            from notifications.services import NotificationService
-            from django.conf import settings as django_settings
-            frontend_url = getattr(django_settings, 'FRONTEND_URL', 'http://localhost:5173')
-            signup_url = f"{frontend_url}/signup/candidate/{invitation_token}"
+            name_parts = booking.attendee_name.split(' ', 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else ''
 
-            NotificationService.notify_candidate_booking_invite(
+            pending_user = User.objects.create(
+                email=attendee_email,
+                username=f"pending_{uuid.uuid4().hex[:8]}",
+                first_name=first_name,
+                last_name=last_name,
+                role=UserRole.CANDIDATE,
+                is_active=False,  # Cannot login until completing signup
+                is_pending_signup=True,
+            )
+            pending_user.set_unusable_password()
+            pending_user.save()
+
+            # Create candidate profile with info from booking form
+            candidate_profile = CandidateProfile.objects.create(
+                user=pending_user,
+                phone=booking.attendee_phone or '',
+            )
+
+            # Link booking to pending user and candidate profile
+            booking.attendee_user = pending_user
+            booking.candidate_profile = candidate_profile
+            booking.save(update_fields=['attendee_user', 'candidate_profile'])
+
+            # Create CandidateInvitation linked to the pending user
+            invitation = CandidateInvitation.objects.create(
                 email=attendee_email,
                 name=booking.attendee_name,
-                recruiter=organizer,
-                meeting_type_name=meeting_type.name,
-                scheduled_at=booking.scheduled_at,
-                duration_minutes=booking.duration_minutes,
-                signup_url=signup_url,
+                created_by=organizer,
+                booking=booking,
+                pending_user=pending_user,
+                expires_at=expires_at,
             )
-        except Exception as e:
-            # Log but don't fail the booking
-            print(f"Failed to send candidate invitation email: {e}")
+            invitation_created = True
+            invitation_token = str(invitation.token)
+
+            # Send invitation email with meeting context
+            try:
+                from notifications.services import NotificationService
+                from django.conf import settings as django_settings
+                frontend_url = getattr(django_settings, 'FRONTEND_URL', 'http://localhost:5173')
+                signup_url = f"{frontend_url}/signup/candidate/{invitation_token}"
+
+                NotificationService.notify_candidate_booking_invite(
+                    email=attendee_email,
+                    name=booking.attendee_name,
+                    recruiter=organizer,
+                    meeting_type_name=meeting_type.name,
+                    scheduled_at=booking.scheduled_at,
+                    duration_minutes=booking.duration_minutes,
+                    signup_url=signup_url,
+                )
+            except Exception as e:
+                print(f"Failed to send candidate invitation email: {e}")
+
+        elif is_sales:
+            # Create a pending CLIENT user for sales meetings
+            # This user will be linked when a CompanyInvitation is sent later
+            name_parts = booking.attendee_name.split(' ', 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+            pending_user = User.objects.create(
+                email=attendee_email,
+                username=f"pending_{uuid.uuid4().hex[:8]}",
+                first_name=first_name,
+                last_name=last_name,
+                role=UserRole.CLIENT,
+                is_active=False,  # Cannot login until completing signup
+                is_pending_signup=True,
+            )
+            # Set unusable password - they'll set it when accepting invitation
+            pending_user.set_unusable_password()
+            pending_user.save()
+
+            booking.attendee_user = pending_user
+            booking.save(update_fields=['attendee_user'])
+
+    # Handle assignment and stage changes
+    # Pass is_authenticated to determine which target stage to use
+    is_authenticated = request.user.is_authenticated
+    _handle_booking_assignment_and_stage(
+        booking=booking,
+        meeting_type=meeting_type,
+        organizer=organizer,
+        candidate_profile=candidate_profile,
+        company=company,
+        is_authenticated=is_authenticated,
+    )
 
     # Try to create calendar event with auto-generated meeting link
     try:
@@ -483,9 +706,7 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
             attendee_email=booking.attendee_email,
             attendee_name=booking.attendee_name,
         )
-        # create_booking_event handles updating the booking model
     except Exception as e:
-        # Log but don't fail the booking
         print(f"Failed to create calendar event: {e}")
 
     # Return booking with redirect URL and invitation info

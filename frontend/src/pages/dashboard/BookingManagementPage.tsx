@@ -25,22 +25,24 @@ import {
   Trash2,
   Briefcase,
 } from 'lucide-react'
-import { useMeetingTypes, useRecruiterBookings, useCandidateInvitations } from '@/hooks'
+import { useMeetingTypes, useRecruiterBookings, useCandidateInvitations, useStaffUsers } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import type {
   RecruiterMeetingType,
   RecruiterMeetingTypeInput,
   RecruiterBooking,
   RecruiterBookingStatus,
-  RecruiterMeetingCategory,
   RecruiterMeetingLocationType,
-  CandidateInvitation,
 } from '@/types'
 import {
   RecruiterBookingStatusLabels,
+  RecruiterMeetingCategory,
   RecruiterMeetingCategoryLabels,
   RecruiterMeetingLocationLabels,
+  StageChangeBehaviorLabels,
 } from '@/types'
+import { getOnboardingStages } from '@/services/api'
+import { useQuery } from '@tanstack/react-query'
 
 type TabType = 'bookings' | 'meeting-types' | 'invitations'
 
@@ -342,11 +344,15 @@ function MeetingTypeCard({
   bookingUrl,
   onEdit,
   onToggleActive,
+  onDelete,
+  isAdmin,
 }: {
   meetingType: RecruiterMeetingType
   bookingUrl: string
   onEdit: () => void
   onToggleActive: () => void
+  onDelete: () => void
+  isAdmin: boolean
 }) {
   const [copied, setCopied] = useState(false)
 
@@ -370,16 +376,28 @@ function MeetingTypeCard({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={onToggleActive}
-            className={`px-2.5 py-1 rounded-full text-[11px] font-medium ${
-              meetingType.is_active
-                ? 'bg-green-100 text-green-700'
-                : 'bg-gray-100 text-gray-500'
-            }`}
-          >
-            {meetingType.is_active ? 'Active' : 'Inactive'}
-          </button>
+          {isAdmin ? (
+            <button
+              onClick={onToggleActive}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium ${
+                meetingType.is_active
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              {meetingType.is_active ? 'Active' : 'Inactive'}
+            </button>
+          ) : (
+            <span
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium ${
+                meetingType.is_active
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              {meetingType.is_active ? 'Active' : 'Inactive'}
+            </span>
+          )}
         </div>
       </div>
 
@@ -389,7 +407,7 @@ function MeetingTypeCard({
         </p>
       )}
 
-      <div className="flex items-center gap-4 text-[13px] text-gray-500 mb-4">
+      <div className="flex items-center gap-4 text-[13px] text-gray-500 mb-3">
         <span className="flex items-center gap-1.5">
           <Clock className="w-4 h-4" />
           {meetingType.duration_minutes} min
@@ -399,6 +417,20 @@ function MeetingTypeCard({
           {RecruiterMeetingLocationLabels[meetingType.location_type]}
         </span>
       </div>
+
+      {/* Allowed users display (for admins) */}
+      {isAdmin && meetingType.allowed_users_details && (
+        <div className="flex items-center gap-1.5 text-[12px] text-gray-500 mb-4">
+          <Users className="w-3.5 h-3.5" />
+          {meetingType.allowed_users_details.length === 0 ? (
+            <span className="text-amber-600">No users assigned</span>
+          ) : (
+            <span>
+              {meetingType.allowed_users_details.length} user{meetingType.allowed_users_details.length !== 1 ? 's' : ''} assigned
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Booking Link */}
       <div className="flex items-center gap-2 bg-gray-50 rounded-md p-2">
@@ -430,14 +462,22 @@ function MeetingTypeCard({
         </a>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-gray-100">
-        <button
-          onClick={onEdit}
-          className="text-[13px] text-gray-600 hover:text-gray-900"
-        >
-          Edit Settings
-        </button>
-      </div>
+      {isAdmin && (
+        <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+          <button
+            onClick={onEdit}
+            className="text-[13px] text-gray-600 hover:text-gray-900"
+          >
+            Edit Settings
+          </button>
+          <button
+            onClick={onDelete}
+            className="text-[13px] text-red-500 hover:text-red-700"
+          >
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -457,7 +497,7 @@ function MeetingTypeModal({
   const [formData, setFormData] = useState<RecruiterMeetingTypeInput>({
     name: meetingType?.name || '',
     slug: meetingType?.slug || '',
-    category: meetingType?.category || 'recruitment',
+    category: meetingType?.category ?? RecruiterMeetingCategory.RECRUITMENT,
     description: meetingType?.description || '',
     duration_minutes: meetingType?.duration_minutes || 30,
     buffer_before_minutes: meetingType?.buffer_before_minutes || 0,
@@ -465,11 +505,26 @@ function MeetingTypeModal({
     location_type: meetingType?.location_type || 'video',
     custom_location: meetingType?.custom_location || '',
     is_active: meetingType?.is_active ?? true,
+    show_on_dashboard: meetingType?.show_on_dashboard ?? false,
     requires_approval: meetingType?.requires_approval || false,
     max_bookings_per_day: meetingType?.max_bookings_per_day || null,
     confirmation_message: meetingType?.confirmation_message || '',
     redirect_url: meetingType?.redirect_url || '',
     color: meetingType?.color || '#3B82F6',
+    target_onboarding_stage: meetingType?.target_onboarding_stage || null,
+    target_onboarding_stage_authenticated: meetingType?.target_onboarding_stage_authenticated || null,
+    stage_change_behavior: meetingType?.stage_change_behavior || 'only_forward',
+    allowed_user_ids: meetingType?.allowed_users_details?.map(u => u.id) || [],
+  })
+
+  // Fetch staff users for allowed users selection
+  const { staffUsers, isLoading: loadingStaff } = useStaffUsers()
+
+  // Fetch onboarding stages based on category
+  const entityType = formData.category === 'recruitment' ? 'candidate' : 'company'
+  const { data: onboardingStages = [] } = useQuery({
+    queryKey: ['onboarding-stages', entityType],
+    queryFn: () => getOnboardingStages({ entity_type: entityType }),
   })
 
   const handleChange = (
@@ -536,6 +591,55 @@ function MeetingTypeModal({
               <option value="sales">Sales</option>
               <option value="recruitment">Recruitment</option>
             </select>
+          </div>
+
+          {/* Allowed Users - Who can use this meeting type */}
+          <div>
+            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              Allowed Users
+            </label>
+            <p className="text-[12px] text-gray-500 mb-2">
+              Select which recruiters can use this meeting type on their booking pages
+            </p>
+            {loadingStaff ? (
+              <div className="flex items-center gap-2 text-[13px] text-gray-500">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading users...
+              </div>
+            ) : (
+              <div className="border border-gray-200 rounded-md max-h-48 overflow-y-auto">
+                {staffUsers.map((staffUser) => (
+                  <label
+                    key={staffUser.id}
+                    className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.allowed_user_ids?.includes(staffUser.id) || false}
+                      onChange={(e) => {
+                        const currentIds = formData.allowed_user_ids || []
+                        const newIds = e.target.checked
+                          ? [...currentIds, staffUser.id]
+                          : currentIds.filter((id) => id !== staffUser.id)
+                        setFormData((prev) => ({ ...prev, allowed_user_ids: newIds }))
+                      }}
+                      className="w-4 h-4 rounded border-gray-300"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-medium text-gray-900 truncate">
+                        {staffUser.full_name}
+                      </p>
+                      <p className="text-[12px] text-gray-500 truncate">
+                        {staffUser.email} · {staffUser.role}
+                      </p>
+                    </div>
+                  </label>
+                ))}
+                {staffUsers.length === 0 && (
+                  <p className="text-[13px] text-gray-500 p-3">No staff users found</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Description */}
@@ -687,6 +791,21 @@ function MeetingTypeModal({
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
+                name="show_on_dashboard"
+                checked={formData.show_on_dashboard}
+                onChange={handleChange}
+                className="w-4 h-4 rounded border-gray-300"
+              />
+              <div>
+                <span className="text-[13px] text-gray-700">Show on Dashboard</span>
+                <p className="text-[11px] text-gray-500">
+                  Display this meeting type on {formData.category === 'recruitment' ? 'candidate' : 'company'} dashboards for booking with assigned contacts
+                </p>
+              </div>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
                 name="requires_approval"
                 checked={formData.requires_approval}
                 onChange={handleChange}
@@ -694,6 +813,103 @@ function MeetingTypeModal({
               />
               <span className="text-[13px] text-gray-700">Require approval before confirming</span>
             </label>
+          </div>
+
+          {/* Onboarding Stage Settings */}
+          <div className="pt-4 border-t border-gray-100">
+            <h3 className="text-[14px] font-medium text-gray-900 mb-3">
+              Onboarding Stage Settings
+            </h3>
+            <p className="text-[12px] text-gray-500 mb-4">
+              Automatically update {formData.category === 'recruitment' ? 'candidate' : 'company'} onboarding stage when a booking is made
+            </p>
+
+            <div className="space-y-4">
+              {/* Target Stage for New/Unauthenticated Users */}
+              <div>
+                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  Stage for New Users (Unauthenticated)
+                </label>
+                <p className="text-[11px] text-gray-500 mb-1.5">
+                  Applied when someone books without being logged in
+                </p>
+                <select
+                  name="target_onboarding_stage"
+                  value={formData.target_onboarding_stage ?? ''}
+                  onChange={(e) => {
+                    const value = e.target.value ? parseInt(e.target.value) : null
+                    setFormData((prev) => ({ ...prev, target_onboarding_stage: value }))
+                  }}
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  <option value="">No stage change</option>
+                  {onboardingStages.map((stage) => (
+                    <option key={stage.id} value={stage.id}>
+                      {stage.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Target Stage for Existing/Authenticated Users */}
+              <div>
+                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  Stage for Existing Users (Authenticated)
+                </label>
+                <p className="text-[11px] text-gray-500 mb-1.5">
+                  Applied when a logged-in user books (e.g., existing candidate scheduling an interview)
+                </p>
+                <select
+                  name="target_onboarding_stage_authenticated"
+                  value={formData.target_onboarding_stage_authenticated ?? ''}
+                  onChange={(e) => {
+                    const value = e.target.value ? parseInt(e.target.value) : null
+                    setFormData((prev) => ({ ...prev, target_onboarding_stage_authenticated: value }))
+                  }}
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  <option value="">Use same as unauthenticated</option>
+                  {onboardingStages.map((stage) => (
+                    <option key={stage.id} value={stage.id}>
+                      {stage.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Stage Change Behavior */}
+              {(formData.target_onboarding_stage || formData.target_onboarding_stage_authenticated) && (
+                <div>
+                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                    Stage Change Behavior
+                  </label>
+                  <select
+                    name="stage_change_behavior"
+                    value={formData.stage_change_behavior}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  >
+                    <option value="only_forward">
+                      {StageChangeBehaviorLabels.only_forward}
+                    </option>
+                    <option value="always">
+                      {StageChangeBehaviorLabels.always}
+                    </option>
+                    <option value="only_if_not_set">
+                      {StageChangeBehaviorLabels.only_if_not_set}
+                    </option>
+                  </select>
+                  <p className="mt-1 text-[11px] text-gray-500">
+                    {formData.stage_change_behavior === 'only_forward' &&
+                      'Stage will only change if the target stage comes after their current stage'}
+                    {formData.stage_change_behavior === 'always' &&
+                      'Stage will always be set to the target, even if going backwards'}
+                    {formData.stage_change_behavior === 'only_if_not_set' &&
+                      'Stage will only be set if they don\'t currently have a stage'}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Submit */}
@@ -729,6 +945,7 @@ export default function BookingManagementPage() {
 
   // Check if user is a recruiter/admin (can manage meeting types and invitations)
   const isRecruiter = user?.role === 'admin' || user?.role === 'recruiter'
+  const isAdmin = user?.role === 'admin'
   const isClient = user?.role === 'client'
 
   // Only load meeting types for recruiters/admins
@@ -737,8 +954,10 @@ export default function BookingManagementPage() {
     isLoading: loadingMeetingTypes,
     createMeetingType,
     updateMeetingType,
+    deleteMeetingType,
     isCreating,
     isUpdating,
+    isDeleting: isDeletingMeetingType,
   } = useMeetingTypes({ enabled: isRecruiter })
 
   const {
@@ -791,6 +1010,12 @@ export default function BookingManagementPage() {
 
   const handleToggleMeetingTypeActive = async (mt: RecruiterMeetingType) => {
     await updateMeetingType(mt.id, { is_active: !mt.is_active })
+  }
+
+  const handleDeleteMeetingType = async (mt: RecruiterMeetingType) => {
+    if (window.confirm(`Are you sure you want to delete "${mt.name}"? This action cannot be undone.`)) {
+      await deleteMeetingType(mt.id)
+    }
   }
 
   return (
@@ -958,15 +1183,19 @@ export default function BookingManagementPage() {
         <div>
           <div className="flex items-center justify-between mb-6">
             <p className="text-[13px] text-gray-500">
-              Create different meeting types for sales calls, recruitment consultations, etc.
+              {isAdmin
+                ? 'Create and manage meeting types. Grant access to recruiters so they can use these meeting types on their booking pages.'
+                : 'View meeting types you have access to. Contact an admin to request additional meeting types.'}
             </p>
-            <button
-              onClick={() => setShowNewMeetingType(true)}
-              className="flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800"
-            >
-              <Plus className="w-4 h-4" />
-              New Meeting Type
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setShowNewMeetingType(true)}
+                className="flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800"
+              >
+                <Plus className="w-4 h-4" />
+                New Meeting Type
+              </button>
+            )}
           </div>
 
           {loadingMeetingTypes ? (
@@ -976,14 +1205,22 @@ export default function BookingManagementPage() {
           ) : meetingTypes.length === 0 ? (
             <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
               <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-[14px] text-gray-500 mb-4">No meeting types yet</p>
-              <button
-                onClick={() => setShowNewMeetingType(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800"
-              >
-                <Plus className="w-4 h-4" />
-                Create Your First Meeting Type
-              </button>
+              <p className="text-[14px] text-gray-500 mb-4">
+                {isAdmin ? 'No meeting types yet' : 'No meeting types assigned to you'}
+              </p>
+              {isAdmin ? (
+                <button
+                  onClick={() => setShowNewMeetingType(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Your First Meeting Type
+                </button>
+              ) : (
+                <p className="text-[13px] text-gray-400">
+                  Contact an admin to get access to meeting types
+                </p>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -994,6 +1231,8 @@ export default function BookingManagementPage() {
                   bookingUrl={`${baseUrl}/meet/${user?.booking_slug}/${mt.slug}`}
                   onEdit={() => setEditingMeetingType(mt)}
                   onToggleActive={() => handleToggleMeetingTypeActive(mt)}
+                  onDelete={() => handleDeleteMeetingType(mt)}
+                  isAdmin={isAdmin}
                 />
               ))}
             </div>

@@ -21,10 +21,11 @@ import {
   useCancelStage,
   useCompleteStage,
   useReopenStage,
+  useAssignedUpdate,
 } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole, ApplicationStatus, RejectionReason, RejectionReasonLabels, StageTypeConfig, StageType } from '@/types'
-import type { ApplicationListItem, OfferDetails, ApplicationStageInstance, ApplicationRecruiter } from '@/types'
+import type { ApplicationListItem, OfferDetails, ApplicationStageInstance } from '@/types'
 import ApplicationFilterPanel, {
   ApplicationFilters,
   defaultFilters,
@@ -33,7 +34,9 @@ import ApplicationBulkActions from '@/components/applications/ApplicationBulkAct
 import ApplicationDrawer from '@/components/applications/ApplicationDrawer'
 import ApplicationKanbanBoard from '@/components/applications/ApplicationKanbanBoard'
 import { ScheduleInterviewModal, AssignAssessmentModal } from '@/components/applications'
+import { AssignedSelect } from '@/components/forms'
 import api from '@/services/api'
+import type { AssignedUser } from '@/types'
 import {
   FileText,
   AlertCircle,
@@ -577,10 +580,28 @@ export default function AdminApplicationsPage() {
     refetch()
   }
 
+  // Hook for optimistic updates with toast notifications
+  const { updateAssigned } = useAssignedUpdate<ApplicationListItem>()
+
+  // Handler for changing assigned recruiters on an application (optimistic)
+  const handleAssignedChange = useCallback((applicationId: string, assignedTo: AssignedUser[]) => {
+    updateAssigned(
+      localApplications,
+      setLocalApplications,
+      applicationId,
+      'id',
+      'assigned_recruiters',
+      assignedTo,
+      () => api.patch(`/jobs/applications/${applicationId}/`, {
+        assigned_recruiter_ids: assignedTo.map(u => u.id),
+      })
+    )
+  }, [localApplications, updateAssigned])
+
   // Define columns with TanStack Table
   const columns = useMemo<ColumnDef<ApplicationListItem, any>[]>(
     () => [
-      // Selection checkbox
+      // Selection checkbox - PINNED LEFT
       {
         id: 'select',
         size: 40,
@@ -604,7 +625,26 @@ export default function AdminApplicationsPage() {
           </div>
         ),
       },
-      // Candidate
+      // Assigned Recruiters - PINNED LEFT
+      columnHelper.accessor('assigned_recruiters', {
+        header: 'Assigned',
+        size: 140,
+        cell: ({ row }) => {
+          const app = row.original
+          const assignedUsers = app.assigned_recruiters || []
+          return (
+            <div onClick={(e) => e.stopPropagation()}>
+              <AssignedSelect
+                selected={assignedUsers}
+                onChange={(users) => handleAssignedChange(app.id, users)}
+                compact
+                placeholder="Assign"
+              />
+            </div>
+          )
+        },
+      }),
+      // Candidate - PINNED LEFT
       columnHelper.accessor('candidate_name', {
         header: 'Candidate',
         size: 200,
@@ -716,40 +756,6 @@ export default function AdminApplicationsPage() {
           )
         },
       }),
-      // Assigned Recruiters
-      columnHelper.accessor('assigned_recruiters', {
-        header: 'Assigned',
-        size: 140,
-        cell: ({ getValue }) => {
-          const recruiters = getValue() as ApplicationRecruiter[]
-          if (!recruiters || recruiters.length === 0) {
-            return <span className="text-[11px] text-gray-400">Unassigned</span>
-          }
-          return (
-            <div className="flex -space-x-2">
-              {recruiters.map((recruiter: ApplicationRecruiter) => (
-                <div
-                  key={recruiter.id}
-                  title={recruiter.full_name}
-                  className="relative"
-                >
-                  {recruiter.avatar ? (
-                    <img
-                      src={recruiter.avatar}
-                      alt={recruiter.full_name}
-                      className="w-6 h-6 rounded-full border-2 border-white object-cover"
-                    />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[10px] font-medium text-gray-600">
-                      {recruiter.first_name?.[0]}{recruiter.last_name?.[0]}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )
-        },
-      }),
       // Actions
       columnHelper.display({
         id: 'actions',
@@ -821,11 +827,11 @@ export default function AdminApplicationsPage() {
         },
       }),
     ],
-    [openActionsMenu, menuPosition]
+    [openActionsMenu, menuPosition, handleAssignedChange]
   )
 
   const table = useReactTable({
-    data: viewMode === 'kanban' ? localApplications : applications,
+    data: localApplications,
     columns,
     state: {
       sorting,
@@ -999,34 +1005,43 @@ export default function AdminApplicationsPage() {
                   <thead>
                     {table.getHeaderGroups().map(headerGroup => (
                       <tr key={headerGroup.id} className="border-b border-gray-200 bg-gray-50">
-                        {headerGroup.headers.map(header => (
-                          <th
-                            key={header.id}
-                            className="px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                            style={{ width: header.getSize() }}
-                          >
-                            {header.isPlaceholder ? null : (
-                              <div
-                                className={`flex items-center gap-1 ${
-                                  header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700' : ''
-                                }`}
-                                onClick={header.column.getToggleSortingHandler()}
-                              >
-                                {flexRender(header.column.columnDef.header, header.getContext())}
-                                {header.column.getCanSort() && (
-                                  <span className="ml-0.5">
-                                    {{
-                                      asc: <ArrowUp className="w-3 h-3" />,
-                                      desc: <ArrowDown className="w-3 h-3" />,
-                                    }[header.column.getIsSorted() as string] ?? (
-                                      <ArrowUpDown className="w-3 h-3 opacity-40" />
-                                    )}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </th>
-                        ))}
+                        {headerGroup.headers.map(header => {
+                          const isPinnedLeft = header.id === 'select' || header.id === 'assigned_recruiters' || header.id === 'candidate_name'
+                          const isPinnedRight = header.id === 'actions'
+                          return (
+                            <th
+                              key={header.id}
+                              className={`px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
+                                isPinnedLeft ? 'sticky z-20 bg-gray-50' : ''
+                              } ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50' : ''}`}
+                              style={{
+                                width: header.getSize(),
+                                left: header.id === 'select' ? 0 : header.id === 'assigned_recruiters' ? 40 : header.id === 'candidate_name' ? 180 : undefined,
+                              }}
+                            >
+                              {header.isPlaceholder ? null : (
+                                <div
+                                  className={`flex items-center gap-1 ${
+                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700' : ''
+                                  }`}
+                                  onClick={header.column.getToggleSortingHandler()}
+                                >
+                                  {flexRender(header.column.columnDef.header, header.getContext())}
+                                  {header.column.getCanSort() && (
+                                    <span className="ml-0.5">
+                                      {{
+                                        asc: <ArrowUp className="w-3 h-3" />,
+                                        desc: <ArrowDown className="w-3 h-3" />,
+                                      }[header.column.getIsSorted() as string] ?? (
+                                        <ArrowUpDown className="w-3 h-3 opacity-40" />
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </th>
+                          )
+                        })}
                       </tr>
                     ))}
                   </thead>
@@ -1041,15 +1056,24 @@ export default function AdminApplicationsPage() {
                           setSelectedApplicationId(row.original.id)
                         }}
                       >
-                        {row.getVisibleCells().map(cell => (
-                          <td
-                            key={cell.id}
-                            className="px-3 py-2.5 whitespace-nowrap"
-                            style={{ width: cell.column.getSize() }}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        ))}
+                        {row.getVisibleCells().map(cell => {
+                          const isPinnedLeft = cell.column.id === 'select' || cell.column.id === 'assigned_recruiters' || cell.column.id === 'candidate_name'
+                          const isPinnedRight = cell.column.id === 'actions'
+                          return (
+                            <td
+                              key={cell.id}
+                              className={`px-3 py-2.5 whitespace-nowrap ${
+                                isPinnedLeft ? 'sticky z-10 bg-white' : ''
+                              } ${isPinnedRight ? 'sticky right-0 z-10 bg-white' : ''}`}
+                              style={{
+                                width: cell.column.getSize(),
+                                left: cell.column.id === 'select' ? 0 : cell.column.id === 'assigned_recruiters' ? 40 : cell.column.id === 'candidate_name' ? 180 : undefined,
+                              }}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </td>
+                          )
+                        })}
                       </tr>
                     ))}
                   </tbody>

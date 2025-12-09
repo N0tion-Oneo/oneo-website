@@ -107,6 +107,15 @@ class CandidateInvitation(models.Model):
         related_name='candidate_invitations',
         help_text="The booking that triggered this invitation"
     )
+    # Pending user created at booking time (before signup is complete)
+    pending_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='candidate_invitation_pending',
+        help_text="The pending user created when booking was made (before signup completion)"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
     used_at = models.DateTimeField(null=True, blank=True)

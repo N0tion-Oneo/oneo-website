@@ -1,6 +1,6 @@
 import { Link, useLocation, Outlet } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { User, Calendar, ChevronLeft, Wrench, Palette, Bell, UserPlus, Users, Briefcase, CalendarClock, ListChecks } from 'lucide-react'
+import { User, Calendar, ChevronLeft, Wrench, Palette, Bell, UserPlus, Users, Briefcase, CalendarClock, ListChecks, Settings } from 'lucide-react'
 
 interface SettingsNavItem {
   name: string
@@ -81,6 +81,11 @@ export default function SettingsLayout() {
             name: 'Recruiters',
             href: '/dashboard/settings/recruiters',
             icon: <Users className="w-4 h-4" />,
+          },
+          {
+            name: 'Dashboard Settings',
+            href: '/dashboard/settings/dashboard',
+            icon: <Settings className="w-4 h-4" />,
           },
         ]
       : []),

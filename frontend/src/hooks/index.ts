@@ -184,4 +184,50 @@ export {
   usePublicAvailability,
   useCreatePublicBooking,
   useCandidateInvitations,
+  useDashboardMeetingType,
 } from './useRecruiterBookings'
+
+// Analytics hooks
+export {
+  useAnalyticsOverview,
+  usePipelineFunnel,
+  useRecruiterPerformance,
+  useTimeMetrics,
+  useAnalyticsTrends,
+  getDateRangeFromPreset,
+  // Onboarding Analytics
+  useOnboardingOverview,
+  useOnboardingTimeInStage,
+  useOnboardingFunnel,
+  useOnboardingTrends,
+  useOnboardingBottlenecks,
+} from './useAnalytics'
+
+// Optimistic Update hooks
+export { useOptimisticUpdate, useAssignedUpdate } from './useOptimisticUpdate'
+
+// Recruiter Dashboard hooks
+export {
+  useDashboardSettings,
+  useTodaysBookings,
+  useTodaysInterviews,
+  useInvitationsSummary,
+  useNewApplications,
+  usePipelineOverview,
+  useRecentActivity,
+  useCandidatesAttention,
+} from './useRecruiterDashboard'
+export type {
+  DashboardSettings,
+  TodaysBooking,
+  TodaysInterview,
+  InvitationItem,
+  InvitationsSummary,
+  NewApplication,
+  JobPipeline,
+  PipelineOverview,
+  ActivityItem,
+  CandidateAttentionItem,
+  CandidatesNeedingAttention,
+  TimeFilter,
+} from './useRecruiterDashboard'

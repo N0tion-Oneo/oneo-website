@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useMyProfile, useCandidate, useCountries, useCities, useCandidateSuggestions } from '@/hooks'
-import { IndustryMultiSelect, AssignedToSelect } from '@/components/forms'
+import { IndustryMultiSelect, AssignedSelect } from '@/components/forms'
 import { ExperienceEditor } from '@/components/experience'
 import { EducationEditor } from '@/components/education'
 import { ResumeImportButton, ResumePreviewModal } from '@/components/resume'
@@ -1078,10 +1078,10 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                 </div>
               )}
 
-              {/* Assigned To (admin mode only) */}
+              {/* Assigned (admin mode only) */}
               {isAdminMode && (
                 <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                  <AssignedToSelect
+                  <AssignedSelect
                     selected={assignedTo}
                     onChange={handleAssignedToChange}
                     placeholder="Assign recruiters..."

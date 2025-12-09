@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSkills, useTechnologies, useCountries, useCities, useQuestionTemplates, useBulkUpdateStageTemplates, useCompanyUsers, useStageTemplates, useRecruiters } from '@/hooks'
+import { useCountries, useCities, useQuestionTemplates, useBulkUpdateStageTemplates, useCompanyUsers, useStageTemplates } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCreateJob, useUpdateJob } from '@/hooks/useJobs'
 import {
@@ -18,6 +18,7 @@ import { ChevronLeft, ChevronRight, Loader2, Plus, X, GripVertical, Trash2, Exte
 import QuestionBuilder from './QuestionBuilder'
 import StageTypeSelector from './StageTypeSelector'
 import { StageList } from './StageConfigForm'
+import { SkillMultiSelect, TechnologyMultiSelect, AssignedSelect } from '@/components/forms'
 
 interface JobFormProps {
   job?: Job
@@ -118,6 +119,7 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
     nice_to_have_skill_ids: job?.nice_to_have_skills?.map((s) => s.id) || [],
     technology_ids: job?.technologies?.map((t) => t.id) || [],
     application_deadline: job?.application_deadline || null,
+    positions_to_fill: job?.positions_to_fill || 1,
     benefits: job?.benefits || [],
     interview_stages: job?.interview_stages || defaultInterviewStages,
     questions: job?.questions?.map((q) => ({
@@ -132,21 +134,33 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
     assigned_recruiter_ids: job?.assigned_recruiters?.map((r) => r.id) || [],
   })
 
+  // Selected skills and technologies (full objects for MultiSelect)
+  const [selectedRequiredSkills, setSelectedRequiredSkills] = useState(job?.required_skills || [])
+  const [selectedTechnologies, setSelectedTechnologies] = useState(job?.technologies || [])
+
+  // Selected assigned recruiters (full objects for AssignedSelect)
+  const [selectedRecruiters, setSelectedRecruiters] = useState(
+    job?.assigned_recruiters?.map(r => ({
+      id: r.id,
+      email: r.email,
+      first_name: r.first_name,
+      last_name: r.last_name,
+      full_name: `${r.first_name} ${r.last_name}`,
+    })) || []
+  )
+
   // Stage templates state (new typed system)
   const [stageTemplates, setStageTemplates] = useState<InterviewStageTemplateInput[]>(
     defaultStageTemplates
   )
   const [showStageSelector, setShowStageSelector] = useState(false)
 
-  const { skills } = useSkills()
-  const { technologies } = useTechnologies()
   const { countries } = useCountries()
   const { cities } = useCities({
     countryId: formData.location_country_id || undefined,
   })
   const { templates: questionTemplates } = useQuestionTemplates({ is_active: true })
   const { users: teamMembers } = useCompanyUsers(companyId)
-  const { recruiters } = useRecruiters()
 
   // Load existing stage templates when editing a job
   const { templates: existingStageTemplates, isLoading: isLoadingStages } = useStageTemplates(job?.id || '')
@@ -209,26 +223,27 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
     }))
   }
 
-  const handleSkillToggle = (skillId: string, isRequired: boolean) => {
-    const fieldName = isRequired ? 'required_skill_ids' : 'nice_to_have_skill_ids'
-    const currentIds = formData[fieldName] || []
-
+  const handleRequiredSkillsChange = (skills: typeof selectedRequiredSkills) => {
+    setSelectedRequiredSkills(skills)
     setFormData((prev) => ({
       ...prev,
-      [fieldName]: currentIds.includes(skillId)
-        ? currentIds.filter((id) => id !== skillId)
-        : [...currentIds, skillId],
+      required_skill_ids: skills.map((s) => s.id),
     }))
   }
 
-  const handleTechToggle = (techId: string) => {
-    const currentIds = formData.technology_ids || []
-
+  const handleTechnologiesChange = (techs: typeof selectedTechnologies) => {
+    setSelectedTechnologies(techs)
     setFormData((prev) => ({
       ...prev,
-      technology_ids: currentIds.includes(techId)
-        ? currentIds.filter((id) => id !== techId)
-        : [...currentIds, techId],
+      technology_ids: techs.map((t) => t.id),
+    }))
+  }
+
+  const handleRecruitersChange = (recruiters: typeof selectedRecruiters) => {
+    setSelectedRecruiters(recruiters)
+    setFormData((prev) => ({
+      ...prev,
+      assigned_recruiter_ids: recruiters.map((r) => r.id),
     }))
   }
 
@@ -414,43 +429,22 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
 
   return (
     <form onSubmit={handleSubmit}>
-      {/* Step Indicator */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          {steps.map((step, index) => (
-            <div key={step.id} className="flex items-center">
-              <button
-                type="button"
-                onClick={() => setCurrentStep(step.id)}
-                className={`flex items-center gap-2 group cursor-pointer`}
-              >
-                <span
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-medium transition-colors ${
-                    currentStep >= step.id
-                      ? 'bg-gray-900 text-white'
-                      : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
-                  }`}
-                >
-                  {step.id}
-                </span>
-                <span
-                  className={`text-[13px] transition-colors ${
-                    currentStep >= step.id
-                      ? 'text-gray-900 font-medium'
-                      : 'text-gray-500 group-hover:text-gray-700'
-                  }`}
-                >
-                  {step.title}
-                </span>
-              </button>
-              {index < steps.length - 1 && (
-                <div
-                  className={`w-12 mx-4 h-px ${
-                    currentStep > step.id ? 'bg-gray-900' : 'bg-gray-200'
-                  }`}
-                />
-              )}
-            </div>
+      {/* Step Tabs - Matching ApplicationDrawer style */}
+      <div className="mb-6 -mx-6 -mt-6 px-6 py-3 border-b border-gray-200 bg-white">
+        <div className="flex gap-1">
+          {steps.map((step) => (
+            <button
+              key={step.id}
+              type="button"
+              onClick={() => setCurrentStep(step.id)}
+              className={`flex items-center gap-2 px-4 py-2 text-[13px] font-medium rounded-md transition-colors ${
+                currentStep === step.id
+                  ? 'bg-gray-900 text-white'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              {step.title}
+            </button>
           ))}
         </div>
       </div>
@@ -638,57 +632,47 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1">
-              Application Deadline
-            </label>
-            <input
-              type="date"
-              name="application_deadline"
-              value={formData.application_deadline?.split('T')[0] || ''}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            />
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+                Application Deadline
+              </label>
+              <input
+                type="date"
+                name="application_deadline"
+                value={formData.application_deadline?.split('T')[0] || ''}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+                Positions to Fill
+              </label>
+              <input
+                type="number"
+                name="positions_to_fill"
+                value={formData.positions_to_fill || 1}
+                onChange={handleInputChange}
+                min={1}
+                max={100}
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              />
+              <p className="text-[12px] text-gray-500 mt-1">
+                Job will auto-mark as filled when this many candidates are hired
+              </p>
+            </div>
           </div>
 
           {/* Recruiter Assignment - Admin Only */}
-          {isAdmin && recruiters.length > 0 && (
-            <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-2">
-                Assigned Recruiters/Admins
-              </label>
-              <div className="flex flex-wrap gap-2 p-3 border border-gray-200 rounded-md max-h-32 overflow-y-auto">
-                {recruiters.map((recruiter) => {
-                  const isSelected = formData.assigned_recruiter_ids?.includes(recruiter.id) || false
-                  return (
-                    <button
-                      key={recruiter.id}
-                      type="button"
-                      onClick={() => {
-                        const currentIds = formData.assigned_recruiter_ids || []
-                        const newIds = isSelected
-                          ? currentIds.filter((id) => id !== recruiter.id)
-                          : [...currentIds, recruiter.id]
-                        setFormData((prev) => ({
-                          ...prev,
-                          assigned_recruiter_ids: newIds,
-                        }))
-                      }}
-                      className={`px-2.5 py-1 text-[12px] font-medium rounded transition-colors ${
-                        isSelected
-                          ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                          : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
-                      }`}
-                    >
-                      {recruiter.full_name}
-                    </button>
-                  )
-                })}
-              </div>
-              <p className="text-[12px] text-gray-500 mt-1">
-                Select one or more recruiters/admins to manage this job's applications
-              </p>
-            </div>
+          {isAdmin && (
+            <AssignedSelect
+              label="Assigned Recruiters/Admins"
+              selected={selectedRecruiters}
+              onChange={handleRecruitersChange}
+              placeholder="Search staff to assign..."
+            />
           )}
         </div>
       )}
@@ -772,49 +756,18 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
             />
           </div>
 
-          <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-2">
-              Required Skills
-            </label>
-            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border border-gray-200 rounded-md">
-              {skills.map((skill) => (
-                <button
-                  key={skill.id}
-                  type="button"
-                  onClick={() => handleSkillToggle(skill.id, true)}
-                  className={`px-2.5 py-1 text-[12px] font-medium rounded transition-colors ${
-                    formData.required_skill_ids?.includes(skill.id)
-                      ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                      : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  {skill.name}
-                </button>
-              ))}
-            </div>
-          </div>
+          <SkillMultiSelect
+            label="Required Skills"
+            selected={selectedRequiredSkills}
+            onChange={handleRequiredSkillsChange}
+            maxItems={15}
+          />
 
-          <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-2">
-              Technologies
-            </label>
-            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border border-gray-200 rounded-md">
-              {technologies.map((tech) => (
-                <button
-                  key={tech.id}
-                  type="button"
-                  onClick={() => handleTechToggle(tech.id)}
-                  className={`px-2.5 py-1 text-[12px] font-medium rounded transition-colors ${
-                    formData.technology_ids?.includes(tech.id)
-                      ? 'bg-purple-100 text-purple-700 border border-purple-200'
-                      : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  {tech.name}
-                </button>
-              ))}
-            </div>
-          </div>
+          <TechnologyMultiSelect
+            selected={selectedTechnologies}
+            onChange={handleTechnologiesChange}
+            maxItems={20}
+          />
         </div>
       )}
 

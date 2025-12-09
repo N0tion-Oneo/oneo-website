@@ -562,3 +562,41 @@ export function useCandidateInvitations(options: UseCandidateInvitationsOptions 
     refetch: fetchInvitations,
   }
 }
+
+// ============================================================================
+// Dashboard Meeting Type Hook (get meeting type for dashboard scheduling card)
+// ============================================================================
+
+import type { RecruiterMeetingTypePublic } from '@/types'
+
+interface UseDashboardMeetingTypeReturn {
+  meetingType: RecruiterMeetingTypePublic | null
+  isLoading: boolean
+  error: string | null
+}
+
+export function useDashboardMeetingType(category: 'recruitment' | 'sales'): UseDashboardMeetingTypeReturn {
+  const [meetingType, setMeetingType] = useState<RecruiterMeetingTypePublic | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchMeetingType = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        const response = await api.get(`/scheduling/meeting-types/dashboard/${category}/`)
+        setMeetingType(response.data.meeting_type)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to load meeting type'
+        setError(message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchMeetingType()
+  }, [category])
+
+  return { meetingType, isLoading, error }
+}

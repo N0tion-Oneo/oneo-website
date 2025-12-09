@@ -5,6 +5,7 @@ from .models import (
     CalendarProvider,
     MeetingType,
     MeetingCategory,
+    StageChangeBehavior,
     Booking,
     BookingStatus,
 )
@@ -84,12 +85,38 @@ class CalendarConnectionCreateSerializer(serializers.Serializer):
 # Meeting Type Serializers
 # ============================================================================
 
+class OnboardingStageMinimalSerializer(serializers.Serializer):
+    """Minimal serializer for onboarding stage in meeting type context."""
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    slug = serializers.CharField()
+    entity_type = serializers.CharField()
+    color = serializers.CharField()
+    order = serializers.IntegerField()
+
+
+class AllowedUserSerializer(serializers.Serializer):
+    """Minimal serializer for allowed users in meeting type context."""
+    id = serializers.IntegerField()
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    full_name = serializers.CharField()
+
+
 class MeetingTypeSerializer(serializers.ModelSerializer):
     """Serializer for reading MeetingType data."""
     owner_name = serializers.CharField(source='owner.full_name', read_only=True)
     owner_email = serializers.EmailField(source='owner.email', read_only=True)
     category_display = serializers.CharField(source='get_category_display', read_only=True)
     location_type_display = serializers.SerializerMethodField()
+    target_onboarding_stage_details = serializers.SerializerMethodField()
+    stage_change_behavior_display = serializers.CharField(
+        source='get_stage_change_behavior_display', read_only=True
+    )
+    allowed_users_details = serializers.SerializerMethodField()
+
+    target_onboarding_stage_authenticated_details = serializers.SerializerMethodField()
 
     class Meta:
         model = MeetingType
@@ -110,11 +137,21 @@ class MeetingTypeSerializer(serializers.ModelSerializer):
             'location_type_display',
             'custom_location',
             'is_active',
+            'show_on_dashboard',
             'requires_approval',
             'max_bookings_per_day',
             'confirmation_message',
             'redirect_url',
             'color',
+            # Onboarding stage settings
+            'target_onboarding_stage',
+            'target_onboarding_stage_details',
+            'target_onboarding_stage_authenticated',
+            'target_onboarding_stage_authenticated_details',
+            'stage_change_behavior',
+            'stage_change_behavior_display',
+            # Allowed users
+            'allowed_users_details',
             'created_at',
             'updated_at',
         ]
@@ -128,9 +165,22 @@ class MeetingTypeSerializer(serializers.ModelSerializer):
         }
         return display_map.get(obj.location_type, obj.location_type)
 
+    def get_target_onboarding_stage_details(self, obj):
+        if obj.target_onboarding_stage:
+            return OnboardingStageMinimalSerializer(obj.target_onboarding_stage).data
+        return None
+
+    def get_target_onboarding_stage_authenticated_details(self, obj):
+        if obj.target_onboarding_stage_authenticated:
+            return OnboardingStageMinimalSerializer(obj.target_onboarding_stage_authenticated).data
+        return None
+
+    def get_allowed_users_details(self, obj):
+        return AllowedUserSerializer(obj.allowed_users.all(), many=True).data
+
 
 class MeetingTypeCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for creating/updating MeetingType."""
+    """Serializer for creating/updating MeetingType (admins only)."""
     slug = serializers.SlugField(required=False, allow_blank=True)
     description = serializers.CharField(required=False, allow_blank=True)
     duration_minutes = serializers.IntegerField(required=False, min_value=5, max_value=480)
@@ -139,11 +189,17 @@ class MeetingTypeCreateUpdateSerializer(serializers.ModelSerializer):
     location_type = serializers.CharField(required=False)
     custom_location = serializers.CharField(required=False, allow_blank=True)
     is_active = serializers.BooleanField(required=False)
+    show_on_dashboard = serializers.BooleanField(required=False)
     requires_approval = serializers.BooleanField(required=False)
     max_bookings_per_day = serializers.IntegerField(required=False, allow_null=True)
     confirmation_message = serializers.CharField(required=False, allow_blank=True)
     redirect_url = serializers.URLField(required=False, allow_blank=True)
     color = serializers.CharField(required=False)
+    allowed_user_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=False,
+        write_only=True,
+    )
 
     class Meta:
         model = MeetingType
@@ -158,12 +214,39 @@ class MeetingTypeCreateUpdateSerializer(serializers.ModelSerializer):
             'location_type',
             'custom_location',
             'is_active',
+            'show_on_dashboard',
             'requires_approval',
             'max_bookings_per_day',
             'confirmation_message',
             'redirect_url',
             'color',
+            # Onboarding stage settings
+            'target_onboarding_stage',
+            'target_onboarding_stage_authenticated',
+            'stage_change_behavior',
+            # Allowed users
+            'allowed_user_ids',
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Import here to avoid circular import
+        from core.models import OnboardingStage
+        # Add the target_onboarding_stage fields dynamically
+        self.fields['target_onboarding_stage'] = serializers.PrimaryKeyRelatedField(
+            queryset=OnboardingStage.objects.filter(is_active=True),
+            required=False,
+            allow_null=True,
+        )
+        self.fields['target_onboarding_stage_authenticated'] = serializers.PrimaryKeyRelatedField(
+            queryset=OnboardingStage.objects.filter(is_active=True),
+            required=False,
+            allow_null=True,
+        )
+        self.fields['stage_change_behavior'] = serializers.ChoiceField(
+            choices=StageChangeBehavior.choices,
+            required=False,
+        )
 
     def validate(self, data):
         # Auto-generate slug from name if not provided
@@ -172,12 +255,62 @@ class MeetingTypeCreateUpdateSerializer(serializers.ModelSerializer):
             data['slug'] = slugify(name)
         else:
             data['slug'] = slugify(data['slug'])
+
+        # Validate that target_onboarding_stage matches meeting category
+        category = data.get('category') or (self.instance.category if self.instance else None)
+        expected_entity_type = 'candidate' if category == MeetingCategory.RECRUITMENT else 'company'
+
+        # Validate unauthenticated stage
+        target_stage = data.get('target_onboarding_stage')
+        if target_stage and category:
+            if target_stage.entity_type != expected_entity_type:
+                raise serializers.ValidationError({
+                    'target_onboarding_stage': f'Stage must be a {expected_entity_type} stage for {category} meetings.'
+                })
+
+        # Validate authenticated stage
+        target_stage_auth = data.get('target_onboarding_stage_authenticated')
+        if target_stage_auth and category:
+            if target_stage_auth.entity_type != expected_entity_type:
+                raise serializers.ValidationError({
+                    'target_onboarding_stage_authenticated': f'Stage must be a {expected_entity_type} stage for {category} meetings.'
+                })
+
         return data
 
     def create(self, validated_data):
+        from users.models import User, UserRole
+        allowed_user_ids = validated_data.pop('allowed_user_ids', [])
+
         # Set owner from request user
         validated_data['owner'] = self.context['request'].user
-        return super().create(validated_data)
+        meeting_type = super().create(validated_data)
+
+        # Set allowed users (only recruiters and admins)
+        if allowed_user_ids:
+            allowed_users = User.objects.filter(
+                id__in=allowed_user_ids,
+                role__in=[UserRole.ADMIN, UserRole.RECRUITER]
+            )
+            meeting_type.allowed_users.set(allowed_users)
+
+        return meeting_type
+
+    def update(self, instance, validated_data):
+        from users.models import User, UserRole
+        allowed_user_ids = validated_data.pop('allowed_user_ids', None)
+
+        instance = super().update(instance, validated_data)
+
+        # Update allowed users if provided
+        if allowed_user_ids is not None:
+            allowed_users = User.objects.filter(
+                id__in=allowed_user_ids,
+                role__in=[UserRole.ADMIN, UserRole.RECRUITER]
+            )
+            instance.allowed_users.set(allowed_users)
+
+        return instance
 
 
 class MeetingTypePublicSerializer(serializers.ModelSerializer):
@@ -289,7 +422,19 @@ class BookingSerializer(serializers.ModelSerializer):
 
 
 class BookingCreateSerializer(serializers.ModelSerializer):
-    """Serializer for creating a booking (public booking flow)."""
+    """
+    Serializer for creating a booking (public booking flow).
+
+    For authenticated users:
+    - attendee_name, attendee_email are optional (pulled from user profile)
+
+    For unauthenticated users:
+    - attendee_name, attendee_email are required
+    """
+    attendee_name = serializers.CharField(required=False, allow_blank=True)
+    attendee_email = serializers.EmailField(required=False, allow_blank=True)
+    attendee_phone = serializers.CharField(required=False, allow_blank=True)
+    attendee_company = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = Booking
@@ -303,6 +448,19 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             'timezone',
         ]
 
+    def validate(self, data):
+        request = self.context.get('request')
+        is_authenticated = request and request.user.is_authenticated
+
+        # For unauthenticated users, name and email are required
+        if not is_authenticated:
+            if not data.get('attendee_name'):
+                raise serializers.ValidationError({'attendee_name': 'This field is required.'})
+            if not data.get('attendee_email'):
+                raise serializers.ValidationError({'attendee_email': 'This field is required.'})
+
+        return data
+
     def validate_scheduled_at(self, value):
         from django.utils import timezone
         if value <= timezone.now():
@@ -311,6 +469,20 @@ class BookingCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         meeting_type = validated_data['meeting_type']
+        request = self.context.get('request')
+        user = request.user if request and request.user.is_authenticated else None
+
+        # For authenticated users, populate attendee fields from their profile
+        if user:
+            validated_data['attendee_user'] = user
+            validated_data['attendee_name'] = validated_data.get('attendee_name') or user.full_name
+            validated_data['attendee_email'] = validated_data.get('attendee_email') or user.email
+
+            # Try to get phone from candidate profile if available
+            if not validated_data.get('attendee_phone'):
+                candidate_profile = getattr(user, 'candidate_profile', None)
+                if candidate_profile and candidate_profile.phone:
+                    validated_data['attendee_phone'] = candidate_profile.phone
 
         # Set fields from meeting type
         validated_data['organizer'] = meeting_type.owner
@@ -326,11 +498,6 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             validated_data['status'] = BookingStatus.PENDING
         else:
             validated_data['status'] = BookingStatus.CONFIRMED
-
-        # Link to user if logged in
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            validated_data['attendee_user'] = request.user
 
         return super().create(validated_data)
 

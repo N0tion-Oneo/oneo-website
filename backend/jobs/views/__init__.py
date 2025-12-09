@@ -58,6 +58,14 @@ from .activity import (
     add_activity_note,
 )
 
+from .analytics import (
+    analytics_overview,
+    pipeline_funnel,
+    recruiter_performance,
+    time_metrics,
+    analytics_trends,
+)
+
 __all__ = [
     # Jobs
     'list_jobs',
@@ -108,4 +116,10 @@ __all__ = [
     'log_activity',
     'list_application_activities',
     'add_activity_note',
+    # Analytics
+    'analytics_overview',
+    'pipeline_funnel',
+    'recruiter_performance',
+    'time_metrics',
+    'analytics_trends',
 ]

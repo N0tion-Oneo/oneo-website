@@ -7,6 +7,13 @@ urlpatterns = [
     # Public endpoints
     path('', views.list_jobs, name='list-jobs'),
 
+    # Analytics endpoints (must come before slug pattern)
+    path('analytics/overview/', views.analytics_overview, name='analytics-overview'),
+    path('analytics/pipeline-funnel/', views.pipeline_funnel, name='pipeline-funnel'),
+    path('analytics/recruiter-performance/', views.recruiter_performance, name='recruiter-performance'),
+    path('analytics/time-metrics/', views.time_metrics, name='time-metrics'),
+    path('analytics/trends/', views.analytics_trends, name='analytics-trends'),
+
     # Admin/Recruiter endpoints (must come before slug pattern)
     path('all/', views.list_all_jobs, name='list-all-jobs'),
 

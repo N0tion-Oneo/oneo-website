@@ -14,6 +14,7 @@ export { default as AdminNewJobPage } from './AdminNewJobPage';
 export { default as AdminRecruitersPage } from './AdminRecruitersPage';
 export { default as AdminSkillsTechnologiesPage } from './AdminSkillsTechnologiesPage';
 export { default as OnboardingStagesSettingsPage } from './OnboardingStagesSettingsPage';
+export { default as DashboardSettingsPage } from './DashboardSettingsPage';
 export { default as ApplicationsPage } from './ApplicationsPage';
 // JobApplicationsPage is deprecated - use AdminApplicationsPage with ?job= param instead
 
@@ -36,3 +37,6 @@ export { default as RecruiterProfilePage } from './RecruiterProfilePage';
 
 // Booking Management
 export { default as BookingManagementPage } from './BookingManagementPage';
+
+// Analytics
+export { default as AnalyticsPage } from './AnalyticsPage';

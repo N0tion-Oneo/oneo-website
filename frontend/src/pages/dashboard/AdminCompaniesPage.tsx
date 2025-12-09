@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import {
@@ -11,10 +11,11 @@ import {
   RowSelectionState,
 } from '@tanstack/react-table'
 import { useAllCompanies } from '@/hooks/useCompanies'
+import { useAssignedUpdate } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole } from '@/types'
 import type { AdminCompanyListItem, AssignedUser } from '@/types'
-import { AssignedToSelect } from '@/components/forms'
+import { AssignedSelect } from '@/components/forms'
 import api from '@/services/api'
 import CompanyFilterPanel, {
   CompanyFilters,
@@ -116,6 +117,16 @@ export default function AdminCompaniesPage() {
     page_size: pageSize,
   })
 
+  // Local state for optimistic updates
+  const [localCompanies, setLocalCompanies] = useState<AdminCompanyListItem[]>([])
+
+  // Sync local state with fetched data
+  useEffect(() => {
+    if (companies) {
+      setLocalCompanies(companies)
+    }
+  }, [companies])
+
   // Check if user has admin/recruiter access
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
@@ -157,17 +168,23 @@ export default function AdminCompaniesPage() {
     setPage(1)
   }
 
-  // Handler for changing assigned users on a company
-  const handleAssignedToChange = async (companyId: string, assignedTo: AssignedUser[]) => {
-    try {
-      await api.patch(`/companies/${companyId}/detail/`, {
+  // Hook for optimistic updates with toast notifications
+  const { updateAssigned } = useAssignedUpdate<AdminCompanyListItem>()
+
+  // Handler for changing assigned users on a company (optimistic)
+  const handleAssignedToChange = useCallback((companyId: string, assignedTo: AssignedUser[]) => {
+    updateAssigned(
+      localCompanies,
+      setLocalCompanies,
+      companyId,
+      'id',
+      'assigned_to',
+      assignedTo,
+      () => api.patch(`/companies/${companyId}/detail/`, {
         assigned_to_ids: assignedTo.map(u => u.id),
       })
-      refetch()
-    } catch (err) {
-      console.error('Failed to update assigned users:', err)
-    }
-  }
+    )
+  }, [localCompanies, updateAssigned])
 
   // Define columns
   const columns = useMemo<ColumnDef<AdminCompanyListItem, any>[]>(
@@ -196,16 +213,16 @@ export default function AdminCompaniesPage() {
           </div>
         ),
       },
-      // Assigned To (pinned to front)
+      // Assigned (pinned to front)
       columnHelper.accessor('assigned_to', {
-        header: 'Assigned To',
+        header: 'Assigned',
         size: 160,
         cell: ({ row }) => {
           const company = row.original
           const assignedUsers = company.assigned_to || []
           return (
             <div onClick={(e) => e.stopPropagation()}>
-              <AssignedToSelect
+              <AssignedSelect
                 selected={assignedUsers}
                 onChange={(newAssigned) => handleAssignedToChange(company.id, newAssigned)}
                 compact
@@ -453,7 +470,7 @@ export default function AdminCompaniesPage() {
   )
 
   const table = useReactTable({
-    data: companies,
+    data: localCompanies,
     columns,
     state: {
       sorting,
@@ -676,7 +693,7 @@ export default function AdminCompaniesPage() {
           {/* Kanban View */}
           {viewMode === 'kanban' && !isLoading && !error && (
             <CompanyKanbanBoard
-              companies={companies}
+              companies={localCompanies}
               isLoading={isLoading}
               onStageChange={refetch}
             />

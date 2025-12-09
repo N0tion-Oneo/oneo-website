@@ -17,6 +17,7 @@ urlpatterns = [
     # Meeting Types (for recruiters/admins)
     path('meeting-types/', views.meeting_types_list_create, name='meeting_types_list_create'),
     path('meeting-types/<uuid:meeting_type_id>/', views.meeting_type_detail, name='meeting_type_detail'),
+    path('meeting-types/dashboard/<str:category>/', views.dashboard_meeting_type, name='dashboard_meeting_type'),
 
     # Public Booking Pages
     path('book/<slug:booking_slug>/', views.public_recruiter_booking_page, name='public_recruiter_booking_page'),

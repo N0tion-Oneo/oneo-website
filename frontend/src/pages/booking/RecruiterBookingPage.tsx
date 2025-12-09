@@ -19,6 +19,7 @@ import {
   usePublicAvailability,
   useCreatePublicBooking,
 } from '@/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import type {
   RecruiterMeetingTypePublic,
   RecruiterMeetingLocationType,
@@ -190,6 +191,7 @@ function RecruiterBookingForm({
   bookingSlug: string
   meetingTypeSlug: string
 }) {
+  const { user, isAuthenticated } = useAuth()
   const { availability, isLoading, error } = usePublicAvailability(bookingSlug, meetingTypeSlug)
   const { createBooking, isCreating, error: createError } = useCreatePublicBooking(
     bookingSlug,
@@ -197,7 +199,7 @@ function RecruiterBookingForm({
   )
 
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
-  const [step, setStep] = useState<'slots' | 'form' | 'success'>('slots')
+  const [step, setStep] = useState<'slots' | 'form' | 'confirm' | 'success'>('slots')
   const [formData, setFormData] = useState({
     attendee_name: '',
     attendee_email: '',
@@ -216,16 +218,33 @@ function RecruiterBookingForm({
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  // Handle slot selection - for authenticated users, go to confirm step instead of form
+  const handleContinueFromSlots = () => {
+    if (isAuthenticated) {
+      setStep('confirm')
+    } else {
+      setStep('form')
+    }
+  }
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     if (!selectedSlot) return
 
     try {
-      const result = await createBooking({
-        ...formData,
-        scheduled_at: selectedSlot,
-        timezone: availability?.timezone || 'Africa/Johannesburg',
-      })
+      // For authenticated users, we don't need to send form data
+      const bookingData = isAuthenticated
+        ? {
+            scheduled_at: selectedSlot,
+            timezone: availability?.timezone || 'Africa/Johannesburg',
+          }
+        : {
+            ...formData,
+            scheduled_at: selectedSlot,
+            timezone: availability?.timezone || 'Africa/Johannesburg',
+          }
+
+      const result = await createBooking(bookingData)
 
       // If invitation was created, redirect to signup page immediately
       if (result.invitation_created && result.signup_url) {
@@ -397,7 +416,7 @@ function RecruiterBookingForm({
             <div className="mt-6">
               <button
                 type="button"
-                onClick={() => setStep('form')}
+                onClick={handleContinueFromSlots}
                 disabled={!selectedSlot}
                 className="w-full py-3 px-4 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
@@ -525,6 +544,89 @@ function RecruiterBookingForm({
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* Step: Confirm (for authenticated users) */}
+        {step === 'confirm' && user && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Confirm your booking</h2>
+              <button
+                type="button"
+                onClick={() => setStep('slots')}
+                className="text-[14px] text-gray-600 hover:text-gray-900"
+              >
+                Change time
+              </button>
+            </div>
+
+            {selectedSlot && (
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <Calendar className="w-5 h-5 text-gray-400" />
+                  <span className="text-[14px] text-gray-700">
+                    {format(parseISO(selectedSlot), 'EEEE, MMMM d, yyyy')} at{' '}
+                    {format(parseISO(selectedSlot), 'h:mm a')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-gray-400" />
+                  <span className="text-[14px] text-gray-700">
+                    {meeting_type.duration_minutes} minutes
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Show user's details */}
+            <div className="border border-gray-200 rounded-lg p-4 mb-6">
+              <p className="text-[12px] font-medium text-gray-500 uppercase tracking-wide mb-3">
+                Booking as
+              </p>
+              <div className="flex items-center gap-3">
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={`${user.first_name} ${user.last_name}`}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <User className="w-5 h-5 text-gray-400" />
+                  </div>
+                )}
+                <div>
+                  <p className="text-[14px] font-medium text-gray-900">
+                    {user.first_name} {user.last_name}
+                  </p>
+                  <p className="text-[13px] text-gray-500">{user.email}</p>
+                </div>
+              </div>
+            </div>
+
+            {createError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 mb-4">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <span className="text-sm text-red-700">{createError}</span>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => handleSubmit()}
+              disabled={isCreating}
+              className="w-full py-3 px-4 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Scheduling...
+                </>
+              ) : (
+                'Confirm Booking'
+              )}
+            </button>
           </div>
         )}
       </div>

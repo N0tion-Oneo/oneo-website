@@ -20,7 +20,7 @@ import {
   formatTotalDuration,
 } from '@/utils/proficiency'
 import { SuggestionIndicator } from '@/components/suggestions'
-import { AssignedToSelect } from '@/components/forms'
+import { AssignedSelect } from '@/components/forms'
 
 // Type guard to check if profile is full or sanitized
 type CandidateData = CandidateProfile | CandidateProfileSanitized | CandidateAdminListItem
@@ -710,9 +710,9 @@ export default function CandidateProfileCard({
               </span>
             )}
 
-            {/* Assigned To (when callback is provided) */}
+            {/* Assigned (when callback is provided) */}
             {onAssignedToChange && hasAssignedTo(candidate) && (
-              <AssignedToSelect
+              <AssignedSelect
                 selected={candidate.assigned_to || []}
                 onChange={onAssignedToChange}
                 compact

@@ -39,15 +39,15 @@ class ApplicationListSerializer(serializers.ModelSerializer):
         return None
 
     def get_assigned_recruiters(self, obj):
-        """Return assigned recruiters for the job."""
-        recruiters = obj.job.assigned_recruiters.all()
+        """Return assigned recruiters for this application."""
+        recruiters = obj.assigned_recruiters.all()
         return [
             {
-                'id': str(r.id),
+                'id': r.id,
+                'email': r.email,
                 'first_name': r.first_name,
                 'last_name': r.last_name,
                 'full_name': r.full_name,
-                'avatar': r.avatar.url if r.avatar else None,
             }
             for r in recruiters
         ]

@@ -56,6 +56,14 @@ class Application(models.Model):
         related_name='referrals',
     )
 
+    # Assigned recruiters/admins for this specific application
+    assigned_recruiters = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name='assigned_applications',
+        help_text='Recruiters/admins assigned to manage this application',
+    )
+
     # Application Content
     covering_statement = models.TextField(
         blank=True,
