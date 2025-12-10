@@ -28,4 +28,15 @@ urlpatterns = [
     path('dashboard/pipeline/', views.pipeline_overview, name='pipeline_overview'),
     path('dashboard/recent-activity/', views.recent_activity, name='recent_activity'),
     path('dashboard/candidates-attention/', views.candidates_needing_attention, name='candidates_needing_attention'),
+
+    # Client Dashboard
+    path('client-dashboard/active-jobs/', views.client_active_jobs, name='client_active_jobs'),
+    path('client-dashboard/recent-applications/', views.client_recent_applications, name='client_recent_applications'),
+    path('client-dashboard/upcoming-interviews/', views.client_upcoming_interviews, name='client_upcoming_interviews'),
+    path('client-dashboard/pipeline/', views.client_pipeline_overview, name='client_pipeline_overview'),
+    path('client-dashboard/pending-offers/', views.client_pending_offers, name='client_pending_offers'),
+    path('client-dashboard/profile-completion/', views.client_profile_completion, name='client_profile_completion'),
+    path('client-dashboard/team-activity/', views.client_team_activity, name='client_team_activity'),
+    path('client-dashboard/assigned-recruiter/', views.client_assigned_recruiter, name='client_assigned_recruiter'),
+    path('client-dashboard/hiring-metrics/', views.client_hiring_metrics, name='client_hiring_metrics'),
 ]

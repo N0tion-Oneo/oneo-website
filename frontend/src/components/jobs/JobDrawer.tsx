@@ -1,9 +1,13 @@
-import { useEffect } from 'react'
-import { X, Loader2 } from 'lucide-react'
-import { useJobDetail } from '@/hooks/useJobs'
+import { useEffect, useState, useRef } from 'react'
+import { X, ChevronDown } from 'lucide-react'
+import { useJobDetail, useJobStatus, useUpdateJob } from '@/hooks/useJobs'
+import { useAllCompanies } from '@/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import { getStatusBadge } from '@/utils/jobs'
+import { AssignedSelect } from '@/components/forms'
 import JobForm from './JobForm'
-import type { Job, JobStatus } from '@/types'
+import { UserRole, JobStatus } from '@/types'
+import type { Job, AssignedUser } from '@/types'
 
 interface JobDrawerProps {
   jobId: string | null
@@ -20,8 +24,50 @@ export default function JobDrawer({
   onSuccess,
   companyId,
 }: JobDrawerProps) {
+  const { user } = useAuth()
   const isCreating = !jobId
+  const isAdminOrRecruiter = user?.role === UserRole.ADMIN || user?.role === UserRole.RECRUITER
+
   const { job, isLoading, refetch } = useJobDetail(jobId || '')
+  const { companies: allCompanies, isLoading: isLoadingCompanies } = useAllCompanies(
+    isAdminOrRecruiter ? { is_published: true } : {}
+  )
+  const { publishJob, closeJob, markJobFilled, isSubmitting: isStatusSubmitting } = useJobStatus()
+  const { updateJob } = useUpdateJob()
+
+  // State for client and assigned recruiters (controlled in drawer, passed to form)
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | undefined>(companyId)
+  const [selectedRecruiters, setSelectedRecruiters] = useState<AssignedUser[]>([])
+
+  // Status dropdown state
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false)
+  const statusDropdownRef = useRef<HTMLDivElement>(null)
+
+  // Initialize from job data when editing
+  useEffect(() => {
+    if (job) {
+      setSelectedCompanyId(job.company?.id)
+      setSelectedRecruiters(
+        job.assigned_recruiters?.map(r => ({
+          id: r.id,
+          email: r.email,
+          first_name: r.first_name,
+          last_name: r.last_name,
+          full_name: `${r.first_name} ${r.last_name}`,
+        })) || []
+      )
+    } else if (companyId) {
+      setSelectedCompanyId(companyId)
+    }
+  }, [job, companyId])
+
+  // Reset state when drawer closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedCompanyId(companyId)
+      setSelectedRecruiters([])
+    }
+  }, [isOpen, companyId])
 
   // Refetch job data when drawer opens with a job ID
   useEffect(() => {
@@ -38,6 +84,46 @@ export default function JobDrawer({
     onClose()
   }
 
+  // Handle status change
+  const handleStatusChange = async (newStatus: JobStatus) => {
+    if (!jobId || !job) return
+
+    try {
+      if (newStatus === JobStatus.PUBLISHED) {
+        await publishJob(jobId)
+      } else if (newStatus === JobStatus.CLOSED) {
+        await closeJob(jobId)
+      } else if (newStatus === JobStatus.FILLED) {
+        await markJobFilled(jobId)
+      } else if (newStatus === JobStatus.DRAFT) {
+        await updateJob(jobId, { status: JobStatus.DRAFT })
+      }
+      setShowStatusDropdown(false)
+      refetch()
+    } catch (err) {
+      console.error('Failed to change status:', err)
+    }
+  }
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setShowStatusDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // All available statuses
+  const allStatuses = [
+    { status: JobStatus.DRAFT, label: 'Draft' },
+    { status: JobStatus.PUBLISHED, label: 'Published' },
+    { status: JobStatus.CLOSED, label: 'Closed' },
+    { status: JobStatus.FILLED, label: 'Filled' },
+  ]
+
   if (!isOpen) return null
 
   const statusBadge = job ? getStatusBadge(job.status as JobStatus) : null
@@ -53,25 +139,50 @@ export default function JobDrawer({
       {/* Drawer - 50% width */}
       <div className="fixed inset-y-0 right-0 w-1/2 min-w-[500px] bg-white shadow-xl z-[201] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <div>
-            <h2 className="text-[16px] font-semibold text-gray-900">
-              {isCreating ? 'Create New Job' : isLoading ? 'Loading...' : job?.title || 'Job'}
-            </h2>
-            {!isCreating && job && (
-              <p className="text-[13px] text-gray-500 mt-0.5">
-                {job.company?.name}
-              </p>
-            )}
-          </div>
+        <div className="px-6 py-4 border-b border-gray-200">
+          {/* Top row: Title, status, close */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="text-[16px] font-semibold text-gray-900">
+                {isCreating ? 'Create New Job' : isLoading ? 'Loading...' : job?.title || 'Job'}
+              </h2>
+              {/* Status Badge with Dropdown */}
+              {!isCreating && job && statusBadge && (
+                <div className="relative" ref={statusDropdownRef}>
+                  <button
+                    onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                    disabled={isStatusSubmitting}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded ${statusBadge.bg} ${statusBadge.text} hover:opacity-80 transition-opacity cursor-pointer disabled:opacity-50`}
+                  >
+                    {statusBadge.label}
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
 
-          <div className="flex items-center gap-3">
-            {/* Status Badge */}
-            {!isCreating && job && statusBadge && (
-              <span className={`px-2.5 py-1.5 text-[12px] font-medium rounded ${statusBadge.bg} ${statusBadge.text}`}>
-                {statusBadge.label}
-              </span>
-            )}
+                  {showStatusDropdown && (
+                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[140px]">
+                      <div className="py-1">
+                        {allStatuses
+                          .filter(({ status }) => status !== job.status)
+                          .map(({ status, label }) => {
+                            const badge = getStatusBadge(status)
+                            return (
+                              <button
+                                key={status}
+                                onClick={() => handleStatusChange(status)}
+                                disabled={isStatusSubmitting}
+                                className="w-full px-3 py-2 text-left text-[13px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50"
+                              >
+                                <span className={`w-2 h-2 rounded-full ${badge?.bg || 'bg-gray-300'}`} />
+                                {label}
+                              </button>
+                            )
+                          })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             <button
               onClick={onClose}
@@ -80,6 +191,47 @@ export default function JobDrawer({
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Admin/Recruiter: Client & Assigned fields */}
+          {isAdminOrRecruiter && (
+            <div className="mt-3 flex items-center gap-6">
+              {/* Client Select */}
+              <div className="flex items-center gap-2">
+                <span className="text-[12px] text-gray-500">Client:</span>
+                <select
+                  value={selectedCompanyId || ''}
+                  onChange={(e) => setSelectedCompanyId(e.target.value || undefined)}
+                  disabled={isLoadingCompanies}
+                  className="px-2 py-1 text-[13px] border border-gray-200 rounded bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:bg-gray-50 min-w-[150px]"
+                >
+                  <option value="">Select company...</option>
+                  {allCompanies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Assigned Recruiters */}
+              <div className="flex items-center gap-2">
+                <span className="text-[12px] text-gray-500">Assigned:</span>
+                <AssignedSelect
+                  selected={selectedRecruiters}
+                  onChange={setSelectedRecruiters}
+                  placeholder="Add staff..."
+                  compact
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Non-admin: Just show company name */}
+          {!isAdminOrRecruiter && !isCreating && job?.company && (
+            <p className="text-[13px] text-gray-500 mt-1">
+              {job.company.name}
+            </p>
+          )}
         </div>
 
         {/* Content */}
@@ -91,8 +243,10 @@ export default function JobDrawer({
           ) : (
             <JobForm
               job={isCreating ? undefined : job || undefined}
-              companyId={companyId}
+              companyId={selectedCompanyId}
               onSuccess={handleSuccess}
+              selectedRecruiters={selectedRecruiters}
+              onRecruitersChange={setSelectedRecruiters}
             />
           )}
         </div>

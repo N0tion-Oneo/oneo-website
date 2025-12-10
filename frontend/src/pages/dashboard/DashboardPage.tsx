@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMyProfile, useMyCompany } from '@/hooks';
 import SchedulingCard from '@/components/booking/SchedulingCard';
 import RecruiterDashboard from '@/components/dashboard/RecruiterDashboard';
+import ClientDashboard from '@/components/dashboard/ClientDashboard';
 import { UserRole } from '@/types';
 
 export default function DashboardPage() {
@@ -41,6 +42,11 @@ export default function DashboardPage() {
   // Render RecruiterDashboard for admins and recruiters
   if (isAdminOrRecruiter) {
     return <RecruiterDashboard />;
+  }
+
+  // Render ClientDashboard for client users
+  if (isClient) {
+    return <ClientDashboard />;
   }
 
   return (

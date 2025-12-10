@@ -174,7 +174,7 @@ def get_job(request, slug):
 def list_company_jobs(request):
     """
     List all jobs for the current user's company.
-    Shows jobs in all statuses.
+    Shows jobs in all statuses. Supports pagination and ordering.
     """
     company = get_user_company(request.user)
     if not company:
@@ -187,15 +187,40 @@ def list_company_jobs(request):
         'company', 'location_city', 'location_country', 'created_by'
     ).prefetch_related(
         'required_skills', 'technologies'
-    ).order_by('-created_at')
+    )
 
     # Filter by status
     job_status = request.query_params.get('status')
     if job_status:
         jobs = jobs.filter(status=job_status)
 
+    # Ordering
+    ordering = request.query_params.get('ordering', '-created_at')
+    allowed_orderings = ['title', '-title', 'created_at', '-created_at',
+                         'applications_count', '-applications_count',
+                         'views_count', '-views_count']
+    if ordering in allowed_orderings:
+        jobs = jobs.order_by(ordering)
+    else:
+        jobs = jobs.order_by('-created_at')
+
+    # Pagination
+    page = int(request.query_params.get('page', 1))
+    page_size = int(request.query_params.get('page_size', 20))
+    page_size = min(page_size, 100)  # Max 100 items per page
+
+    total_count = jobs.count()
+    start = (page - 1) * page_size
+    end = start + page_size
+    jobs = jobs[start:end]
+
     serializer = JobListSerializer(jobs, many=True)
-    return Response(serializer.data)
+    return Response({
+        'results': serializer.data,
+        'count': total_count,
+        'next': page * page_size < total_count,
+        'previous': page > 1,
+    })
 
 
 @api_view(['POST'])

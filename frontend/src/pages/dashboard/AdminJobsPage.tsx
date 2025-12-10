@@ -10,8 +10,8 @@ import {
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table'
-import { useAllJobs, useJobStatus, useDeleteJob, useUpdateJob } from '@/hooks/useJobs'
-import { useAssignedUpdate } from '@/hooks'
+import { useAllJobs, useCompanyJobs, useJobStatus, useDeleteJob, useUpdateJob } from '@/hooks/useJobs'
+import { useAssignedUpdate, useMyCompany } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { JobStatus, UserRole } from '@/types'
 import type { JobListItem, User, AssignedUser } from '@/types'
@@ -48,8 +48,14 @@ const PAGE_SIZE_OPTIONS = [20, 30, 50]
 
 const columnHelper = createColumnHelper<JobListItem>()
 
-export default function AdminJobsPage() {
+interface AdminJobsPageProps {
+  mode?: 'admin' | 'client'
+}
+
+export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
+  const isClientMode = mode === 'client'
   const { user } = useAuth()
+  const { company, isLoading: companyLoading } = useMyCompany()
   const [searchParams] = useSearchParams()
   const [filters, setFilters] = useState<JobFilters>(() => {
     // Initialize company filter from URL params
@@ -90,7 +96,8 @@ export default function AdminJobsPage() {
     return sortItem.desc ? `-${field}` : field
   }, [sorting, filters.ordering])
 
-  const { jobs, count, hasNext, hasPrevious, isLoading, error, refetch } = useAllJobs({
+  // Use different hooks based on mode
+  const adminJobsResult = useAllJobs(isClientMode ? {} : {
     search: filters.search || undefined,
     status: filters.status as JobStatus | undefined,
     company: filters.company || undefined,
@@ -106,6 +113,18 @@ export default function AdminJobsPage() {
     page_size: pageSize,
   })
 
+  const clientJobsResult = useCompanyJobs(isClientMode ? {
+    status: filters.status as JobStatus | undefined,
+    ordering,
+    page,
+    page_size: pageSize,
+  } : {})
+
+  // Select the appropriate result based on mode
+  const { jobs, count, hasNext, hasPrevious, isLoading, error, refetch } = isClientMode
+    ? clientJobsResult
+    : adminJobsResult
+
   // Local state for optimistic updates
   const [localJobs, setLocalJobs] = useState<JobListItem[]>([])
 
@@ -115,19 +134,6 @@ export default function AdminJobsPage() {
       setLocalJobs(jobs)
     }
   }, [jobs])
-
-  // Check if user has admin/recruiter access
-  if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
-    return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
-          You do not have permission to view this page.
-        </p>
-      </div>
-    )
-  }
 
   const totalPages = Math.ceil(count / pageSize)
 
@@ -241,61 +247,69 @@ export default function AdminJobsPage() {
 
   // Define columns
   const columns = useMemo<ColumnDef<JobListItem, any>[]>(
-    () => [
-      // Selection checkbox - PINNED LEFT
-      {
-        id: 'select',
-        size: 40,
-        enableResizing: false,
-        header: ({ table }) => (
-          <input
-            type="checkbox"
-            checked={table.getIsAllPageRowsSelected()}
-            onChange={table.getToggleAllPageRowsSelectedHandler()}
-            className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
-          />
-        ),
-        cell: ({ row }) => (
-          <div onClick={(e) => e.stopPropagation()}>
+    () => {
+      const baseColumns: ColumnDef<JobListItem, any>[] = [
+        // Selection checkbox - PINNED LEFT
+        {
+          id: 'select',
+          size: 40,
+          enableResizing: false,
+          header: ({ table }) => (
             <input
               type="checkbox"
-              checked={row.getIsSelected()}
-              onChange={row.getToggleSelectedHandler()}
+              checked={table.getIsAllPageRowsSelected()}
+              onChange={table.getToggleAllPageRowsSelectedHandler()}
               className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
             />
-          </div>
-        ),
-      },
-      // Assigned Recruiters - PINNED LEFT
-      columnHelper.accessor('assigned_recruiters', {
-        header: 'Assigned',
-        size: 140,
-        cell: ({ row }) => {
-          const job = row.original
-          const recruiters = job.assigned_recruiters || []
-          const assignedUsers = recruiters.map((r: User) => ({
-            id: r.id,
-            email: r.email,
-            first_name: r.first_name,
-            last_name: r.last_name,
-            full_name: `${r.first_name} ${r.last_name}`,
-          }))
-          return (
+          ),
+          cell: ({ row }) => (
             <div onClick={(e) => e.stopPropagation()}>
-              <AssignedSelect
-                selected={assignedUsers}
-                onChange={(users) => handleAssignedChange(job.id, users)}
-                compact
-                placeholder="Assign"
+              <input
+                type="checkbox"
+                checked={row.getIsSelected()}
+                onChange={row.getToggleSelectedHandler()}
+                className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
               />
             </div>
-          )
+          ),
         },
-      }),
+      ]
+
+      // Admin-only: Assigned Recruiters column
+      if (!isClientMode) {
+        baseColumns.push(
+          columnHelper.accessor('assigned_recruiters', {
+            header: 'Assigned',
+            size: 140,
+            cell: ({ row }) => {
+              const job = row.original
+              const recruiters = job.assigned_recruiters || []
+              const assignedUsers = recruiters.map((r: User) => ({
+                id: r.id,
+                email: r.email,
+                first_name: r.first_name,
+                last_name: r.last_name,
+                full_name: `${r.first_name} ${r.last_name}`,
+              }))
+              return (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <AssignedSelect
+                    selected={assignedUsers}
+                    onChange={(users) => handleAssignedChange(job.id, users)}
+                    compact
+                    placeholder="Assign"
+                  />
+                </div>
+              )
+            },
+          })
+        )
+      }
+
       // Job Title - PINNED LEFT
-      columnHelper.accessor('title', {
+      baseColumns.push(columnHelper.accessor('title', {
         header: 'Job Title',
-        size: 220,
+        size: isClientMode ? 280 : 220,
         enableSorting: true,
         cell: ({ row }) => {
           const job = row.original
@@ -310,35 +324,39 @@ export default function AdminJobsPage() {
             </div>
           )
         },
-      }),
-      // Company
-      columnHelper.accessor('company', {
-        header: 'Company',
-        size: 160,
-        cell: ({ getValue }) => {
-          const company = getValue()
-          return (
-            <div className="flex items-center gap-2">
-              {company?.logo ? (
-                <img
-                  src={company.logo}
-                  alt={company.name}
-                  className="w-6 h-6 rounded object-cover flex-shrink-0"
-                />
-              ) : (
-                <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
-                  <Building2 className="w-3 h-3 text-gray-400" />
-                </div>
-              )}
-              <span className="text-[12px] text-gray-600 truncate">
-                {company?.name || 'Unknown'}
-              </span>
-            </div>
-          )
-        },
-      }),
+      }))
+
+      // Admin-only: Company column
+      if (!isClientMode) {
+        baseColumns.push(columnHelper.accessor('company', {
+          header: 'Company',
+          size: 160,
+          cell: ({ getValue }) => {
+            const companyData = getValue()
+            return (
+              <div className="flex items-center gap-2">
+                {companyData?.logo ? (
+                  <img
+                    src={companyData.logo}
+                    alt={companyData.name}
+                    className="w-6 h-6 rounded object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-3 h-3 text-gray-400" />
+                  </div>
+                )}
+                <span className="text-[12px] text-gray-600 truncate">
+                  {companyData?.name || 'Unknown'}
+                </span>
+              </div>
+            )
+          },
+        }))
+      }
+
       // Seniority
-      columnHelper.accessor('seniority', {
+      baseColumns.push(columnHelper.accessor('seniority', {
         header: 'Seniority',
         size: 90,
         cell: ({ getValue }) => (
@@ -346,9 +364,10 @@ export default function AdminJobsPage() {
             {getValue()?.replace('_', ' ') || '-'}
           </span>
         ),
-      }),
+      }))
+
       // Work Mode
-      columnHelper.accessor('work_mode', {
+      baseColumns.push(columnHelper.accessor('work_mode', {
         header: 'Work Mode',
         size: 90,
         cell: ({ getValue }) => (
@@ -356,9 +375,10 @@ export default function AdminJobsPage() {
             {getValue() || '-'}
           </span>
         ),
-      }),
+      }))
+
       // Status
-      columnHelper.accessor('status', {
+      baseColumns.push(columnHelper.accessor('status', {
         header: 'Status',
         size: 100,
         cell: ({ getValue }) => {
@@ -370,9 +390,10 @@ export default function AdminJobsPage() {
             </span>
           )
         },
-      }),
+      }))
+
       // Applications
-      columnHelper.accessor('applications_count', {
+      baseColumns.push(columnHelper.accessor('applications_count', {
         header: 'Applications',
         size: 100,
         enableSorting: true,
@@ -380,7 +401,7 @@ export default function AdminJobsPage() {
           const job = row.original
           return (
             <Link
-              to={`/dashboard/jobs/${job.id}/applications`}
+              to={`/dashboard/applications?job=${job.id}`}
               className="text-[12px] text-gray-600 hover:text-gray-900 hover:underline"
               onClick={(e) => e.stopPropagation()}
             >
@@ -388,18 +409,20 @@ export default function AdminJobsPage() {
             </Link>
           )
         },
-      }),
+      }))
+
       // Created At
-      columnHelper.accessor('created_at', {
+      baseColumns.push(columnHelper.accessor('created_at', {
         header: 'Created',
         size: 100,
         enableSorting: true,
         cell: ({ getValue }) => (
           <span className="text-[12px] text-gray-500">{formatJobDate(getValue())}</span>
         ),
-      }),
+      }))
+
       // Actions
-      columnHelper.display({
+      baseColumns.push(columnHelper.display({
         id: 'actions',
         header: '',
         size: 50,
@@ -522,9 +545,11 @@ export default function AdminJobsPage() {
             </div>
           )
         },
-      }),
-    ],
-    [openActionsMenu, menuPosition, isSubmitting, isDeleting, handleAssignedChange]
+      }))
+
+      return baseColumns
+    },
+    [openActionsMenu, menuPosition, isSubmitting, isDeleting, handleAssignedChange, isClientMode]
   )
 
   const table = useReactTable({
@@ -553,14 +578,57 @@ export default function AdminJobsPage() {
     setRowSelection({})
   }
 
+  // Early returns - MUST be after all hooks
+  // Check access: admin mode requires admin/recruiter role
+  if (!isClientMode && (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role))) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500">
+          You do not have permission to view this page.
+        </p>
+      </div>
+    )
+  }
+
+  // Client mode: check for company loading and existence
+  if (isClientMode && companyLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-[14px] text-gray-500">Loading...</p>
+      </div>
+    )
+  }
+
+  if (isClientMode && !company) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 mb-2">No company profile</p>
+        <p className="text-[13px] text-gray-500 mb-4">
+          You need to create a company profile before posting jobs.
+        </p>
+        <a
+          href="/dashboard/company"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
+        >
+          Create Company Profile
+        </a>
+      </div>
+    )
+  }
+
   return (
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">All Jobs</h1>
+          <h1 className="text-[20px] font-semibold text-gray-900">
+            {isClientMode ? 'Job Postings' : 'All Jobs'}
+          </h1>
           <p className="text-[13px] text-gray-500 mt-0.5">
-            {count} job{count !== 1 ? 's' : ''} found
+            {count} job{count !== 1 ? 's' : ''}{isClientMode && company ? ` • ${company.name}` : ' found'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -598,7 +666,7 @@ export default function AdminJobsPage() {
             className="flex items-center gap-2 px-4 py-1.5 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
           >
             <Plus className="w-4 h-4" />
-            Create Job
+            {isClientMode ? 'Post New Job' : 'Create Job'}
           </button>
         </div>
       </div>
@@ -682,7 +750,7 @@ export default function AdminJobsPage() {
                     {table.getHeaderGroups().map(headerGroup => (
                       <tr key={headerGroup.id} className="border-b border-gray-200 bg-gray-50">
                         {headerGroup.headers.map(header => {
-                          const isPinnedLeft = header.id === 'select' || header.id === 'assigned_recruiters' || header.id === 'title'
+                          const isPinnedLeft = header.id === 'select' || header.id === 'title'
                           const isPinnedRight = header.id === 'actions'
                           return (
                             <th
@@ -692,7 +760,7 @@ export default function AdminJobsPage() {
                               } ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50' : ''}`}
                               style={{
                                 width: header.getSize(),
-                                left: header.id === 'select' ? 0 : header.id === 'assigned_recruiters' ? 40 : header.id === 'title' ? 180 : undefined,
+                                left: header.id === 'select' ? 0 : header.id === 'title' ? 40 : undefined,
                               }}
                             >
                               {header.isPlaceholder ? null : (
@@ -730,7 +798,7 @@ export default function AdminJobsPage() {
                       >
                         {row.getVisibleCells().map(cell => {
                           const colId = cell.column.id
-                          const isPinnedLeft = colId === 'select' || colId === 'assigned_recruiters' || colId === 'title'
+                          const isPinnedLeft = colId === 'select' || colId === 'title'
                           const isPinnedRight = colId === 'actions'
                           return (
                             <td
@@ -740,7 +808,7 @@ export default function AdminJobsPage() {
                               } ${isPinnedRight ? 'sticky right-0 z-10 bg-white' : ''}`}
                               style={{
                                 width: cell.column.getSize(),
-                                left: colId === 'select' ? 0 : colId === 'assigned_recruiters' ? 40 : colId === 'title' ? 180 : undefined,
+                                left: colId === 'select' ? 0 : colId === 'title' ? 40 : undefined,
                               }}
                             >
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -790,6 +858,7 @@ export default function AdminJobsPage() {
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
         onSuccess={handleDrawerSuccess}
+        companyId={isClientMode && company ? company.id : undefined}
       />
     </div>
   )

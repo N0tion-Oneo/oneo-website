@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCountries, useCities, useQuestionTemplates, useBulkUpdateStageTemplates, useCompanyUsers, useStageTemplates } from '@/hooks'
-import { useAuth } from '@/contexts/AuthContext'
 import { useCreateJob, useUpdateJob } from '@/hooks/useJobs'
 import {
   Seniority,
@@ -11,19 +10,21 @@ import {
   Currency,
   StageType,
   StageTypeLabels,
-  UserRole,
 } from '@/types'
-import type { Job, JobInput, BenefitCategory, InterviewStage, ApplicationQuestionInput, InterviewStageTemplateInput } from '@/types'
-import { ChevronLeft, ChevronRight, Loader2, Plus, X, GripVertical, Trash2, ExternalLink, FileText, AlertTriangle, Calendar } from 'lucide-react'
+import type { Job, JobInput, InterviewStage, ApplicationQuestionInput, InterviewStageTemplateInput, AssignedUser } from '@/types'
+import { ChevronLeft, ChevronRight, Loader2, Plus, FileText, AlertTriangle, Calendar } from 'lucide-react'
 import QuestionBuilder from './QuestionBuilder'
 import StageTypeSelector from './StageTypeSelector'
 import { StageList } from './StageConfigForm'
-import { SkillMultiSelect, TechnologyMultiSelect, AssignedSelect } from '@/components/forms'
+import { SkillMultiSelect, TechnologyMultiSelect } from '@/components/forms'
 
 interface JobFormProps {
   job?: Job
   companyId?: string
   onSuccess?: (job: Job) => void
+  // Controlled from parent (JobDrawer) for admin/recruiter
+  selectedRecruiters?: AssignedUser[]
+  onRecruitersChange?: (recruiters: AssignedUser[]) => void
 }
 
 const seniorityOptions = [
@@ -73,6 +74,7 @@ const steps = [
   { id: 3, title: 'Requirements' },
   { id: 4, title: 'Compensation' },
   { id: 5, title: 'Interview Pipeline' },
+  { id: 6, title: 'Application Questions' },
 ]
 
 const defaultInterviewStages: InterviewStage[] = [
@@ -90,11 +92,9 @@ const defaultStageTemplates: InterviewStageTemplateInput[] = [
   { stage_type: StageType.IN_PERSON_INTERVIEW, name: 'Final Interview', order: 4, description: 'Final round with hiring manager', default_duration_minutes: 60, use_company_address: true },
 ]
 
-export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
+export default function JobForm({ job, companyId, onSuccess, selectedRecruiters }: JobFormProps) {
   const navigate = useNavigate()
-  const { user } = useAuth()
   const isEditing = !!job
-  const isAdmin = user?.role === UserRole.ADMIN
 
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<JobInput>({
@@ -137,17 +137,6 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
   // Selected skills and technologies (full objects for MultiSelect)
   const [selectedRequiredSkills, setSelectedRequiredSkills] = useState(job?.required_skills || [])
   const [selectedTechnologies, setSelectedTechnologies] = useState(job?.technologies || [])
-
-  // Selected assigned recruiters (full objects for AssignedSelect)
-  const [selectedRecruiters, setSelectedRecruiters] = useState(
-    job?.assigned_recruiters?.map(r => ({
-      id: r.id,
-      email: r.email,
-      first_name: r.first_name,
-      last_name: r.last_name,
-      full_name: `${r.first_name} ${r.last_name}`,
-    })) || []
-  )
 
   // Stage templates state (new typed system)
   const [stageTemplates, setStageTemplates] = useState<InterviewStageTemplateInput[]>(
@@ -236,14 +225,6 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
     setFormData((prev) => ({
       ...prev,
       technology_ids: techs.map((t) => t.id),
-    }))
-  }
-
-  const handleRecruitersChange = (recruiters: typeof selectedRecruiters) => {
-    setSelectedRecruiters(recruiters)
-    setFormData((prev) => ({
-      ...prev,
-      assigned_recruiter_ids: recruiters.map((r) => r.id),
     }))
   }
 
@@ -357,12 +338,18 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Include assigned recruiters from props if provided
+    const submitData = {
+      ...formData,
+      assigned_recruiter_ids: selectedRecruiters?.map(r => r.id) || formData.assigned_recruiter_ids,
+    }
+
     try {
       let result: Job
       if (isEditing && job) {
-        result = await updateJob(job.id, formData)
+        result = await updateJob(job.id, submitData)
       } else {
-        result = await createJob(formData, companyId)
+        result = await createJob(submitData, companyId)
       }
 
       // Save typed stage templates (new system)
@@ -429,7 +416,7 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
 
   return (
     <form onSubmit={handleSubmit}>
-      {/* Step Tabs - Matching ApplicationDrawer style */}
+      {/* Step Tabs */}
       <div className="mb-6 -mx-6 -mt-6 px-6 py-3 border-b border-gray-200 bg-white">
         <div className="flex gap-1">
           {steps.map((step) => (
@@ -665,15 +652,6 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
             </div>
           </div>
 
-          {/* Recruiter Assignment - Admin Only */}
-          {isAdmin && (
-            <AssignedSelect
-              label="Assigned Recruiters/Admins"
-              selected={selectedRecruiters}
-              onChange={handleRecruitersChange}
-              placeholder="Search staff to assign..."
-            />
-          )}
         </div>
       )}
 
@@ -848,95 +826,91 @@ export default function JobForm({ job, companyId, onSuccess }: JobFormProps) {
         </div>
       )}
 
-      {/* Step 5: Interview Pipeline & Application Questions */}
+      {/* Step 5: Interview Pipeline */}
       {currentStep === 5 && (
-        <div className="space-y-8">
-          {/* Interview Stages Section - Typed System */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-[14px] font-medium text-gray-900">Interview Pipeline</h3>
-                <p className="text-[12px] text-gray-500 mt-0.5">
-                  Define the stages candidates will go through in your hiring process.
-                  Each stage type has specific scheduling and notification features.
-                </p>
-              </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-[14px] font-medium text-gray-900">Interview Pipeline</h3>
+              <p className="text-[12px] text-gray-500 mt-0.5">
+                Define the stages candidates will go through in your hiring process.
+                Each stage type has specific scheduling and notification features.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowStageSelector(!showStageSelector)}
+              className="flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add Stage
+            </button>
+          </div>
+
+          {/* Stage Type Selector */}
+          {showStageSelector && (
+            <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg mb-4">
+              <StageTypeSelector onSelect={handleAddStageTemplate} />
               <button
                 type="button"
-                onClick={() => setShowStageSelector(!showStageSelector)}
-                className="flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50"
+                onClick={() => setShowStageSelector(false)}
+                className="mt-4 text-sm text-gray-500 hover:text-gray-700"
               >
-                <Plus className="w-3.5 h-3.5" />
-                Add Stage
+                Cancel
               </button>
             </div>
+          )}
 
-            {/* Stage Type Selector */}
-            {showStageSelector && (
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg mb-4">
-                <StageTypeSelector onSelect={handleAddStageTemplate} />
-                <button
-                  type="button"
-                  onClick={() => setShowStageSelector(false)}
-                  className="mt-4 text-sm text-gray-500 hover:text-gray-700"
+          {/* Stage List */}
+          <StageList
+            stages={stageTemplates}
+            onChange={handleStageTemplatesChange}
+            onRemove={handleRemoveStageTemplate}
+            teamMembers={teamMembers}
+          />
+        </div>
+      )}
+
+      {/* Step 6: Application Questions */}
+      {currentStep === 6 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-[14px] font-medium text-gray-900 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Application Questions
+              </h3>
+              <p className="text-[12px] text-gray-500 mt-0.5">
+                Custom questions candidates must answer when applying
+              </p>
+            </div>
+            {questionTemplates.length > 0 && (
+              <div className="flex items-center gap-2">
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleApplyTemplate(e.target.value)
+                      e.target.value = ''
+                    }
+                  }}
+                  className="px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  defaultValue=""
                 >
-                  Cancel
-                </button>
+                  <option value="">Apply from template...</option>
+                  {questionTemplates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name} ({template.questions_count || template.questions.length} questions)
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
-
-            {/* Stage List */}
-            <StageList
-              stages={stageTemplates}
-              onChange={handleStageTemplatesChange}
-              onRemove={handleRemoveStageTemplate}
-              teamMembers={teamMembers}
-            />
           </div>
 
-          {/* Divider */}
-          <div className="border-t border-gray-200" />
-
-          {/* Application Questions Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-[14px] font-medium text-gray-900 flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  Application Questions
-                </h3>
-                <p className="text-[12px] text-gray-500 mt-0.5">
-                  Custom questions candidates must answer when applying
-                </p>
-              </div>
-              {questionTemplates.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <select
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        handleApplyTemplate(e.target.value)
-                        e.target.value = ''
-                      }
-                    }}
-                    className="px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-                    defaultValue=""
-                  >
-                    <option value="">Apply from template...</option>
-                    {questionTemplates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.name} ({template.questions_count || template.questions.length} questions)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            <QuestionBuilder
-              questions={formData.questions || []}
-              onChange={handleQuestionsChange}
-            />
-          </div>
+          <QuestionBuilder
+            questions={formData.questions || []}
+            onChange={handleQuestionsChange}
+          />
         </div>
       )}
 

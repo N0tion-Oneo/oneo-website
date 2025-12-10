@@ -1006,7 +1006,7 @@ export default function AdminApplicationsPage() {
                     {table.getHeaderGroups().map(headerGroup => (
                       <tr key={headerGroup.id} className="border-b border-gray-200 bg-gray-50">
                         {headerGroup.headers.map(header => {
-                          const isPinnedLeft = header.id === 'select' || header.id === 'assigned_recruiters' || header.id === 'candidate_name'
+                          const isPinnedLeft = header.id === 'select' || header.id === 'candidate_name'
                           const isPinnedRight = header.id === 'actions'
                           return (
                             <th
@@ -1016,7 +1016,7 @@ export default function AdminApplicationsPage() {
                               } ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50' : ''}`}
                               style={{
                                 width: header.getSize(),
-                                left: header.id === 'select' ? 0 : header.id === 'assigned_recruiters' ? 40 : header.id === 'candidate_name' ? 180 : undefined,
+                                left: header.id === 'select' ? 0 : header.id === 'candidate_name' ? 40 : undefined,
                               }}
                             >
                               {header.isPlaceholder ? null : (
@@ -1057,8 +1057,9 @@ export default function AdminApplicationsPage() {
                         }}
                       >
                         {row.getVisibleCells().map(cell => {
-                          const isPinnedLeft = cell.column.id === 'select' || cell.column.id === 'assigned_recruiters' || cell.column.id === 'candidate_name'
-                          const isPinnedRight = cell.column.id === 'actions'
+                          const colId = cell.column.id
+                          const isPinnedLeft = colId === 'select' || colId === 'candidate_name'
+                          const isPinnedRight = colId === 'actions'
                           return (
                             <td
                               key={cell.id}
@@ -1067,7 +1068,7 @@ export default function AdminApplicationsPage() {
                               } ${isPinnedRight ? 'sticky right-0 z-10 bg-white' : ''}`}
                               style={{
                                 width: cell.column.getSize(),
-                                left: cell.column.id === 'select' ? 0 : cell.column.id === 'assigned_recruiters' ? 40 : cell.column.id === 'candidate_name' ? 180 : undefined,
+                                left: colId === 'select' ? 0 : colId === 'candidate_name' ? 40 : undefined,
                               }}
                             >
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}

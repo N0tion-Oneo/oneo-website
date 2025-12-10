@@ -25,6 +25,8 @@ export {
   useCreateCompany,
   useCountries,
   useCities,
+  useAllCompanies,
+  useCompanyById,
 } from './useCompanies'
 export type { CompanyInvitation, InviteResult } from './useCompanies'
 
@@ -231,3 +233,28 @@ export type {
   CandidatesNeedingAttention,
   TimeFilter,
 } from './useRecruiterDashboard'
+
+// Client Dashboard hooks
+export {
+  useActiveJobs,
+  useClientRecentApplications,
+  useClientUpcomingInterviews,
+  useClientPipeline,
+  usePendingOffers,
+  useProfileCompletion,
+  useTeamActivity,
+  useAssignedRecruiter,
+  useHiringMetrics,
+} from './useClientDashboard'
+export type {
+  ActiveJob,
+  RecentApplication,
+  UpcomingInterview,
+  PipelineCounts,
+  JobPipelineItem,
+  PendingOffer,
+  ProfileCompletion,
+  TeamActivity,
+  AssignedRecruiter,
+  HiringMetrics,
+} from './useClientDashboard'

@@ -17,7 +17,7 @@ from core.views.analytics import (
     onboarding_bottlenecks,
 )
 
-# Export dashboard views
+# Export dashboard views (recruiter/admin)
 from core.views.dashboard import (
     dashboard_settings,
     todays_bookings,
@@ -27,4 +27,17 @@ from core.views.dashboard import (
     pipeline_overview,
     recent_activity,
     candidates_needing_attention,
+)
+
+# Export client dashboard views
+from core.views.client_dashboard import (
+    client_active_jobs,
+    client_recent_applications,
+    client_upcoming_interviews,
+    client_pipeline_overview,
+    client_pending_offers,
+    client_profile_completion,
+    client_team_activity,
+    client_assigned_recruiter,
+    client_hiring_metrics,
 )

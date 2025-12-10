@@ -173,14 +173,9 @@ def todays_interviews(request):
     """
     Get today's interviews (ApplicationStageInstances) for the current user.
     Shows: Company, Interviewer, Candidate, Job Title, Stage, Time, Status
+    Works for admins, recruiters, and clients.
     """
     from jobs.models import ApplicationStageInstance, StageInstanceStatus
-
-    if not is_admin_or_recruiter(request.user):
-        return Response(
-            {'error': 'Only recruiters and admins can access this'},
-            status=status.HTTP_403_FORBIDDEN
-        )
 
     user = request.user
     now = timezone.now()
@@ -200,13 +195,21 @@ def todays_interviews(request):
         'interviewer',
     ).order_by('scheduled_at')
 
-    # Filter: admins see all, recruiters see their own or assigned
-    if user.role != UserRole.ADMIN:
+    # Filter based on role
+    if user.role == UserRole.CLIENT:
+        # Client users see interviews for their company's jobs
+        membership = user.company_memberships.select_related('company').first()
+        if not membership:
+            return Response({'interviews': [], 'total_today': 0})
+        interviews = interviews.filter(application__job__company=membership.company)
+    elif user.role == UserRole.RECRUITER:
+        # Recruiters see their own or assigned interviews
         interviews = interviews.filter(
             Q(interviewer=user) |
             Q(participants=user) |
             Q(application__job__assigned_recruiters=user)
         ).distinct()
+    # Admins see all
 
     result = []
     for interview in interviews[:20]:
@@ -408,14 +411,9 @@ def pipeline_overview(request):
     Get pipeline overview for all published assigned jobs.
     Shows job-by-job breakdown of candidates per stage.
     Also returns summary stats: open positions, offers pending.
+    Works for admins, recruiters, and clients.
     """
     from jobs.models import Job, JobStatus, Application, ApplicationStatus
-
-    if not is_admin_or_recruiter(request.user):
-        return Response(
-            {'error': 'Only recruiters and admins can access this'},
-            status=status.HTTP_403_FORBIDDEN
-        )
 
     user = request.user
 
@@ -427,12 +425,23 @@ def pipeline_overview(request):
         'stage_templates',
     ).order_by('-created_at')
 
-    # Filter by assigned unless admin
-    if user.role != UserRole.ADMIN:
+    # Filter based on role
+    if user.role == UserRole.CLIENT:
+        # Client users see jobs for their company
+        membership = user.company_memberships.select_related('company').first()
+        if not membership:
+            return Response({
+                'jobs': [],
+                'summary': {'total_jobs': 0, 'open_positions': 0, 'offers_pending': 0},
+            })
+        jobs = jobs.filter(company=membership.company)
+    elif user.role == UserRole.RECRUITER:
+        # Recruiters see assigned jobs or jobs they created
         jobs = jobs.filter(
             Q(assigned_recruiters=user) |
             Q(created_by=user)
         ).distinct()
+    # Admins see all jobs
 
     # Build pipeline data
     pipeline_data = []
@@ -491,12 +500,6 @@ def recent_activity(request):
     """
     from jobs.models import ActivityLog, ActivityNote, ActivityType
 
-    if not is_admin_or_recruiter(request.user):
-        return Response(
-            {'error': 'Only recruiters and admins can access this'},
-            status=status.HTTP_403_FORBIDDEN
-        )
-
     user = request.user
     limit = int(request.query_params.get('limit', 10))
     now = timezone.now()
@@ -524,12 +527,22 @@ def recent_activity(request):
         'performed_by',
     ).order_by('-created_at')
 
-    # Filter by assigned jobs unless admin
-    if user.role != UserRole.ADMIN:
+    # Filter based on user role
+    if user.role == UserRole.CLIENT:
+        # Client users see activity for their company's jobs
+        membership = user.company_memberships.select_related('company').first()
+        if not membership:
+            return Response({'activities': []})
+        app_activity_qs = app_activity_qs.filter(
+            application__job__company=membership.company
+        )
+    elif user.role == UserRole.RECRUITER:
+        # Recruiters see activity for assigned/created jobs
         app_activity_qs = app_activity_qs.filter(
             Q(application__job__assigned_recruiters=user) |
             Q(application__job__created_by=user)
         ).distinct()
+    # Admins see all activity
 
     # Get activity notes (separate query)
     notes_qs = ActivityNote.objects.filter(
@@ -540,7 +553,16 @@ def recent_activity(request):
         'author',
     ).order_by('-created_at')
 
-    if user.role != UserRole.ADMIN:
+    # Filter notes based on user role
+    if user.role == UserRole.CLIENT:
+        membership = user.company_memberships.select_related('company').first()
+        if membership:
+            notes_qs = notes_qs.filter(
+                activity__application__job__company=membership.company
+            )
+        else:
+            notes_qs = notes_qs.none()
+    elif user.role == UserRole.RECRUITER:
         notes_qs = notes_qs.filter(
             Q(activity__application__job__assigned_recruiters=user) |
             Q(activity__application__job__created_by=user)
@@ -603,15 +625,10 @@ def candidates_needing_attention(request):
     - Not contacted in X days
     - Stuck in stage for X days
     - Interview prep needed (within X days)
+    Works for admins, recruiters, and clients.
     """
     from candidates.models import CandidateProfile, CandidateActivity
-    from jobs.models import ApplicationStageInstance, StageInstanceStatus
-
-    if not is_admin_or_recruiter(request.user):
-        return Response(
-            {'error': 'Only recruiters and admins can access this'},
-            status=status.HTTP_403_FORBIDDEN
-        )
+    from jobs.models import ApplicationStageInstance, StageInstanceStatus, Application
 
     user = request.user
     settings = DashboardSettings.get_settings()
@@ -620,7 +637,30 @@ def candidates_needing_attention(request):
     # Get candidates based on role
     if user.role == UserRole.ADMIN:
         candidates = CandidateProfile.objects.all()
+    elif user.role == UserRole.CLIENT:
+        # Client users see candidates who applied to their company's jobs
+        membership = user.company_memberships.select_related('company').first()
+        if not membership:
+            return Response({
+                'not_contacted': [],
+                'not_contacted_count': 0,
+                'stuck_in_stage': [],
+                'stuck_in_stage_count': 0,
+                'needs_interview_prep': [],
+                'needs_interview_prep_count': 0,
+                'thresholds': {
+                    'days_without_contact': settings.days_without_contact,
+                    'days_stuck_in_stage': settings.days_stuck_in_stage,
+                    'days_before_interview_prep': settings.days_before_interview_prep,
+                },
+            })
+        # Get candidate IDs from applications to this company's jobs
+        candidate_ids = Application.objects.filter(
+            job__company=membership.company
+        ).values_list('candidate_id', flat=True).distinct()
+        candidates = CandidateProfile.objects.filter(id__in=candidate_ids)
     else:
+        # Recruiters see assigned candidates
         candidates = CandidateProfile.objects.filter(assigned_to=user)
 
     candidates = candidates.select_related('user', 'onboarding_stage')
@@ -691,11 +731,21 @@ def candidates_needing_attention(request):
         'stage_template',
     )
 
-    if user.role != UserRole.ADMIN:
+    if user.role == UserRole.CLIENT:
+        # Client users see interviews for their company's jobs
+        membership = user.company_memberships.select_related('company').first()
+        if membership:
+            upcoming_interviews = upcoming_interviews.filter(
+                application__job__company=membership.company
+            )
+        else:
+            upcoming_interviews = upcoming_interviews.none()
+    elif user.role == UserRole.RECRUITER:
         upcoming_interviews = upcoming_interviews.filter(
             Q(interviewer=user) |
             Q(application__job__assigned_recruiters=user)
         ).distinct()
+    # Admins see all
 
     for interview in upcoming_interviews:
         candidate = interview.application.candidate

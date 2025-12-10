@@ -305,9 +305,9 @@ export default function AdminCandidatesPage() {
           </div>
         ),
       },
-      // PINNED LEFT: Assigned To
+      // PINNED LEFT: Assigned
       columnHelper.accessor('assigned_to', {
-        header: 'Assigned To',
+        header: 'Assigned',
         size: 160,
         cell: ({ row }) => {
           const candidate = row.original

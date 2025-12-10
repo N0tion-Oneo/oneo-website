@@ -111,10 +111,23 @@ export function useJob(slug: string): UseJobReturn {
 
 interface UseCompanyJobsOptions {
   status?: JobStatus
+  ordering?: string
+  page?: number
+  page_size?: number
+}
+
+interface CompanyJobsPaginatedResponse {
+  results: JobListItem[]
+  count: number
+  next: boolean
+  previous: boolean
 }
 
 interface UseCompanyJobsReturn {
   jobs: JobListItem[]
+  count: number
+  hasNext: boolean
+  hasPrevious: boolean
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
@@ -122,6 +135,9 @@ interface UseCompanyJobsReturn {
 
 export function useCompanyJobs(options: UseCompanyJobsOptions = {}): UseCompanyJobsReturn {
   const [jobs, setJobs] = useState<JobListItem[]>([])
+  const [count, setCount] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrevious, setHasPrevious] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -131,14 +147,23 @@ export function useCompanyJobs(options: UseCompanyJobsOptions = {}): UseCompanyJ
     try {
       const params = new URLSearchParams()
       if (options.status) params.append('status', options.status)
+      if (options.ordering) params.append('ordering', options.ordering)
+      if (options.page) params.append('page', String(options.page))
+      if (options.page_size) params.append('page_size', String(options.page_size))
 
-      const response = await api.get<JobListItem[]>(`/jobs/my/?${params.toString()}`)
-      setJobs(response.data)
+      const response = await api.get<CompanyJobsPaginatedResponse>(`/jobs/my/?${params.toString()}`)
+      setJobs(response.data.results || [])
+      setCount(response.data.count || 0)
+      setHasNext(response.data.next || false)
+      setHasPrevious(response.data.previous || false)
     } catch (err) {
       // 404 means user is not associated with any company
       const axiosError = err as { response?: { status?: number } }
       if (axiosError.response?.status === 404) {
         setJobs([])
+        setCount(0)
+        setHasNext(false)
+        setHasPrevious(false)
       } else {
         setError('Failed to load jobs')
         console.error('Error fetching company jobs:', err)
@@ -146,13 +171,13 @@ export function useCompanyJobs(options: UseCompanyJobsOptions = {}): UseCompanyJ
     } finally {
       setIsLoading(false)
     }
-  }, [options.status])
+  }, [options.status, options.ordering, options.page, options.page_size])
 
   useEffect(() => {
     fetchJobs()
   }, [fetchJobs])
 
-  return { jobs, isLoading, error, refetch: fetchJobs }
+  return { jobs, count, hasNext, hasPrevious, isLoading, error, refetch: fetchJobs }
 }
 
 // ============================================================================
