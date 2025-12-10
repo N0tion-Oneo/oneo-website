@@ -136,6 +136,26 @@ class Application(models.Model):
         help_text='Internal notes about the application',
     )
 
+    # Stage-specific feedback (for Applied and Shortlisted stages)
+    applied_feedback = models.TextField(
+        blank=True,
+        help_text='Recruiter feedback/notes for the Applied stage',
+    )
+    applied_score = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text='Score given at the Applied stage (1-10)',
+    )
+    shortlisted_feedback = models.TextField(
+        blank=True,
+        help_text='Recruiter feedback/notes for the Shortlisted stage',
+    )
+    shortlisted_score = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text='Score given at the Shortlisted stage (1-10)',
+    )
+
     # Dates
     applied_at = models.DateTimeField(auto_now_add=True)
     shortlisted_at = models.DateTimeField(null=True, blank=True)

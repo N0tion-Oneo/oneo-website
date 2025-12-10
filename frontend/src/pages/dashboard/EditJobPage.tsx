@@ -57,7 +57,7 @@ export default function EditJobPage() {
 
       {/* Form */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <JobForm job={job} onSuccess={handleSuccess} />
+        <JobForm job={job} companyId={job.company.id} onSuccess={handleSuccess} />
       </div>
     </div>
   )

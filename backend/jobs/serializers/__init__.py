@@ -54,6 +54,12 @@ from .stages import (
     CompleteStageSerializer,
 )
 
+from .feedback import (
+    StageFeedbackSerializer,
+    StageFeedbackCreateSerializer,
+    StageFeedbackUpdateSerializer,
+)
+
 __all__ = [
     # Job serializers
     'JobListSerializer',
@@ -98,4 +104,8 @@ __all__ = [
     'AssignAssessmentSerializer',
     'SubmitAssessmentSerializer',
     'CompleteStageSerializer',
+    # Feedback serializers
+    'StageFeedbackSerializer',
+    'StageFeedbackCreateSerializer',
+    'StageFeedbackUpdateSerializer',
 ]

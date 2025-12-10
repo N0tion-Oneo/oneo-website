@@ -206,6 +206,8 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             'assigned_to',
             # Onboarding
             'onboarding_stage',
+            # Access permissions
+            'can_view_all_candidates',
             'created_at',
             'updated_at',
         ]
@@ -329,6 +331,8 @@ class CompanyUpdateSerializer(serializers.ModelSerializer):
             'is_published',
             # Onboarding
             'onboarding_stage_id',
+            # Access permissions
+            'can_view_all_candidates',
         ]
 
     def __init__(self, *args, **kwargs):

@@ -2,6 +2,7 @@ export { default as DashboardPage } from './DashboardPage';
 export { default as ProfilePage } from './ProfilePage';
 export { default as InvitationsPage } from './InvitationsPage';
 export { default as JobsPage } from './JobsPage';
+export { default as CandidatesPage } from './CandidatesPage';
 export { default as NewJobPage } from './NewJobPage';
 export { default as EditJobPage } from './EditJobPage';
 export { default as AdminCompaniesPage } from './AdminCompaniesPage';

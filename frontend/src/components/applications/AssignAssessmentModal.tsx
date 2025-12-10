@@ -105,7 +105,7 @@ export default function AssignAssessmentModal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+        className="fixed inset-0 bg-black/50 z-[300] flex items-center justify-center"
         onClick={onClose}
       >
         {/* Modal */}

@@ -19,6 +19,7 @@ urlpatterns = [
     # Candidate profiles - public
     path('candidates/', views.list_candidates, name='list-candidates'),
     path('candidates/all/', views.list_all_candidates, name='list-all-candidates'),
+    path('candidates/company/', views.list_company_candidates, name='list-company-candidates'),
     path('candidates/export/csv/', export_views.export_candidates_csv, name='export-candidates-csv'),
     path('candidates/<slug:slug>/', views.get_candidate, name='get-candidate'),
 
@@ -79,4 +80,8 @@ urlpatterns = [
     path('candidates/me/suggestions/', views.candidate_list_suggestions, name='candidate-list-suggestions'),
     path('candidates/me/suggestions/<uuid:suggestion_id>/resolve/', views.candidate_resolve_suggestion, name='candidate-resolve-suggestion'),
     path('candidates/me/suggestions/<uuid:suggestion_id>/decline/', views.candidate_decline_suggestion, name='candidate-decline-suggestion'),
+
+    # Candidate Applications (Admin/Client)
+    path('admin/candidates/<int:candidate_id>/applications/', views.list_candidate_applications, name='list-candidate-applications'),
+    path('admin/candidates/<int:candidate_id>/applications/create/', views.create_candidate_application, name='create-candidate-application'),
 ]

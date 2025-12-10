@@ -11,7 +11,7 @@ import {
   RowSelectionState,
   ColumnSizingState,
 } from '@tanstack/react-table'
-import { useAllCandidates, useAssignedUpdate } from '@/hooks'
+import { useAllCandidates, useCompanyCandidates, useAssignedUpdate, useMyCompany } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole, Seniority, WorkPreference, ProfileVisibility, Currency } from '@/types'
 import type { CandidateAdminListItem, ExperienceListItem } from '@/types'
@@ -137,8 +137,17 @@ const calculateDuration = (startDate: string, endDate: string | null, isCurrent:
 // Column helper for type safety
 const columnHelper = createColumnHelper<CandidateAdminListItem>()
 
-export default function AdminCandidatesPage() {
+interface AdminCandidatesPageProps {
+  mode?: 'admin' | 'client'
+}
+
+export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesPageProps) {
   const { user } = useAuth()
+  const isClientMode = mode === 'client'
+
+  // For client mode, fetch company info
+  const { company, isLoading: companyLoading } = useMyCompany()
+
   const [filters, setFilters] = useState<CandidateFilters>(defaultFilters)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
@@ -166,28 +175,53 @@ export default function AdminCandidatesPage() {
     return sort.desc ? `-${field}` : field
   }, [sorting, filters.ordering])
 
-  const { candidates, count, hasNext, hasPrevious, isLoading, error, refetch } = useAllCandidates({
-    search: filters.search || undefined,
-    seniority: filters.seniority || undefined,
-    work_preference: filters.work_preference || undefined,
-    visibility: filters.visibility || undefined,
-    industries: filters.industries.length > 0 ? filters.industries : undefined,
-    min_completeness: filters.min_completeness,
-    min_experience: filters.min_experience,
-    max_experience: filters.max_experience,
-    min_salary: filters.min_salary,
-    max_salary: filters.max_salary,
-    salary_currency: filters.salary_currency || undefined,
-    notice_period_min: filters.notice_period_min,
-    notice_period_max: filters.notice_period_max,
-    created_after: filters.created_after || undefined,
-    created_before: filters.created_before || undefined,
-    willing_to_relocate: filters.willing_to_relocate,
-    has_resume: filters.has_resume,
-    ordering,
-    page,
-    page_size: pageSize,
-  })
+  // Conditional data fetching based on mode
+  const adminCandidatesResult = useAllCandidates(
+    isClientMode
+      ? {}
+      : {
+          search: filters.search || undefined,
+          seniority: filters.seniority || undefined,
+          work_preference: filters.work_preference || undefined,
+          visibility: filters.visibility || undefined,
+          industries: filters.industries.length > 0 ? filters.industries : undefined,
+          min_completeness: filters.min_completeness,
+          min_experience: filters.min_experience,
+          max_experience: filters.max_experience,
+          min_salary: filters.min_salary,
+          max_salary: filters.max_salary,
+          salary_currency: filters.salary_currency || undefined,
+          notice_period_min: filters.notice_period_min,
+          notice_period_max: filters.notice_period_max,
+          created_after: filters.created_after || undefined,
+          created_before: filters.created_before || undefined,
+          willing_to_relocate: filters.willing_to_relocate,
+          has_resume: filters.has_resume,
+          ordering,
+          page,
+          page_size: pageSize,
+        }
+  )
+
+  const clientCandidatesResult = useCompanyCandidates(
+    isClientMode
+      ? {
+          search: filters.search || undefined,
+          seniority: filters.seniority || undefined,
+          work_preference: filters.work_preference || undefined,
+          min_experience: filters.min_experience,
+          max_experience: filters.max_experience,
+          ordering,
+          page,
+          page_size: pageSize,
+        }
+      : {}
+  )
+
+  // Select the appropriate data based on mode
+  const { candidates, count, hasNext, hasPrevious, isLoading, error, refetch } = isClientMode
+    ? clientCandidatesResult
+    : adminCandidatesResult
 
   // Local state for optimistic updates
   const [localCandidates, setLocalCandidates] = useState<CandidateAdminListItem[]>([])
@@ -208,19 +242,6 @@ export default function AdminCandidatesPage() {
       }
     }
   }, [localCandidates, previewCandidate])
-
-  // Check if user has admin/recruiter access
-  if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
-    return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
-          You do not have permission to view this page.
-        </p>
-      </div>
-    )
-  }
 
   const totalPages = Math.ceil(count / pageSize)
 
@@ -280,77 +301,86 @@ export default function AdminCandidatesPage() {
 
   // Define columns with TanStack Table
   const columns = useMemo<ColumnDef<CandidateAdminListItem, any>[]>(
-    () => [
-      // Selection checkbox
-      {
-        id: 'select',
-        size: 40,
-        enableResizing: false,
-        header: ({ table }) => (
-          <input
-            type="checkbox"
-            checked={table.getIsAllPageRowsSelected()}
-            onChange={table.getToggleAllPageRowsSelectedHandler()}
-            className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
-          />
-        ),
-        cell: ({ row }) => (
-          <div onClick={(e) => e.stopPropagation()}>
+    () => {
+      const baseColumns: ColumnDef<CandidateAdminListItem, any>[] = [
+        // Selection checkbox
+        {
+          id: 'select',
+          size: 40,
+          enableResizing: false,
+          header: ({ table }) => (
             <input
               type="checkbox"
-              checked={row.getIsSelected()}
-              onChange={row.getToggleSelectedHandler()}
+              checked={table.getIsAllPageRowsSelected()}
+              onChange={table.getToggleAllPageRowsSelectedHandler()}
               className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
             />
-          </div>
-        ),
-      },
-      // PINNED LEFT: Assigned
-      columnHelper.accessor('assigned_to', {
-        header: 'Assigned',
-        size: 160,
-        cell: ({ row }) => {
-          const candidate = row.original
-          const assignedUsers = candidate.assigned_to || []
-          return (
+          ),
+          cell: ({ row }) => (
             <div onClick={(e) => e.stopPropagation()}>
-              <AssignedSelect
-                selected={assignedUsers}
-                onChange={(newAssigned) => handleAssignedToChange(candidate.slug, newAssigned)}
-                compact
-                placeholder="Assign"
+              <input
+                type="checkbox"
+                checked={row.getIsSelected()}
+                onChange={row.getToggleSelectedHandler()}
+                className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
               />
             </div>
-          )
+          ),
         },
-      }),
-      // PINNED LEFT: Candidate info
-      columnHelper.accessor('full_name', {
-        header: 'Candidate',
-        size: 220,
-        enableSorting: true,
-        cell: ({ row }) => {
-          const candidate = row.original
-          return (
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-[11px] font-medium text-gray-600">
-                  {candidate.initials || '--'}
-                </span>
+      ]
+
+      // Admin-only: Assigned column
+      if (!isClientMode) {
+        baseColumns.push(
+          columnHelper.accessor('assigned_to', {
+            header: 'Assigned',
+            size: 160,
+            cell: ({ row }) => {
+              const candidate = row.original
+              const assignedUsers = candidate.assigned_to || []
+              return (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <AssignedSelect
+                    selected={assignedUsers}
+                    onChange={(newAssigned) => handleAssignedToChange(candidate.slug, newAssigned)}
+                    compact
+                    placeholder="Assign"
+                  />
+                </div>
+              )
+            },
+          })
+        )
+      }
+
+      // Candidate info (all modes)
+      baseColumns.push(
+        columnHelper.accessor('full_name', {
+          header: 'Candidate',
+          size: 220,
+          enableSorting: true,
+          cell: ({ row }) => {
+            const candidate = row.original
+            return (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[11px] font-medium text-gray-600">
+                    {candidate.initials || '--'}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-gray-900 truncate">
+                    {candidate.full_name || 'No name'}
+                  </p>
+                  <p className="text-[11px] text-gray-500 truncate">
+                    {candidate.email}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-[13px] font-medium text-gray-900 truncate">
-                  {candidate.full_name || 'No name'}
-                </p>
-                <p className="text-[11px] text-gray-500 truncate">
-                  {candidate.email}
-                </p>
-              </div>
-            </div>
-          )
-        },
-      }),
-      columnHelper.accessor('phone', {
+            )
+          },
+        }),
+        columnHelper.accessor('phone', {
         header: 'Phone',
         size: 120,
         cell: ({ getValue }) => (
@@ -691,18 +721,6 @@ export default function AdminCandidatesPage() {
           )
         },
       }),
-      columnHelper.accessor('visibility', {
-        header: 'Status',
-        size: 80,
-        cell: ({ getValue }) => {
-          const badge = getVisibilityBadge(getValue())
-          return (
-            <span className={`inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded ${badge.bg} ${badge.text}`}>
-              {badge.label}
-            </span>
-          )
-        },
-      }),
       columnHelper.accessor('created_at', {
         header: 'Created',
         size: 100,
@@ -798,9 +816,30 @@ export default function AdminCandidatesPage() {
             </div>
           )
         },
-      }),
-    ],
-    [openActionsMenu, menuPosition]
+      })
+      )
+
+      // Admin-only: Visibility column
+      if (!isClientMode) {
+        baseColumns.splice(baseColumns.length - 1, 0, // Insert before actions
+          columnHelper.accessor('visibility', {
+            header: 'Status',
+            size: 80,
+            cell: ({ getValue }) => {
+              const badge = getVisibilityBadge(getValue())
+              return (
+                <span className={`inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded ${badge.bg} ${badge.text}`}>
+                  {badge.label}
+                </span>
+              )
+            },
+          })
+        )
+      }
+
+      return baseColumns
+    },
+    [openActionsMenu, menuPosition, isClientMode]
   )
 
   const table = useReactTable({
@@ -833,12 +872,47 @@ export default function AdminCandidatesPage() {
     setRowSelection({})
   }
 
+  // Early returns - MUST be after all hooks
+  if (!isClientMode && (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role))) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500">
+          You do not have permission to view this page.
+        </p>
+      </div>
+    )
+  }
+
+  if (isClientMode && companyLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-[14px] text-gray-500">Loading...</p>
+      </div>
+    )
+  }
+
+  if (isClientMode && !company) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 mb-2">No Company Profile</p>
+        <p className="text-[13px] text-gray-500">
+          You need to be associated with a company to view candidates.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">All Candidates</h1>
+          <h1 className="text-[20px] font-semibold text-gray-900">
+            {isClientMode ? 'Candidates' : 'All Candidates'}
+          </h1>
           <p className="text-[13px] text-gray-500 mt-0.5">
             {count} candidate{count !== 1 ? 's' : ''} found
           </p>
@@ -1127,6 +1201,7 @@ export default function AdminCandidatesPage() {
         candidate={previewCandidate}
         onClose={() => setPreviewCandidate(null)}
         onRefresh={refetch}
+        mode={mode}
       />
     </div>
   )

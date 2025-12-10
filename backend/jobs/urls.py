@@ -56,11 +56,18 @@ urlpatterns = [
     path('applications/<uuid:application_id>/stages/<uuid:instance_id>/reschedule/', views.reschedule_stage, name='reschedule-stage'),
     path('applications/<uuid:application_id>/stages/<uuid:instance_id>/cancel/', views.cancel_stage, name='cancel-stage'),
     path('applications/<uuid:application_id>/stages/<uuid:instance_id>/complete/', views.complete_stage, name='complete-stage'),
+    path('applications/<uuid:application_id>/stages/<uuid:instance_id>/feedback/', views.update_stage_feedback, name='update-stage-feedback'),
     path('applications/<uuid:application_id>/stages/<uuid:instance_id>/reopen/', views.reopen_stage, name='reopen-stage'),
     path('applications/<uuid:application_id>/stages/<uuid:instance_id>/assign-assessment/', views.assign_assessment, name='assign-assessment'),
     path('applications/<uuid:application_id>/stages/<uuid:instance_id>/submit/', views.submit_assessment, name='submit-assessment'),
     path('applications/<uuid:application_id>/stages/<uuid:instance_id>/send-booking-link/', views.send_booking_link, name='send-booking-link'),
     path('applications/<uuid:application_id>/move-to/<uuid:template_id>/', views.move_to_stage_template, name='move-to-stage-template'),
+
+    # Feedback endpoints (threaded comments on stages)
+    path('applications/<uuid:application_id>/feedback/', views.application_feedback_list, name='application-feedback-list'),
+    path('applications/<uuid:application_id>/feedback/<uuid:feedback_id>/', views.feedback_detail, name='feedback-detail'),
+    path('applications/<uuid:application_id>/stages/<uuid:instance_id>/feedbacks/', views.stage_feedback_list, name='stage-feedback-list'),
+    path('applications/<uuid:application_id>/status/<str:stage_type>/feedback/', views.status_feedback_list, name='status-feedback-list'),
 
     # Public booking endpoints (Calendly-like self-scheduling)
     path('booking/<str:token>/', views.get_booking_info, name='get-booking-info'),

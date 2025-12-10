@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
-import { X, User, Clock, Gift, Ban, CheckCircle, AlertCircle, ChevronDown, FileText, ExternalLink, Paperclip, Calendar } from 'lucide-react'
+import { X, User, Clock, Gift, Ban, CheckCircle, AlertCircle, ChevronDown, FileText, ExternalLink, Paperclip, Calendar, Maximize2 } from 'lucide-react'
 import { useApplication, useRecordApplicationView, useStageInstances, useCancelStage, useCompleteStage } from '@/hooks'
 import { CandidateProfileCard } from '@/components/candidates'
 import ActivityTimeline from './ActivityTimeline'
-import StageTimeline from './StageTimeline'
+import FullPipelineTimeline from './FullPipelineTimeline'
 import ScheduleInterviewModal from './ScheduleInterviewModal'
 import AssignAssessmentModal from './AssignAssessmentModal'
-import { ApplicationStatus, RejectionReason, RejectionReasonLabels, QuestionType } from '@/types'
+import InterviewModeView from './InterviewModeView'
+import { ApplicationStatus, RejectionReason, RejectionReasonLabels, QuestionType, StageTypeConfig } from '@/types'
+import api from '@/services/api'
 import type { Application, InterviewStage, OfferDetails, ApplicationAnswer, ApplicationStageInstance } from '@/types'
 
 interface ApplicationDrawerProps {
@@ -87,6 +89,7 @@ export default function ApplicationDrawer({
   const [activeTab, setActiveTab] = useState<TabType>('profile')
   const [actionError, setActionError] = useState<string | null>(null)
   const [isStageDropdownOpen, setIsStageDropdownOpen] = useState(false)
+  const [isInterviewMode, setIsInterviewMode] = useState(false)
   const stageDropdownRef = useRef<HTMLDivElement>(null)
 
   // Offer form state
@@ -141,7 +144,7 @@ export default function ApplicationDrawer({
     if (!confirm('Are you sure you want to cancel this interview?')) return
 
     try {
-      await cancelStage(applicationId, instance.id, { reason: 'Cancelled by recruiter' })
+      await cancelStage(applicationId, instance.id, 'Cancelled by recruiter')
       refetchStages()
     } catch (error) {
       console.error('Failed to cancel:', error)
@@ -224,6 +227,18 @@ export default function ApplicationDrawer({
 
   if (!isOpen) return null
 
+  // Interview Mode View (full-screen)
+  if (isInterviewMode && applicationId) {
+    return (
+      <InterviewModeView
+        applicationId={applicationId}
+        onClose={() => setIsInterviewMode(false)}
+        onShortlist={onShortlist}
+        onMoveToStage={onMoveToStage}
+      />
+    )
+  }
+
   // Build tabs based on application status
   const tabs: { id: TabType; label: string; icon: typeof User }[] = [
     { id: 'profile', label: 'Candidate', icon: User },
@@ -235,12 +250,10 @@ export default function ApplicationDrawer({
     tabs.splice(1, 0, { id: 'answers', label: 'Answers', icon: FileText })
   }
 
-  // Add stages tab if there are stage instances (new typed system)
-  if (stageInstances && stageInstances.length > 0) {
-    // Insert after answers (or after profile if no answers)
-    const insertIndex = tabs.findIndex(t => t.id === 'activity')
-    tabs.splice(insertIndex, 0, { id: 'stages', label: 'Interview Pipeline', icon: Calendar })
-  }
+  // Always show Pipeline tab (full application journey)
+  // Insert after answers (or after profile if no answers)
+  const insertIndex = tabs.findIndex(t => t.id === 'activity')
+  tabs.splice(insertIndex, 0, { id: 'stages', label: 'Pipeline', icon: Calendar })
 
   // Add action tabs based on status
   const hasOffer = application && (application.status === ApplicationStatus.OFFER_MADE || application.status === ApplicationStatus.OFFER_ACCEPTED)
@@ -340,10 +353,45 @@ export default function ApplicationDrawer({
                         key={stage.order}
                         onClick={async () => {
                           if (applicationId && onMoveToStage) {
-                            onMoveToStage(applicationId, stage.order)
                             setIsStageDropdownOpen(false)
-                            onUpdate?.()
-                            setTimeout(() => refetch(), 300)
+
+                            // Move to the stage
+                            onMoveToStage(applicationId, stage.order)
+
+                            // Fetch stage instances to get the one we just moved to
+                            try {
+                              const instancesResponse = await api.get<ApplicationStageInstance[]>(
+                                `/jobs/applications/${applicationId}/stages/`
+                              )
+                              const instances = instancesResponse.data
+
+                              // Find the instance for this stage order
+                              const stageInstance = instances.find(
+                                (inst) => inst.stage_template.order === stage.order
+                              )
+
+                              if (stageInstance && stageInstance.status === 'not_started') {
+                                const stageConfig = StageTypeConfig[stageInstance.stage_template.stage_type]
+
+                                if (stageConfig?.requiresScheduling) {
+                                  // Open schedule modal
+                                  handleOpenScheduleModal(stageInstance, 'schedule')
+                                } else if (stageConfig?.isAssessment) {
+                                  // Open assessment modal
+                                  setAssessmentStageInstance(stageInstance)
+                                  setAssessmentModalOpen(true)
+                                }
+                              }
+
+                              refetchStages()
+                              refetch()
+                              onUpdate?.()
+                            } catch (err) {
+                              console.error('Failed to fetch stage instances:', err)
+                              refetchStages()
+                              refetch()
+                              onUpdate?.()
+                            }
                           }
                         }}
                         disabled={
@@ -402,6 +450,16 @@ export default function ApplicationDrawer({
               </div>
             )}
 
+            {/* Interview Mode Button */}
+            <button
+              onClick={() => setIsInterviewMode(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+              title="Enter Interview Mode"
+            >
+              <Maximize2 className="w-4 h-4" />
+              Interview Mode
+            </button>
+
             <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
@@ -457,16 +515,22 @@ export default function ApplicationDrawer({
               )}
               {activeTab === 'stages' && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-[14px] font-medium text-gray-900">Interview Pipeline</h3>
-                  </div>
                   {isLoadingStages ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
                     </div>
                   ) : (
-                    <StageTimeline
-                      instances={stageInstances}
+                    <FullPipelineTimeline
+                      applicationId={applicationId!}
+                      applicationStatus={application.status}
+                      appliedAt={application.applied_at}
+                      shortlistedAt={application.shortlisted_at}
+                      stageInstances={stageInstances}
+                      currentStageOrder={application.current_stage_order}
+                      offerMadeAt={application.offer_made_at}
+                      offerAcceptedAt={application.offer_accepted_at}
+                      rejectedAt={application.rejected_at}
+                      rejectionReason={application.rejection_reason}
                       isRecruiterView={true}
                       onSchedule={(instance) => handleOpenScheduleModal(instance, 'schedule')}
                       onReschedule={(instance) => handleOpenScheduleModal(instance, 'reschedule')}
@@ -476,6 +540,8 @@ export default function ApplicationDrawer({
                         setAssessmentStageInstance(instance)
                         setAssessmentModalOpen(true)
                       }}
+                      onShortlist={onShortlist ? () => onShortlist(applicationId!) : undefined}
+                      onMakeOffer={() => setActiveTab('offer')}
                     />
                   )}
                 </div>

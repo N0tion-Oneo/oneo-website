@@ -195,6 +195,11 @@ class ApplicationSerializer(serializers.ModelSerializer):
             'applied_at',
             'shortlisted_at',
             'last_status_change',
+            # Stage-specific feedback
+            'applied_feedback',
+            'applied_score',
+            'shortlisted_feedback',
+            'shortlisted_score',
         ]
         read_only_fields = ['id', 'applied_at', 'shortlisted_at', 'last_status_change']
 

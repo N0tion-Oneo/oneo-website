@@ -439,6 +439,93 @@ export function useAllCandidates(options: UseAllCandidatesOptions = {}): UseAllC
 }
 
 // ============================================================================
+// Company Candidates Hook (Client - applicants to their jobs)
+// ============================================================================
+
+interface UseCompanyCandidatesOptions {
+  seniority?: string
+  work_preference?: string
+  min_experience?: number
+  max_experience?: number
+  search?: string
+  ordering?: string
+  page?: number
+  page_size?: number
+}
+
+interface UseCompanyCandidatesReturn {
+  candidates: CandidateAdminListItem[]
+  count: number
+  hasNext: boolean
+  hasPrevious: boolean
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export function useCompanyCandidates(options: UseCompanyCandidatesOptions = {}): UseCompanyCandidatesReturn {
+  const [candidates, setCandidates] = useState<CandidateAdminListItem[]>([])
+  const [count, setCount] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrevious, setHasPrevious] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchCandidates = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams()
+      if (options.seniority) params.append('seniority', options.seniority)
+      if (options.work_preference) params.append('work_preference', options.work_preference)
+      if (options.min_experience !== undefined) params.append('min_experience', options.min_experience.toString())
+      if (options.max_experience !== undefined) params.append('max_experience', options.max_experience.toString())
+      if (options.search) params.append('search', options.search)
+      if (options.ordering) params.append('ordering', options.ordering)
+      if (options.page) params.append('page', options.page.toString())
+      if (options.page_size) params.append('page_size', options.page_size.toString())
+
+      const response = await api.get<PaginatedResponse<CandidateAdminListItem>>(
+        `/candidates/company/?${params.toString()}`
+      )
+      setCandidates(response.data.results)
+      setCount(response.data.count)
+      setHasNext(!!response.data.next)
+      setHasPrevious(!!response.data.previous)
+    } catch (err) {
+      // 404 means user is not associated with any company
+      const axiosError = err as { response?: { status?: number } }
+      if (axiosError.response?.status === 404) {
+        setCandidates([])
+        setCount(0)
+        setHasNext(false)
+        setHasPrevious(false)
+      } else {
+        setError('Failed to load candidates')
+        console.error('Error fetching company candidates:', err)
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [
+    options.seniority,
+    options.work_preference,
+    options.min_experience,
+    options.max_experience,
+    options.search,
+    options.ordering,
+    options.page,
+    options.page_size,
+  ])
+
+  useEffect(() => {
+    fetchCandidates()
+  }, [fetchCandidates])
+
+  return { candidates, count, hasNext, hasPrevious, isLoading, error, refetch: fetchCandidates }
+}
+
+// ============================================================================
 // Single Candidate Hook (Public Profile + Admin Edit)
 // ============================================================================
 

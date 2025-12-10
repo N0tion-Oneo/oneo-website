@@ -6,6 +6,7 @@ export {
   useMyProfile,
   useCandidates,
   useAllCandidates,
+  useCompanyCandidates,
   useCandidate,
   useExperiences,
   useExperienceMutations,
@@ -112,6 +113,7 @@ export {
   useAssignAssessment,
   useSubmitAssessment,
   useMoveToStageTemplate,
+  useUpdateStageFeedback,
   useJobInterviewers,
 } from './useStageInstances'
 export type { Interviewer } from './useStageInstances'
@@ -246,6 +248,16 @@ export {
   useAssignedRecruiter,
   useHiringMetrics,
 } from './useClientDashboard'
+
+// Stage Feedback hooks (threaded comments)
+export {
+  useApplicationFeedback,
+  useStatusFeedback,
+  useStageInstanceFeedback,
+  useCreateFeedback,
+  useUpdateFeedback,
+  useDeleteFeedback,
+} from './useStageFeedback'
 export type {
   ActiveJob,
   RecentApplication,

@@ -22,6 +22,7 @@ import {
   AdminCompanyEditPage,
   AdminCandidatesPage,
   AdminCandidateEditPage,
+  CandidatesPage,
   AdminApplicationsPage,
   AdminJobsPage,
   AdminNewJobPage,
@@ -124,6 +125,7 @@ function App() {
           <Route path="jobs/new" element={<NewJobPage />} />
           <Route path="jobs/:jobId" element={<EditJobPage />} />
           <Route path="jobs/:jobId/applications" element={<JobApplicationsRedirect />} />
+          <Route path="candidates" element={<CandidatesPage />} />
           <Route path="applications" element={<AdminApplicationsPage />} />
           <Route path="my-applications" element={<ApplicationsPage />} />
           <Route path="bookings" element={<BookingManagementPage />} />

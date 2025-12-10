@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import api from '@/services/api'
 import type {
   ApplicationStageInstance,
@@ -24,11 +24,15 @@ export function useStageInstances(applicationId: string): UseStageInstancesRetur
   const [instances, setInstances] = useState<ApplicationStageInstance[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const isInitialLoad = useRef(true)
 
   const fetchInstances = useCallback(async () => {
     if (!applicationId) return
 
-    setIsLoading(true)
+    // Only show loading state on initial load, not on refetch
+    if (isInitialLoad.current) {
+      setIsLoading(true)
+    }
     setError(null)
     try {
       const response = await api.get<ApplicationStageInstance[]>(
@@ -40,6 +44,7 @@ export function useStageInstances(applicationId: string): UseStageInstancesRetur
       console.error('Error fetching stage instances:', err)
     } finally {
       setIsLoading(false)
+      isInitialLoad.current = false
     }
   }, [applicationId])
 
@@ -478,6 +483,56 @@ export function useMoveToStageTemplate(): UseMoveToStageTemplateReturn {
   )
 
   return { moveToStageTemplate, isMoving, error }
+}
+
+// ============================================================================
+// Update Stage Feedback Hook
+// ============================================================================
+
+interface UseUpdateStageFeedbackReturn {
+  updateFeedback: (
+    applicationId: string,
+    instanceId: string,
+    feedback: string,
+    score: number | null
+  ) => Promise<ApplicationStageInstance>
+  isUpdating: boolean
+  error: string | null
+}
+
+export function useUpdateStageFeedback(): UseUpdateStageFeedbackReturn {
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const updateFeedback = useCallback(
+    async (
+      applicationId: string,
+      instanceId: string,
+      feedback: string,
+      score: number | null
+    ): Promise<ApplicationStageInstance> => {
+      setIsUpdating(true)
+      setError(null)
+      try {
+        const response = await api.patch<ApplicationStageInstance>(
+          `/jobs/applications/${applicationId}/stages/${instanceId}/feedback/`,
+          { feedback, score }
+        )
+        return response.data
+      } catch (err) {
+        const axiosError = err as { response?: { data?: { error?: string } } }
+        const message = axiosError.response?.data?.error || 'Failed to update feedback'
+        setError(message)
+        console.error('Error updating stage feedback:', err)
+        throw err
+      } finally {
+        setIsUpdating(false)
+      }
+    },
+    []
+  )
+
+  return { updateFeedback, isUpdating, error }
 }
 
 // ============================================================================

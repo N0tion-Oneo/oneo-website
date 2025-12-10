@@ -1,14 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, User, Activity } from 'lucide-react'
+import { X, User, Activity, Briefcase } from 'lucide-react'
 import { CandidateAdminListItem, ProfileSuggestionFieldType, AssignedUser } from '@/types'
 import { SUGGESTION_FIELD_LABELS } from '@/types'
 import api from '@/services/api'
 import { useAdminSuggestions } from '@/hooks'
 import CandidateProfileCard from './CandidateProfileCard'
 import CandidateActivityTab from './CandidateActivityTab'
+import CandidateApplicationsTab from './CandidateApplicationsTab'
+import AddToJobModal from './AddToJobModal'
 import { SuggestionsPanel } from '@/components/suggestions'
 
-type TabType = 'profile' | 'activity'
+type TabType = 'profile' | 'activity' | 'applications'
 
 interface SuggestionPanelState {
   isOpen: boolean
@@ -22,18 +24,22 @@ interface CandidatePreviewPanelProps {
   candidate: CandidateAdminListItem | null
   onClose: () => void
   onRefresh?: () => void
+  mode?: 'admin' | 'client'
 }
 
-export default function CandidatePreviewPanel({ candidate, onClose, onRefresh }: CandidatePreviewPanelProps) {
+export default function CandidatePreviewPanel({ candidate, onClose, onRefresh, mode = 'admin' }: CandidatePreviewPanelProps) {
+  const isClientMode = mode === 'client'
   const [activeTab, setActiveTab] = useState<TabType>('profile')
   const viewRecordedRef = useRef<number | null>(null)
+  const [showAddToJobModal, setShowAddToJobModal] = useState(false)
+  const [applicationsRefreshKey, setApplicationsRefreshKey] = useState(0)
   const [suggestionPanel, setSuggestionPanel] = useState<SuggestionPanelState>({
     isOpen: false,
     fieldType: null,
     fieldName: null,
   })
 
-  // Suggestions hook
+  // Suggestions hook - only load for admin mode
   const {
     suggestions,
     isLoading: suggestionsLoading,
@@ -42,7 +48,7 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh }:
     closeSuggestion,
     isCreating,
     isUpdating,
-  } = useAdminSuggestions(candidate?.id ?? null)
+  } = useAdminSuggestions(isClientMode ? null : (candidate?.id ?? null))
 
   // Reset tab and close suggestions panel when candidate changes
   useEffect(() => {
@@ -50,16 +56,16 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh }:
     setSuggestionPanel({ isOpen: false, fieldType: null, fieldName: null })
   }, [candidate?.id])
 
-  // Record profile view when panel opens
+  // Record profile view when panel opens (admin only)
   useEffect(() => {
-    if (candidate && candidate.id !== viewRecordedRef.current) {
+    if (!isClientMode && candidate && candidate.id !== viewRecordedRef.current) {
       viewRecordedRef.current = candidate.id
       // Fire and forget - we don't need to wait for this
       api.post(`/admin/candidates/${candidate.id}/view/`).catch(() => {
         // Silently fail - view recording is non-critical
       })
     }
-  }, [candidate])
+  }, [candidate, isClientMode])
 
   // Handle escape key - close suggestions panel first, then main panel
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -139,10 +145,17 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh }:
 
   if (!candidate) return null
 
-  const tabs = [
-    { id: 'profile' as TabType, label: 'Profile', icon: User },
-    { id: 'activity' as TabType, label: 'Activity', icon: Activity },
-  ]
+  // Define tabs - Activity tab is admin-only, Applications tab is for both
+  const tabs = isClientMode
+    ? [
+        { id: 'profile' as TabType, label: 'Profile', icon: User },
+        { id: 'applications' as TabType, label: 'Applications', icon: Briefcase },
+      ]
+    : [
+        { id: 'profile' as TabType, label: 'Profile', icon: User },
+        { id: 'applications' as TabType, label: 'Applications', icon: Briefcase },
+        { id: 'activity' as TabType, label: 'Activity', icon: Activity },
+      ]
 
   // Calculate pending suggestions count
   const pendingSuggestionsCount = suggestions.filter((s) => s.status === 'pending').length
@@ -162,7 +175,7 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh }:
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <h2 className="text-[16px] font-semibold text-gray-900">Candidate Details</h2>
-              {pendingSuggestionsCount > 0 && (
+              {!isClientMode && pendingSuggestionsCount > 0 && (
                 <span className="px-2 py-0.5 text-[11px] font-medium bg-amber-100 text-amber-700 rounded-full">
                   {pendingSuggestionsCount} pending suggestion{pendingSuggestionsCount !== 1 ? 's' : ''}
                 </span>
@@ -207,13 +220,22 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh }:
               education={candidate.education || []}
               variant="compact"
               showAdminActions={true}
-              showProfileCompleteness={true}
-              editLink={`/dashboard/admin/candidates/${candidate.slug}`}
+              showContactInfo={true}
+              showProfileCompleteness={!isClientMode}
+              editLink={isClientMode ? undefined : `/dashboard/admin/candidates/${candidate.slug}`}
               hideViewProfileLink={true}
-              enableSuggestions={true}
-              suggestions={suggestions}
-              onAddSuggestion={handleAddSuggestion}
-              onAssignedToChange={handleAssignedToChange}
+              enableSuggestions={!isClientMode}
+              suggestions={isClientMode ? [] : suggestions}
+              onAddSuggestion={isClientMode ? undefined : handleAddSuggestion}
+              onAssignedToChange={isClientMode ? undefined : handleAssignedToChange}
+            />
+          )}
+          {activeTab === 'applications' && (
+            <CandidateApplicationsTab
+              key={applicationsRefreshKey}
+              candidateId={candidate.id}
+              mode={mode}
+              onAddToJob={isClientMode ? undefined : () => setShowAddToJobModal(true)}
             />
           )}
           {activeTab === 'activity' && (
@@ -229,22 +251,39 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh }:
         </div>
       </div>
 
-      {/* Suggestions Panel */}
-      <SuggestionsPanel
-        isOpen={suggestionPanel.isOpen}
-        onClose={handleCloseSuggestionPanel}
-        fieldType={suggestionPanel.fieldType}
-        fieldName={suggestionPanel.fieldName}
-        relatedObjectId={suggestionPanel.relatedObjectId}
-        relatedObjectLabel={suggestionPanel.relatedObjectLabel}
-        suggestions={suggestions}
-        candidate={candidate}
-        onCreateSuggestion={createSuggestion}
-        onReopenSuggestion={reopenSuggestion}
-        onCloseSuggestion={closeSuggestion}
-        isCreating={isCreating}
-        isUpdating={isUpdating}
-      />
+      {/* Suggestions Panel - Admin only */}
+      {!isClientMode && (
+        <SuggestionsPanel
+          isOpen={suggestionPanel.isOpen}
+          onClose={handleCloseSuggestionPanel}
+          fieldType={suggestionPanel.fieldType}
+          fieldName={suggestionPanel.fieldName}
+          relatedObjectId={suggestionPanel.relatedObjectId}
+          relatedObjectLabel={suggestionPanel.relatedObjectLabel}
+          suggestions={suggestions}
+          candidate={candidate}
+          onCreateSuggestion={createSuggestion}
+          onReopenSuggestion={reopenSuggestion}
+          onCloseSuggestion={closeSuggestion}
+          isCreating={isCreating}
+          isUpdating={isUpdating}
+        />
+      )}
+
+      {/* Add to Job Modal - Admin only */}
+      {!isClientMode && (
+        <AddToJobModal
+          isOpen={showAddToJobModal}
+          onClose={() => setShowAddToJobModal(false)}
+          candidateId={candidate.id}
+          candidateName={candidate.full_name}
+          onSuccess={() => {
+            // Refresh applications tab and switch to it
+            setApplicationsRefreshKey((prev) => prev + 1)
+            setActiveTab('applications')
+          }}
+        />
+      )}
     </>
   )
 }

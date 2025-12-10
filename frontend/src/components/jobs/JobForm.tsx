@@ -149,7 +149,9 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
     countryId: formData.location_country_id || undefined,
   })
   const { templates: questionTemplates } = useQuestionTemplates({ is_active: true })
-  const { users: teamMembers } = useCompanyUsers(companyId)
+  // Use companyId prop, or fall back to job's company id
+  const effectiveCompanyId = companyId || job?.company?.id
+  const { users: teamMembers } = useCompanyUsers(effectiveCompanyId)
 
   // Load existing stage templates when editing a job
   const { templates: existingStageTemplates, isLoading: isLoadingStages } = useStageTemplates(job?.id || '')

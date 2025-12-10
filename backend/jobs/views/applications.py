@@ -753,6 +753,33 @@ def update_application_notes(request, application_id):
         existing_notes.update(stage_notes)
         application.stage_notes = existing_notes
 
+    # Handle status-specific feedback (for Applied and Shortlisted stages)
+    applied_feedback = request.data.get('applied_feedback')
+    if applied_feedback is not None:
+        application.applied_feedback = applied_feedback
+
+    applied_score = request.data.get('applied_score')
+    if applied_score is not None:
+        if applied_score and (int(applied_score) < 1 or int(applied_score) > 10):
+            return Response(
+                {'error': 'Applied score must be between 1 and 10'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        application.applied_score = applied_score if applied_score else None
+
+    shortlisted_feedback = request.data.get('shortlisted_feedback')
+    if shortlisted_feedback is not None:
+        application.shortlisted_feedback = shortlisted_feedback
+
+    shortlisted_score = request.data.get('shortlisted_score')
+    if shortlisted_score is not None:
+        if shortlisted_score and (int(shortlisted_score) < 1 or int(shortlisted_score) > 10):
+            return Response(
+                {'error': 'Shortlisted score must be between 1 and 10'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        application.shortlisted_score = shortlisted_score if shortlisted_score else None
+
     application.save()
     return Response(ApplicationSerializer(application).data)
 

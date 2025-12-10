@@ -796,6 +796,68 @@ def complete_stage(request, application_id, instance_id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_stage_feedback(request, application_id, instance_id):
+    """
+    Update feedback on a stage instance (without changing status).
+    Can be used on any stage to add/edit recruiter notes.
+    """
+    try:
+        application = Application.objects.select_related('job', 'job__company').get(id=application_id)
+        instance = ApplicationStageInstance.objects.select_related('stage_template').get(
+            id=instance_id, application=application
+        )
+    except Application.DoesNotExist:
+        return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
+    except ApplicationStageInstance.DoesNotExist:
+        return Response({'error': 'Stage instance not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permission
+    is_staff = request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]
+    is_company_editor = CompanyUser.objects.filter(
+        user=request.user,
+        company=application.job.company,
+        role__in=[CompanyUserRole.ADMIN, CompanyUserRole.EDITOR],
+        is_active=True
+    ).exists()
+
+    if not is_staff and not is_company_editor:
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    feedback = request.data.get('feedback', '')
+    score = request.data.get('score')
+
+    # Validate score if provided
+    if score is not None:
+        try:
+            score = int(score)
+            if score < 1 or score > 10:
+                return Response({'error': 'Score must be between 1 and 10'}, status=status.HTTP_400_BAD_REQUEST)
+        except (ValueError, TypeError):
+            return Response({'error': 'Invalid score value'}, status=status.HTTP_400_BAD_REQUEST)
+
+    instance.feedback = feedback
+    instance.score = score
+    instance.save()
+
+    # Log activity
+    log_activity(
+        application=application,
+        user=request.user,
+        activity_type=ActivityType.STAGE_CHANGED,
+        new_stage=instance.stage_template.order,
+        stage_name=instance.stage_template.name,
+        metadata={
+            'action': 'feedback_updated',
+            'feedback': feedback,
+            'score': score,
+        }
+    )
+
+    return Response(ApplicationStageInstanceSerializer(instance).data)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reopen_stage(request, application_id, instance_id):

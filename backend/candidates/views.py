@@ -11,6 +11,7 @@ from itertools import chain
 from operator import attrgetter
 
 from users.models import UserRole
+from companies.models import CompanyUser
 from .models import (
     Skill, Industry, Technology, CandidateProfile, ProfileVisibility,
     Experience, Education, CandidateActivity, CandidateActivityNote,
@@ -21,8 +22,9 @@ from .services import (
     log_education_added, log_education_updated, detect_profile_changes,
     detect_experience_changes, detect_education_changes,
 )
-from jobs.models import Application, ActivityLog
+from jobs.models import Application, ActivityLog, Job
 from jobs.serializers.activity import ActivityNoteSerializer
+from jobs.serializers.applications import ApplicationListSerializer
 from .serializers import (
     SkillSerializer,
     IndustrySerializer,
@@ -465,6 +467,128 @@ def list_all_candidates(request):
             candidates = candidates.exclude(Q(resume_url__isnull=True) | Q(resume_url=''))
         elif has_resume.lower() == 'false':
             candidates = candidates.filter(Q(resume_url__isnull=True) | Q(resume_url=''))
+
+    # Search
+    search = request.query_params.get('search')
+    if search:
+        candidates = candidates.filter(
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search) |
+            Q(user__email__icontains=search) |
+            Q(professional_title__icontains=search) |
+            Q(headline__icontains=search)
+        ).distinct()
+
+    # Ordering
+    ordering = request.query_params.get('ordering', '-created_at')
+    valid_orderings = ['created_at', '-created_at', 'profile_completeness', '-profile_completeness',
+                       'years_of_experience', '-years_of_experience', 'user__first_name', '-user__first_name']
+    if ordering in valid_orderings:
+        candidates = candidates.order_by(ordering)
+    else:
+        candidates = candidates.order_by('-created_at')
+
+    # Pagination
+    paginator = CandidatePagination()
+    page = paginator.paginate_queryset(candidates, request)
+
+    serializer = CandidateAdminListSerializer(page, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
+
+@extend_schema(
+    description='List candidates who have applied to jobs for the current user\'s company.',
+    responses={
+        200: CandidateAdminListSerializer(many=True),
+        403: OpenApiResponse(description='Permission denied'),
+        404: OpenApiResponse(description='Company not found'),
+    },
+    parameters=[
+        OpenApiParameter(name='seniority', description='Filter by seniority level', required=False, type=str),
+        OpenApiParameter(name='work_preference', description='Filter by work preference', required=False, type=str),
+        OpenApiParameter(name='search', description='Search in name, title, headline', required=False, type=str),
+        OpenApiParameter(name='ordering', description='Order by field (e.g., -created_at)', required=False, type=str),
+        OpenApiParameter(name='page', description='Page number', required=False, type=int),
+        OpenApiParameter(name='page_size', description='Results per page', required=False, type=int),
+    ],
+    tags=['Candidates'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_company_candidates(request):
+    """
+    List candidates for the current user's company.
+    Restricted to clients who are members of a company.
+    If company.can_view_all_candidates is enabled, shows all candidates.
+    Otherwise, shows only candidates who have applied to the company's jobs.
+    """
+    # Check if user is a client
+    if request.user.role != UserRole.CLIENT:
+        return Response(
+            {'error': 'Permission denied. Client access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Get user's company membership
+    company_membership = CompanyUser.objects.filter(
+        user=request.user,
+        is_active=True
+    ).select_related('company').first()
+
+    if not company_membership:
+        return Response(
+            {'error': 'You are not associated with any company.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    company = company_membership.company
+
+    # Check if this company can view all candidates
+    if company.can_view_all_candidates:
+        # Show all candidates
+        candidates = CandidateProfile.objects.all()
+    else:
+        # Show only candidates who have applied to this company's jobs
+        from jobs.models import Job
+        company_job_ids = Job.objects.filter(company=company).values_list('id', flat=True)
+
+        candidate_ids = Application.objects.filter(
+            job_id__in=company_job_ids
+        ).values_list('candidate_id', flat=True).distinct()
+
+        candidates = CandidateProfile.objects.filter(
+            id__in=candidate_ids
+        )
+
+    candidates = candidates.select_related(
+        'user', 'city_rel', 'country_rel'
+    ).prefetch_related(
+        'industries',
+        'experiences',
+        'experiences__industry',
+        'experiences__skills',
+        'experiences__technologies',
+        'education',
+    )
+
+    # Filter by seniority
+    seniority = request.query_params.get('seniority')
+    if seniority:
+        candidates = candidates.filter(seniority=seniority)
+
+    # Filter by work preference
+    work_preference = request.query_params.get('work_preference')
+    if work_preference:
+        candidates = candidates.filter(work_preference=work_preference)
+
+    # Filter by years of experience
+    min_experience = request.query_params.get('min_experience')
+    if min_experience:
+        candidates = candidates.filter(years_of_experience__gte=int(min_experience))
+
+    max_experience = request.query_params.get('max_experience')
+    if max_experience:
+        candidates = candidates.filter(years_of_experience__lte=int(max_experience))
 
     # Search
     search = request.query_params.get('search')
@@ -1796,3 +1920,137 @@ def candidate_decline_suggestion(request, suggestion_id):
 
     # TODO: Send notification email to admin/recruiter who created the suggestion
     return Response(ProfileSuggestionSerializer(suggestion).data)
+
+
+# ============================================================================
+# Candidate Applications (Admin/Client View)
+# ============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_candidate_applications(request, candidate_id):
+    """
+    List all applications for a specific candidate.
+
+    - Admin/Recruiter: See all applications
+    - Client: Only see applications to their company's jobs
+    """
+    candidate = get_object_or_404(CandidateProfile, id=candidate_id)
+
+    # Check permissions
+    if request.user.role in [UserRole.ADMIN, UserRole.RECRUITER]:
+        # Admin/Recruiter sees all applications
+        applications = Application.objects.filter(
+            candidate=candidate
+        ).select_related(
+            'job', 'job__company', 'current_stage'
+        ).prefetch_related('assigned_recruiters').order_by('-applied_at')
+    elif request.user.role == UserRole.CLIENT:
+        # Client only sees applications to their company's jobs
+        company_membership = CompanyUser.objects.filter(
+            user=request.user,
+            is_active=True
+        ).select_related('company').first()
+
+        if not company_membership:
+            return Response(
+                {'error': 'No company membership found.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        applications = Application.objects.filter(
+            candidate=candidate,
+            job__company=company_membership.company
+        ).select_related(
+            'job', 'job__company', 'current_stage'
+        ).prefetch_related('assigned_recruiters').order_by('-applied_at')
+    else:
+        return Response(
+            {'error': 'Permission denied.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    serializer = ApplicationListSerializer(applications, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_candidate_application(request, candidate_id):
+    """
+    Create an application for a candidate (Admin/Recruiter sourcing).
+
+    This allows recruiters to add candidates to jobs without the candidate
+    having to apply themselves.
+
+    Required body:
+    - job_id: UUID of the job to apply for
+    Optional body:
+    - covering_statement: Cover letter/note about why they're a fit
+    - source: 'direct' (default), 'referral', or 'recruiter'
+    """
+    from jobs.models import ApplicationStatus, InterviewStageTemplate, StageInstanceStatus, ApplicationStageInstance, JobStatus
+
+    # Only admin/recruiter can source candidates
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Permission denied. Admin or Recruiter access required.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    candidate = get_object_or_404(CandidateProfile, id=candidate_id)
+
+    job_id = request.data.get('job_id')
+    if not job_id:
+        return Response(
+            {'error': 'job_id is required.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        job = Job.objects.get(id=job_id)
+    except Job.DoesNotExist:
+        return Response(
+            {'error': 'Job not found.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check job is accepting applications
+    if job.status not in [JobStatus.PUBLISHED, JobStatus.DRAFT]:
+        return Response(
+            {'error': 'This job is not accepting applications.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Check candidate hasn't already applied
+    if Application.objects.filter(job=job, candidate=candidate).exists():
+        return Response(
+            {'error': 'This candidate has already been added to this job.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Create the application
+    application = Application.objects.create(
+        job=job,
+        candidate=candidate,
+        covering_statement=request.data.get('covering_statement', ''),
+        source=request.data.get('source', 'recruiter'),
+        referrer=request.user,  # Track who sourced them
+        status=ApplicationStatus.APPLIED,
+    )
+
+    # Create stage instances for all job stage templates
+    stage_templates = InterviewStageTemplate.objects.filter(job=job).order_by('order')
+    for template in stage_templates:
+        ApplicationStageInstance.objects.create(
+            application=application,
+            stage_template=template,
+            status=StageInstanceStatus.NOT_STARTED,
+        )
+
+    # Increment job applications count
+    job.applications_count += 1
+    job.save(update_fields=['applications_count'])
+
+    serializer = ApplicationListSerializer(application)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -39,6 +39,11 @@ from .stages import (
     ApplicationStageInstance,
 )
 
+from .feedback import (
+    StageFeedback,
+    StageFeedbackType,
+)
+
 __all__ = [
     # Job domain
     'Job',
@@ -68,4 +73,7 @@ __all__ = [
     'InterviewStageTemplate',
     'StageInstanceStatus',
     'ApplicationStageInstance',
+    # Feedback domain
+    'StageFeedback',
+    'StageFeedbackType',
 ]

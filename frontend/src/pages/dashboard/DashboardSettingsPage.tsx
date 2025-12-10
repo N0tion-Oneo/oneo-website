@@ -173,12 +173,7 @@ export default function DashboardSettingsPage() {
         </div>
 
         {/* Save Button */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-          <p className="text-xs text-gray-500">
-            {settings?.updated_at && (
-              <>Last updated: {new Date(settings.updated_at).toLocaleString()}</>
-            )}
-          </p>
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end">
           <button
             onClick={handleSave}
             disabled={isUpdating || !hasChanges}
@@ -192,7 +187,7 @@ export default function DashboardSettingsPage() {
 
       {/* Help Text */}
       <p className="mt-4 text-xs text-gray-500">
-        These settings apply globally to all recruiters in the system. Changes will take effect immediately.
+        These settings apply globally to all users in the system. Changes will take effect immediately.
       </p>
     </div>
   )

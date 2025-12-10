@@ -91,10 +91,16 @@ export default function ScheduleInterviewModal({
     }
 
     const defaultId = instance.stage_template.default_interviewer_id
+    console.log('Default interviewer check:', {
+      defaultId,
+      interviewerIds: interviewers.map(i => i.id),
+      stageTemplate: instance.stage_template,
+    })
     if (defaultId) {
       // Convert to string for comparison (backend may return number or string)
       const defaultIdStr = String(defaultId)
       const exists = interviewers.some(i => i.id === defaultIdStr)
+      console.log('Checking interviewer:', { defaultIdStr, exists })
       if (exists) {
         setFormData(prev => ({ ...prev, interviewer_id: defaultIdStr }))
       }
@@ -182,7 +188,7 @@ export default function ScheduleInterviewModal({
   const interviewerHasCalendar = selectedInterviewer?.has_calendar ?? false
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[300]">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">

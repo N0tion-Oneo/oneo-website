@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import api from '@/services/api'
 import type {
   Application,
@@ -106,11 +106,15 @@ export function useApplication(applicationId: string): UseApplicationReturn {
   const [application, setApplication] = useState<Application | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const isInitialLoad = useRef(true)
 
   const fetchApplication = useCallback(async () => {
     if (!applicationId) return
 
-    setIsLoading(true)
+    // Only show loading state on initial load, not on refetch
+    if (isInitialLoad.current) {
+      setIsLoading(true)
+    }
     setError(null)
     try {
       const response = await api.get<Application>(`/jobs/applications/${applicationId}/`)
@@ -120,6 +124,7 @@ export function useApplication(applicationId: string): UseApplicationReturn {
       console.error('Error fetching application:', err)
     } finally {
       setIsLoading(false)
+      isInitialLoad.current = false
     }
   }, [applicationId])
 
@@ -442,6 +447,11 @@ export function useMoveToStage(): UseMoveToStageReturn {
 interface UpdateNotesInput {
   feedback?: string
   stage_notes?: Record<string, { notes: string; updated_at: string }>
+  // Status-specific feedback (for Applied and Shortlisted)
+  applied_feedback?: string
+  applied_score?: number | null
+  shortlisted_feedback?: string
+  shortlisted_score?: number | null
 }
 
 interface UseUpdateApplicationNotesReturn {

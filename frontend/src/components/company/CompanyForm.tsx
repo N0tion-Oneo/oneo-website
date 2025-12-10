@@ -52,6 +52,8 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
     billing_contact_phone: '',
     // Meta
     is_published: false,
+    // Access permissions
+    can_view_all_candidates: false,
   })
   const [selectedIndustry, setSelectedIndustry] = useState<Industry[]>([])
   const [selectedTechnologies, setSelectedTechnologies] = useState<Technology[]>([])
@@ -96,6 +98,8 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
         billing_contact_phone: company.billing_contact_phone || '',
         // Meta
         is_published: company.is_published || false,
+        // Access permissions
+        can_view_all_candidates: company.can_view_all_candidates || false,
       })
       if (company.industry) {
         setSelectedIndustry([company.industry])
@@ -538,24 +542,50 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
 
         {/* Visibility Tab */}
         {activeTab === 'visibility' && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="is_published"
-                name="is_published"
-                checked={formData.is_published}
-                onChange={handleInputChange}
-                className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-              />
-              <label htmlFor="is_published" className="text-[14px] text-gray-700">
-                Publish company profile
-              </label>
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="is_published"
+                  name="is_published"
+                  checked={formData.is_published}
+                  onChange={handleInputChange}
+                  className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                />
+                <label htmlFor="is_published" className="text-[14px] text-gray-700">
+                  Publish company profile
+                </label>
+              </div>
+              <p className="text-[13px] text-gray-500">
+                When published, your company profile will be visible in the public company directory and
+                candidates can view your profile.
+              </p>
             </div>
-            <p className="text-[13px] text-gray-500">
-              When published, your company profile will be visible in the public company directory and
-              candidates can view your profile.
-            </p>
+
+            {/* Candidate Access - Staff only */}
+            {isStaffUser && (
+              <div className="space-y-4 pt-4 border-t border-gray-200">
+                <h4 className="text-[13px] font-medium text-gray-900">Candidate Access</h4>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="can_view_all_candidates"
+                    name="can_view_all_candidates"
+                    checked={formData.can_view_all_candidates || false}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                  />
+                  <label htmlFor="can_view_all_candidates" className="text-[14px] text-gray-700">
+                    Allow access to all candidates
+                  </label>
+                </div>
+                <p className="text-[13px] text-gray-500">
+                  When enabled, users from this company can browse all candidates on the platform.
+                  Otherwise, they only see candidates who have applied to their jobs.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

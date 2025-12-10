@@ -40,6 +40,7 @@ from .stages import (
     reschedule_stage,
     cancel_stage,
     complete_stage,
+    update_stage_feedback,
     reopen_stage,
     assign_assessment,
     submit_assessment,
@@ -64,6 +65,13 @@ from .analytics import (
     recruiter_performance,
     time_metrics,
     analytics_trends,
+)
+
+from .feedback import (
+    application_feedback_list,
+    feedback_detail,
+    stage_feedback_list,
+    status_feedback_list,
 )
 
 __all__ = [
@@ -104,6 +112,7 @@ __all__ = [
     'reschedule_stage',
     'cancel_stage',
     'complete_stage',
+    'update_stage_feedback',
     'reopen_stage',
     'assign_assessment',
     'submit_assessment',
@@ -122,4 +131,9 @@ __all__ = [
     'recruiter_performance',
     'time_metrics',
     'analytics_trends',
+    # Feedback
+    'application_feedback_list',
+    'feedback_detail',
+    'stage_feedback_list',
+    'status_feedback_list',
 ]

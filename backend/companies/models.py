@@ -193,6 +193,12 @@ class Company(models.Model):
         related_name='companies',
     )
 
+    # Access permissions
+    can_view_all_candidates = models.BooleanField(
+        default=False,
+        help_text='If enabled, users from this company can view all candidates. Otherwise, they only see applicants to their jobs.',
+    )
+
     # Meta
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

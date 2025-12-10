@@ -442,6 +442,8 @@ export interface Company {
   is_published: boolean
   // Assigned staff (for admin view)
   assigned_to?: AssignedUser[]
+  // Access permissions
+  can_view_all_candidates?: boolean
   created_at: string
   updated_at: string
 }
@@ -510,6 +512,8 @@ export interface CompanyInput {
   is_published?: boolean
   // Assigned staff (admin only)
   assigned_to_ids?: number[]
+  // Access permissions (admin only)
+  can_view_all_candidates?: boolean
 }
 
 export interface CompanyLocation {
@@ -1027,6 +1031,51 @@ export interface Application {
   applied_at: string
   shortlisted_at: string | null
   last_status_change: string
+  // Stage-specific feedback (for Applied and Shortlisted)
+  applied_feedback: string | null
+  applied_score: number | null
+  shortlisted_feedback: string | null
+  shortlisted_score: number | null
+}
+
+// Stage Feedback (threaded comments)
+export enum StageFeedbackType {
+  APPLIED = 'applied',
+  SHORTLISTED = 'shortlisted',
+  INTERVIEW = 'interview',
+}
+
+export interface StageFeedbackAuthor {
+  id: string
+  email: string
+  first_name: string
+  last_name: string
+  full_name: string
+}
+
+export interface StageFeedback {
+  id: string
+  application: string
+  stage_type: StageFeedbackType | null
+  stage_instance: string | null
+  author: StageFeedbackAuthor
+  comment: string
+  score: number | null
+  stage_name: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface StageFeedbackCreateInput {
+  comment: string
+  score?: number | null
+  stage_type?: StageFeedbackType.APPLIED | StageFeedbackType.SHORTLISTED
+  stage_instance_id?: string
+}
+
+export interface StageFeedbackUpdateInput {
+  comment?: string
+  score?: number | null
 }
 
 // Pending booking link info for candidates
