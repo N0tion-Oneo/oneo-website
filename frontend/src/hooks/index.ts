@@ -258,6 +258,25 @@ export {
   useUpdateFeedback,
   useDeleteFeedback,
 } from './useStageFeedback'
+
+// Shortlist Template hooks (company-level screening question templates)
+export {
+  useShortlistTemplates,
+  useShortlistTemplate,
+  useCreateShortlistTemplate,
+  useUpdateShortlistTemplate,
+  useDeleteShortlistTemplate,
+} from './useShortlistTemplates'
+
+// Shortlist Answer hooks (application-level screening scores)
+export {
+  useShortlistQuestions,
+  useBulkUpdateShortlistQuestions,
+  useShortlistAnswers,
+  useMyShortlistAnswers,
+  useSubmitShortlistAnswers,
+  useShortlistReviewSummary,
+} from './useShortlistAnswers'
 export type {
   ActiveJob,
   RecentApplication,

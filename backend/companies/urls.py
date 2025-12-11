@@ -26,6 +26,10 @@ urlpatterns = [
     path('my/question-templates/', views.list_create_question_templates, name='list-create-question-templates'),
     path('my/question-templates/<uuid:template_id>/', views.question_template_detail, name='question-template-detail'),
 
+    # Shortlist screening templates
+    path('my/shortlist-templates/', views.list_create_shortlist_templates, name='list-create-shortlist-templates'),
+    path('my/shortlist-templates/<uuid:template_id>/', views.shortlist_template_detail, name='shortlist-template-detail'),
+
     # Location endpoints
     path('countries/', views.list_countries, name='list-countries'),
     path('cities/', views.list_cities, name='list-cities'),

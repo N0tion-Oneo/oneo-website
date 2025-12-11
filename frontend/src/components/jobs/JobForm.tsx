@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCountries, useCities, useQuestionTemplates, useBulkUpdateStageTemplates, useCompanyUsers, useStageTemplates } from '@/hooks'
+import { useCountries, useCities, useQuestionTemplates, useBulkUpdateStageTemplates, useCompanyUsers, useStageTemplates, useShortlistTemplates, useBulkUpdateShortlistQuestions, useShortlistQuestions } from '@/hooks'
 import { useCreateJob, useUpdateJob } from '@/hooks/useJobs'
 import {
   Seniority,
@@ -11,9 +11,10 @@ import {
   StageType,
   StageTypeLabels,
 } from '@/types'
-import type { Job, JobInput, InterviewStage, ApplicationQuestionInput, InterviewStageTemplateInput, AssignedUser } from '@/types'
-import { ChevronLeft, ChevronRight, Loader2, Plus, FileText, AlertTriangle, Calendar } from 'lucide-react'
+import type { Job, JobInput, InterviewStage, ApplicationQuestionInput, InterviewStageTemplateInput, AssignedUser, ShortlistQuestionInput } from '@/types'
+import { ChevronLeft, ChevronRight, Loader2, Plus, FileText, AlertTriangle, Calendar, Star } from 'lucide-react'
 import QuestionBuilder from './QuestionBuilder'
+import ShortlistQuestionBuilder from './ShortlistQuestionBuilder'
 import StageTypeSelector from './StageTypeSelector'
 import { StageList } from './StageConfigForm'
 import { SkillMultiSelect, TechnologyMultiSelect } from '@/components/forms'
@@ -75,6 +76,7 @@ const steps = [
   { id: 4, title: 'Compensation' },
   { id: 5, title: 'Interview Pipeline' },
   { id: 6, title: 'Application Questions' },
+  { id: 7, title: 'Shortlist Screening' },
 ]
 
 const defaultInterviewStages: InterviewStage[] = [
@@ -144,6 +146,9 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
   )
   const [showStageSelector, setShowStageSelector] = useState(false)
 
+  // Shortlist screening questions state
+  const [shortlistQuestions, setShortlistQuestions] = useState<ShortlistQuestionInput[]>([])
+
   const { countries } = useCountries()
   const { cities } = useCities({
     countryId: formData.location_country_id || undefined,
@@ -155,6 +160,11 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
 
   // Load existing stage templates when editing a job
   const { templates: existingStageTemplates, isLoading: isLoadingStages } = useStageTemplates(job?.id || '')
+
+  // Shortlist screening templates and existing questions
+  const { templates: shortlistTemplates } = useShortlistTemplates({ is_active: true })
+  const { questions: existingShortlistQuestions } = useShortlistQuestions(job?.id || null)
+  const { updateQuestions: bulkUpdateShortlistQuestions, isUpdating: isUpdatingShortlist } = useBulkUpdateShortlistQuestions()
 
   const { createJob, isCreating, error: createError } = useCreateJob()
   const { updateJob, isUpdating, error: updateError } = useUpdateJob()
@@ -183,8 +193,22 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
     }
   }, [isEditing, existingStageTemplates])
 
+  // Populate shortlist questions from server when editing
+  useEffect(() => {
+    if (isEditing && existingShortlistQuestions && existingShortlistQuestions.length > 0) {
+      const mapped: ShortlistQuestionInput[] = existingShortlistQuestions.map((q) => ({
+        id: q.id,
+        question_text: q.question_text,
+        description: q.description || '',
+        is_required: q.is_required,
+        order: q.order,
+      }))
+      setShortlistQuestions(mapped)
+    }
+  }, [isEditing, existingShortlistQuestions])
+
   const error = createError || updateError || stagesError
-  const isSubmitting = isCreating || isUpdating || isUpdatingStages
+  const isSubmitting = isCreating || isUpdating || isUpdatingStages || isUpdatingShortlist
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -337,6 +361,20 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
     }
   }
 
+  // Shortlist template handler
+  const handleApplyShortlistTemplate = (templateId: string) => {
+    const template = shortlistTemplates.find((t) => t.id === templateId)
+    if (template && template.questions) {
+      const questions: ShortlistQuestionInput[] = template.questions.map((q, i) => ({
+        question_text: q.question_text,
+        description: q.description || '',
+        is_required: q.is_required,
+        order: q.order || i + 1,
+      }))
+      setShortlistQuestions(questions)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -393,6 +431,19 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
           window.scrollTo({ top: 0, behavior: 'smooth' })
           return  // Don't navigate away - let the hook's error state show
         }
+      }
+
+      // Save shortlist screening questions
+      try {
+        // Convert to the format expected by the API (with proper typing)
+        const questionsToSave = shortlistQuestions.map((q, i) => ({
+          ...q,
+          order: q.order || i + 1,
+        }))
+        await bulkUpdateShortlistQuestions(result.id, questionsToSave as any)
+      } catch (shortlistErr) {
+        console.error('Shortlist questions update error:', shortlistErr)
+        // Non-blocking - continue with success even if this fails
       }
 
       if (onSuccess) {
@@ -912,6 +963,36 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
           <QuestionBuilder
             questions={formData.questions || []}
             onChange={handleQuestionsChange}
+          />
+        </div>
+      )}
+
+      {/* Step 7: Shortlist Screening */}
+      {currentStep === 7 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-[14px] font-medium text-gray-900 flex items-center gap-2">
+                <Star className="w-4 h-4" />
+                Shortlist Screening Questions
+              </h3>
+              <p className="text-[12px] text-gray-500 mt-0.5">
+                Questions reviewers will score (1-5 stars) when evaluating shortlisted candidates
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <p className="text-[12px] text-blue-700">
+              <strong>Who answers:</strong> Admins, Recruiters, and Client team members will answer these questions when reviewing candidates in the Shortlisted stage.
+            </p>
+          </div>
+
+          <ShortlistQuestionBuilder
+            questions={shortlistQuestions}
+            onChange={setShortlistQuestions}
+            templates={shortlistTemplates}
+            onLoadTemplate={handleApplyShortlistTemplate}
           />
         </div>
       )}

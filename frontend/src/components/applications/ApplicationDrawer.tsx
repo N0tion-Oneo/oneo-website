@@ -528,6 +528,7 @@ export default function ApplicationDrawer({
                   ) : (
                     <FullPipelineTimeline
                       applicationId={applicationId!}
+                      jobId={application.job?.id || ''}
                       applicationStatus={application.status}
                       appliedAt={application.applied_at}
                       shortlistedAt={application.shortlisted_at}

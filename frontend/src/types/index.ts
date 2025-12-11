@@ -1284,6 +1284,111 @@ export interface QuestionTemplateInput {
 }
 
 // ============================================================================
+// Shortlist Screening Questions
+// ============================================================================
+
+// Template question (company-level reusable template)
+export interface ShortlistTemplateQuestion {
+  id: string
+  template: string
+  question_text: string
+  description: string
+  is_required: boolean
+  order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ShortlistTemplateQuestionInput {
+  id?: string
+  question_text: string
+  description?: string
+  is_required?: boolean
+  order?: number
+}
+
+// Company-level template (contains multiple questions)
+export interface ShortlistQuestionTemplate {
+  id: string
+  company: string
+  name: string
+  description: string
+  is_active: boolean
+  questions: ShortlistTemplateQuestion[]
+  questions_count?: number
+  created_by: string | null
+  created_by_name: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ShortlistQuestionTemplateInput {
+  name: string
+  description?: string
+  is_active?: boolean
+  questions?: ShortlistTemplateQuestionInput[]
+}
+
+// Job-level question (copied from template or custom per job)
+export interface ShortlistQuestion {
+  id: string
+  job: string
+  question_text: string
+  description: string
+  is_required: boolean
+  order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ShortlistQuestionInput {
+  id?: string
+  question_text: string
+  description?: string
+  is_required?: boolean
+  order?: number
+}
+
+// Answer submitted by a reviewer (Admin/Recruiter/Client)
+export interface ShortlistAnswer {
+  id: string
+  application: string
+  question: ShortlistQuestion
+  reviewer: string | null
+  reviewer_name: string | null
+  reviewer_avatar: string | null
+  score: number  // 1-5 stars
+  notes: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ShortlistAnswerInput {
+  question_id: string
+  score: number  // 1-5 stars
+  notes?: string
+}
+
+// Summary of all reviewer scores for an application
+export interface ShortlistReviewSummary {
+  total_reviewers: number
+  average_overall_score: number | null
+  questions: {
+    question_id: string
+    question_text: string
+    average_score: number | null
+    response_count: number
+  }[]
+  reviews: {
+    reviewer_id: string
+    reviewer_name: string
+    reviewer_avatar: string | null
+    average_score: number | null
+    answered_at: string | null
+  }[]
+}
+
+// ============================================================================
 // Activity Log
 // ============================================================================
 

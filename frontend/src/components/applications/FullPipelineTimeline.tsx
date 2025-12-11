@@ -34,9 +34,11 @@ import {
 } from '@/types'
 import { StageTypeBadge } from '../jobs/StageTypeSelector'
 import FeedbackThread from './FeedbackThread'
+import ShortlistScreeningSection from './ShortlistScreeningSection'
 
 interface FullPipelineTimelineProps {
   applicationId: string
+  jobId: string
   applicationStatus: ApplicationStatus
   appliedAt: string
   shortlistedAt: string | null
@@ -626,6 +628,7 @@ function InterviewStageCard({
 
 export default function FullPipelineTimeline({
   applicationId,
+  jobId,
   applicationStatus,
   appliedAt,
   shortlistedAt,
@@ -735,13 +738,24 @@ export default function FullPipelineTimeline({
             isExpanded={expandedStages.has('shortlisted')}
             onExpand={() => toggleStage('shortlisted')}
           >
-            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-              <FeedbackThread
+            <div className="space-y-3">
+              {/* Shortlist Screening Questions */}
+              <ShortlistScreeningSection
                 applicationId={applicationId}
-                stageType={StageFeedbackType.SHORTLISTED}
+                jobId={jobId}
                 isRecruiterView={isRecruiterView}
                 currentUserId={currentUserId}
               />
+
+              {/* Feedback Thread */}
+              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <FeedbackThread
+                  applicationId={applicationId}
+                  stageType={StageFeedbackType.SHORTLISTED}
+                  isRecruiterView={isRecruiterView}
+                  currentUserId={currentUserId}
+                />
+              </div>
             </div>
           </TimelineItem>
         )}

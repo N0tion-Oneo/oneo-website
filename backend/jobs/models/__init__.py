@@ -44,6 +44,13 @@ from .feedback import (
     StageFeedbackType,
 )
 
+from .shortlist_questions import (
+    ShortlistQuestionTemplate,
+    ShortlistTemplateQuestion,
+    ShortlistQuestion,
+    ShortlistAnswer,
+)
+
 __all__ = [
     # Job domain
     'Job',
@@ -76,4 +83,9 @@ __all__ = [
     # Feedback domain
     'StageFeedback',
     'StageFeedbackType',
+    # Shortlist screening domain
+    'ShortlistQuestionTemplate',
+    'ShortlistTemplateQuestion',
+    'ShortlistQuestion',
+    'ShortlistAnswer',
 ]

@@ -79,6 +79,15 @@ urlpatterns = [
     # NOTE: Calendar connection endpoints moved to scheduling app (/api/v1/scheduling/)
     path('<uuid:job_id>/interviewers/', views.list_job_interviewers, name='list-job-interviewers'),
 
+    # Shortlist screening questions (job-level)
+    path('<uuid:job_id>/shortlist-questions/', views.list_create_shortlist_questions, name='list-create-shortlist-questions'),
+    path('<uuid:job_id>/shortlist-questions/bulk/', views.bulk_update_shortlist_questions, name='bulk-update-shortlist-questions'),
+
+    # Shortlist screening answers (application-level)
+    path('applications/<uuid:application_id>/shortlist-answers/', views.list_create_shortlist_answers, name='list-create-shortlist-answers'),
+    path('applications/<uuid:application_id>/shortlist-answers/my/', views.my_shortlist_answers, name='my-shortlist-answers'),
+    path('applications/<uuid:application_id>/shortlist-summary/', views.shortlist_review_summary, name='shortlist-review-summary'),
+
     # Public single job by slug (must be last - catches any remaining slug)
     path('<slug:slug>/', views.get_job, name='get-job'),
 ]
