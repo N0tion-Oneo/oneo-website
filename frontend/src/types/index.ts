@@ -1014,6 +1014,7 @@ export interface Application {
   current_stage_name: string
   stage_notes: Record<string, StageNote>
   interview_stages: InterviewStage[]
+  questions: ApplicationQuestion[]
   // Offer fields
   offer_details: OfferDetails
   offer_made_at: string | null

@@ -1,23 +1,25 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import {
   Check,
   X,
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+  Clock,
+  MapPin,
+  Video,
+  ExternalLink,
+  User,
+  Star,
+  Play,
   FileText,
   Users,
   Gift,
   Ban,
-  ChevronDown,
-  ChevronUp,
-  Calendar,
-  Play,
-  Video,
-  MapPin,
-  ExternalLink,
-  Link,
-  Copy,
   CheckCircle,
-  Send,
-  User,
+  Paperclip,
+  Link,
+  MessageSquare,
 } from 'lucide-react'
 import {
   ApplicationStatus,
@@ -26,6 +28,9 @@ import {
   StageInstanceStatusLabels,
   StageTypeConfig,
   StageFeedbackType,
+  ApplicationAnswer,
+  ApplicationQuestion,
+  QuestionType,
 } from '@/types'
 import { StageTypeBadge } from '../jobs/StageTypeSelector'
 import FeedbackThread from './FeedbackThread'
@@ -41,101 +46,63 @@ interface FullPipelineTimelineProps {
   offerAcceptedAt: string | null
   rejectedAt: string | null
   rejectionReason: string | null
-  // Actions for interview stages
+  // Application questions and answers (shown in Applied stage)
+  questions?: ApplicationQuestion[]
+  answers?: ApplicationAnswer[]
+  coveringStatement?: string | null
+  // Interview stage actions only
   onSchedule?: (instance: ApplicationStageInstance) => void
   onReschedule?: (instance: ApplicationStageInstance) => void
   onCancel?: (instance: ApplicationStageInstance) => void
   onComplete?: (instance: ApplicationStageInstance) => void
   onAssignAssessment?: (instance: ApplicationStageInstance) => void
-  onSendInvite?: (instance: ApplicationStageInstance) => void
-  // Actions for status changes
-  onShortlist?: () => void
-  onMoveToInProgress?: () => void
-  onMakeOffer?: () => void
   isRecruiterView?: boolean
   currentUserId?: string
 }
 
-// Application status order for calculating progress
-const STATUS_ORDER: ApplicationStatus[] = [
-  ApplicationStatus.APPLIED,
-  ApplicationStatus.SHORTLISTED,
-  ApplicationStatus.IN_PROGRESS,
-  ApplicationStatus.OFFER_MADE,
-  ApplicationStatus.OFFER_ACCEPTED,
-]
-
-const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string; bgColor: string; borderColor: string }> = {
+const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string; bgColor: string }> = {
   [ApplicationStatus.APPLIED]: {
     label: 'Applied',
-    icon: <FileText className="w-4 h-4" />,
-    color: 'text-blue-700',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
+    icon: <FileText className="w-3.5 h-3.5" />,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100',
   },
   [ApplicationStatus.SHORTLISTED]: {
     label: 'Shortlisted',
-    icon: <Users className="w-4 h-4" />,
-    color: 'text-purple-700',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-200',
+    icon: <Users className="w-3.5 h-3.5" />,
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-100',
   },
   [ApplicationStatus.IN_PROGRESS]: {
-    label: 'Interview Process',
-    icon: <Play className="w-4 h-4" />,
-    color: 'text-amber-700',
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-200',
+    label: 'In Progress',
+    icon: <Play className="w-3.5 h-3.5" />,
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-100',
   },
   [ApplicationStatus.OFFER_MADE]: {
     label: 'Offer Made',
-    icon: <Gift className="w-4 h-4" />,
-    color: 'text-green-700',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
+    icon: <Gift className="w-3.5 h-3.5" />,
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
   },
   [ApplicationStatus.OFFER_ACCEPTED]: {
     label: 'Hired',
-    icon: <CheckCircle className="w-4 h-4" />,
-    color: 'text-emerald-700',
-    bgColor: 'bg-emerald-50',
-    borderColor: 'border-emerald-200',
-  },
-  [ApplicationStatus.OFFER_DECLINED]: {
-    label: 'Offer Declined',
-    icon: <X className="w-4 h-4" />,
-    color: 'text-orange-700',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-200',
+    icon: <CheckCircle className="w-3.5 h-3.5" />,
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-100',
   },
   [ApplicationStatus.REJECTED]: {
     label: 'Rejected',
-    icon: <Ban className="w-4 h-4" />,
-    color: 'text-red-700',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
+    icon: <Ban className="w-3.5 h-3.5" />,
+    color: 'text-red-600',
+    bgColor: 'bg-red-100',
   },
-}
-
-// Helper to determine if a status stage is complete
-function isStatusComplete(current: ApplicationStatus, target: ApplicationStatus): boolean {
-  const currentIndex = STATUS_ORDER.indexOf(current)
-  const targetIndex = STATUS_ORDER.indexOf(target)
-
-  // Handle terminal states
-  if (current === ApplicationStatus.REJECTED ||
-      current === ApplicationStatus.OFFER_DECLINED) {
-    // For rejected/declined, only applied and shortlisted can be "complete"
-    if (target === ApplicationStatus.APPLIED) return true
-    if (target === ApplicationStatus.SHORTLISTED && currentIndex >= 1) return true
-    return false
-  }
-
-  return currentIndex > targetIndex
-}
-
-function isStatusCurrent(current: ApplicationStatus, target: ApplicationStatus): boolean {
-  return current === target
+  [ApplicationStatus.OFFER_DECLINED]: {
+    label: 'Offer Declined',
+    icon: <X className="w-3.5 h-3.5" />,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-100',
+  },
 }
 
 function formatDate(dateStr: string | null): string {
@@ -143,7 +110,6 @@ function formatDate(dateStr: string | null): string {
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    year: 'numeric',
   })
 }
 
@@ -163,405 +129,497 @@ function formatDateTime(dateStr: string | null): { date: string; time: string } 
   }
 }
 
-// Status Stage Card Component
-function StatusStageCard({
-  status,
-  isComplete,
-  isCurrent,
-  date,
-  children,
-  onAction,
-  actionLabel,
-  isRecruiterView,
-  applicationId,
-  currentUserId,
+function getInitials(firstName?: string, lastName?: string): string {
+  return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase()
+}
+
+// Compact display for application questions and answers in the Applied stage
+function ApplicationAnswersSection({
+  questions,
+  answers,
+  coveringStatement,
 }: {
-  status: ApplicationStatus
-  isComplete: boolean
-  isCurrent: boolean
-  date?: string | null
-  children?: React.ReactNode
-  onAction?: () => void
-  actionLabel?: string
-  isRecruiterView: boolean
-  applicationId?: string
-  currentUserId?: string
+  questions: ApplicationQuestion[]
+  answers: ApplicationAnswer[]
+  coveringStatement?: string | null
 }) {
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG[ApplicationStatus.APPLIED]!
-  const isPending = !isComplete && !isCurrent
+  if ((!questions || questions.length === 0) && !coveringStatement) {
+    return null
+  }
 
-  // Show feedback section for Applied and Shortlisted stages when complete or current
-  const showFeedbackSection = (isComplete || isCurrent) &&
-    (status === ApplicationStatus.APPLIED || status === ApplicationStatus.SHORTLISTED) &&
-    applicationId
+  // Sort questions by order
+  const sortedQuestions = [...questions].sort((a, b) => a.order - b.order)
 
-  // Map status to feedback stage type
-  const feedbackStageType = status === ApplicationStatus.APPLIED
-    ? StageFeedbackType.APPLIED
-    : StageFeedbackType.SHORTLISTED
+  // Create a map of question ID to answer for quick lookup
+  const answersByQuestionId = new Map<string, ApplicationAnswer>()
+  answers.forEach(answer => {
+    if (answer.question?.id) {
+      answersByQuestionId.set(answer.question.id, answer)
+    }
+  })
+
+  const renderAnswerValue = (question: ApplicationQuestion, answer: ApplicationAnswer | undefined) => {
+    const answer_text = answer?.answer_text
+    const answer_file = answer?.answer_file
+
+    // No answer provided
+    if (!answer) {
+      return <span className="text-xs text-gray-400 italic">Not answered</span>
+    }
+
+    // Handle file answers
+    if (question.question_type === QuestionType.FILE) {
+      if (answer_file) {
+        return (
+          <a
+            href={answer_file}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800"
+          >
+            <Paperclip className="w-3.5 h-3.5" />
+            View file
+          </a>
+        )
+      }
+      if (answer_text) {
+        return (
+          <a
+            href={answer_text}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800"
+          >
+            <Link className="w-3.5 h-3.5" />
+            {answer_text.length > 40 ? answer_text.substring(0, 40) + '...' : answer_text}
+          </a>
+        )
+      }
+      return <span className="text-xs text-gray-400 italic">No file uploaded</span>
+    }
+
+    // Handle external links
+    if (question.question_type === QuestionType.EXTERNAL_LINK) {
+      if (answer_text) {
+        return (
+          <a
+            href={answer_text}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            {answer_text.length > 40 ? answer_text.substring(0, 40) + '...' : answer_text}
+          </a>
+        )
+      }
+      return <span className="text-xs text-gray-400 italic">No link provided</span>
+    }
+
+    // Handle multi-select (comma-separated values displayed as tags)
+    if (question.question_type === QuestionType.MULTI_SELECT && answer_text) {
+      const values = answer_text.split(',').filter(Boolean)
+      if (values.length === 0) {
+        return <span className="text-xs text-gray-400 italic">No selection</span>
+      }
+      return (
+        <div className="flex flex-wrap gap-1">
+          {values.slice(0, 3).map((value, idx) => (
+            <span
+              key={idx}
+              className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-gray-600 bg-gray-100 rounded"
+            >
+              {value.trim()}
+            </span>
+          ))}
+          {values.length > 3 && (
+            <span className="text-[10px] text-gray-500">+{values.length - 3} more</span>
+          )}
+        </div>
+      )
+    }
+
+    // Handle select (single value)
+    if (question.question_type === QuestionType.SELECT && answer_text) {
+      return (
+        <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-gray-600 bg-gray-100 rounded">
+          {answer_text}
+        </span>
+      )
+    }
+
+    // Handle text/textarea
+    if (answer_text) {
+      const truncated = answer_text.length > 100
+        ? answer_text.substring(0, 100) + '...'
+        : answer_text
+      return <p className="text-xs text-gray-700">{truncated}</p>
+    }
+
+    return <span className="text-xs text-gray-400 italic">No answer</span>
+  }
 
   return (
-    <div
-      className={`border rounded-lg overflow-hidden transition-all ${
-        isComplete
-          ? 'border-green-200 bg-green-50/50'
-          : isCurrent
-            ? `${config.borderColor} ${config.bgColor}`
-            : 'border-gray-200 bg-gray-50 opacity-60'
-      }`}
-    >
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          {/* Status icon */}
-          <div
-            className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-              isComplete
-                ? 'bg-green-100'
-                : isCurrent
-                  ? config.bgColor
-                  : 'bg-gray-100'
-            }`}
-          >
-            {isComplete ? (
-              <Check className="w-4 h-4 text-green-600" />
-            ) : (
-              <span className={isCurrent ? config.color : 'text-gray-400'}>
-                {config.icon}
-              </span>
-            )}
+    <div className="space-y-3">
+      {/* Covering Statement */}
+      {coveringStatement && (
+        <div className="bg-white border border-gray-200 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <MessageSquare className="w-3.5 h-3.5 text-gray-400" />
+            <span className="text-xs font-medium text-gray-700">Cover Letter / Statement</span>
           </div>
+          <p className="text-xs text-gray-600 whitespace-pre-wrap">
+            {coveringStatement.length > 300
+              ? coveringStatement.substring(0, 300) + '...'
+              : coveringStatement}
+          </p>
+        </div>
+      )}
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <span className={`font-medium ${isComplete || isCurrent ? 'text-gray-900' : 'text-gray-500'}`}>
-                  {config.label}
-                </span>
-                {date && (
-                  <p className="text-xs text-gray-500 mt-0.5">{formatDate(date)}</p>
-                )}
-                {isPending && (
-                  <p className="text-xs text-gray-400 mt-0.5">Pending</p>
-                )}
-              </div>
-
-              {/* Action button for current stage */}
-              {isCurrent && isRecruiterView && onAction && actionLabel && (
-                <button
-                  onClick={onAction}
-                  className="flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded transition-colors bg-gray-900 text-white hover:bg-gray-800"
+      {/* Application Questions & Answers */}
+      {sortedQuestions.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-3">
+            <FileText className="w-3.5 h-3.5 text-gray-400" />
+            <span className="text-xs font-medium text-gray-700">Application Questions</span>
+            <span className="text-[10px] text-gray-400">({sortedQuestions.length})</span>
+          </div>
+          <div className="space-y-3">
+            {sortedQuestions.map((question) => {
+              const answer = answersByQuestionId.get(question.id)
+              const hasAnswer = !!answer && (!!answer.answer_text || !!answer.answer_file)
+              return (
+                <div
+                  key={question.id}
+                  className={`border-l-2 pl-3 ${hasAnswer ? 'border-green-200' : 'border-gray-100'}`}
                 >
-                  {actionLabel}
-                </button>
+                  <p className="text-xs font-medium text-gray-800 mb-1">
+                    {question.question_text}
+                    {question.is_required && (
+                      <span className="text-red-500 ml-0.5">*</span>
+                    )}
+                  </p>
+                  <div>{renderAnswerValue(question, answer)}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Simple completed timeline item
+function TimelineItem({
+  label,
+  date,
+  isFirst,
+  isCancelled,
+  children,
+  onExpand,
+  isExpanded,
+}: {
+  label: string
+  date: string | null
+  isFirst?: boolean
+  isCancelled?: boolean
+  children?: React.ReactNode
+  onExpand?: () => void
+  isExpanded?: boolean
+}) {
+  return (
+    <div className="relative">
+      {!isFirst && (
+        <div className={`absolute left-3 -top-3 w-0.5 h-3 ${isCancelled ? 'bg-gray-200' : 'bg-green-300'}`} />
+      )}
+
+      <div className="flex items-start gap-3">
+        <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+          isCancelled ? 'bg-gray-100' : 'bg-green-100'
+        }`}>
+          {isCancelled ? (
+            <X className="w-3.5 h-3.5 text-gray-400" />
+          ) : (
+            <Check className="w-3.5 h-3.5 text-green-600" />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0 pb-4">
+          <div
+            className={`flex items-center justify-between gap-2 ${onExpand ? 'cursor-pointer' : ''}`}
+            onClick={onExpand}
+          >
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`text-sm font-medium ${isCancelled ? 'text-gray-400' : 'text-gray-900'}`}>
+                {label}
+              </span>
+              {date && (
+                <span className="text-xs text-gray-500">{formatDate(date)}</span>
+              )}
+              {isCancelled && (
+                <span className="text-xs text-gray-400">(Cancelled)</span>
               )}
             </div>
 
-            {/* Feedback Thread for Applied/Shortlisted */}
-            {showFeedbackSection && (
-              <FeedbackThread
-                applicationId={applicationId}
-                stageType={feedbackStageType}
-                isRecruiterView={isRecruiterView}
-                currentUserId={currentUserId}
-              />
+            {onExpand && (
+              <button className="p-1 text-gray-400 hover:text-gray-600 rounded">
+                {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
             )}
           </div>
-        </div>
 
-        {/* Children (e.g., interview stages within In Progress) */}
-        {children && (
-          <div className="mt-4 ml-11">
-            {children}
-          </div>
-        )}
+          {isExpanded && children && (
+            <div className="mt-3">{children}</div>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
-// Interview Stage Card (for stages within In Progress)
+// Interview stage card (for current stage with actions, or completed with details)
 function InterviewStageCard({
   instance,
-  index,
-  isRecruiterView,
+  isCurrent,
+  isExpanded,
+  onToggle,
   applicationId,
+  isRecruiterView,
   currentUserId,
   onSchedule,
   onReschedule,
   onCancel,
   onComplete,
   onAssignAssessment,
-  onSendInvite,
-  isCurrentStage,
 }: {
   instance: ApplicationStageInstance
-  index: number
-  isRecruiterView: boolean
+  isCurrent: boolean
+  isExpanded: boolean
+  onToggle: () => void
   applicationId: string
+  isRecruiterView: boolean
   currentUserId?: string
   onSchedule?: (instance: ApplicationStageInstance) => void
   onReschedule?: (instance: ApplicationStageInstance) => void
   onCancel?: (instance: ApplicationStageInstance) => void
   onComplete?: (instance: ApplicationStageInstance) => void
   onAssignAssessment?: (instance: ApplicationStageInstance) => void
-  onSendInvite?: (instance: ApplicationStageInstance) => void
-  isCurrentStage?: boolean
 }) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const hasAutoExpanded = useRef(false)
-
-  // Auto-expand when this becomes the current stage (only once on initial load)
-  useEffect(() => {
-    if (isCurrentStage && !hasAutoExpanded.current) {
-      setIsExpanded(true)
-      hasAutoExpanded.current = true
-    }
-  }, [isCurrentStage])
-  const [copiedTokenId, setCopiedTokenId] = useState<string | null>(null)
-
   const config = StageTypeConfig[instance.stage_template.stage_type]
-  const isCompleted = instance.status === StageInstanceStatus.COMPLETED
   const isCancelled = instance.status === StageInstanceStatus.CANCELLED
+  const isCompleted = instance.status === StageInstanceStatus.COMPLETED
   const isScheduled = instance.status === StageInstanceStatus.SCHEDULED
   const isNotStarted = instance.status === StageInstanceStatus.NOT_STARTED
+  const isInProgress = instance.status === StageInstanceStatus.IN_PROGRESS
+  const isSubmitted = instance.status === StageInstanceStatus.SUBMITTED
 
   const scheduledInfo = formatDateTime(instance.scheduled_at)
-  const hasBookingToken = instance.booking_token && instance.booking_token.is_valid && !instance.booking_token.is_used
-
-  // Determine primary action
-  let primaryAction: { label: string; onClick: () => void } | null = null
-  if (isRecruiterView) {
-    if (isNotStarted && config.isAssessment && onAssignAssessment) {
-      primaryAction = { label: 'Assign', onClick: () => onAssignAssessment(instance) }
-    } else if (isNotStarted && config.requiresScheduling && !hasBookingToken && onSchedule) {
-      primaryAction = { label: 'Schedule', onClick: () => onSchedule(instance) }
-    } else if ((isScheduled || instance.status === StageInstanceStatus.IN_PROGRESS || instance.status === StageInstanceStatus.SUBMITTED) && onComplete) {
-      primaryAction = { label: 'Complete', onClick: () => onComplete(instance) }
-    }
-  }
-
-  const handleCopyBookingLink = async (bookingUrl: string, tokenId: string) => {
-    try {
-      const fullUrl = `${window.location.origin}${bookingUrl}`
-      await navigator.clipboard.writeText(fullUrl)
-      setCopiedTokenId(tokenId)
-      setTimeout(() => setCopiedTokenId(null), 2000)
-    } catch (err) {
-      console.error('Failed to copy booking link:', err)
-    }
-  }
+  const completedInfo = formatDateTime(instance.completed_at)
+  const interviewer = instance.interviewer
+  const hasScore = instance.score !== null && instance.score !== undefined
 
   return (
-    <div
-      className={`border rounded-lg overflow-hidden transition-all ${
-        isCompleted
-          ? 'border-green-200 bg-white'
-          : isCancelled
-            ? 'border-gray-200 bg-gray-50 opacity-60'
-            : isScheduled
-              ? 'border-blue-200 bg-white'
-              : isCurrentStage
-                ? 'border-amber-300 bg-amber-50/30 ring-2 ring-amber-200'
-                : 'border-gray-200 bg-white'
-      }`}
-    >
-      <div className="p-3">
-        <div className="flex items-start gap-3">
-          {/* Stage number / status */}
-          <div
-            className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-              isCompleted
-                ? 'bg-green-100 text-green-700'
-                : isCancelled
-                  ? 'bg-gray-100 text-gray-400'
-                  : isScheduled
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-600'
-            }`}
-          >
-            {isCompleted ? <Check className="w-3 h-3" /> : isCancelled ? <X className="w-3 h-3" /> : index + 1}
-          </div>
+    <div className="relative">
+      <div className={`absolute left-3 -top-3 w-0.5 h-3 ${
+        isCurrent ? 'bg-amber-300' : isCancelled ? 'bg-gray-200' : 'bg-green-300'
+      }`} />
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium text-gray-900 truncate">
-                    {instance.stage_template.name}
-                  </span>
-                  <StageTypeBadge stageType={instance.stage_template.stage_type} size="sm" />
+      <div className="flex items-start gap-3">
+        <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+          isCurrent
+            ? 'bg-amber-100 ring-2 ring-amber-400'
+            : isCancelled
+              ? 'bg-gray-100'
+              : 'bg-green-100'
+        }`}>
+          {isCurrent ? (
+            <Play className="w-3 h-3 text-amber-600" />
+          ) : isCancelled ? (
+            <X className="w-3.5 h-3.5 text-gray-400" />
+          ) : (
+            <Check className="w-3.5 h-3.5 text-green-600" />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0 pb-4">
+          <div
+            className={`bg-white border rounded-lg overflow-hidden transition-colors ${
+              isCurrent
+                ? 'border-amber-200 shadow-sm'
+                : isCancelled
+                  ? 'border-gray-200 opacity-60'
+                  : 'border-gray-200 hover:border-gray-300 cursor-pointer'
+            }`}
+            onClick={!isCurrent ? onToggle : undefined}
+          >
+            {/* Header */}
+            <div className={`p-3 ${isCurrent ? 'bg-amber-50' : ''}`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  {/* Title row */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold text-gray-900">
+                      {instance.stage_template.name}
+                    </span>
+                    <StageTypeBadge stageType={instance.stage_template.stage_type} size="sm" />
+                    {isCurrent && (
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        isScheduled ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {StageInstanceStatusLabels[instance.status]}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Date and time */}
+                  {!isCancelled && (scheduledInfo || completedInfo) && (
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                        <span>{(completedInfo || scheduledInfo)?.date}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                        <Clock className="w-3.5 h-3.5 text-gray-400" />
+                        <span>{(completedInfo || scheduledInfo)?.time}</span>
+                      </div>
+                      {instance.duration_minutes && (
+                        <span className="text-xs text-gray-500">
+                          ({instance.duration_minutes} min)
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Interviewer and Score */}
+                  {!isCancelled && (interviewer || hasScore) && (
+                    <div className="flex items-center gap-4 mt-2">
+                      {interviewer && (
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-medium text-gray-600">
+                            {getInitials(interviewer.first_name, interviewer.last_name)}
+                          </div>
+                          <span className="text-xs text-gray-600">
+                            {interviewer.first_name} {interviewer.last_name}
+                          </span>
+                        </div>
+                      )}
+
+                      {hasScore && (
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                          <span className="text-xs font-medium text-gray-700">
+                            {instance.score}/10
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Meeting link / Location */}
+                  {isCurrent && !isCancelled && (instance.meeting_link || instance.location) && (
+                    <div className="flex items-center gap-4 mt-2">
+                      {instance.meeting_link && (
+                        <a
+                          href={instance.meeting_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          <Video className="w-3.5 h-3.5" />
+                          Join Meeting
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                      {instance.location && (
+                        <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                          <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                          <span>{instance.location}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {/* Status badge */}
-                <span className={`inline-block mt-1 text-xs font-medium px-1.5 py-0.5 rounded ${
-                  isCompleted
-                    ? 'bg-green-100 text-green-700'
-                    : isCancelled
-                      ? 'bg-gray-100 text-gray-500'
-                      : isScheduled
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-100 text-gray-600'
-                }`}>
-                  {StageInstanceStatusLabels[instance.status]}
-                </span>
-
-                {/* Scheduled info */}
-                {scheduledInfo && (
-                  <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                    <Calendar className="w-3 h-3" />
-                    {scheduledInfo.date} at {scheduledInfo.time}
-                  </div>
-                )}
-
-                {/* Booking token waiting */}
-                {hasBookingToken && (
-                  <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-blue-700 text-xs rounded border border-blue-200">
-                    <Send className="w-3 h-3" />
-                    Awaiting booking
-                  </div>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-1 flex-shrink-0">
-                {primaryAction && (
+                {/* Expand toggle for completed stages */}
+                {!isCurrent && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      primaryAction.onClick()
+                      onToggle()
                     }}
-                    className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                      primaryAction.label === 'Complete'
-                        ? 'bg-green-600 text-white hover:bg-green-700'
-                        : primaryAction.label === 'Assign'
-                          ? 'bg-orange-600 text-white hover:bg-orange-700'
-                          : 'bg-gray-900 text-white hover:bg-gray-800'
-                    }`}
+                    className="p-1 text-gray-400 hover:text-gray-600 rounded flex-shrink-0"
                   >
-                    {primaryAction.label}
+                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
                 )}
-                <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="p-1 text-gray-400 hover:text-gray-600 rounded"
-                >
-                  {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </button>
               </div>
             </div>
+
+            {/* Actions for current stage */}
+            {isCurrent && isRecruiterView && (
+              <div className="px-3 py-2 bg-gray-50 border-t border-gray-100 flex flex-wrap gap-2">
+                {isNotStarted && config.isAssessment && onAssignAssessment && (
+                  <button
+                    onClick={() => onAssignAssessment(instance)}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-orange-600 rounded hover:bg-orange-700"
+                  >
+                    Assign Assessment
+                  </button>
+                )}
+
+                {isNotStarted && config.requiresScheduling && onSchedule && (
+                  <button
+                    onClick={() => onSchedule(instance)}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded hover:bg-gray-800"
+                  >
+                    Schedule Interview
+                  </button>
+                )}
+
+                {isScheduled && onReschedule && (
+                  <button
+                    onClick={() => onReschedule(instance)}
+                    className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded hover:bg-gray-50"
+                  >
+                    Reschedule
+                  </button>
+                )}
+
+                {isScheduled && onCancel && (
+                  <button
+                    onClick={() => onCancel(instance)}
+                    className="px-3 py-1.5 text-xs font-medium text-red-600 bg-white border border-red-200 rounded hover:bg-red-50"
+                  >
+                    Cancel
+                  </button>
+                )}
+
+                {(isScheduled || isInProgress || isSubmitted) && onComplete && (
+                  <button
+                    onClick={() => onComplete(instance)}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
+                  >
+                    Mark Complete
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Feedback section - always show for current, expandable for completed */}
+            {(isCurrent || isExpanded) && !isCancelled && (
+              <div className="px-3 py-3 border-t border-gray-100">
+                <FeedbackThread
+                  applicationId={applicationId}
+                  stageInstanceId={instance.id}
+                  isRecruiterView={isRecruiterView}
+                  currentUserId={currentUserId}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Expanded details */}
-      {isExpanded && (
-        <div className="border-t border-gray-100 bg-gray-50 p-3 space-y-3">
-          {instance.stage_template.description && (
-            <p className="text-xs text-gray-600">{instance.stage_template.description}</p>
-          )}
-
-          {instance.interviewer && (
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              <User className="w-3 h-3" />
-              {instance.interviewer.first_name} {instance.interviewer.last_name}
-            </div>
-          )}
-
-          {instance.meeting_link && (
-            <a
-              href={instance.meeting_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
-            >
-              <Video className="w-3 h-3" />
-              Join Meeting
-              <ExternalLink className="w-2.5 h-2.5" />
-            </a>
-          )}
-
-          {instance.location && (
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              <MapPin className="w-3 h-3" />
-              {instance.location}
-            </div>
-          )}
-
-          {/* Booking Link */}
-          {instance.booking_token && !instance.booking_token.is_used && (
-            <div className="p-2 bg-white rounded border border-gray-200">
-              <div className="flex items-center gap-2 text-xs">
-                <Link className="w-3 h-3 text-blue-500" />
-                <span className="font-medium text-gray-700">Booking Link</span>
-                {instance.booking_token.is_valid ? (
-                  <span className="ml-auto px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">Pending</span>
-                ) : (
-                  <span className="ml-auto px-1.5 py-0.5 text-xs bg-red-100 text-red-700 rounded">Expired</span>
-                )}
-              </div>
-              <div className="mt-2 flex items-center gap-1">
-                <input
-                  type="text"
-                  readOnly
-                  value={`${window.location.origin}${instance.booking_token.booking_url}`}
-                  className="flex-1 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded text-gray-600"
-                />
-                <button
-                  onClick={() => handleCopyBookingLink(instance.booking_token!.booking_url, instance.booking_token!.id)}
-                  className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
-                >
-                  {copiedTokenId === instance.booking_token.id ? (
-                    <Check className="w-3 h-3 text-green-500" />
-                  ) : (
-                    <Copy className="w-3 h-3" />
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Feedback Thread */}
-          <FeedbackThread
-            applicationId={applicationId}
-            stageInstanceId={instance.id}
-            isRecruiterView={isRecruiterView}
-            currentUserId={currentUserId}
-          />
-
-          {/* Secondary actions */}
-          {isRecruiterView && (
-            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-              {isScheduled && onReschedule && (
-                <button
-                  onClick={() => onReschedule(instance)}
-                  className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
-                >
-                  Reschedule
-                </button>
-              )}
-              {isScheduled && onCancel && (
-                <button
-                  onClick={() => onCancel(instance)}
-                  className="px-2 py-1 text-xs font-medium text-red-700 bg-red-50 rounded hover:bg-red-100"
-                >
-                  Cancel
-                </button>
-              )}
-              {isNotStarted && config.requiresScheduling && !hasBookingToken && onSendInvite && (
-                <button
-                  onClick={() => onSendInvite(instance)}
-                  className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-50 rounded hover:bg-blue-100 flex items-center gap-1"
-                >
-                  <Send className="w-3 h-3" />
-                  Send Invite
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }
@@ -577,217 +635,200 @@ export default function FullPipelineTimeline({
   offerAcceptedAt,
   rejectedAt,
   rejectionReason,
+  questions,
+  answers,
+  coveringStatement,
   onSchedule,
   onReschedule,
   onCancel,
   onComplete,
   onAssignAssessment,
-  onSendInvite,
-  onShortlist,
-  onMoveToInProgress,
-  onMakeOffer,
   isRecruiterView = false,
   currentUserId,
 }: FullPipelineTimelineProps) {
-  // Sort stage instances
+  const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set())
+
+  // Sort stage instances by order
   const sortedInstances = [...stageInstances].sort(
     (a, b) => a.stage_template.order - b.stage_template.order
   )
 
-  // Calculate overall progress
-  const completedStagesCount = stageInstances.filter(
-    (i) => i.status === StageInstanceStatus.COMPLETED
-  ).length
-  const totalStagesCount = stageInstances.length
-
-  // Find the current stage by matching currentStageOrder from the application
-  const currentStageInstance = currentStageOrder != null
-    ? sortedInstances.find((inst) => inst.stage_template.order === currentStageOrder)
-    : null
-
-  // Determine which outcome to show (offer or reject)
+  // Determine status flags
+  const isApplied = applicationStatus === ApplicationStatus.APPLIED
+  const isShortlisted = applicationStatus === ApplicationStatus.SHORTLISTED
+  const isInProgress = applicationStatus === ApplicationStatus.IN_PROGRESS
+  const isOfferMade = applicationStatus === ApplicationStatus.OFFER_MADE
+  const isHired = applicationStatus === ApplicationStatus.OFFER_ACCEPTED
   const isRejected = applicationStatus === ApplicationStatus.REJECTED
   const isOfferDeclined = applicationStatus === ApplicationStatus.OFFER_DECLINED
-  const hasOffer = [ApplicationStatus.OFFER_MADE, ApplicationStatus.OFFER_ACCEPTED].includes(applicationStatus)
+
+  const toggleStage = (id: string) => {
+    setExpandedStages(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  // Filter stages: show completed/cancelled and current
+  const completedStages = sortedInstances.filter(
+    inst => inst.status === StageInstanceStatus.COMPLETED || inst.status === StageInstanceStatus.CANCELLED
+  )
+
+  const currentStage = currentStageOrder != null
+    ? sortedInstances.find(
+        inst => inst.stage_template.order === currentStageOrder &&
+        inst.status !== StageInstanceStatus.COMPLETED &&
+        inst.status !== StageInstanceStatus.CANCELLED
+      )
+    : null
 
   return (
-    <div className="space-y-4">
-      {/* Progress Overview */}
-      <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium text-gray-900">Application Pipeline</span>
-          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_CONFIG[applicationStatus]?.bgColor} ${STATUS_CONFIG[applicationStatus]?.color}`}>
-            {STATUS_CONFIG[applicationStatus]?.label}
-          </span>
-        </div>
-
-        {/* Visual progress bar */}
-        <div className="flex items-center gap-1">
-          {/* Applied */}
-          <div className="h-2 flex-1 rounded-full bg-green-500" title="Applied" />
-
-          {/* Shortlisted */}
-          <div
-            className={`h-2 flex-1 rounded-full ${
-              isStatusComplete(applicationStatus, ApplicationStatus.SHORTLISTED) || isStatusCurrent(applicationStatus, ApplicationStatus.SHORTLISTED)
-                ? 'bg-green-500'
-                : 'bg-gray-200'
-            }`}
-            title="Shortlisted"
-          />
-
-          {/* In Progress (with interview stages) */}
-          {totalStagesCount > 0 ? (
-            sortedInstances.map((instance) => (
-              <div
-                key={instance.id}
-                className={`h-2 flex-1 rounded-full ${
-                  instance.status === StageInstanceStatus.COMPLETED
-                    ? 'bg-green-500'
-                    : instance.status === StageInstanceStatus.SCHEDULED
-                      ? 'bg-blue-500'
-                      : instance.status === StageInstanceStatus.IN_PROGRESS ||
-                        instance.status === StageInstanceStatus.AWAITING_SUBMISSION ||
-                        instance.status === StageInstanceStatus.SUBMITTED
-                        ? 'bg-purple-500'
-                        : 'bg-gray-200'
-                }`}
-                title={`${instance.stage_template.name}: ${StageInstanceStatusLabels[instance.status]}`}
-              />
-            ))
-          ) : (
-            <div
-              className={`h-2 flex-1 rounded-full ${
-                isStatusComplete(applicationStatus, ApplicationStatus.IN_PROGRESS) || isStatusCurrent(applicationStatus, ApplicationStatus.IN_PROGRESS)
-                  ? 'bg-green-500'
-                  : 'bg-gray-200'
-              }`}
-              title="Interview Process"
-            />
-          )}
-
-          {/* Offer/Hired */}
-          <div
-            className={`h-2 flex-1 rounded-full ${
-              hasOffer || applicationStatus === ApplicationStatus.OFFER_ACCEPTED
-                ? 'bg-green-500'
-                : isRejected || isOfferDeclined
-                  ? 'bg-red-500'
-                  : 'bg-gray-200'
-            }`}
-            title={isRejected ? 'Rejected' : isOfferDeclined ? 'Offer Declined' : 'Offer'}
-          />
-        </div>
+    <div className="space-y-1">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+        <span className="text-sm font-medium text-gray-900">Pipeline History</span>
+        <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_CONFIG[applicationStatus]?.bgColor} ${STATUS_CONFIG[applicationStatus]?.color}`}>
+          {STATUS_CONFIG[applicationStatus]?.label}
+        </span>
       </div>
 
-      {/* Stage Cards */}
-      <div className="space-y-3">
-        {/* 1. Applied */}
-        <StatusStageCard
-          status={ApplicationStatus.APPLIED}
-          isComplete={isStatusComplete(applicationStatus, ApplicationStatus.APPLIED)}
-          isCurrent={isStatusCurrent(applicationStatus, ApplicationStatus.APPLIED)}
+      {/* Timeline */}
+      <div className="space-y-0">
+        {/* Applied */}
+        <TimelineItem
+          label="Applied"
           date={appliedAt}
-          onAction={onShortlist}
-          actionLabel="Shortlist"
-          isRecruiterView={isRecruiterView}
-          applicationId={applicationId}
-          currentUserId={currentUserId}
-        />
-
-        {/* 2. Shortlisted */}
-        <StatusStageCard
-          status={ApplicationStatus.SHORTLISTED}
-          isComplete={isStatusComplete(applicationStatus, ApplicationStatus.SHORTLISTED)}
-          isCurrent={isStatusCurrent(applicationStatus, ApplicationStatus.SHORTLISTED)}
-          date={shortlistedAt}
-          onAction={onMoveToInProgress}
-          actionLabel="Start Interviews"
-          isRecruiterView={isRecruiterView}
-          applicationId={applicationId}
-          currentUserId={currentUserId}
-        />
-
-        {/* 3. Interview Process (In Progress) with nested stages */}
-        <StatusStageCard
-          status={ApplicationStatus.IN_PROGRESS}
-          isComplete={isStatusComplete(applicationStatus, ApplicationStatus.IN_PROGRESS)}
-          isCurrent={isStatusCurrent(applicationStatus, ApplicationStatus.IN_PROGRESS)}
-          date={null}
-          onAction={completedStagesCount === totalStagesCount && totalStagesCount > 0 ? onMakeOffer : undefined}
-          actionLabel="Make Offer"
-          isRecruiterView={isRecruiterView}
+          isFirst={true}
+          isExpanded={expandedStages.has('applied')}
+          onExpand={() => toggleStage('applied')}
         >
-          {/* Interview stages */}
-          {sortedInstances.length > 0 ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-gray-500">
-                  Interview Stages ({completedStagesCount}/{totalStagesCount} complete)
-                </span>
-              </div>
-              {sortedInstances.map((instance, index) => (
-                <InterviewStageCard
-                  key={instance.id}
-                  instance={instance}
-                  index={index}
-                  isRecruiterView={isRecruiterView}
-                  applicationId={applicationId}
-                  currentUserId={currentUserId}
-                  onSchedule={onSchedule}
-                  onReschedule={onReschedule}
-                  onCancel={onCancel}
-                  onComplete={onComplete}
-                  onAssignAssessment={onAssignAssessment}
-                  onSendInvite={onSendInvite}
-                  isCurrentStage={currentStageInstance?.id === instance.id}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-xs text-gray-500 py-2">
-              No interview stages configured for this job.
-            </div>
-          )}
-        </StatusStageCard>
-
-        {/* 4. Offer Stage (or Rejected) */}
-        {isRejected || isOfferDeclined ? (
-          <StatusStageCard
-            status={ApplicationStatus.REJECTED}
-            isComplete={false}
-            isCurrent={true}
-            date={rejectedAt}
-            isRecruiterView={isRecruiterView}
-          >
-            {rejectionReason && (
-              <p className="text-xs text-gray-500">
-                Reason: {rejectionReason}
-              </p>
-            )}
-          </StatusStageCard>
-        ) : (
-          <>
-            {/* Offer Made */}
-            <StatusStageCard
-              status={ApplicationStatus.OFFER_MADE}
-              isComplete={applicationStatus === ApplicationStatus.OFFER_ACCEPTED}
-              isCurrent={applicationStatus === ApplicationStatus.OFFER_MADE}
-              date={offerMadeAt}
-              isRecruiterView={isRecruiterView}
+          <div className="space-y-3">
+            {/* Application Answers */}
+            <ApplicationAnswersSection
+              questions={questions || []}
+              answers={answers || []}
+              coveringStatement={coveringStatement}
             />
 
-            {/* Hired (Offer Accepted) */}
-            {applicationStatus === ApplicationStatus.OFFER_ACCEPTED && (
-              <StatusStageCard
-                status={ApplicationStatus.OFFER_ACCEPTED}
-                isComplete={false}
-                isCurrent={true}
-                date={offerAcceptedAt}
+            {/* Feedback Thread */}
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <FeedbackThread
+                applicationId={applicationId}
+                stageType={StageFeedbackType.APPLIED}
                 isRecruiterView={isRecruiterView}
+                currentUserId={currentUserId}
               />
-            )}
-          </>
+            </div>
+          </div>
+        </TimelineItem>
+
+        {/* Shortlisted */}
+        {!isApplied && (
+          <TimelineItem
+            label="Shortlisted"
+            date={shortlistedAt}
+            isExpanded={expandedStages.has('shortlisted')}
+            onExpand={() => toggleStage('shortlisted')}
+          >
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <FeedbackThread
+                applicationId={applicationId}
+                stageType={StageFeedbackType.SHORTLISTED}
+                isRecruiterView={isRecruiterView}
+                currentUserId={currentUserId}
+              />
+            </div>
+          </TimelineItem>
+        )}
+
+        {/* Completed Interview Stages */}
+        {completedStages.map((instance) => (
+          <InterviewStageCard
+            key={instance.id}
+            instance={instance}
+            isCurrent={false}
+            isExpanded={expandedStages.has(instance.id)}
+            onToggle={() => toggleStage(instance.id)}
+            applicationId={applicationId}
+            isRecruiterView={isRecruiterView}
+            currentUserId={currentUserId}
+          />
+        ))}
+
+        {/* Current Interview Stage */}
+        {isInProgress && currentStage && (
+          <InterviewStageCard
+            instance={currentStage}
+            isCurrent={true}
+            isExpanded={true}
+            onToggle={() => {}}
+            applicationId={applicationId}
+            isRecruiterView={isRecruiterView}
+            currentUserId={currentUserId}
+            onSchedule={onSchedule}
+            onReschedule={onReschedule}
+            onCancel={onCancel}
+            onComplete={onComplete}
+            onAssignAssessment={onAssignAssessment}
+          />
+        )}
+
+        {/* Offer Made */}
+        {(isOfferMade || isHired) && (
+          <TimelineItem
+            label="Offer Made"
+            date={offerMadeAt}
+          />
+        )}
+
+        {/* Hired */}
+        {isHired && (
+          <div className="relative">
+            <div className="absolute left-3 -top-3 w-0.5 h-3 bg-emerald-300" />
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 ring-2 ring-emerald-400 flex items-center justify-center">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                  <span className="text-sm font-semibold text-emerald-800">Hired</span>
+                  {offerAcceptedAt && (
+                    <span className="text-xs text-emerald-600 ml-2">{formatDate(offerAcceptedAt)}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Rejected / Offer Declined */}
+        {(isRejected || isOfferDeclined) && (
+          <div className="relative">
+            <div className="absolute left-3 -top-3 w-0.5 h-3 bg-red-200" />
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
+                <Ban className="w-3.5 h-3.5 text-red-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <span className="text-sm font-medium text-red-800">
+                    {isOfferDeclined ? 'Offer Declined' : 'Rejected'}
+                  </span>
+                  {rejectedAt && (
+                    <span className="text-xs text-red-600 ml-2">{formatDate(rejectedAt)}</span>
+                  )}
+                  {rejectionReason && (
+                    <p className="text-xs text-red-600 mt-1">{rejectionReason}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

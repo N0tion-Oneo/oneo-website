@@ -161,6 +161,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
     current_stage_name = serializers.CharField(read_only=True)
     current_stage_id = serializers.UUIDField(source='current_stage.id', read_only=True, allow_null=True)
     interview_stages = serializers.SerializerMethodField()
+    questions = serializers.SerializerMethodField()
     answers = serializers.SerializerMethodField()
 
     class Meta:
@@ -179,6 +180,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             'current_stage_name',
             'stage_notes',
             'interview_stages',
+            'questions',
             'answers',
             'source',
             # Offer fields
@@ -214,6 +216,23 @@ class ApplicationSerializer(serializers.ModelSerializer):
                 'duration_minutes': t.default_duration_minutes,
             }
             for t in templates
+        ]
+
+    def get_questions(self, obj):
+        """Return the job's application questions."""
+        questions = ApplicationQuestion.objects.filter(job=obj.job).order_by('order')
+        return [
+            {
+                'id': str(q.id),
+                'question_text': q.question_text,
+                'question_type': q.question_type,
+                'options': q.options,
+                'placeholder': q.placeholder,
+                'helper_text': q.helper_text,
+                'is_required': q.is_required,
+                'order': q.order,
+            }
+            for q in questions
         ]
 
     def get_answers(self, obj):

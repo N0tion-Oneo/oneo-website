@@ -137,6 +137,8 @@ export default function ApplicationDrawer({
   const handleScheduleSuccess = (_updatedInstance: ApplicationStageInstance) => {
     setScheduleModalOpen(false)
     refetchStages()
+    refetch()
+    onUpdate?.()
   }
 
   const handleCancelStage = async (instance: ApplicationStageInstance) => {
@@ -146,6 +148,8 @@ export default function ApplicationDrawer({
     try {
       await cancelStage(applicationId, instance.id, 'Cancelled by recruiter')
       refetchStages()
+      refetch()
+      onUpdate?.()
     } catch (error) {
       console.error('Failed to cancel:', error)
     }
@@ -157,6 +161,8 @@ export default function ApplicationDrawer({
     try {
       await completeStage(applicationId, instance.id, {})
       refetchStages()
+      refetch()
+      onUpdate?.()
     } catch (error) {
       console.error('Failed to complete:', error)
     }
@@ -531,6 +537,9 @@ export default function ApplicationDrawer({
                       offerAcceptedAt={application.offer_accepted_at}
                       rejectedAt={application.rejected_at}
                       rejectionReason={application.rejection_reason}
+                      questions={application.questions}
+                      answers={application.answers}
+                      coveringStatement={application.covering_statement}
                       isRecruiterView={true}
                       onSchedule={(instance) => handleOpenScheduleModal(instance, 'schedule')}
                       onReschedule={(instance) => handleOpenScheduleModal(instance, 'reschedule')}
@@ -540,8 +549,6 @@ export default function ApplicationDrawer({
                         setAssessmentStageInstance(instance)
                         setAssessmentModalOpen(true)
                       }}
-                      onShortlist={onShortlist ? () => onShortlist(applicationId!) : undefined}
-                      onMakeOffer={() => setActiveTab('offer')}
                     />
                   )}
                 </div>
@@ -608,6 +615,8 @@ export default function ApplicationDrawer({
           onSuccess={() => {
             setAssessmentModalOpen(false)
             refetchStages()
+            refetch()
+            onUpdate?.()
           }}
         />
       )}

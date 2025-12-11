@@ -158,10 +158,22 @@ class BookingTokenSerializer(serializers.ModelSerializer):
         return f"/booking/{obj.token}"
 
 
+class InterviewerSerializer(serializers.Serializer):
+    """Serializer for interviewer details in stage instances."""
+    id = serializers.UUIDField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.EmailField()
+
+    class Meta:
+        fields = ['id', 'first_name', 'last_name', 'email']
+
+
 class ApplicationStageInstanceSerializer(serializers.ModelSerializer):
     """Serializer for reading application stage instances."""
     stage_template = InterviewStageTemplateSerializer(read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    interviewer = serializers.SerializerMethodField()
     interviewer_name = serializers.SerializerMethodField()
     interviewer_email = serializers.SerializerMethodField()
     participants_list = serializers.SerializerMethodField()
@@ -209,6 +221,17 @@ class ApplicationStageInstanceSerializer(serializers.ModelSerializer):
             'id', 'application', 'created_at', 'updated_at', 'completed_at',
             'notification_sent_at', 'reminder_sent_at',
         ]
+
+    def get_interviewer(self, obj):
+        """Return full interviewer object."""
+        if obj.interviewer:
+            return {
+                'id': str(obj.interviewer.id),
+                'first_name': obj.interviewer.first_name or '',
+                'last_name': obj.interviewer.last_name or '',
+                'email': obj.interviewer.email,
+            }
+        return None
 
     def get_interviewer_name(self, obj):
         if obj.interviewer:
