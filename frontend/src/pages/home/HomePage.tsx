@@ -1,12 +1,16 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout';
+import { SEO } from '@/components/seo';
+import { useSEODefaults } from '@/contexts/SEOContext';
 
 export default function HomePage() {
   const { isAuthenticated } = useAuth();
+  const seoDefaults = useSEODefaults();
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO />
       <Navbar />
 
       <main className="max-w-5xl mx-auto px-6">
@@ -16,7 +20,7 @@ export default function HomePage() {
             Find your next opportunity in recruitment
           </h1>
           <p className="mt-6 text-lg text-gray-500 max-w-xl">
-            Oneo connects talented candidates with leading companies.
+            {seoDefaults.companyName ? `${seoDefaults.companyName} connects` : 'We connect'} talented candidates with leading companies.
             Start your journey today.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
@@ -93,7 +97,7 @@ export default function HomePage() {
       <footer className="border-t border-gray-100 py-8 mt-16">
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-[13px] text-gray-400">
-            © {new Date().getFullYear()} Oneo. All rights reserved.
+            © {new Date().getFullYear()} {seoDefaults.companyName || 'All rights reserved'}.{seoDefaults.companyName ? ' All rights reserved.' : ''}
           </p>
         </div>
       </footer>

@@ -1,0 +1,5 @@
+export { default as EORPage } from './EORPage'
+export { default as RetainedRecruitmentPage } from './RetainedRecruitmentPage'
+export { default as HeadhuntingPage } from './HeadhuntingPage'
+export { default as EnterprisePage } from './EnterprisePage'
+export { default as PricingCalculatorPage } from './PricingCalculatorPage'

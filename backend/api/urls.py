@@ -34,4 +34,7 @@ urlpatterns = [
 
     # Core endpoints (onboarding stages)
     path('', include('core.urls')),
+
+    # CMS endpoints (pages, blog, faqs, glossary, case studies)
+    path('cms/', include('cms.urls')),
 ]

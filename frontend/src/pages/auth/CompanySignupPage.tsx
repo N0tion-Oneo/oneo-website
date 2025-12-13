@@ -49,7 +49,7 @@ export default function CompanySignupPage() {
   const [invitationEmail, setInvitationEmail] = useState('')
   const [companyName, setCompanyName] = useState('')
 
-  const brandName = branding?.company_name || 'Oneo'
+  const brandName = branding?.company_name || ''
 
   const {
     register,

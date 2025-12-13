@@ -171,6 +171,22 @@ export default function CandidateDashboardLayout() {
     },
   ] : []
 
+  // CMS navigation (Admin only)
+  const cmsNav: NavItem[] = isAdmin ? [
+    {
+      name: 'CMS',
+      href: '/dashboard/cms',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M4 4h16v16H4z" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4 9h16" strokeLinecap="round" />
+          <path d="M9 9v11" strokeLinecap="round" />
+          <path d="M7 5.5h2" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+  ] : []
+
   // Admin-only navigation (not visible to recruiters)
   const adminOnlyNav: NavItem[] = []
 
@@ -230,6 +246,7 @@ export default function CandidateDashboardLayout() {
     ...profileNav,
     ...companyNav,
     ...adminNav,
+    ...cmsNav,
     ...adminOnlyNav,
     ...candidateNav,
     ...settingsNav,
@@ -273,7 +290,7 @@ export default function CandidateDashboardLayout() {
                 />
               ) : (
                 <span className="text-lg font-semibold text-gray-900">
-                  {branding?.company_name || 'Oneo'}
+                  {branding?.company_name || ''}
                 </span>
               )}
             </Link>

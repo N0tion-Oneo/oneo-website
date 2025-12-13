@@ -11,3 +11,6 @@ export { OnboardingTimeInStageChart } from './OnboardingTimeInStageChart'
 export { OnboardingBottlenecksCard } from './OnboardingBottlenecksCard'
 export { OnboardingFunnelChart } from './OnboardingFunnelChart'
 export { OnboardingSummaryCards } from './OnboardingSummaryCards'
+
+// Google Analytics
+export { default as GoogleAnalytics, analytics, trackEvent, trackPageView, initGA } from './GoogleAnalytics'

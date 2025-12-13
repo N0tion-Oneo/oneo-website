@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'notifications',
     'branding',
     'resume_parser',
+    'cms',
 ]
 
 MIDDLEWARE = [
@@ -73,6 +74,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'cms.middleware.RedirectMiddleware',  # CMS URL redirects
 ]
 
 ROOT_URLCONF = 'config.urls'

@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-do
 import { useEffect } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
+import { SEOProvider } from '@/contexts/SEOContext';
 import { ProtectedRoute, PublicRoute } from '@/components/auth';
 import { BrandingProvider } from '@/components/branding';
 import {
@@ -49,9 +50,52 @@ import {
   RecruiterProfilePage,
   BookingManagementPage,
   AnalyticsPage,
+  // CMS Dashboard Pages
+  CMSOverviewPage,
+  CMSPagesListPage,
+  CMSPageEditorPage,
+  CMSLegalListPage,
+  CMSLegalEditorPage,
+  CMSBlogListPage,
+  CMSBlogEditorPage,
+  CMSFAQsPage,
+  CMSGlossaryPage,
+  CMSGlossaryEditorPage,
+  CMSCaseStudiesPage,
+  CMSCaseStudyEditorPage,
+  CMSContactSubmissionsPage,
+  CMSNewsletterPage,
+  CMSSitemapSettingsPage,
+  CMSRobotsTxtPage,
+  CMSLLMsTxtPage,
+  CMSRedirectsPage,
+  CMSSeoMetaPage,
+  CMSPageSeoPage,
+  CMSPricingPage,
+  // Public CMS Pages
+  CMSPageView,
+  BlogListPage,
+  BlogPostPage,
+  CaseStudyListPage,
+  CaseStudyPage,
+  ContactPage,
+  FAQPage,
+  GlossaryListPage,
+  GlossaryTermPage,
+  // SEO Files
+  SitemapXmlPage,
+  RobotsTxtPage,
+  LLMsTxtPage,
+  // Service Pages
+  EORPage,
+  RetainedRecruitmentPage,
+  HeadhuntingPage,
+  EnterprisePage,
+  PricingCalculatorPage,
 } from '@/pages';
 import { BookingPage, RecruiterBookingPage } from '@/pages/booking';
-import { CandidateDashboardLayout, SettingsLayout } from '@/layouts';
+import { CandidateDashboardLayout, SettingsLayout, CMSLayout } from '@/layouts';
+import { GoogleAnalytics } from '@/components/analytics';
 import './App.css';
 
 // Redirect component for old job applications route
@@ -73,8 +117,10 @@ function JobApplicationsRedirect() {
 function App() {
   return (
     <BrandingProvider>
-      <AuthProvider>
-        <ToastProvider>
+      <SEOProvider>
+        <AuthProvider>
+          <ToastProvider>
+          <GoogleAnalytics />
         <Routes>
         {/* Home page - accessible to all */}
         <Route path="/" element={<HomePage />} />
@@ -158,6 +204,40 @@ function App() {
           <Route path="admin/analytics" element={<AnalyticsPage />} />
           {/* Redirect old admin/applications URL */}
           <Route path="admin/applications" element={<Navigate to="/dashboard/applications" replace />} />
+          {/* CMS Dashboard routes with CMSLayout */}
+          <Route path="cms" element={<CMSLayout />}>
+            <Route index element={<CMSOverviewPage />} />
+            {/* Legal Documents */}
+            <Route path="legal" element={<CMSLegalListPage />} />
+            <Route path="legal/new" element={<CMSLegalEditorPage />} />
+            <Route path="legal/:docId" element={<CMSLegalEditorPage />} />
+            {/* Legacy pages routes - redirect to legal */}
+            <Route path="pages" element={<CMSPagesListPage />} />
+            <Route path="pages/new" element={<CMSPageEditorPage />} />
+            <Route path="pages/:pageId" element={<CMSPageEditorPage />} />
+            <Route path="blog" element={<CMSBlogListPage />} />
+            <Route path="blog/new" element={<CMSBlogEditorPage />} />
+            <Route path="blog/:postId" element={<CMSBlogEditorPage />} />
+            <Route path="faqs" element={<CMSFAQsPage />} />
+            <Route path="glossary" element={<CMSGlossaryPage />} />
+            <Route path="glossary/new" element={<CMSGlossaryEditorPage />} />
+            <Route path="glossary/:termId" element={<CMSGlossaryEditorPage />} />
+            <Route path="case-studies" element={<CMSCaseStudiesPage />} />
+            <Route path="case-studies/new" element={<CMSCaseStudyEditorPage />} />
+            <Route path="case-studies/:studyId" element={<CMSCaseStudyEditorPage />} />
+            <Route path="contact" element={<CMSContactSubmissionsPage />} />
+            <Route path="newsletter" element={<CMSNewsletterPage />} />
+            {/* CMS Settings */}
+            <Route path="settings/sitemap" element={<CMSSitemapSettingsPage />} />
+            <Route path="settings/robots" element={<CMSRobotsTxtPage />} />
+            <Route path="settings/llms" element={<CMSLLMsTxtPage />} />
+            {/* SEO Management */}
+            <Route path="seo/meta" element={<CMSSeoMetaPage />} />
+            <Route path="seo/pages" element={<CMSPageSeoPage />} />
+            <Route path="seo/redirects" element={<CMSRedirectsPage />} />
+            {/* Pricing */}
+            <Route path="pricing" element={<CMSPricingPage />} />
+          </Route>
         </Route>
 
         {/* Public candidates directory */}
@@ -171,6 +251,22 @@ function App() {
         {/* Public jobs board */}
         <Route path="/jobs" element={<JobsListingPage />} />
         <Route path="/jobs/:slug" element={<JobDetailPage />} />
+
+        <Route path="/blog" element={<BlogListPage />} />
+        <Route path="/blog/:slug" element={<BlogPostPage />} />
+        <Route path="/case-studies" element={<CaseStudyListPage />} />
+        <Route path="/case-studies/:slug" element={<CaseStudyPage />} />
+        <Route path="/faqs" element={<FAQPage />} />
+        <Route path="/glossary" element={<GlossaryListPage />} />
+        <Route path="/glossary/:slug" element={<GlossaryTermPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+
+        {/* Service Pages */}
+        <Route path="/eor" element={<EORPage />} />
+        <Route path="/retained-recruitment" element={<RetainedRecruitmentPage />} />
+        <Route path="/headhunting" element={<HeadhuntingPage />} />
+        <Route path="/enterprise" element={<EnterprisePage />} />
+        <Route path="/pricing" element={<PricingCalculatorPage />} />
 
         {/* Public booking page (Calendly-like self-scheduling for interviews) */}
         <Route path="/book/:token" element={<BookingPage />} />
@@ -189,11 +285,20 @@ function App() {
           }
         />
 
+        {/* SEO Files - served as clean URLs */}
+        <Route path="/sitemap.xml" element={<SitemapXmlPage />} />
+        <Route path="/robots.txt" element={<RobotsTxtPage />} />
+        <Route path="/llms.txt" element={<LLMsTxtPage />} />
+
+        {/* CMS Pages - catch-all for dynamic pages at root level (e.g., /privacy-policy) */}
+        <Route path="/:slug" element={<CMSPageView />} />
+
         {/* 404 - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        </ToastProvider>
-      </AuthProvider>
+          </ToastProvider>
+        </AuthProvider>
+      </SEOProvider>
     </BrandingProvider>
   );
 }

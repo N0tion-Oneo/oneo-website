@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useCandidates } from '@/hooks'
 import { Seniority, WorkPreference } from '@/types'
 import type { CandidateProfileSanitized } from '@/types'
+import Navbar from '@/components/layout/Navbar'
+import { SEO } from '@/components/seo'
 
 export default function CandidatesDirectoryPage() {
   const [filters, setFilters] = useState({
@@ -48,27 +50,10 @@ export default function CandidatesDirectoryPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="text-lg font-semibold text-gray-900">
-            Oneo
-          </Link>
-          <nav className="flex items-center gap-6">
-            <Link to="/jobs" className="text-[13px] font-medium text-gray-500 hover:text-gray-900">
-              Jobs
-            </Link>
-            <Link to="/candidates" className="text-[13px] font-medium text-gray-900">
-              Candidates
-            </Link>
-            <Link to="/login" className="text-[13px] font-medium text-gray-500 hover:text-gray-900">
-              Sign in
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SEO />
+      <Navbar />
 
-      <main className="max-w-6xl mx-auto px-6 py-10">
+      <main className="max-w-5xl mx-auto px-6 py-10">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-[26px] font-semibold text-gray-900">Talent Directory</h1>

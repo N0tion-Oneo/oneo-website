@@ -22,7 +22,7 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  const companyName = branding?.company_name || 'Oneo';
+  const companyName = branding?.company_name || '';
 
   const from = (location.state as { from?: Location })?.from?.pathname || '/dashboard';
 

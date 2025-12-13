@@ -1,6 +1,10 @@
+import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useCandidate } from '@/hooks'
 import CandidateProfileCard from '@/components/candidates/CandidateProfileCard'
+import Navbar from '@/components/layout/Navbar'
+import { SEO } from '@/components/seo'
+import { buildCandidateSEOData } from '@/utils/seoTemplates'
 import type { CandidateProfile, CandidateProfileSanitized } from '@/types'
 
 // Type guard to check if profile is full or sanitized
@@ -11,6 +15,27 @@ function isFullProfile(profile: CandidateProfile | CandidateProfileSanitized): p
 export default function CandidateProfilePage() {
   const { slug } = useParams<{ slug: string }>()
   const { candidate, isLoading, error } = useCandidate(slug || '')
+
+  // Build SEO data for programmatic templates - must be before any early returns
+  // For public profiles, we use initials instead of full name
+  const candidateSeoData = useMemo(() => {
+    if (!candidate) return undefined
+
+    // Get initials from first_name and last_name
+    const initials = `${candidate.first_name?.charAt(0) || ''}${candidate.last_name?.charAt(0) || ''}`.toUpperCase()
+
+    return buildCandidateSEOData({
+      initials,
+      professional_title: candidate.current_title || undefined,
+      headline: candidate.bio || undefined,
+      seniority: candidate.seniority || undefined,
+      city: candidate.city || undefined,
+      country: candidate.country || undefined,
+      work_preference: candidate.work_preference || undefined,
+      years_of_experience: candidate.years_of_experience || undefined,
+      industries: candidate.industries || undefined,
+    })
+  }, [candidate])
 
   if (isLoading) {
     return (
@@ -23,14 +48,8 @@ export default function CandidateProfilePage() {
   if (error || !candidate) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <header className="bg-white border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-6 h-14 flex items-center">
-            <Link to="/" className="text-lg font-semibold text-gray-900">
-              Oneo
-            </Link>
-          </div>
-        </header>
-        <main className="max-w-4xl mx-auto px-6 py-10">
+        <Navbar />
+        <main className="max-w-5xl mx-auto px-6 py-10">
           <div className="text-center py-12">
             <p className="text-[15px] text-gray-700 mb-2">Profile not found</p>
             <p className="text-[13px] text-gray-500 mb-4">
@@ -52,21 +71,14 @@ export default function CandidateProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="text-lg font-semibold text-gray-900">
-            Oneo
-          </Link>
-          <nav className="flex items-center gap-6">
-            <Link to="/candidates" className="text-[13px] font-medium text-gray-500 hover:text-gray-900">
-              Back to directory
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SEO
+        contentData={candidateSeoData ? { candidate: candidateSeoData } : undefined}
+        ogType="profile"
+        ogImage={candidate.profile_image || undefined}
+      />
+      <Navbar />
 
-      <main className="max-w-4xl mx-auto px-6 py-10">
+      <main className="max-w-5xl mx-auto px-6 py-10">
         <div className="grid md:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="md:col-span-2">

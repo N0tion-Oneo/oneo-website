@@ -26,17 +26,20 @@ export const CONFIG = {
   STALE_TIME: 5 * 60 * 1000, // 5 minutes
   CACHE_TIME: 10 * 60 * 1000, // 10 minutes
 
-  // Application
-  APP_NAME: 'Oneo',
-  APP_DESCRIPTION: 'Premium Recruitment Platform',
-  COMPANY_EMAIL: 'hello@oneo.co.za',
-  COMPANY_PHONE: '+27 (0) 123 456 789',
+  // Application - these are fallbacks only, branding comes from BrandingSettings
+  // For multi-tenant support, these should be generic or empty
+  APP_NAME: '', // Loaded from BrandingSettings
+  APP_DESCRIPTION: '', // Loaded from BrandingSettings
 
-  // Social media (placeholders)
+  // Contact info - loaded from BrandingSettings
+  COMPANY_EMAIL: '',
+  COMPANY_PHONE: '',
+
+  // Social media - loaded from BrandingSettings
   SOCIAL: {
-    linkedin: 'https://linkedin.com/company/oneo',
-    twitter: 'https://twitter.com/oneo',
-    facebook: 'https://facebook.com/oneo',
+    linkedin: '',
+    twitter: '',
+    facebook: '',
   },
 } as const
 

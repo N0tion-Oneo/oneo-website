@@ -573,7 +573,7 @@ export default function BrandingSettingsPage() {
                 value={formData.company_name || ''}
                 onChange={(e) => handleChange('company_name', e.target.value)}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
-                placeholder="Oneo"
+                placeholder="Your Company Name"
               />
             </div>
             <div>
@@ -585,7 +585,7 @@ export default function BrandingSettingsPage() {
                 value={formData.tagline || ''}
                 onChange={(e) => handleChange('tagline', e.target.value)}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
-                placeholder="Recruitment Made Simple"
+                placeholder="Your company tagline"
               />
             </div>
           </div>
@@ -1171,9 +1171,9 @@ export default function BrandingSettingsPage() {
                       // Then do variable substitution
                       return processedHtml
                         // Company Info
-                        .replace(/\{\{\s*branding\.company_name\s*\}\}/g, formData.company_name || 'Oneo')
-                        .replace(/\{\{\s*branding\.company_name\|default:"[^"]*"\s*\}\}/g, formData.company_name || 'Oneo')
-                        .replace(/\{\{\s*branding\.company_name\|default:'[^']*'\s*\}\}/g, formData.company_name || 'Oneo')
+                        .replace(/\{\{\s*branding\.company_name\s*\}\}/g, formData.company_name || '')
+                        .replace(/\{\{\s*branding\.company_name\|default:"[^"]*"\s*\}\}/g, formData.company_name || '')
+                        .replace(/\{\{\s*branding\.company_name\|default:'[^']*'\s*\}\}/g, formData.company_name || '')
                         .replace(/\{\{\s*branding\.tagline\s*\}\}/g, formData.tagline || 'Recruitment Made Simple')
                         .replace(/\{\{\s*branding\.logo_url\s*\}\}/g, logoUrl)
                         .replace(/\{\{\s*branding\.logo_dark_url\s*\}\}/g, logoDarkUrl)
@@ -1233,7 +1233,7 @@ export default function BrandingSettingsPage() {
                           <p><a href="#" class="button">View Details</a></p>
                         `)
                         // Preheader
-                        .replace(/\{\{\s*preheader_text\|default:[^}]+\}\}/g, formData.tagline || 'Update from Oneo')
+                        .replace(/\{\{\s*preheader_text\|default:[^}]+\}\}/g, formData.tagline || 'Update')
                         // Year
                         .replace(/\{%\s*now\s+"Y"\s*%\}/g, new Date().getFullYear().toString())
                         // Block tags (for extending templates)

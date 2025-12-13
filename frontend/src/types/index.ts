@@ -2418,3 +2418,4 @@ export interface OnboardingHistory {
 // ============================================================================
 
 export * from './analytics'
+export * from './cms'

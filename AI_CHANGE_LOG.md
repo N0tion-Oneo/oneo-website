@@ -84,3 +84,155 @@ This file tracks all changes made by the AI assistant to the project.
 - Updated job models, serializers, views, and frontend components
 - Updated API URLs and settings configuration
 
+## 2024-12-19 - Git Push: Shortlist Questions and Screening Functionality
+
+**Time**: Current session
+**Description**: Committed and pushed shortlist questions and screening functionality to GitHub
+**Reason**: User requested to push latest changes to GitHub
+**Affected Files**:
+- 23 files changed (2,575 insertions, 7 deletions)
+**Changes**:
+- Staged all changes (modified and untracked files) with `git add .`
+- Committed changes with message: "Add shortlist questions and screening functionality"
+- Pushed commit (72456f7) to origin/main branch
+- Added ShortlistQuestion model with migration
+- Added shortlist questions serializers and views
+- Added ShortlistScreeningSection component for applications
+- Added ShortlistQuestionBuilder component for job creation
+- Added StarRatingInput component for rating questions
+- Added useShortlistAnswers and useShortlistTemplates hooks
+- Updated application drawer and pipeline timeline components
+- Updated job form and related components
+- Cleaned up AI_CHANGE_LOG.md entries
+
+## 2025-12-11 - CMS Settings & Navigation Enhancement
+
+**Time**: Current session
+**Description**: Added CMS site settings for analytics, robots.txt, sitemap, and llms.txt with dashboard management UI
+
+**Backend Changes**:
+- `backend/cms/models/site_settings.py` - New SiteSettings singleton model for:
+  - Google Analytics (GA4 Measurement ID, GTM Container ID, enable toggle)
+  - robots.txt content (editable)
+  - llms.txt content (editable for AI/LLM agents)
+  - Sitemap settings (enable/disable, content type toggles)
+  - Site meta info (name, URL, description)
+- `backend/cms/serializers/site_settings.py` - Serializers for settings endpoints
+- `backend/cms/views/site_settings.py` - Admin and public views for settings
+- `backend/cms/views/sitemap.py` - Updated to use SiteSettings for configuration
+- `backend/cms/urls.py` - Added settings endpoints:
+  - Admin: `/admin/settings/`, `/admin/settings/analytics/`, `/admin/settings/robots-txt/`, `/admin/settings/llms-txt/`, `/admin/settings/sitemap/`
+  - Public: `/robots.txt`, `/llms.txt`, `/analytics/`
+- Migration `0002_add_site_settings.py`
+
+**Frontend Changes**:
+- `frontend/src/layouts/CMSLayout.tsx` - New CMS layout with sub-navigation (similar to SettingsLayout)
+- `frontend/src/layouts/CandidateDashboardLayout.tsx` - Added CMS nav item for admin users
+- `frontend/src/pages/dashboard/cms/CMSAnalyticsSettingsPage.tsx` - GA4/GTM configuration
+- `frontend/src/pages/dashboard/cms/CMSSitemapSettingsPage.tsx` - Sitemap configuration
+- `frontend/src/pages/dashboard/cms/CMSRobotsTxtPage.tsx` - robots.txt editor
+- `frontend/src/pages/dashboard/cms/CMSLLMsTxtPage.tsx` - llms.txt editor
+- `frontend/src/components/analytics/GoogleAnalytics.tsx` - Now fetches settings from CMS
+- `frontend/src/services/cms.ts` - Added cmsSiteSettings service
+- `frontend/src/types/cms.ts` - Added site settings types
+- `frontend/src/App.tsx` - Updated routes to use CMSLayout
+
+**Key Features**:
+- CMS now accessible via main dashboard navigation (admin only)
+- CMS has its own sub-navigation sidebar with sections:
+  - Content: Overview, Pages, Blog, FAQs, Glossary, Case Studies
+  - Submissions: Contact, Newsletter
+  - SEO & Technical: Analytics, Sitemap, Robots.txt, LLMs.txt
+- Google Analytics configurable via CMS (no env variables needed)
+- robots.txt and llms.txt served dynamically from CMS database
+- Sitemap generation respects CMS settings for content type inclusion
+- Removed static robots.txt and llms.txt from public folder
+
+---
+
+## 2025-12-11 - Phase 12 & 13: CMS, Content Management & SEO
+
+**Time**: Current session
+**Description**: Implemented comprehensive CMS system and SEO infrastructure (Phases 12 & 13 from V1 Plan)
+**Reason**: User requested implementation of Phase 12 (Content & Legal Pages) and Phase 13 (SEO & Analytics)
+
+### Phase 12: Content Management System
+
+**Backend CMS (Django)**:
+- `backend/cms/models/` - Created modular model structure:
+  - `base.py` - Abstract base classes (TimestampedModel, SluggedModel, SEOFields, PublishableModel, BlockContentModel)
+  - `pages.py` - Page model for static content (legal, about, service pages)
+  - `blog.py` - BlogPost model with categories, tags, featured images
+  - `faqs.py` - FAQ and FAQCategory models
+  - `glossary.py` - GlossaryTerm model with related terms
+  - `case_studies.py` - CaseStudy model with highlights and testimonials
+  - `submissions.py` - ContactSubmission and NewsletterSubscriber models
+- `backend/cms/serializers/` - Full serializer suite for all content types
+- `backend/cms/views/` - Admin and public API endpoints for all content
+- `backend/cms/urls.py` - URL routing for CMS endpoints
+- `backend/cms/admin.py` - Django admin registration
+- `backend/cms/views/sitemap.py` - Dynamic XML sitemap generation
+
+**Frontend CMS Dashboard**:
+- `frontend/src/components/cms/BlockEditor.tsx` - Editor.js wrapper component
+- `frontend/src/components/cms/BlockRenderer.tsx` - Renders Editor.js content as HTML
+- `frontend/src/pages/dashboard/cms/CMSOverviewPage.tsx` - CMS dashboard overview
+- `frontend/src/pages/dashboard/cms/CMSPagesListPage.tsx` - Pages list with filtering
+- `frontend/src/pages/dashboard/cms/CMSPageEditorPage.tsx` - Block editor for pages
+- `frontend/src/pages/dashboard/cms/CMSBlogListPage.tsx` - Blog posts grid view
+- `frontend/src/pages/dashboard/cms/CMSBlogEditorPage.tsx` - Blog post editor
+- `frontend/src/pages/dashboard/cms/CMSFAQsPage.tsx` - FAQ management with categories
+
+**Frontend Public Pages**:
+- `frontend/src/pages/public/CMSPageView.tsx` - Public CMS page renderer
+- `frontend/src/pages/public/BlogListPage.tsx` - Public blog listing
+- `frontend/src/pages/public/BlogPostPage.tsx` - Blog post detail page
+- `frontend/src/pages/public/ContactPage.tsx` - Contact form with validation
+
+**Frontend Services & Types**:
+- `frontend/src/services/cms.ts` - CMS API service layer
+- `frontend/src/types/cms.ts` - TypeScript types for all CMS content
+
+### Phase 13: SEO & Analytics
+
+**SEO Components**:
+- `frontend/src/components/seo/SEO.tsx` - SEO component with:
+  - Meta tag management (title, description, robots)
+  - Open Graph tags for social sharing
+  - Twitter Card tags
+  - Structured data injection (JSON-LD)
+  - Schema generators: createOrganizationSchema, createJobPostingSchema, createArticleSchema, createFAQSchema, createBreadcrumbSchema
+
+**Google Analytics 4**:
+- `frontend/src/components/analytics/GoogleAnalytics.tsx` - GA4 implementation with:
+  - Page view tracking on route changes
+  - Custom event tracking
+  - Pre-defined event helpers (jobView, jobApply, blogPostView, contactFormSubmit, etc.)
+
+**Static Files**:
+- `frontend/public/robots.txt` - Search engine crawler rules
+
+**SEO Integration**:
+- Added SEO to JobDetailPage with JobPosting structured data
+- Added SEO to BlogPostPage with Article structured data
+- Added SEO to BlogListPage and ContactPage
+
+**Routing Updates**:
+- `frontend/src/App.tsx` - Added routes:
+  - `/dashboard/cms/*` - CMS dashboard routes
+  - `/pages/:slug` - Public CMS pages
+  - `/blog` and `/blog/:slug` - Public blog
+  - `/contact` - Contact page
+
+**Dependencies Added**:
+- @editorjs/editorjs and plugins (header, list, paragraph, quote, code, delimiter, table, checklist)
+
+**Key Features**:
+- Block-based content editing (Notion-like experience)
+- Full CRUD for Pages, Blog Posts, FAQs, Glossary, Case Studies
+- Contact form submissions storage
+- Newsletter subscriber management
+- SEO-optimized public pages
+- Structured data for rich search results
+- GA4 analytics with custom event tracking
+

@@ -143,9 +143,9 @@ export default function NotificationTemplateEditPage() {
     // Then do variable substitution
     processedHtml = processedHtml
       // Company Info
-      .replace(/\{\{\s*branding\.company_name\s*\}\}/g, brandingSettings.company_name || 'Oneo')
-      .replace(/\{\{\s*branding\.company_name\|default:"[^"]*"\s*\}\}/g, brandingSettings.company_name || 'Oneo')
-      .replace(/\{\{\s*branding\.company_name\|default:'[^']*'\s*\}\}/g, brandingSettings.company_name || 'Oneo')
+      .replace(/\{\{\s*branding\.company_name\s*\}\}/g, brandingSettings.company_name || '')
+      .replace(/\{\{\s*branding\.company_name\|default:"[^"]*"\s*\}\}/g, brandingSettings.company_name || '')
+      .replace(/\{\{\s*branding\.company_name\|default:'[^']*'\s*\}\}/g, brandingSettings.company_name || '')
       .replace(/\{\{\s*branding\.tagline\s*\}\}/g, brandingSettings.tagline || '')
       .replace(/\{\{\s*branding\.logo_url\s*\}\}/g, logoUrl)
       .replace(/\{\{\s*branding\.logo_dark_url\s*\}\}/g, logoDarkUrl)
@@ -200,7 +200,7 @@ export default function NotificationTemplateEditPage() {
       // Inject the notification email content
       .replace(/\{\{\s*email_content\|safe\s*\}\}/g, previewContent.emailBody || '<p>Email content will appear here</p>')
       // Preheader
-      .replace(/\{\{\s*preheader_text\|default:[^}]+\}\}/g, brandingSettings.tagline || 'Update from Oneo')
+      .replace(/\{\{\s*preheader_text\|default:[^}]+\}\}/g, brandingSettings.tagline || 'Update')
       // Year
       .replace(/\{%\s*now\s+"Y"\s*%\}/g, new Date().getFullYear().toString())
       // Block tags (for extending templates)

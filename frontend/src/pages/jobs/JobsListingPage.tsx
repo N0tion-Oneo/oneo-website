@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useJobs } from '@/hooks/useJobs'
 import { useCountries } from '@/hooks/useCompanies'
 import { JobCard } from '@/components/jobs'
 import { Seniority, JobType, WorkMode, Department } from '@/types'
 import type { JobFilters } from '@/types'
 import { Briefcase, Search, X } from 'lucide-react'
+import Navbar from '@/components/layout/Navbar'
+import { SEO } from '@/components/seo'
 
 const seniorityOptions = [
   { value: Seniority.INTERN, label: 'Intern' },
@@ -90,39 +91,10 @@ export default function JobsListingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="text-lg font-semibold text-gray-900">
-            Oneo
-          </Link>
-          <nav className="flex items-center gap-6">
-            <Link to="/jobs" className="text-[13px] font-medium text-gray-900">
-              Jobs
-            </Link>
-            <Link
-              to="/candidates"
-              className="text-[13px] font-medium text-gray-500 hover:text-gray-900"
-            >
-              Candidates
-            </Link>
-            <Link
-              to="/companies"
-              className="text-[13px] font-medium text-gray-500 hover:text-gray-900"
-            >
-              Companies
-            </Link>
-            <Link
-              to="/login"
-              className="text-[13px] font-medium text-gray-500 hover:text-gray-900"
-            >
-              Sign in
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SEO />
+      <Navbar />
 
-      <main className="max-w-6xl mx-auto px-6 py-10">
+      <main className="max-w-5xl mx-auto px-6 py-10">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-[26px] font-semibold text-gray-900">Job Board</h1>

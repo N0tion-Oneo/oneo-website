@@ -34,7 +34,7 @@ export default function SignupPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  const companyName = branding?.company_name || 'Oneo';
+  const companyName = branding?.company_name || '';
 
   const {
     register,

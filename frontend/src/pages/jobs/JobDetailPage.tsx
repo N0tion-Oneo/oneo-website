@@ -1,8 +1,12 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useJob } from '@/hooks/useJobs'
 import { useAuth } from '@/contexts/AuthContext'
+import { useSEODefaults } from '@/contexts/SEOContext'
 import { ApplyModal } from '@/components/applications'
+import { SEO, createJobPostingSchema } from '@/components/seo'
+import { buildJobSEOData } from '@/utils/seoTemplates'
+import Navbar from '@/components/layout/Navbar'
 import {
   Building2,
   MapPin,
@@ -80,7 +84,57 @@ export default function JobDetailPage() {
   const navigate = useNavigate()
   const { job, isLoading, error, refetch } = useJob(slug || '')
   const { user, isAuthenticated } = useAuth()
+  const seoDefaults = useSEODefaults()
   const [showApplyModal, setShowApplyModal] = useState(false)
+
+  // Generate structured data for job posting - must be before any early returns
+  const jobSchema = useMemo(() => {
+    if (!job) return undefined
+    return createJobPostingSchema({
+      title: job.title,
+      description: job.description,
+      datePosted: job.created_at,
+      validThrough: job.deadline || undefined,
+      employmentType: job.job_type === 'full_time' ? 'FULL_TIME' :
+                      job.job_type === 'part_time' ? 'PART_TIME' :
+                      job.job_type === 'contract' ? 'CONTRACTOR' : 'OTHER',
+      hiringOrganization: {
+        name: job.company?.name || 'Confidential',
+        sameAs: job.company ? `/companies/${job.company.slug}` : undefined,
+        logo: job.company?.logo || undefined,
+      },
+      jobLocation: job.location_display ? {
+        addressLocality: job.location_display,
+      } : undefined,
+      isRemote: job.work_mode === 'remote',
+      baseSalary: (job.salary_min || job.salary_max) ? {
+        currency: job.currency || 'ZAR',
+        minValue: job.salary_min || undefined,
+        maxValue: job.salary_max || undefined,
+        unitText: 'YEAR',
+      } : undefined,
+    })
+  }, [job])
+
+  // Build SEO data for programmatic templates
+  const jobSeoData = useMemo(() => {
+    if (!job) return undefined
+    return buildJobSEOData({
+      title: job.title,
+      company: job.company,
+      seniority: job.seniority,
+      job_type: job.job_type,
+      department: job.department,
+      location_city: job.location_city,
+      location_country: job.location_country,
+      work_mode: job.work_mode,
+      salary_min: job.salary_min,
+      salary_max: job.salary_max,
+      salary_currency: job.currency,
+      salary_visible: job.salary_visible,
+      summary: job.summary,
+    })
+  }, [job])
 
   const isCandidate = user?.role === UserRole.CANDIDATE
   const canApply = isAuthenticated && isCandidate
@@ -96,14 +150,8 @@ export default function JobDetailPage() {
   if (error || !job) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <header className="bg-white border-b border-gray-200">
-          <div className="max-w-6xl mx-auto px-6 h-14 flex items-center">
-            <Link to="/" className="text-lg font-semibold text-gray-900">
-              Oneo
-            </Link>
-          </div>
-        </header>
-        <div className="max-w-6xl mx-auto px-6 py-10">
+        <Navbar />
+        <div className="max-w-5xl mx-auto px-6 py-10">
           <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
             <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-[15px] text-gray-700 mb-1">Job not found</p>
@@ -125,39 +173,15 @@ export default function JobDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="text-lg font-semibold text-gray-900">
-            Oneo
-          </Link>
-          <nav className="flex items-center gap-6">
-            <Link to="/jobs" className="text-[13px] font-medium text-gray-900">
-              Jobs
-            </Link>
-            <Link
-              to="/candidates"
-              className="text-[13px] font-medium text-gray-500 hover:text-gray-900"
-            >
-              Candidates
-            </Link>
-            <Link
-              to="/companies"
-              className="text-[13px] font-medium text-gray-500 hover:text-gray-900"
-            >
-              Companies
-            </Link>
-            <Link
-              to="/login"
-              className="text-[13px] font-medium text-gray-500 hover:text-gray-900"
-            >
-              Sign in
-            </Link>
-          </nav>
-        </div>
-      </header>
+      {job && (
+        <SEO
+          contentData={jobSeoData ? { job: jobSeoData } : undefined}
+          structuredData={jobSchema}
+        />
+      )}
+      <Navbar />
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="max-w-5xl mx-auto px-6 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-[13px] text-gray-500 mb-6">
           <Link to="/jobs" className="hover:text-gray-700">
@@ -398,7 +422,7 @@ export default function JobDetailPage() {
                     Apply Now
                   </button>
                   <p className="text-[11px] text-gray-400 text-center mt-3">
-                    Apply with your Oneo profile
+                    Apply with your {seoDefaults.companyName || ''} profile
                   </p>
                 </>
               ) : isAuthenticated ? (

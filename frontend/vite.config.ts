@@ -20,4 +20,26 @@ export default defineConfig({
       '@/features': path.resolve(__dirname, './src/features'),
     },
   },
+  server: {
+    proxy: {
+      // Proxy SEO files to Django backend
+      // Matches: sitemap.xml, page-sitemap.xml, post-sitemap.xml, etc.
+      '^/(sitemap\\.xml|[a-z-]+-sitemap\\.xml)$': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/sitemap.xsl': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/robots.txt': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/llms.txt': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
+  },
 });

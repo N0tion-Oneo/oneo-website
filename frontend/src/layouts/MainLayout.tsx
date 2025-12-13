@@ -24,7 +24,7 @@ function Navbar() {
                 className="h-8 w-auto"
               />
             ) : (
-              <span className="text-2xl font-bold">{branding?.company_name || 'Oneo'}</span>
+              <span className="text-2xl font-bold">{branding?.company_name || ''}</span>
             )}
           </Link>
 
@@ -88,7 +88,7 @@ function Footer() {
                 className="h-8 w-auto mb-4"
               />
             ) : (
-              <h3 className="text-2xl font-bold mb-4">{branding?.company_name || 'Oneo'}</h3>
+              <h3 className="text-2xl font-bold mb-4">{branding?.company_name || ''}</h3>
             )}
             <p className="text-white/70 text-sm">
               {branding?.tagline || 'Connecting exceptional talent with innovative companies.'}
@@ -169,7 +169,7 @@ function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-white/10 mt-8 pt-8 text-center text-sm text-white/60">
-          <p>&copy; {currentYear} {branding?.company_name || 'Oneo'}. All rights reserved.</p>
+          <p>&copy; {currentYear} {branding?.company_name || ''}. All rights reserved.</p>
         </div>
       </div>
     </footer>

@@ -45,7 +45,7 @@ export default function ClientSignupPage() {
   const [invitationValid, setInvitationValid] = useState(false)
   const [invitationEmail, setInvitationEmail] = useState('')
 
-  const brandName = branding?.company_name || 'Oneo'
+  const brandName = branding?.company_name || ''
 
   const {
     register,

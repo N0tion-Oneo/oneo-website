@@ -1,5 +1,9 @@
+import { useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useCompany } from '@/hooks'
+import Navbar from '@/components/layout/Navbar'
+import { SEO } from '@/components/seo'
+import { buildCompanySEOData } from '@/utils/seoTemplates'
 import {
   Building2,
   MapPin,
@@ -41,6 +45,20 @@ export default function CompanyProfilePage() {
     return labels[stage] || stage
   }
 
+  // Build SEO data for programmatic templates - must be before any early returns
+  const companySeoData = useMemo(() => {
+    if (!company) return undefined
+    return buildCompanySEOData({
+      name: company.name,
+      tagline: company.tagline || undefined,
+      industry: company.industry || undefined,
+      company_size: company.company_size || undefined,
+      headquarters_location: company.headquarters_location || undefined,
+      founded_year: company.founded_year || undefined,
+      remote_work_policy: company.remote_work_policy || undefined,
+    })
+  }, [company])
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -55,14 +73,8 @@ export default function CompanyProfilePage() {
   if (error || !company) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <header className="bg-white border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-6 h-14 flex items-center">
-            <Link to="/companies" className="text-lg font-semibold text-gray-900">
-              Oneo
-            </Link>
-          </div>
-        </header>
-        <main className="max-w-4xl mx-auto px-6 py-12">
+        <Navbar />
+        <main className="max-w-5xl mx-auto px-6 py-12">
           <div className="text-center">
             <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-[15px] text-gray-700 mb-1">Company not found</p>
@@ -77,33 +89,13 @@ export default function CompanyProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="text-lg font-semibold text-gray-900">
-            Oneo
-          </Link>
-          <nav className="flex items-center gap-6">
-            <Link to="/jobs" className="text-[13px] font-medium text-gray-500 hover:text-gray-900">
-              Jobs
-            </Link>
-            <Link
-              to="/candidates"
-              className="text-[13px] font-medium text-gray-500 hover:text-gray-900"
-            >
-              Candidates
-            </Link>
-            <Link to="/companies" className="text-[13px] font-medium text-gray-900">
-              Companies
-            </Link>
-            <Link to="/login" className="text-[13px] font-medium text-gray-500 hover:text-gray-900">
-              Sign in
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SEO
+        contentData={companySeoData ? { company: companySeoData } : undefined}
+        ogImage={company.logo || undefined}
+      />
+      <Navbar />
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-5xl mx-auto px-6 py-8">
         {/* Back link */}
         <Link
           to="/companies"

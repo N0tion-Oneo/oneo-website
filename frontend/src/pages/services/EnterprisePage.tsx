@@ -1,0 +1,365 @@
+// Enterprise Service Page - Combined Recruitment + EOR offering
+import { Link } from 'react-router-dom'
+import { SEO } from '@/components/seo'
+import { useSEODefaults } from '@/contexts/SEOContext'
+import Navbar from '@/components/layout/Navbar'
+import {
+  Building2,
+  Users,
+  Globe,
+  ArrowRight,
+  CheckCircle2,
+  TrendingDown,
+  Briefcase,
+  Shield,
+  Clock,
+  CreditCard,
+  Handshake,
+  BarChart3,
+  Calculator,
+} from 'lucide-react'
+
+const benefits = [
+  {
+    icon: TrendingDown,
+    title: 'Cashflow Friendly',
+    description: 'Spread costs over time with our margin-based model. No large upfront placement fees — pay as you go with predictable monthly costs.',
+  },
+  {
+    icon: Shield,
+    title: 'Full Compliance & Risk Management',
+    description: 'We handle all employment compliance, contracts, payroll, and statutory requirements across multiple jurisdictions.',
+  },
+  {
+    icon: Users,
+    title: 'End-to-End Talent Solution',
+    description: 'From finding the right candidate to employing and managing them — one partner handles everything.',
+  },
+  {
+    icon: TrendingDown,
+    title: 'Decreasing Costs Over Time',
+    description: 'Our margin decreases by 2% each year for the first 4 years, rewarding long-term partnerships.',
+  },
+]
+
+const included = [
+  { title: 'Talent Sourcing & Recruitment', description: 'Full recruitment service to find the perfect candidates' },
+  { title: 'Employment & Compliance', description: 'We become the legal employer, handling all compliance' },
+  { title: 'Payroll Management', description: 'Accurate, timely payroll in local currencies' },
+  { title: 'Benefits Administration', description: 'Competitive benefits packages for your team' },
+  { title: 'Asset Management', description: 'Equipment provisioning and tracking' },
+  { title: 'Office Solutions', description: 'Co-working spaces and local office setup' },
+  { title: 'Culture & Engagement', description: 'Team events and culture-building activities' },
+  { title: 'HR Support', description: 'Dedicated support for you and your employees' },
+]
+
+const pricingTiers = [
+  {
+    year: 'Year 1',
+    margin: '22%',
+    description: 'Starting rate on salaries',
+  },
+  {
+    year: 'Year 2',
+    margin: '20%',
+    description: '2% reduction',
+  },
+  {
+    year: 'Year 3',
+    margin: '18%',
+    description: '2% reduction',
+  },
+  {
+    year: 'Year 4+',
+    margin: '16%',
+    description: 'Long-term rate',
+  },
+]
+
+const comparison = [
+  {
+    feature: 'Upfront Costs',
+    enterprise: 'None',
+    traditional: 'Large placement fees (15-25%)',
+  },
+  {
+    feature: 'Monthly Predictability',
+    enterprise: 'Fixed margin on salary',
+    traditional: 'Variable costs',
+  },
+  {
+    feature: 'Employment Compliance',
+    enterprise: 'Included',
+    traditional: 'Your responsibility',
+  },
+  {
+    feature: 'Payroll & Benefits',
+    enterprise: 'Included',
+    traditional: 'Separate vendors',
+  },
+  {
+    feature: 'Asset Management',
+    enterprise: 'Available (+12% fee)',
+    traditional: 'Your responsibility',
+  },
+  {
+    feature: 'Long-term Cost Trend',
+    enterprise: 'Decreases over time',
+    traditional: 'Static or increases',
+  },
+]
+
+export default function EnterprisePage() {
+  const seoDefaults = useSEODefaults()
+
+  return (
+    <div className="min-h-screen bg-white">
+      <SEO />
+      <Navbar />
+
+      {/* Hero Section */}
+      <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+        <div className="max-w-5xl mx-auto px-6 py-20 md:py-28">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 bg-white/10 backdrop-blur rounded-xl flex items-center justify-center">
+              <Building2 className="w-6 h-6 text-amber-400" />
+            </div>
+            <span className="text-[13px] font-medium text-amber-400 uppercase tracking-wide">
+              Enterprise Solution
+            </span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+            Recruitment + EOR<br />
+            <span className="text-amber-400">Combined for Maximum Value</span>
+          </h1>
+          <p className="text-lg text-gray-300 max-w-2xl mb-8">
+            The ultimate talent solution for growing businesses. We find your talent, employ them compliantly,
+            and manage everything — with cashflow-friendly pricing that rewards long-term partnerships.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              to="/contact"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 text-gray-900 font-medium rounded-lg hover:bg-amber-400 transition-colors"
+            >
+              Get Started
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              to="/pricing"
+              className="inline-flex items-center gap-2 px-6 py-3 border border-white/30 text-white font-medium rounded-lg hover:bg-white/10 transition-colors"
+            >
+              <Calculator className="w-4 h-4" />
+              Calculate Your Costs
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Key Benefits */}
+      <div className="max-w-5xl mx-auto px-6 py-20">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            Why Choose Enterprise?
+          </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            A single partner for all your talent needs — from recruitment to employment to ongoing management.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          {benefits.map((benefit) => (
+            <div
+              key={benefit.title}
+              className="flex gap-4 p-6 rounded-xl border border-gray-200 hover:border-amber-200 hover:shadow-sm transition-all"
+            >
+              <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <benefit.icon className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-[17px] font-semibold text-gray-900 mb-2">
+                  {benefit.title}
+                </h3>
+                <p className="text-[14px] text-gray-600 leading-relaxed">
+                  {benefit.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Pricing Structure */}
+      <div className="bg-gray-50 border-y border-gray-100">
+        <div className="max-w-5xl mx-auto px-6 py-20">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Transparent Pricing That Rewards Loyalty
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Our margin-based model means you pay a percentage on salaries — no surprises, no large upfront fees.
+              And your rate decreases over time.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+            {pricingTiers.map((tier, index) => (
+              <div
+                key={tier.year}
+                className={`p-6 rounded-xl text-center ${
+                  index === 3
+                    ? 'bg-amber-500 text-gray-900'
+                    : 'bg-white border border-gray-200'
+                }`}
+              >
+                <div className={`text-[13px] font-medium mb-2 ${index === 3 ? 'text-gray-700' : 'text-gray-500'}`}>
+                  {tier.year}
+                </div>
+                <div className={`text-3xl font-bold mb-1 ${index === 3 ? 'text-gray-900' : 'text-gray-900'}`}>
+                  {tier.margin}
+                </div>
+                <div className={`text-[12px] ${index === 3 ? 'text-gray-700' : 'text-gray-500'}`}>
+                  {tier.description}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-6 md:p-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">How It Works</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <CreditCard className="w-5 h-5 text-amber-600" />
+                  <span className="font-medium text-gray-900">Salary Margin</span>
+                </div>
+                <p className="text-[14px] text-gray-600">
+                  We charge a margin on employee salaries (starting at 22%, decreasing to 16% by year 4).
+                  This covers recruitment, employment, payroll, compliance, and HR support.
+                </p>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <BarChart3 className="w-5 h-5 text-amber-600" />
+                  <span className="font-medium text-gray-900">Additional Services</span>
+                </div>
+                <p className="text-[14px] text-gray-600">
+                  Asset management, office solutions, and culture activities are charged at a 12% management
+                  fee on actual costs — completely transparent and optional.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* What's Included */}
+      <div className="max-w-5xl mx-auto px-6 py-20">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            Everything Included
+          </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            One partnership covers your entire talent lifecycle.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {included.map((item) => (
+            <div
+              key={item.title}
+              className="p-5 rounded-xl border border-gray-200 hover:border-amber-200 transition-colors"
+            >
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-[14px] font-semibold text-gray-900 mb-1">
+                    {item.title}
+                  </h3>
+                  <p className="text-[12px] text-gray-500">
+                    {item.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Comparison Table */}
+      <div className="bg-gray-900 text-white">
+        <div className="max-w-5xl mx-auto px-6 py-20">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">
+              Enterprise vs Traditional Recruitment
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              See how our integrated approach compares to traditional recruitment agencies.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="text-left py-4 px-4 text-[13px] font-medium text-gray-400">Feature</th>
+                  <th className="text-left py-4 px-4 text-[13px] font-medium text-amber-400">Enterprise</th>
+                  <th className="text-left py-4 px-4 text-[13px] font-medium text-gray-400">Traditional</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparison.map((row) => (
+                  <tr key={row.feature} className="border-b border-gray-800">
+                    <td className="py-4 px-4 text-[14px] text-gray-300">{row.feature}</td>
+                    <td className="py-4 px-4 text-[14px] text-white font-medium">{row.enterprise}</td>
+                    <td className="py-4 px-4 text-[14px] text-gray-500">{row.traditional}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="max-w-5xl mx-auto px-6 py-20">
+        <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-8 md:p-12">
+          <div className="md:flex md:items-center md:justify-between">
+            <div className="mb-6 md:mb-0">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                Ready to Transform Your Hiring?
+              </h2>
+              <p className="text-gray-600">
+                Let's discuss how Enterprise can work for your business.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                to="/contact"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                Contact Us
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/pricing"
+                className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-white transition-colors"
+              >
+                <Calculator className="w-4 h-4" />
+                Pricing Calculator
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-100 py-8">
+        <div className="max-w-5xl mx-auto px-6">
+          <p className="text-[13px] text-gray-400 text-center">
+            © {new Date().getFullYear()} {seoDefaults.companyName || 'All rights reserved'}.{seoDefaults.companyName ? ' All rights reserved.' : ''}
+          </p>
+        </div>
+      </footer>
+    </div>
+  )
+}

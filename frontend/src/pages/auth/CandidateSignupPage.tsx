@@ -59,7 +59,7 @@ export default function CandidateSignupPage() {
   const [invitationName, setInvitationName] = useState('')
   const [bookingInfo, setBookingInfo] = useState<BookingInfo | null>(null)
 
-  const brandName = branding?.company_name || 'Oneo'
+  const brandName = branding?.company_name || ''
 
   const {
     register,

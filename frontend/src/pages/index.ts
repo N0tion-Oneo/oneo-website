@@ -5,3 +5,6 @@ export * from './candidates';
 export * from './companies';
 export * from './jobs';
 export * from './settings';
+export * from './public';
+export * from './services';
+export * from './dashboard/cms';
