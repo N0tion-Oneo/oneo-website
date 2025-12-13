@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { SEO } from '@/components/seo'
 import Navbar from '@/components/layout/Navbar'
-import { cmsPricing, CMSPricingConfig, CMSPricingFeature } from '@/services/cms'
+import { cmsPricing, CMSPricingConfig } from '@/services/cms'
 import {
   Calculator,
   ArrowRight,
@@ -14,15 +14,7 @@ import {
   Crosshair,
   Check,
   X,
-  Trophy,
-  Star,
-  Plus,
   Trash2,
-  Briefcase,
-  Coffee,
-  PartyPopper,
-  Calendar,
-  Laptop,
 } from 'lucide-react'
 
 const formatCurrency = (amount: number): string => {
@@ -44,8 +36,8 @@ interface HireRole {
 interface Additionals {
   deskFees: { enabled: boolean; costPerDesk: number }
   monthlyLunches: { enabled: boolean; costPerPerson: number }
-  quarterlyEvents: { enabled: boolean; costPerEvent: number }
-  yearEndParty: { enabled: boolean; totalCost: number }
+  quarterlyEvents: { enabled: boolean; costPerPerson: number }
+  yearEndParty: { enabled: boolean; costPerPerson: number }
   assets: { enabled: boolean; costPerHire: number }
 }
 
@@ -94,11 +86,18 @@ const services = [
   { key: 'headhunting', name: 'Headhunting', icon: Crosshair, color: 'purple', link: '/headhunting', needsRecruitment: true, needsEOR: false },
 ]
 
-const colorClasses: Record<string, { bg: string; text: string; border: string; light: string }> = {
-  amber: { bg: 'bg-amber-500', text: 'text-amber-600', border: 'border-amber-300', light: 'bg-amber-50' },
-  blue: { bg: 'bg-blue-500', text: 'text-blue-600', border: 'border-blue-300', light: 'bg-blue-50' },
-  emerald: { bg: 'bg-emerald-500', text: 'text-emerald-600', border: 'border-emerald-300', light: 'bg-emerald-50' },
-  purple: { bg: 'bg-purple-500', text: 'text-purple-600', border: 'border-purple-300', light: 'bg-purple-50' },
+const colorClasses: Record<string, {
+  bg: string;
+  text: string;
+  border: string;
+  light: string;
+  borderActive: string;
+  bgLight: string;
+}> = {
+  amber: { bg: 'bg-amber-500', text: 'text-amber-600', border: 'border-amber-300', light: 'bg-amber-50', borderActive: 'border-amber-500', bgLight: 'bg-amber-100' },
+  blue: { bg: 'bg-blue-500', text: 'text-blue-600', border: 'border-blue-300', light: 'bg-blue-50', borderActive: 'border-blue-500', bgLight: 'bg-blue-100' },
+  emerald: { bg: 'bg-emerald-500', text: 'text-emerald-600', border: 'border-emerald-300', light: 'bg-emerald-50', borderActive: 'border-emerald-500', bgLight: 'bg-emerald-100' },
+  purple: { bg: 'bg-purple-500', text: 'text-purple-600', border: 'border-purple-300', light: 'bg-purple-50', borderActive: 'border-purple-500', bgLight: 'bg-purple-100' },
 }
 
 export default function PricingCalculatorPage() {
@@ -143,14 +142,14 @@ export default function PricingCalculatorPage() {
   }, [apiFeatures])
 
   // Get default values from config
-  const defaultSalary = Number(config.default_salary) || 45000
+  const defaultSalary = Number(config.default_salary) || 50000
   const defaultDeskFee = Number(config.default_desk_fee) || 5000
   const defaultLunchFee = Number(config.default_lunch_fee) || 500
-  const defaultEventCost = Number(config.default_event_cost) || 15000
-  const defaultPartyCost = Number(config.default_party_cost) || 50000
   const defaultAssetCost = Number(config.default_asset_cost) || 25000
 
   const [needs, setNeeds] = useState({ recruitment: true, eor: true })
+  const [hireType, setHireType] = useState<'single' | 'team'>('team')
+  const [expandedPricing, setExpandedPricing] = useState<string | null>(null)
   const [roles, setRoles] = useState<HireRole[]>([
     { id: '1', title: 'Mid-level', salary: defaultSalary, count: 1, year: 1 },
   ])
@@ -158,20 +157,20 @@ export default function PricingCalculatorPage() {
   const [additionals, setAdditionals] = useState<Additionals>({
     deskFees: { enabled: true, costPerDesk: defaultDeskFee },
     monthlyLunches: { enabled: true, costPerPerson: defaultLunchFee },
-    quarterlyEvents: { enabled: true, costPerEvent: defaultEventCost },
-    yearEndParty: { enabled: true, totalCost: defaultPartyCost },
+    quarterlyEvents: { enabled: true, costPerPerson: 500 },
+    yearEndParty: { enabled: true, costPerPerson: 1000 },
     assets: { enabled: true, costPerHire: defaultAssetCost },
   })
 
   // Update defaults when config loads
   useEffect(() => {
     if (apiConfig) {
-      setRoles([{ id: '1', title: 'Mid-level', salary: Number(apiConfig.default_salary) || 45000, count: 1, year: 1 }])
+      setRoles([{ id: '1', title: 'Mid-level', salary: Number(apiConfig.default_salary) || 50000, count: 1, year: 1 }])
       setAdditionals({
         deskFees: { enabled: true, costPerDesk: Number(apiConfig.default_desk_fee) || 5000 },
         monthlyLunches: { enabled: true, costPerPerson: Number(apiConfig.default_lunch_fee) || 500 },
-        quarterlyEvents: { enabled: true, costPerEvent: Number(apiConfig.default_event_cost) || 15000 },
-        yearEndParty: { enabled: true, totalCost: Number(apiConfig.default_party_cost) || 50000 },
+        quarterlyEvents: { enabled: true, costPerPerson: 500 },
+        yearEndParty: { enabled: true, costPerPerson: 1000 },
         assets: { enabled: true, costPerHire: Number(apiConfig.default_asset_cost) || 25000 },
       })
     }
@@ -182,7 +181,7 @@ export default function PricingCalculatorPage() {
   const totalAnnualSalary = roles.reduce((sum, r) => sum + (r.salary * r.count * 12), 0)
 
   const addRole = (year: number) => {
-    setRoles([...roles, { id: Date.now().toString(), title: '', salary: 40000, count: 1, year }])
+    setRoles([...roles, { id: Date.now().toString(), title: '', salary: 50000, count: 1, year }])
   }
 
   const removeRole = (id: string) => {
@@ -197,8 +196,8 @@ export default function PricingCalculatorPage() {
     let total = 0
     if (additionals.deskFees.enabled) total += additionals.deskFees.costPerDesk * totalHires
     if (additionals.monthlyLunches.enabled) total += additionals.monthlyLunches.costPerPerson * totalHires
-    if (additionals.quarterlyEvents.enabled) total += additionals.quarterlyEvents.costPerEvent / 3
-    if (additionals.yearEndParty.enabled) total += additionals.yearEndParty.totalCost / 12
+    if (additionals.quarterlyEvents.enabled) total += (additionals.quarterlyEvents.costPerPerson * totalHires * 4) / 12
+    if (additionals.yearEndParty.enabled) total += (additionals.yearEndParty.costPerPerson * totalHires) / 12
     return total
   }, [additionals, totalHires])
 
@@ -207,15 +206,25 @@ export default function PricingCalculatorPage() {
     return 0
   }, [additionals, totalHires])
 
-  // Filter services based on needs
+  // Filter services based on needs and hire type
   const relevantServices = useMemo(() => {
     return services.filter(s => {
-      if (needs.recruitment && needs.eor) return true
-      if (needs.recruitment && !needs.eor) return s.needsRecruitment && !s.needsEOR
-      if (!needs.recruitment && needs.eor) return s.needsEOR && !s.needsRecruitment
+      // Both recruitment and EOR - show only Enterprise
+      if (needs.recruitment && needs.eor) {
+        return s.key === 'enterprise'
+      }
+      // EOR only (no recruitment)
+      if (!needs.recruitment && needs.eor) {
+        return s.key === 'eor'
+      }
+      // Recruitment only (no EOR)
+      if (needs.recruitment && !needs.eor) {
+        if (hireType === 'single') return s.key === 'headhunting'
+        if (hireType === 'team') return s.key === 'retained'
+      }
       return false
     })
-  }, [needs])
+  }, [needs, hireType])
 
   // Get roles grouped by year
   const rolesByYear = useMemo(() => {
@@ -224,23 +233,6 @@ export default function PricingCalculatorPage() {
       grouped[y] = roles.filter(r => r.year === y)
     }
     return grouped
-  }, [roles, years])
-
-  // Calculate cumulative hires and salaries per year
-  const yearlyStats = useMemo(() => {
-    const stats: { hires: number; salary: number; cumulativeHires: number; cumulativeSalary: number }[] = []
-    let cumulativeHires = 0
-    let cumulativeSalary = 0
-
-    for (let y = 1; y <= years; y++) {
-      const yearRoles = roles.filter(r => r.year === y)
-      const yearHires = yearRoles.reduce((sum, r) => sum + r.count, 0)
-      const yearSalary = yearRoles.reduce((sum, r) => sum + (r.salary * r.count * 12), 0)
-      cumulativeHires += yearHires
-      cumulativeSalary += yearSalary
-      stats.push({ hires: yearHires, salary: yearSalary, cumulativeHires, cumulativeSalary })
-    }
-    return stats
   }, [roles, years])
 
   interface YearBreakdown {
@@ -315,15 +307,15 @@ export default function PricingCalculatorPage() {
         .filter(r => r.year <= currentYear) // Only include employees hired up to current year
         .forEach(role => {
           const employeeTenure = currentYear - role.year // 0 = first year, 1 = second year, etc.
-          const markupRate = enterpriseMarkups[Math.min(employeeTenure, 3)]
+          const markupRate = enterpriseMarkups[Math.min(employeeTenure, 3)] ?? 0.16
           const roleSalary = role.salary * role.count * 12
           entSalaryMargin += roleSalary * markupRate
         })
       let entAdditionals = 0
       if (additionals.deskFees.enabled) entAdditionals += additionals.deskFees.costPerDesk * cumulativeHiresEnt * 12
       if (additionals.monthlyLunches.enabled) entAdditionals += additionals.monthlyLunches.costPerPerson * cumulativeHiresEnt * 12
-      if (additionals.quarterlyEvents.enabled) entAdditionals += additionals.quarterlyEvents.costPerEvent * 4
-      if (additionals.yearEndParty.enabled) entAdditionals += additionals.yearEndParty.totalCost
+      if (additionals.quarterlyEvents.enabled) entAdditionals += additionals.quarterlyEvents.costPerPerson * cumulativeHiresEnt * 4
+      if (additionals.yearEndParty.enabled) entAdditionals += additionals.yearEndParty.costPerPerson * cumulativeHiresEnt
       const entAdditionalsFeeCalc = entAdditionals * enterpriseAdditionalsFee
       enterpriseByYear.push({
         salaryMargin: entSalaryMargin,
@@ -341,8 +333,8 @@ export default function PricingCalculatorPage() {
       let eorAdditionals = 0
       if (additionals.deskFees.enabled) eorAdditionals += additionals.deskFees.costPerDesk * cumulativeHiresEor * 12
       if (additionals.monthlyLunches.enabled) eorAdditionals += additionals.monthlyLunches.costPerPerson * cumulativeHiresEor * 12
-      if (additionals.quarterlyEvents.enabled) eorAdditionals += additionals.quarterlyEvents.costPerEvent * 4
-      if (additionals.yearEndParty.enabled) eorAdditionals += additionals.yearEndParty.totalCost
+      if (additionals.quarterlyEvents.enabled) eorAdditionals += additionals.quarterlyEvents.costPerPerson * cumulativeHiresEor * 4
+      if (additionals.yearEndParty.enabled) eorAdditionals += additionals.yearEndParty.costPerPerson * cumulativeHiresEor
       const eorAdditionalsFeeCalc = eorAdditionals * eorAdditionalsFee
       eorByYear.push({
         salaryMargin: 0,
@@ -400,8 +392,8 @@ export default function PricingCalculatorPage() {
         total: enterpriseTotal,
         upfront: 0,
         monthly: enterpriseTotal / months,
-        rate: `${formatPct(enterpriseMarkups[0])}→${formatPct(enterpriseMarkups[3])} markup`,
-        note: `Decreases yearly · +${formatPct(enterpriseAdditionalsFee)} on additionals`,
+        rate: `${formatPct(enterpriseMarkups[0] ?? 0.22)}→${formatPct(enterpriseMarkups[3] ?? 0.16)} fee`,
+        note: `+${formatPct(enterpriseAdditionalsFee)} on additionals`,
         byYear: enterpriseByYear,
         totals: sumTotals(enterpriseByYear),
       },
@@ -435,465 +427,745 @@ export default function PricingCalculatorPage() {
     }
   }, [roles, additionals, years, config])
 
-  const mostCompleteKey = useMemo(() => {
-    const relevant = relevantServices.map(s => ({
-      key: s.key,
-      features: Object.values(serviceFeatures[s.key]).filter(Boolean).length
-    }))
-    if (relevant.length === 0) return null
-    return relevant.reduce((max, curr) => curr.features > max.features ? curr : max).key
-  }, [relevantServices])
-
-  const lowestCostKey = useMemo(() => {
-    if (relevantServices.length === 0) return null
-    const costs = relevantServices.map(s => ({
-      key: s.key,
-      total: calculations[s.key].total
-    }))
-    return costs.reduce((min, curr) => curr.total < min.total ? curr : min).key
-  }, [relevantServices, calculations])
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <SEO />
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-4">
-          <Calculator className="w-5 h-5 text-gray-400" />
-          <h1 className="text-lg font-bold text-gray-900">Service Comparison Calculator</h1>
+      {/* Hero Section */}
+      <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+        <div className="max-w-5xl mx-auto px-6 py-16 md:py-20">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 bg-white/10 backdrop-blur rounded-xl flex items-center justify-center">
+              <Calculator className="w-6 h-6 text-amber-400" />
+            </div>
+            <span className="text-[13px] font-medium text-amber-400 uppercase tracking-wide">
+              Pricing Calculator
+            </span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+            Compare Our <span className="text-amber-400">Services</span>
+          </h1>
+          <p className="text-lg text-gray-300 max-w-2xl">
+            Build your hiring plan and see transparent pricing across all our service offerings.
+            Get instant estimates tailored to your specific needs.
+          </p>
         </div>
+      </div>
 
-        {/* Input Section - 3 columns when EOR selected, 2 columns otherwise */}
-        <div className={`grid gap-4 mb-4 ${needs.eor ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
-          {/* Column 1: Needs */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">Services Needed</h3>
-            <div className="space-y-2">
-              <label className="flex items-center gap-3 p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={needs.recruitment}
-                  onChange={(e) => setNeeds({ ...needs, recruitment: e.target.checked })}
-                  className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
-                />
-                <div>
-                  <span className="text-[12px] font-medium text-gray-900">Recruitment</span>
-                  <p className="text-[10px] text-gray-500">Help finding & hiring candidates</p>
+      {/* Pricing Models Panel */}
+      <div className="bg-gray-100 py-12">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="mb-8">
+            <span className="text-[13px] font-medium text-gray-500 uppercase tracking-wide">Step 1</span>
+            <h2 className="text-[28px] font-bold text-gray-900 mt-1">Understand Our Pricing Models</h2>
+            <p className="text-[15px] text-gray-600 mt-2">Explore how each service is priced before building your plan.</p>
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden min-h-[70vh] flex">
+            {/* Vertical Tabs */}
+            <div className="w-[200px] bg-gray-50 border-r border-gray-200 flex flex-col">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-[13px] font-semibold text-gray-500 uppercase tracking-wide">Our Services</h3>
+              </div>
+              {[
+                { key: 'enterprise', name: 'Enterprise', icon: Building2, color: 'amber' },
+                { key: 'eor', name: 'EOR Only', icon: Users, color: 'blue' },
+                { key: 'retained', name: 'Retained', icon: Target, color: 'emerald' },
+                { key: 'headhunting', name: 'Headhunting', icon: Crosshair, color: 'purple' },
+              ].map((tab) => {
+                const colors = colorClasses[tab.color]!
+                const isActive = expandedPricing === tab.key || (!expandedPricing && tab.key === 'enterprise')
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setExpandedPricing(tab.key)}
+                    className={`w-full px-4 py-4 flex items-center gap-3 text-left transition-all border-l-4 ${
+                      isActive
+                        ? `${colors.borderActive} bg-white`
+                        : 'border-transparent hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                      isActive ? colors.bgLight : 'bg-gray-200'
+                    }`}>
+                      <tab.icon className={`w-4 h-4 ${
+                        isActive ? colors.text : 'text-gray-500'
+                      }`} />
+                    </div>
+                    <span className={`text-[14px] font-medium ${
+                      isActive ? 'text-gray-900' : 'text-gray-600'
+                    }`}>{tab.name}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Content Panel */}
+            <div className="flex-1">
+              {/* Enterprise Content */}
+              {(expandedPricing === 'enterprise' || !expandedPricing) && (
+                <div className="h-full bg-gradient-to-br from-amber-600 via-amber-500 to-amber-400 p-8 flex flex-col">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                      <Building2 className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <span className="text-amber-100 text-[13px] font-medium uppercase tracking-wide">Complete Solution</span>
+                      <h2 className="text-white text-[28px] font-bold">Enterprise</h2>
+                    </div>
+                  </div>
+
+                  <p className="text-white/90 text-[16px] leading-relaxed mb-8 max-w-xl">
+                    Our all-in-one solution. We find, hire, and employ your team. You get dedicated talent without the administrative burden of legal employment, payroll, or HR.
+                  </p>
+
+                  <div className="flex-1 flex items-center">
+                    <div className="grid md:grid-cols-2 gap-6 w-full">
+                      {/* Pricing Box */}
+                      <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+                        <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">Pricing Model</h3>
+                        <p className="text-white text-[18px] font-semibold mb-4">Salary Markup</p>
+                        <p className="text-white/70 text-[14px] mb-4">Markup decreases as employee tenure increases</p>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-white/80">Year 1</span>
+                            <span className="text-white text-[24px] font-bold">{Math.round(Number(config.enterprise_markup_year1) * 100 || 22)}%</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-white/80">Year 2</span>
+                            <span className="text-white text-[24px] font-bold">{Math.round(Number(config.enterprise_markup_year2) * 100 || 20)}%</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-white/80">Year 3</span>
+                            <span className="text-white text-[24px] font-bold">{Math.round(Number(config.enterprise_markup_year3) * 100 || 18)}%</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-white/80">Year 4+</span>
+                            <span className="text-white text-[24px] font-bold">{Math.round(Number(config.enterprise_markup_year4_plus) * 100 || 16)}%</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Features Box */}
+                      <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+                        <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">What's Included</h3>
+                        <ul className="space-y-3">
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-amber-200" /> Full recruitment & talent sourcing</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-amber-200" /> Legal employment & payroll</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-amber-200" /> Benefits & HR support</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-amber-200" /> Compliance & tax handling</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-amber-200" /> Optional office & perks</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </label>
-              <label className="flex items-center gap-3 p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={needs.eor}
-                  onChange={(e) => setNeeds({ ...needs, eor: e.target.checked })}
-                  className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
-                />
-                <div>
-                  <span className="text-[12px] font-medium text-gray-900">Employment (EOR)</span>
-                  <p className="text-[10px] text-gray-500">We employ staff on your behalf</p>
+              )}
+
+              {/* EOR Content */}
+              {expandedPricing === 'eor' && (
+                <div className="h-full bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 p-8 flex flex-col">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                      <Users className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <span className="text-blue-100 text-[13px] font-medium uppercase tracking-wide">Employment Only</span>
+                      <h2 className="text-white text-[28px] font-bold">EOR Only</h2>
+                    </div>
+                  </div>
+
+                  <p className="text-white/90 text-[16px] leading-relaxed mb-8 max-w-xl">
+                    Already have candidates? We handle employment, payroll, benefits, and compliance. You manage the work, we manage the rest.
+                  </p>
+
+                  <div className="flex-1 flex items-center">
+                    <div className="grid md:grid-cols-2 gap-6 w-full">
+                      {/* Pricing Box */}
+                      <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+                        <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">Pricing Model</h3>
+                        <p className="text-white text-[18px] font-semibold mb-4">Fixed Monthly Fee</p>
+                        <p className="text-white/70 text-[14px] mb-6">Simple, predictable pricing per employee</p>
+                        <div className="text-center">
+                          <span className="text-white text-[56px] font-bold leading-none">R{Number(config.eor_monthly_fee || 7000).toLocaleString()}</span>
+                          <p className="text-white/80 text-[16px] mt-2">per person / month</p>
+                        </div>
+                      </div>
+
+                      {/* Features Box */}
+                      <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+                        <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">What's Included</h3>
+                        <ul className="space-y-3">
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-200" /> Legal employment contracts</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-200" /> Payroll processing</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-200" /> Benefits administration</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-200" /> Tax compliance & HR</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-200" /> Optional perks & office</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </label>
+              )}
+
+              {/* Retained Content */}
+              {expandedPricing === 'retained' && (
+                <div className="h-full bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-400 p-8 flex flex-col">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                      <Target className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <span className="text-emerald-100 text-[13px] font-medium uppercase tracking-wide">Team Building</span>
+                      <h2 className="text-white text-[28px] font-bold">Retained</h2>
+                    </div>
+                  </div>
+
+                  <p className="text-white/90 text-[16px] leading-relaxed mb-8 max-w-xl">
+                    Building a team? Get priority access to our recruitment team with guaranteed placements and free replacements.
+                  </p>
+
+                  <div className="flex-1 flex items-center">
+                    <div className="grid md:grid-cols-2 gap-6 w-full">
+                      {/* Pricing Box */}
+                      <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+                        <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">Pricing Model</h3>
+                        <p className="text-white text-[18px] font-semibold mb-4">Retainer + Placement Fee</p>
+                        <p className="text-white/70 text-[14px] mb-6">Monthly retainer plus small fee per successful hire</p>
+                        <div className="flex items-center justify-center gap-6">
+                          <div className="text-center">
+                            <span className="text-white text-[40px] font-bold leading-none">R{(Number(config.retained_monthly_retainer || 20000) / 1000)}k</span>
+                            <p className="text-white/80 text-[14px] mt-1">per month</p>
+                          </div>
+                          <span className="text-white/50 text-[32px]">+</span>
+                          <div className="text-center">
+                            <span className="text-white text-[40px] font-bold leading-none">{Math.round(Number(config.retained_placement_fee) * 100 || 5)}%</span>
+                            <p className="text-white/80 text-[14px] mt-1">per placement</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Features Box */}
+                      <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+                        <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">What's Included</h3>
+                        <ul className="space-y-3">
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-emerald-200" /> Dedicated recruitment team</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-emerald-200" /> Guaranteed placements</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-emerald-200" /> Free replacements</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-emerald-200" /> Priority candidate access</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-emerald-200" /> Always-on recruitment</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Headhunting Content */}
+              {expandedPricing === 'headhunting' && (
+                <div className="h-full bg-gradient-to-br from-purple-600 via-purple-500 to-purple-400 p-8 flex flex-col">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+                      <Crosshair className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <span className="text-purple-100 text-[13px] font-medium uppercase tracking-wide">Single Hire</span>
+                      <h2 className="text-white text-[28px] font-bold">Headhunting</h2>
+                    </div>
+                  </div>
+
+                  <p className="text-white/90 text-[16px] leading-relaxed mb-8 max-w-xl">
+                    Need one key hire? No retainers, no commitments. Pay only when we successfully place your candidate.
+                  </p>
+
+                  <div className="flex-1 flex items-center">
+                    <div className="grid md:grid-cols-2 gap-6 w-full">
+                      {/* Pricing Box */}
+                      <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+                        <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">Pricing Model</h3>
+                        <p className="text-white text-[18px] font-semibold mb-4">Success-Based Fee</p>
+                        <p className="text-white/70 text-[14px] mb-6">No upfront costs. Pay only when we deliver.</p>
+                        <div className="text-center">
+                          <span className="text-white text-[56px] font-bold leading-none">{Math.round(Number(config.headhunting_placement_fee) * 100 || 20)}%</span>
+                          <p className="text-white/80 text-[16px] mt-2">of annual salary</p>
+                        </div>
+                      </div>
+
+                      {/* Features Box */}
+                      <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+                        <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">What's Included</h3>
+                        <ul className="space-y-3">
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-purple-200" /> No upfront costs</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-purple-200" /> Pay only on success</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-purple-200" /> Thorough candidate vetting</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-purple-200" /> Replacement guarantee</li>
+                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-purple-200" /> Flexible engagement</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Column 2: Hiring Plan */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Hiring Plan</h3>
-              <select
-                value={years}
-                onChange={(e) => {
-                  const newYears = Number(e.target.value)
-                  setYears(newYears)
-                  setRoles(roles.filter(r => r.year <= newYears))
-                }}
-                className="px-2 py-1 border border-gray-200 rounded text-[11px]"
-              >
-                {[1,2,3,4,5].map(y => <option key={y} value={y}>{y} year{y > 1 ? 's' : ''}</option>)}
-              </select>
+      {/* Main Content - Configurator + Sticky Card */}
+      <div className="max-w-5xl mx-auto px-6 py-12">
+        {/* Section Header */}
+        <div className="mb-8">
+          <span className="text-[13px] font-medium text-gray-500 uppercase tracking-wide">Step 2</span>
+          <h2 className="text-[28px] font-bold text-gray-900 mt-1">Build Your Plan & See Your Estimate</h2>
+          <p className="text-[15px] text-gray-600 mt-2">Configure your requirements and watch your estimate update in real-time.</p>
+        </div>
+
+        <div className="flex gap-8">
+          {/* Left: Configurator */}
+          <div className="flex-1 space-y-6">
+            {/* Services Needed */}
+            <div className="bg-gray-50 rounded-xl p-5">
+              <h3 className="text-[14px] font-semibold text-gray-900 mb-4">What do you need?</h3>
+              <div className="flex gap-3">
+                <label className={`flex-1 flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${needs.recruitment ? 'border-gray-900 bg-white' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                  <input
+                    type="checkbox"
+                    checked={needs.recruitment}
+                    onChange={(e) => setNeeds({ ...needs, recruitment: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                  />
+                  <div>
+                    <span className="text-[14px] font-medium text-gray-900 block">Recruitment</span>
+                    <span className="text-[12px] text-gray-500">Find & hire talent</span>
+                  </div>
+                </label>
+                <label className={`flex-1 flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${needs.eor ? 'border-gray-900 bg-white' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                  <input
+                    type="checkbox"
+                    checked={needs.eor}
+                    onChange={(e) => setNeeds({ ...needs, eor: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                  />
+                  <div>
+                    <span className="text-[14px] font-medium text-gray-900 block">Employment</span>
+                    <span className="text-[12px] text-gray-500">EOR services</span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Hire Type - shown when recruitment is selected but NOT when both are selected */}
+              {needs.recruitment && !needs.eor && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-[13px] text-gray-600 mb-3">What type of hiring?</p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setHireType('single')}
+                      className={`flex-1 px-4 py-2.5 rounded-lg border-2 text-[13px] font-medium transition-all ${
+                        hireType === 'single'
+                          ? 'border-gray-900 bg-gray-900 text-white'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Single Hire
+                    </button>
+                    <button
+                      onClick={() => setHireType('team')}
+                      className={`flex-1 px-4 py-2.5 rounded-lg border-2 text-[13px] font-medium transition-all ${
+                        hireType === 'team'
+                          ? 'border-gray-900 bg-gray-900 text-white'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Team / Multiple
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            {/* Column Headers */}
-            <div className="flex items-center gap-1.5 mb-2 px-0.5">
-              <span className="flex-1 text-[9px] font-semibold text-gray-400 uppercase">Role</span>
-              <span className="w-20 text-[9px] font-semibold text-gray-400 uppercase text-center">Salary/mo</span>
-              <span className="w-10 text-[9px] font-semibold text-gray-400 uppercase text-center">Qty</span>
-              <span className="w-5"></span>
-            </div>
-            <div className="space-y-2 max-h-[160px] overflow-y-auto">
-              {Array.from({ length: years }, (_, i) => i + 1).map((year) => {
-                const yearRoles = rolesByYear[year] || []
-                return (
-                  <div key={year}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] font-semibold text-gray-500">Year {year}</span>
-                      <button onClick={() => addRole(year)} className="text-[10px] text-gray-400 hover:text-gray-600">+ Add</button>
-                    </div>
-                    {yearRoles.length === 0 ? (
-                      <p className="text-[10px] text-gray-300 italic pl-1">No hires planned</p>
-                    ) : (
-                      <div className="space-y-1">
-                        {yearRoles.map((role) => (
-                          <div key={role.id} className="flex items-center gap-1.5">
-                            <input
-                              type="text"
-                              value={role.title}
-                              onChange={(e) => updateRole(role.id, 'title', e.target.value)}
-                              placeholder="Role title"
-                              className="flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded text-[11px]"
-                            />
-                            <div className="relative">
-                              <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">R</span>
+
+            {/* Hiring Plan */}
+            <div className="bg-gray-50 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[14px] font-semibold text-gray-900">Hiring Plan</h3>
+                <select
+                  value={years}
+                  onChange={(e) => {
+                    const newYears = Number(e.target.value)
+                    setYears(newYears)
+                    setRoles(roles.filter(r => r.year <= newYears))
+                  }}
+                  className="h-8 px-2 border border-gray-300 rounded text-[13px] bg-white focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+                >
+                  {[1,2,3,4,5].map(y => <option key={y} value={y}>{y} year{y > 1 ? 's' : ''}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-3">
+                {Array.from({ length: years }, (_, i) => i + 1).map((year) => {
+                  const yearRoles = rolesByYear[year] || []
+                  return (
+                    <div key={year} className="bg-white rounded-lg p-3 border border-gray-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[13px] font-semibold text-gray-700">Year {year}</span>
+                        <button
+                          onClick={() => addRole(year)}
+                          className="text-[12px] text-gray-500 hover:text-gray-900 font-medium"
+                        >
+                          + Add
+                        </button>
+                      </div>
+                      {yearRoles.length === 0 ? (
+                        <p className="text-[13px] text-gray-400 italic">No hires planned</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {yearRoles.map((role) => (
+                            <div key={role.id} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={role.title}
+                                onChange={(e) => updateRole(role.id, 'title', e.target.value)}
+                                placeholder="Role"
+                                className="flex-1 min-w-0 h-8 px-2 border border-gray-200 rounded text-[13px] focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+                              />
+                              <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-[12px]">R</span>
+                                <input
+                                  type="number"
+                                  value={role.salary}
+                                  onChange={(e) => updateRole(role.id, 'salary', Number(e.target.value))}
+                                  className="w-24 h-8 pl-5 pr-1 border border-gray-200 rounded text-[13px] focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+                                  step="5000"
+                                />
+                              </div>
                               <input
                                 type="number"
-                                value={role.salary}
-                                onChange={(e) => updateRole(role.id, 'salary', Number(e.target.value))}
-                                className="w-20 pl-4 pr-1 py-1 border border-gray-200 rounded text-[11px]"
-                                step="5000"
+                                value={role.count}
+                                onChange={(e) => updateRole(role.id, 'count', Number(e.target.value))}
+                                className="w-12 h-8 px-1 border border-gray-200 rounded text-[13px] text-center focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+                                min="1"
                               />
+                              <button
+                                onClick={() => removeRole(role.id)}
+                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 rounded transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
                             </div>
-                            <input
-                              type="number"
-                              value={role.count}
-                              onChange={(e) => updateRole(role.id, 'count', Number(e.target.value))}
-                              className="w-10 px-1 py-1 border border-gray-200 rounded text-[11px] text-center"
-                              min="1"
-                            />
-                            <button onClick={() => removeRole(role.id)} className="text-gray-300 hover:text-red-500">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
+                <span className="text-[13px] text-gray-600">{totalHires} hire{totalHires !== 1 ? 's' : ''}</span>
+                <span className="text-[14px] font-semibold text-gray-900">{formatCurrency(totalAnnualSalary)}/yr</span>
+              </div>
+            </div>
+
+            {/* Additional Services (only when EOR selected) */}
+            {needs.eor && (
+              <div className="bg-gray-50 rounded-xl p-5">
+                <h3 className="text-[14px] font-semibold text-gray-900 mb-4">Additional Services</h3>
+
+                {/* Column Headers */}
+                <div className="flex items-center text-[10px] text-gray-500 uppercase tracking-wide mb-2 px-3">
+                  <span className="flex-1">Service</span>
+                  <span className="w-[120px] text-center">Rate</span>
+                  <span className="w-[80px] text-right">Total</span>
+                </div>
+
+                {/* Annual Costs */}
+                <div className="mb-3">
+                  <div className="space-y-1.5">
+                    {[
+                      {
+                        key: 'deskFees',
+                        label: 'Desk/Co-working',
+                        value: additionals.deskFees.costPerDesk,
+                        enabled: additionals.deskFees.enabled,
+                        annual: additionals.deskFees.costPerDesk * totalHires * 12,
+                        inputLabel: '/mo/pp'
+                      },
+                      {
+                        key: 'monthlyLunches',
+                        label: 'Monthly Lunches',
+                        value: additionals.monthlyLunches.costPerPerson,
+                        enabled: additionals.monthlyLunches.enabled,
+                        annual: additionals.monthlyLunches.costPerPerson * totalHires * 12,
+                        inputLabel: '/mo/pp'
+                      },
+                      {
+                        key: 'quarterlyEvents',
+                        label: 'Quarterly Events',
+                        value: additionals.quarterlyEvents.costPerPerson,
+                        enabled: additionals.quarterlyEvents.enabled,
+                        annual: additionals.quarterlyEvents.costPerPerson * totalHires * 4,
+                        inputLabel: '/event/pp'
+                      },
+                      {
+                        key: 'yearEndParty',
+                        label: 'Year-End Party',
+                        value: additionals.yearEndParty.costPerPerson,
+                        enabled: additionals.yearEndParty.enabled,
+                        annual: additionals.yearEndParty.costPerPerson * totalHires,
+                        inputLabel: '/pp'
+                      },
+                    ].map((item) => (
+                      <div key={item.key} className="flex items-center bg-white rounded-lg px-3 py-2 border border-gray-200">
+                        <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                          <input
+                            type="checkbox"
+                            checked={item.enabled}
+                            onChange={(e) => {
+                              const key = item.key as keyof Additionals
+                              setAdditionals({
+                                ...additionals,
+                                [key]: { ...additionals[key], enabled: e.target.checked }
+                              })
+                            }}
+                            className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 flex-shrink-0"
+                          />
+                          <span className="text-[13px] text-gray-700 truncate">{item.label}</span>
+                        </label>
+                        <div className="w-[120px] flex items-center justify-center gap-1">
+                          <span className="text-[11px] text-gray-400">R</span>
+                          <input
+                            type="number"
+                            value={item.value}
+                            onChange={(e) => {
+                              const key = item.key as keyof Additionals
+                              const valueKey = key === 'deskFees' ? 'costPerDesk' : 'costPerPerson'
+                              setAdditionals({
+                                ...additionals,
+                                [key]: { ...additionals[key], [valueKey]: Number(e.target.value) }
+                              })
+                            }}
+                            className="w-20 h-8 px-2 border border-gray-200 rounded text-[13px] text-right focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none disabled:opacity-50 disabled:bg-gray-100"
+                            disabled={!item.enabled}
+                          />
+                          <span className="text-[9px] text-gray-400 w-[36px]">{item.inputLabel}</span>
+                        </div>
+                        <span className="w-[80px] text-[12px] font-medium text-gray-700 text-right">
+                          {item.enabled ? formatCurrency(item.annual) : '—'}
+                        </span>
                       </div>
-                    )}
+                    ))}
                   </div>
-                )
-              })}
-            </div>
-            <div className="mt-3 pt-2 border-t border-gray-100 text-[10px] text-gray-500 flex justify-between">
-              <span>{totalHires} total hires</span>
-              <span className="font-medium text-gray-700">{formatCurrency(totalAnnualSalary)}/yr</span>
-            </div>
+                  <div className="flex items-center px-3 py-2 border-t border-gray-200 mt-2">
+                    <span className="flex-1 text-[12px] font-medium text-gray-600">Annual subtotal</span>
+                    <span className="w-[120px]"></span>
+                    <span className="w-[80px] text-[13px] font-semibold text-gray-900 text-right">{formatCurrency(monthlyAdditionals * 12)}</span>
+                  </div>
+                </div>
+
+                {/* One-Off Costs */}
+                <div>
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 px-3">One-Off Costs</div>
+                  <div className="flex items-center bg-white rounded-lg px-3 py-2 border border-gray-200">
+                    <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={additionals.assets.enabled}
+                        onChange={(e) => {
+                          setAdditionals({
+                            ...additionals,
+                            assets: { ...additionals.assets, enabled: e.target.checked }
+                          })
+                        }}
+                        className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 flex-shrink-0"
+                      />
+                      <span className="text-[13px] text-gray-700 truncate">Assets (laptop, etc)</span>
+                    </label>
+                    <div className="w-[120px] flex items-center justify-center gap-1">
+                      <span className="text-[11px] text-gray-400">R</span>
+                      <input
+                        type="number"
+                        value={additionals.assets.costPerHire}
+                        onChange={(e) => {
+                          setAdditionals({
+                            ...additionals,
+                            assets: { ...additionals.assets, costPerHire: Number(e.target.value) }
+                          })
+                        }}
+                        className="w-20 h-8 px-2 border border-gray-200 rounded text-[13px] text-right focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none disabled:opacity-50 disabled:bg-gray-100"
+                        disabled={!additionals.assets.enabled}
+                      />
+                      <span className="text-[9px] text-gray-400 w-[36px]">/hire</span>
+                    </div>
+                    <span className="w-[80px] text-[12px] font-medium text-gray-700 text-right">
+                      {additionals.assets.enabled ? formatCurrency(oneTimeAdditionals) : '—'}
+                    </span>
+                  </div>
+                  <div className="flex items-center px-3 py-2 border-t border-gray-200 mt-2">
+                    <span className="flex-1 text-[12px] font-medium text-gray-600">One-off subtotal</span>
+                    <span className="w-[120px]"></span>
+                    <span className="w-[80px] text-[13px] font-semibold text-gray-900 text-right">{formatCurrency(oneTimeAdditionals)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Column 3: Additionals - only show when EOR is selected */}
-          {needs.eor && (
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">Additionals</h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={additionals.deskFees.enabled} onChange={(e) => setAdditionals({ ...additionals, deskFees: { ...additionals.deskFees, enabled: e.target.checked }})} className="w-3.5 h-3.5 rounded border-gray-300" />
-                  <Briefcase className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-[11px] text-gray-700">Desk/Co-working</span>
-                </label>
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-400 text-[10px]">R</span>
-                  <input type="number" value={additionals.deskFees.costPerDesk} onChange={(e) => setAdditionals({ ...additionals, deskFees: { ...additionals.deskFees, costPerDesk: Number(e.target.value) }})} className="w-16 px-1.5 py-1 border border-gray-200 rounded text-[11px] text-right" disabled={!additionals.deskFees.enabled} />
-                  <span className="text-[10px] text-gray-400">/mo</span>
+          {/* Right: Sticky Service Card */}
+          <div className="w-[340px] flex-shrink-0">
+            <div className="sticky top-24">
+              {!needs.recruitment && !needs.eor ? (
+                <div className="bg-gray-50 rounded-xl p-8 text-center">
+                  <div className="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Calculator className="w-7 h-7 text-gray-400" />
+                  </div>
+                  <p className="text-[14px] text-gray-600 font-medium">Select a service to see your estimate</p>
+                  <p className="text-[13px] text-gray-400 mt-1">Choose Recruitment or Employment</p>
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={additionals.monthlyLunches.enabled} onChange={(e) => setAdditionals({ ...additionals, monthlyLunches: { ...additionals.monthlyLunches, enabled: e.target.checked }})} className="w-3.5 h-3.5 rounded border-gray-300" />
-                  <Coffee className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-[11px] text-gray-700">Monthly Lunches</span>
-                </label>
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-400 text-[10px]">R</span>
-                  <input type="number" value={additionals.monthlyLunches.costPerPerson} onChange={(e) => setAdditionals({ ...additionals, monthlyLunches: { ...additionals.monthlyLunches, costPerPerson: Number(e.target.value) }})} className="w-16 px-1.5 py-1 border border-gray-200 rounded text-[11px] text-right" disabled={!additionals.monthlyLunches.enabled} />
-                  <span className="text-[10px] text-gray-400">/pp</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={additionals.quarterlyEvents.enabled} onChange={(e) => setAdditionals({ ...additionals, quarterlyEvents: { ...additionals.quarterlyEvents, enabled: e.target.checked }})} className="w-3.5 h-3.5 rounded border-gray-300" />
-                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-[11px] text-gray-700">Quarterly Events</span>
-                </label>
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-400 text-[10px]">R</span>
-                  <input type="number" value={additionals.quarterlyEvents.costPerEvent} onChange={(e) => setAdditionals({ ...additionals, quarterlyEvents: { ...additionals.quarterlyEvents, costPerEvent: Number(e.target.value) }})} className="w-16 px-1.5 py-1 border border-gray-200 rounded text-[11px] text-right" disabled={!additionals.quarterlyEvents.enabled} />
-                  <span className="text-[10px] text-gray-400">/event</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={additionals.yearEndParty.enabled} onChange={(e) => setAdditionals({ ...additionals, yearEndParty: { ...additionals.yearEndParty, enabled: e.target.checked }})} className="w-3.5 h-3.5 rounded border-gray-300" />
-                  <PartyPopper className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-[11px] text-gray-700">Year-End Party</span>
-                </label>
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-400 text-[10px]">R</span>
-                  <input type="number" value={additionals.yearEndParty.totalCost} onChange={(e) => setAdditionals({ ...additionals, yearEndParty: { ...additionals.yearEndParty, totalCost: Number(e.target.value) }})} className="w-16 px-1.5 py-1 border border-gray-200 rounded text-[11px] text-right" disabled={!additionals.yearEndParty.enabled} />
-                  <span className="text-[10px] text-gray-400">/year</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={additionals.assets.enabled} onChange={(e) => setAdditionals({ ...additionals, assets: { ...additionals.assets, enabled: e.target.checked }})} className="w-3.5 h-3.5 rounded border-gray-300" />
-                  <Laptop className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-[11px] text-gray-700">Assets (laptop, etc)</span>
-                </label>
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-400 text-[10px]">R</span>
-                  <input type="number" value={additionals.assets.costPerHire} onChange={(e) => setAdditionals({ ...additionals, assets: { ...additionals.assets, costPerHire: Number(e.target.value) }})} className="w-16 px-1.5 py-1 border border-gray-200 rounded text-[11px] text-right" disabled={!additionals.assets.enabled} />
-                  <span className="text-[10px] text-gray-400">/hire</span>
-                </div>
-              </div>
-            </div>
-            <div className="mt-3 pt-2 border-t border-gray-100 text-[10px] text-gray-500 flex justify-between">
-              <span>Monthly additionals</span>
-              <span className="font-medium text-gray-700">{formatCurrency(monthlyAdditionals)}</span>
-            </div>
-          </div>
-          )}
-        </div>
+              ) : (
+                <>
+                  {relevantServices.map((s) => {
+                    const calc = calculations[s.key]
+                    const colors = colorClasses[s.color]
+                    if (!calc || !colors) return null
 
-        {/* Comparison Table */}
-        <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden shadow-sm">
-          {!needs.recruitment && !needs.eor ? (
-              <div className="p-8 text-center text-gray-500">
-                <p className="text-[14px]">Select at least one service need to see comparison</p>
-              </div>
-            ) : (
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b-2 border-gray-200 bg-gray-50">
-                    <th className="w-[130px] p-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wide"></th>
-                    {relevantServices.map((s) => {
-                      const isMostComplete = s.key === mostCompleteKey
-                      const isLowestCost = s.key === lowestCostKey
-                      // Check if this service covers both needs when both are selected
-                      const coversBothNeeds = needs.recruitment && needs.eor && s.needsRecruitment && s.needsEOR
-                      const isPartialSolution = needs.recruitment && needs.eor && !(s.needsRecruitment && s.needsEOR)
-                      const colors = colorClasses[s.color]
-                      return (
-                        <th key={s.key} className={`p-3 text-center ${isMostComplete ? colors.light : isLowestCost ? 'bg-green-50' : 'bg-gray-50'}`}>
-                          <div className="flex flex-col items-center gap-1.5">
-                            <div className="flex flex-wrap justify-center gap-1 min-h-[20px]">
-                              {coversBothNeeds && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500 text-white text-[9px] font-bold rounded-full shadow-sm">
-                                  Complete Solution
-                                </span>
-                              )}
-                              {isPartialSolution && (
-                                <span className="inline-flex items-center px-2 py-0.5 bg-gray-400 text-white text-[9px] font-medium rounded-full">
-                                  {s.needsRecruitment ? 'Recruitment Only' : 'EOR Only'}
-                                </span>
-                              )}
-                              {isMostComplete && !coversBothNeeds && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded-full shadow-sm">
-                                  <Trophy className="w-2.5 h-2.5" /> Most Complete
-                                </span>
-                              )}
-                              {isLowestCost && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-500 text-white text-[9px] font-bold rounded-full shadow-sm">
-                                  <Star className="w-2.5 h-2.5" /> Lowest Cost
-                                </span>
-                              )}
-                            </div>
-                            <div className={`w-10 h-10 ${colors.bg} rounded-xl flex items-center justify-center shadow-sm`}>
+                    return (
+                      <div key={s.key} className={`rounded-xl border-2 overflow-hidden bg-white shadow-lg ${colors.border}`}>
+                        {/* Header */}
+                        <div className={`${colors.bg} px-5 py-5`}>
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-11 h-11 bg-white/20 rounded-lg flex items-center justify-center">
                               <s.icon className="w-5 h-5 text-white" />
                             </div>
-                            <span className="text-[13px] font-bold text-gray-900">{s.name}</span>
+                            <div>
+                              <h3 className="text-white font-semibold text-[17px]">{s.name}</h3>
+                              <p className="text-white/70 text-[12px]">{calc.rate}</p>
+                            </div>
                           </div>
-                        </th>
-                      )
-                    })}
-                  </tr>
-                </thead>
-                <tbody className="text-[12px]">
-                  {/* Pricing Rate */}
-                  <tr className="bg-gray-800">
-                    <td colSpan={relevantServices.length + 1} className="px-3 py-1.5 text-[10px] font-bold text-white uppercase tracking-wider">
-                      Pricing Model
-                    </td>
-                  </tr>
-                  <tr className="border-b-2 border-gray-200 bg-white">
-                    <td className="p-3 text-gray-700 font-medium">Rate</td>
-                    {relevantServices.map((s) => (
-                      <td key={s.key} className="p-3 text-center">
-                        <div className="font-bold text-gray-900 text-[13px]">
-                          {calculations[s.key].rate}
+                          {calc.note && <p className="text-white/60 text-[12px]">{calc.note}</p>}
                         </div>
-                        <div className="text-[10px] text-gray-500 mt-0.5">
-                          {calculations[s.key].note}
+
+                        {/* Total Price */}
+                        <div className="px-5 py-5 border-b border-gray-100 bg-gray-50">
+                          <div className="text-[12px] text-gray-500 uppercase tracking-wide mb-1">Estimated Total</div>
+                          <div className={`text-[28px] font-bold ${colors.text}`}>
+                            {formatCurrency(calc.total)}
+                          </div>
+                          <div className="text-[13px] text-gray-500">over {years} year{years > 1 ? 's' : ''}</div>
+                          {/* Year by Year (if multi-year) */}
+                          {years > 1 && (
+                            <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
+                              {calc.byYear.map((yearData, idx) => {
+                                const enterpriseMarkups = [
+                                  Number(config.enterprise_markup_year1) || 0.22,
+                                  Number(config.enterprise_markup_year2) || 0.20,
+                                  Number(config.enterprise_markup_year3) || 0.18,
+                                  Number(config.enterprise_markup_year4_plus) || 0.16,
+                                ]
+                                const rateForYear = s.key === 'enterprise' ? enterpriseMarkups[Math.min(idx, 3)] : null
+                                return (
+                                  <div key={idx} className="flex justify-between text-[13px]">
+                                    <span className="text-gray-500">
+                                      Year {idx + 1}
+                                      {rateForYear != null && (
+                                        <span className="text-gray-400 ml-1">({Math.round(rateForYear * 100)}%)</span>
+                                      )}
+                                    </span>
+                                    <span className="font-medium text-gray-700">{formatCurrency(yearData.total)}</span>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
                         </div>
-                      </td>
-                    ))}
-                  </tr>
 
-                  {/* Total Row */}
-                  <tr className="border-b-2 border-gray-300 bg-gray-100">
-                    <td className="p-3 font-bold text-gray-900">Estimated Total</td>
-                    {relevantServices.map((s) => {
-                      const colors = colorClasses[s.color]
-                      const isLowestCost = s.key === lowestCostKey
-                      return (
-                        <td key={s.key} className={`p-3 text-center ${isLowestCost ? 'bg-green-50' : ''}`}>
-                          <span className={`text-[18px] font-black ${isLowestCost ? 'text-green-600' : colors.text}`}>
-                            {formatCurrency(calculations[s.key].total)}
-                          </span>
-                          <div className="text-[10px] text-gray-500 mt-0.5">over {years} year{years > 1 ? 's' : ''}</div>
-                        </td>
-                      )
-                    })}
-                  </tr>
-
-                  {/* Features Section */}
-                  <tr className="bg-gray-800">
-                    <td colSpan={relevantServices.length + 1} className="px-3 py-1.5 text-[10px] font-bold text-white uppercase tracking-wider">
-                      What's Included
-                    </td>
-                  </tr>
-                  {features.map((feature, idx) => (
-                    <tr key={feature.name} className={`border-b border-gray-200 bg-white hover:bg-gray-50 ${idx === features.length - 1 ? 'border-b-2' : ''}`}>
-                      <td className="p-2.5 text-gray-700 font-medium">{feature.name}</td>
-                      {relevantServices.map((s) => {
-                        const included = serviceFeatures[s.key][feature.name]
-                        return (
-                          <td key={s.key} className="p-2.5 text-center">
-                            {included ? (
-                              <Check className="w-5 h-5 text-green-500 mx-auto" strokeWidth={3} />
-                            ) : (
-                              <X className="w-5 h-5 text-red-400 mx-auto" strokeWidth={2.5} />
+                        {/* Cost Breakdown */}
+                        <div className="px-5 py-4 border-b border-gray-100">
+                          <div className="text-[11px] text-gray-500 uppercase tracking-wide mb-2">Cost Breakdown</div>
+                          <div className="space-y-1.5">
+                            {calc.totals.salaryMargin > 0 && (
+                              <div className="flex justify-between text-[13px]">
+                                <span className="text-gray-600">Salary Margin</span>
+                                <span className="font-medium text-gray-900">{formatCurrency(calc.totals.salaryMargin)}</span>
+                              </div>
                             )}
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  ))}
+                            {calc.totals.monthlyFees > 0 && (
+                              <div className="flex justify-between text-[13px]">
+                                <span className="text-gray-600">{s.key === 'eor' ? 'EOR Fees' : 'Retainer'}</span>
+                                <span className="font-medium text-gray-900">{formatCurrency(calc.totals.monthlyFees)}</span>
+                              </div>
+                            )}
+                            {calc.totals.placementFees > 0 && (
+                              <div className="flex justify-between text-[13px]">
+                                <span className="text-gray-600">Placement Fee</span>
+                                <span className="font-medium text-gray-900">{formatCurrency(calc.totals.placementFees)}</span>
+                              </div>
+                            )}
+                            {calc.totals.additionalsFees > 0 && (
+                              <div className="flex justify-between text-[13px]">
+                                <span className="text-gray-600">Additionals</span>
+                                <span className="font-medium text-gray-900">{formatCurrency(calc.totals.additionalsFees)}</span>
+                              </div>
+                            )}
+                            {calc.totals.assetsFees > 0 && (
+                              <div className="flex justify-between text-[13px]">
+                                <span className="text-gray-600">Assets</span>
+                                <span className="font-medium text-gray-900">{formatCurrency(calc.totals.assetsFees)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
 
-                  {/* CTA Row */}
-                  <tr className="bg-gray-100">
-                    <td className="p-3"></td>
-                    {relevantServices.map((s) => {
-                      const colors = colorClasses[s.color]
-                      return (
-                        <td key={s.key} className="p-3 text-center">
+                        {/* Features */}
+                        <div className="px-5 py-4 border-b border-gray-100">
+                          <div className="text-[11px] text-gray-500 uppercase tracking-wide mb-2">Includes</div>
+                          <div className="space-y-1">
+                            {features.map((feature) => {
+                              const included = serviceFeatures[s.key as keyof typeof serviceFeatures]?.[feature.name]
+                              return (
+                                <div key={feature.name} className="flex items-center gap-2 text-[12px]">
+                                  {included ? (
+                                    <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                                  ) : (
+                                    <X className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+                                  )}
+                                  <span className={included ? 'text-gray-700' : 'text-gray-400'}>{feature.name}</span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+
+                        {/* CTA */}
+                        <div className="p-5">
                           <Link
                             to={s.link}
-                            className={`inline-flex items-center gap-1.5 px-4 py-2 ${colors.bg} text-white text-[11px] font-bold rounded-lg hover:opacity-90 shadow-sm transition-all hover:shadow-md`}
+                            className={`w-full flex items-center justify-center gap-2 px-4 py-3 ${colors.bg} text-white text-[14px] font-medium rounded-lg hover:opacity-90 transition-opacity`}
                           >
-                            Learn More <ArrowRight className="w-3.5 h-3.5" />
+                            Learn More <ArrowRight className="w-4 h-4" />
                           </Link>
-                        </td>
-                      )
-                    })}
-                  </tr>
-                </tbody>
-              </table>
-            )}
-        </div>
-
-        {/* Cost Breakdown Cards - Below Comparison */}
-        {(needs.recruitment || needs.eor) && (
-          <div className="mt-6">
-            <h2 className="text-[14px] font-bold text-gray-900 mb-3">Detailed Cost Breakdown</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {relevantServices.map((s) => {
-                const calc = calculations[s.key]
-                const colors = colorClasses[s.color]
-                return (
-                  <div key={s.key} className={`rounded-xl border-2 ${colors.border} overflow-hidden bg-white`}>
-                    {/* Header */}
-                    <div className={`${colors.bg} px-4 py-3 flex items-center gap-3`}>
-                      <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                        <s.icon className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-white font-bold text-[14px]">{s.name}</h3>
-                        <p className="text-white/80 text-[10px]">{calc.rate}</p>
-                      </div>
-                    </div>
-
-                    {/* Cost Items */}
-                    <div className="p-4 space-y-2">
-                      {calc.totals.salaryMargin > 0 && (
-                        <div className="flex justify-between items-center text-[12px]">
-                          <span className="text-gray-600">Salary Margin</span>
-                          <span className="font-semibold text-gray-900">{formatCurrency(calc.totals.salaryMargin)}</span>
-                        </div>
-                      )}
-                      {calc.totals.monthlyFees > 0 && (
-                        <div className="flex justify-between items-center text-[12px]">
-                          <span className="text-gray-600">{s.key === 'eor' ? 'EOR Fees' : 'Retainer Fees'}</span>
-                          <span className="font-semibold text-gray-900">{formatCurrency(calc.totals.monthlyFees)}</span>
-                        </div>
-                      )}
-                      {calc.totals.placementFees > 0 && (
-                        <div className="flex justify-between items-center text-[12px]">
-                          <span className="text-gray-600">Placement Fees</span>
-                          <span className="font-semibold text-gray-900">{formatCurrency(calc.totals.placementFees)}</span>
-                        </div>
-                      )}
-                      {calc.totals.additionalsFees > 0 && (
-                        <div className="flex justify-between items-center text-[12px]">
-                          <span className="text-gray-600">Additionals Mgmt</span>
-                          <span className="font-semibold text-gray-900">{formatCurrency(calc.totals.additionalsFees)}</span>
-                        </div>
-                      )}
-                      {calc.totals.assetsFees > 0 && (
-                        <div className="flex justify-between items-center text-[12px]">
-                          <span className="text-gray-600">Assets Mgmt</span>
-                          <span className="font-semibold text-gray-900">{formatCurrency(calc.totals.assetsFees)}</span>
-                        </div>
-                      )}
-
-                      {/* Total */}
-                      <div className={`mt-3 pt-3 border-t-2 ${colors.border}`}>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[12px] font-bold text-gray-900">Total ({years}Y)</span>
-                          <span className={`text-[16px] font-black ${colors.text}`}>{formatCurrency(calc.total)}</span>
                         </div>
                       </div>
-
-                      {/* Year by Year */}
-                      {years > 1 && (
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Year by Year</p>
-                          <div className="space-y-1">
-                            {calc.byYear.map((yearData, idx) => (
-                              <div key={idx} className="flex justify-between items-center text-[11px]">
-                                <span className="text-gray-500">Year {idx + 1}</span>
-                                <span className="font-medium text-gray-700">{formatCurrency(yearData.total)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* CTA */}
-                    <div className="px-4 pb-4">
-                      <Link
-                        to={s.link}
-                        className={`w-full flex items-center justify-center gap-1.5 px-4 py-2 ${colors.bg} text-white text-[11px] font-bold rounded-lg hover:opacity-90 transition-opacity`}
-                      >
-                        Learn More <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
-                    </div>
-                  </div>
-                )
-              })}
+                    )
+                  })}
+                </>
+              )}
             </div>
           </div>
-        )}
+        </div>
 
         {/* Bottom CTA */}
-        <div className="mt-6 flex items-center justify-between bg-white rounded-xl border-2 border-gray-200 p-4">
-          <div>
-            <p className="text-[13px] font-bold text-gray-900">Ready to discuss your needs?</p>
-            <p className="text-[11px] text-gray-500">Get a detailed proposal tailored to your requirements.</p>
+        <div className="mt-12 bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-8 md:p-10">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <h3 className="text-[20px] font-semibold text-white mb-2">Ready to discuss your needs?</h3>
+              <p className="text-[15px] text-gray-300">Get a detailed proposal tailored to your specific requirements.</p>
+            </div>
+            <Link
+              to="/contact"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-gray-900 text-[14px] font-medium rounded-md hover:bg-gray-100 transition-colors whitespace-nowrap"
+            >
+              Get a Quote <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
-          <Link
-            to="/contact"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-[12px] font-bold rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            Get a Quote <ArrowRight className="w-4 h-4" />
-          </Link>
         </div>
       </div>
     </div>
