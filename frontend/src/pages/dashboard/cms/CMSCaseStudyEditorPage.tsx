@@ -20,6 +20,8 @@ import {
   Plus,
   X,
   Quote,
+  ImageIcon,
+  Building2,
 } from 'lucide-react'
 
 const STATUS_OPTIONS = [
@@ -63,6 +65,10 @@ export default function CMSCaseStudyEditorPage() {
   })
   const [showSettings, setShowSettings] = useState(true)
   const [hasChanges, setHasChanges] = useState(false)
+  const [featuredImagePreview, setFeaturedImagePreview] = useState<string | null>(null)
+  const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null)
+  const [clientLogoPreview, setClientLogoPreview] = useState<string | null>(null)
+  const [clientLogoFile, setClientLogoFile] = useState<File | null>(null)
 
   // Fetch existing case study
   const { data: study, isLoading: studyLoading, error: studyError } = useQuery({
@@ -89,6 +95,13 @@ export default function CMSCaseStudyEditorPage() {
         status: study.status,
         is_featured: study.is_featured,
       })
+      // Set image previews
+      if (study.featured_image) {
+        setFeaturedImagePreview(study.featured_image)
+      }
+      if (study.client_logo) {
+        setClientLogoPreview(study.client_logo)
+      }
     }
   }, [study])
 
@@ -168,6 +181,33 @@ export default function CMSCaseStudyEditorPage() {
     setHasChanges(true)
   }
 
+  // Image handlers
+  const handleFeaturedImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setFeaturedImageFile(file)
+      const reader = new FileReader()
+      reader.onload = () => {
+        setFeaturedImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+      setHasChanges(true)
+    }
+  }
+
+  const handleClientLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setClientLogoFile(file)
+      const reader = new FileReader()
+      reader.onload = () => {
+        setClientLogoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+      setHasChanges(true)
+    }
+  }
+
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
       showToast('Title is required', 'error')
@@ -180,6 +220,8 @@ export default function CMSCaseStudyEditorPage() {
     const submitData = {
       ...formData,
       content: content || defaultContent,
+      ...(featuredImageFile && { featured_image: featuredImageFile }),
+      ...(clientLogoFile && { client_logo: clientLogoFile }),
     }
 
     if (isNew) {
@@ -462,6 +504,80 @@ export default function CMSCaseStudyEditorPage() {
           <div className="w-80 flex-shrink-0">
             <div className="bg-white border border-gray-200 rounded-lg p-4 sticky top-20">
               <h3 className="text-[14px] font-medium text-gray-900 mb-4">Case Study Settings</h3>
+
+              {/* Featured Image */}
+              <div className="mb-4">
+                <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  Featured Image
+                </label>
+                {featuredImagePreview ? (
+                  <div className="relative aspect-video bg-gray-100 rounded-md overflow-hidden">
+                    <img
+                      src={featuredImagePreview}
+                      alt="Featured"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      onClick={() => {
+                        setFeaturedImagePreview(null)
+                        setFeaturedImageFile(null)
+                        setHasChanges(true)
+                      }}
+                      className="absolute top-1.5 right-1.5 p-1 bg-white rounded-full shadow hover:bg-gray-100"
+                    >
+                      <X className="w-3 h-3 text-gray-600" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center aspect-video bg-gray-50 border-2 border-dashed border-gray-200 rounded-md cursor-pointer hover:border-gray-300 transition-colors">
+                    <ImageIcon className="w-6 h-6 text-gray-400 mb-1" />
+                    <span className="text-[11px] text-gray-500">Add image</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFeaturedImageChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* Client Logo */}
+              <div className="mb-4">
+                <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  Client Logo
+                </label>
+                {clientLogoPreview ? (
+                  <div className="relative h-16 bg-gray-50 rounded-md overflow-hidden flex items-center justify-center p-2">
+                    <img
+                      src={clientLogoPreview}
+                      alt="Client Logo"
+                      className="max-h-full max-w-full object-contain"
+                    />
+                    <button
+                      onClick={() => {
+                        setClientLogoPreview(null)
+                        setClientLogoFile(null)
+                        setHasChanges(true)
+                      }}
+                      className="absolute top-1 right-1 p-1 bg-white rounded-full shadow hover:bg-gray-100"
+                    >
+                      <X className="w-3 h-3 text-gray-600" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center justify-center gap-2 h-16 bg-gray-50 border-2 border-dashed border-gray-200 rounded-md cursor-pointer hover:border-gray-300 transition-colors">
+                    <Building2 className="w-4 h-4 text-gray-400" />
+                    <span className="text-[11px] text-gray-500">Add logo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleClientLogoChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
 
               {/* Slug */}
               <div className="mb-4">

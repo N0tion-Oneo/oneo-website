@@ -58,8 +58,8 @@ class PricingConfig(TimestampedModel):
         help_text="Monthly retainer fee (ZAR)"
     )
     retained_placement_fee = models.DecimalField(
-        max_digits=5, decimal_places=4, default=0.05,
-        help_text="Placement fee as markup (e.g., 0.05 = 5%)"
+        max_digits=5, decimal_places=4, default=0.10,
+        help_text="Placement fee as markup (e.g., 0.10 = 10%)"
     )
 
     # Headhunting pricing

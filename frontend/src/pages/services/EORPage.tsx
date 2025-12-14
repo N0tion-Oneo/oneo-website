@@ -1,8 +1,10 @@
 // EOR (Employer of Record) Service Page
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { SEO } from '@/components/seo'
 import { useSEODefaults } from '@/contexts/SEOContext'
 import Navbar from '@/components/layout/Navbar'
+import { cmsPricing, CMSPricingConfig } from '@/services/cms'
 import {
   Globe,
   Shield,
@@ -18,84 +20,79 @@ import {
   Laptop,
   Building,
   Heart,
+  CheckCircle2,
+  Calculator,
 } from 'lucide-react'
+
+// Helper to format currency
+const formatCurrency = (amount: string | number): string => {
+  const num = typeof amount === 'string' ? parseFloat(amount) : amount
+  return `R${num.toLocaleString()}`
+}
+
+// Helper to format decimal as percentage
+const formatPercent = (decimal: string | number): string => {
+  const num = typeof decimal === 'string' ? parseFloat(decimal) : decimal
+  return `${Math.round(num * 100)}%`
+}
 
 const benefits = [
   {
-    icon: Globe,
-    title: 'Global Expansion Made Easy',
-    description: 'Hire employees in new countries without setting up a local entity. We handle the legal complexities so you can focus on growth.',
-  },
-  {
     icon: Shield,
     title: 'Full Compliance',
-    description: 'Stay compliant with local labor laws, tax regulations, and employment requirements in every country you operate.',
+    description: 'Stay compliant with South African labor laws, tax regulations, BBBEE requirements, and all employment legislation.',
   },
   {
     icon: FileText,
     title: 'Payroll & Benefits',
-    description: 'We manage payroll, taxes, benefits, and statutory contributions according to local requirements.',
-  },
-  {
-    icon: Users,
-    title: 'Employee Experience',
-    description: 'Your team members receive locally compliant contracts, competitive benefits, and dedicated HR support.',
-  },
-]
-
-const services = [
-  {
-    icon: Building2,
-    title: 'Entity-Free Employment',
-    description: 'Employ talent in countries where you don\'t have a legal entity.',
-  },
-  {
-    icon: CreditCard,
-    title: 'Payroll Management',
-    description: 'Accurate, timely payroll processing in local currencies.',
-  },
-  {
-    icon: Scale,
-    title: 'Legal Compliance',
-    description: 'Employment contracts that meet local legal requirements.',
-  },
-  {
-    icon: Shield,
-    title: 'Risk Mitigation',
-    description: 'Protection from misclassification and compliance risks.',
-  },
-  {
-    icon: HeadphonesIcon,
-    title: 'HR Support',
-    description: 'Dedicated support for you and your employees.',
+    description: 'We manage payroll, PAYE, UIF, SDL contributions, and benefits administration according to SA requirements.',
   },
   {
     icon: Clock,
     title: 'Fast Onboarding',
-    description: 'Get new hires onboarded in days, not months.',
+    description: 'Get new hires onboarded in days with proper contracts, registration, and documentation.',
   },
+  {
+    icon: Users,
+    title: 'Employee Experience',
+    description: 'Your team members receive compliant contracts, competitive benefits, and dedicated HR support.',
+  },
+]
+
+const includedServices = [
+  'Legal employment contracts',
+  'SARS registration & compliance',
+  'Monthly payroll processing',
+  'PAYE, UIF, SDL submissions',
+  'Leave management',
+  'HR support & guidance',
+  'Employee onboarding',
+  'Termination & offboarding',
+]
+
+const additionalServices = [
   {
     icon: Laptop,
     title: 'Asset Management',
-    description: 'Provision, track, and manage equipment for your remote team members.',
+    description: 'Provision, track, and manage equipment for your team members.',
   },
   {
     icon: Building,
-    title: 'Office Management',
-    description: 'Co-working spaces, local office setup, and workspace solutions for your teams.',
+    title: 'Office Solutions',
+    description: 'Co-working spaces, local office setup, and workspace solutions.',
   },
   {
     icon: Heart,
-    title: 'Culture Management',
-    description: 'Team events, local engagement activities, and culture-building for distributed teams.',
+    title: 'Culture & Engagement',
+    description: 'Team events, engagement activities, and culture-building.',
   },
 ]
 
 const process = [
   {
     step: '01',
-    title: 'Identify Your Hire',
-    description: 'Find the perfect candidate for your role, anywhere in the world.',
+    title: 'Share Your Requirements',
+    description: 'Tell us about the role and the candidate you want to employ.',
   },
   {
     step: '02',
@@ -114,8 +111,42 @@ const process = [
   },
 ]
 
+const idealFor = [
+  {
+    icon: Globe,
+    title: 'International Companies',
+    description: 'Employ South African talent without setting up a local entity or navigating complex registration.',
+  },
+  {
+    icon: Building2,
+    title: 'Growing Businesses',
+    description: 'Focus on growth while we handle the administrative burden of employment compliance.',
+  },
+  {
+    icon: Briefcase,
+    title: 'Project-Based Hiring',
+    description: 'Flexible employment for contract roles without long-term entity commitments.',
+  },
+]
+
 export default function EORPage() {
   const seoDefaults = useSEODefaults()
+  const [pricingConfig, setPricingConfig] = useState<CMSPricingConfig | null>(null)
+
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        const config = await cmsPricing.getConfigPublic()
+        setPricingConfig(config)
+      } catch (error) {
+        console.error('Failed to fetch pricing config:', error)
+      }
+    }
+    fetchPricing()
+  }, [])
+
+  const monthlyFee = pricingConfig ? formatCurrency(pricingConfig.eor_monthly_fee) : ''
+  const additionalsFee = pricingConfig ? formatPercent(pricingConfig.eor_additionals_fee) : ''
 
   return (
     <div className="min-h-screen bg-white">
@@ -134,13 +165,12 @@ export default function EORPage() {
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-            Hire Globally Without<br />
-            <span className="text-blue-300">Setting Up Entities</span>
+            Compliant Employment<br />
+            <span className="text-blue-300">In South Africa</span>
           </h1>
           <p className="text-lg text-blue-100 max-w-2xl mb-8">
-            Expand your team into new markets quickly and compliantly. Our Employer of Record
-            service handles all the legal, payroll, and HR complexities so you can focus on
-            what matters most — your business.
+            Employ talent in South Africa without the complexity. We handle legal employment,
+            payroll, compliance, and HR — so you can focus on what your team delivers.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
@@ -151,116 +181,218 @@ export default function EORPage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
             <a
-              href="#how-it-works"
+              href="#pricing"
               className="inline-flex items-center gap-2 px-6 py-3 border border-white/30 text-white font-medium rounded-lg hover:bg-white/10 transition-colors"
             >
-              Learn More
+              View Pricing
             </a>
           </div>
         </div>
       </div>
 
-      {/* Benefits Section */}
+      {/* What is EOR */}
       <div className="max-w-5xl mx-auto px-6 py-20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Why Choose EOR?
-          </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            An Employer of Record allows you to legally employ workers in countries where
-            you don't have a registered entity, handling all compliance and administrative tasks.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {benefits.map((benefit) => (
-            <div
-              key={benefit.title}
-              className="flex gap-4 p-6 rounded-xl border border-gray-200 hover:border-blue-200 hover:shadow-sm transition-all"
-            >
-              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                <benefit.icon className="w-6 h-6 text-blue-600" />
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+              What is Employer of Record?
+            </h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              An Employer of Record (EOR) is a service where we become the legal employer of your
+              team members in South Africa. While you manage their day-to-day work, we handle all
+              the employment administration, compliance, and payroll.
+            </p>
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              This is ideal for international companies wanting to hire in South Africa without
+              setting up a local entity, or local businesses wanting to outsource employment
+              administration.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                <span className="text-[14px] text-gray-700">No entity required</span>
               </div>
-              <div>
-                <h3 className="text-[17px] font-semibold text-gray-900 mb-2">
-                  {benefit.title}
-                </h3>
-                <p className="text-[14px] text-gray-600 leading-relaxed">
-                  {benefit.description}
-                </p>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                <span className="text-[14px] text-gray-700">Full SA compliance</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                <span className="text-[14px] text-gray-700">Fast onboarding</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                <span className="text-[14px] text-gray-700">Flexible terms</span>
               </div>
             </div>
-          ))}
+          </div>
+          <div className="bg-blue-50 rounded-2xl p-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6">
+              How It Works
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  1
+                </div>
+                <div>
+                  <p className="text-[14px] font-medium text-gray-900">You find the talent</p>
+                  <p className="text-[13px] text-gray-500">Identify who you want to employ</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  2
+                </div>
+                <div>
+                  <p className="text-[14px] font-medium text-gray-900">We employ them</p>
+                  <p className="text-[13px] text-gray-500">Legal employment through our entity</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  3
+                </div>
+                <div>
+                  <p className="text-[14px] font-medium text-gray-900">They work for you</p>
+                  <p className="text-[13px] text-gray-500">You manage their work, we handle the rest</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Services Grid */}
+      {/* Benefits Section */}
       <div className="bg-gray-50 border-y border-gray-100">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              What's Included
+              Why Choose EOR?
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Our comprehensive EOR service covers everything you need to employ talent globally.
+              Let us handle the complexity of South African employment compliance.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service) => (
+          <div className="grid md:grid-cols-2 gap-8">
+            {benefits.map((benefit) => (
               <div
-                key={service.title}
-                className="bg-white p-6 rounded-xl border border-gray-200"
+                key={benefit.title}
+                className="flex gap-4 p-6 bg-white rounded-xl border border-gray-200"
               >
-                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
-                  <service.icon className="w-5 h-5 text-blue-600" />
+                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <benefit.icon className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="text-[15px] font-semibold text-gray-900 mb-2">
-                  {service.title}
-                </h3>
-                <p className="text-[13px] text-gray-600">
-                  {service.description}
-                </p>
+                <div>
+                  <h3 className="text-[17px] font-semibold text-gray-900 mb-2">
+                    {benefit.title}
+                  </h3>
+                  <p className="text-[14px] text-gray-600 leading-relaxed">
+                    {benefit.description}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* How It Works */}
-      <div id="how-it-works" className="max-w-5xl mx-auto px-6 py-20">
+      {/* Pricing Section */}
+      <div id="pricing" className="max-w-5xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            How It Works
+            Simple, Transparent Pricing
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Getting started with our EOR service is simple and straightforward.
+            One flat monthly fee per employee. No hidden costs, no surprises.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-4 gap-8">
-          {process.map((item, index) => (
-            <div key={item.step} className="relative">
-              {index < process.length - 1 && (
-                <div className="hidden md:block absolute top-8 left-full w-full h-[2px] bg-gray-200 -translate-x-1/2" />
-              )}
-              <div className="text-center">
-                <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
-                  {item.step}
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            {/* Pricing Header */}
+            <div className="bg-blue-600 text-white p-8 text-center">
+              <p className="text-blue-100 text-sm mb-2">Per Employee</p>
+              <div className="text-4xl md:text-5xl font-bold mb-2">{monthlyFee || '–'}</div>
+              <p className="text-blue-100">per month</p>
+            </div>
+
+            {/* What's Included */}
+            <div className="p-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">What's Included</h3>
+              <div className="grid sm:grid-cols-2 gap-3 mb-8">
+                {includedServices.map((service) => (
+                  <div key={service} className="flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                    <span className="text-[14px] text-gray-700">{service}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-gray-100 pt-6">
+                <h4 className="text-[14px] font-medium text-gray-900 mb-3">
+                  Additional Services (charged at {additionalsFee || '–'} on actual costs)
+                </h4>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {additionalServices.map((service) => (
+                    <div key={service.title} className="text-center p-4 bg-gray-50 rounded-lg">
+                      <service.icon className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                      <p className="text-[13px] font-medium text-gray-900">{service.title}</p>
+                    </div>
+                  ))}
                 </div>
-                <h3 className="text-[15px] font-semibold text-gray-900 mb-2">
-                  {item.title}
-                </h3>
-                <p className="text-[13px] text-gray-600">
-                  {item.description}
-                </p>
+              </div>
+
+              <div className="mt-8">
+                <Link
+                  to="/contact"
+                  className="block w-full text-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Get Started
+                </Link>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       </div>
 
-      {/* Use Cases */}
+      {/* Process */}
+      <div className="bg-gray-50 border-y border-gray-100">
+        <div className="max-w-5xl mx-auto px-6 py-20">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Getting Started
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Simple and straightforward — we can have your employee onboarded in days.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-8">
+            {process.map((item, index) => (
+              <div key={item.step} className="relative">
+                {index < process.length - 1 && (
+                  <div className="hidden md:block absolute top-8 left-full w-full h-[2px] bg-gray-200 -translate-x-1/2" />
+                )}
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                    {item.step}
+                  </div>
+                  <h3 className="text-[15px] font-semibold text-gray-900 mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-[13px] text-gray-600">
+                    {item.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Ideal For */}
       <div className="bg-blue-950 text-white">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
@@ -268,45 +400,33 @@ export default function EORPage() {
               Ideal For
             </h2>
             <p className="text-blue-200 max-w-2xl mx-auto">
-              Our EOR service is perfect for companies looking to expand globally.
+              Our EOR service works for any company wanting compliant employment in South Africa.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-white/10 backdrop-blur rounded-xl p-6">
-              <Briefcase className="w-8 h-8 text-blue-300 mb-4" />
-              <h3 className="text-[17px] font-semibold mb-2">Startups & Scale-ups</h3>
-              <p className="text-[14px] text-blue-200">
-                Access global talent without the overhead of establishing foreign entities.
-              </p>
-            </div>
-            <div className="bg-white/10 backdrop-blur rounded-xl p-6">
-              <Building2 className="w-8 h-8 text-blue-300 mb-4" />
-              <h3 className="text-[17px] font-semibold mb-2">Enterprises</h3>
-              <p className="text-[14px] text-blue-200">
-                Test new markets or hire specialized talent in countries without existing presence.
-              </p>
-            </div>
-            <div className="bg-white/10 backdrop-blur rounded-xl p-6">
-              <Users className="w-8 h-8 text-blue-300 mb-4" />
-              <h3 className="text-[17px] font-semibold mb-2">Remote-First Companies</h3>
-              <p className="text-[14px] text-blue-200">
-                Build distributed teams across multiple countries with full compliance.
-              </p>
-            </div>
+            {idealFor.map((item) => (
+              <div key={item.title} className="bg-white/10 backdrop-blur rounded-xl p-6">
+                <item.icon className="w-8 h-8 text-blue-300 mb-4" />
+                <h3 className="text-[17px] font-semibold mb-2">{item.title}</h3>
+                <p className="text-[14px] text-blue-200">
+                  {item.description}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
       {/* CTA Section */}
       <div className="max-w-5xl mx-auto px-6 py-20">
-        <div className="bg-gray-50 rounded-2xl p-8 md:p-12 text-center">
+        <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl p-8 md:p-12 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-            Ready to Expand Globally?
+            Ready to Simplify Employment?
           </h2>
           <p className="text-gray-600 max-w-xl mx-auto mb-8">
-            Let's discuss how our EOR service can help you hire the best talent,
-            anywhere in the world, without the complexity.
+            Let's discuss how our EOR service can help you employ talent in South Africa
+            without the complexity.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
@@ -317,10 +437,11 @@ export default function EORPage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              to="/case-studies"
-              className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+              to="/pricing"
+              className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-white transition-colors"
             >
-              View Case Studies
+              <Calculator className="w-4 h-4" />
+              Pricing Calculator
             </Link>
           </div>
         </div>

@@ -305,7 +305,7 @@ export const cmsCaseStudies = {
     const { data } = await api.get(`${CMS_BASE}/case-studies/`, { params });
     return data;
   },
-  getBySlug: async (slug: string): Promise<CMSCaseStudy> => {
+  getPublicBySlug: async (slug: string): Promise<CMSCaseStudy> => {
     const { data } = await api.get(`${CMS_BASE}/case-studies/${slug}/`);
     return data;
   },

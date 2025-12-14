@@ -1,20 +1,18 @@
 // Enterprise Service Page - Combined Recruitment + EOR offering
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { SEO } from '@/components/seo'
 import { useSEODefaults } from '@/contexts/SEOContext'
 import Navbar from '@/components/layout/Navbar'
+import { cmsPricing, CMSPricingConfig } from '@/services/cms'
 import {
   Building2,
   Users,
-  Globe,
   ArrowRight,
   CheckCircle2,
   TrendingDown,
-  Briefcase,
   Shield,
-  Clock,
   CreditCard,
-  Handshake,
   BarChart3,
   Calculator,
 } from 'lucide-react'
@@ -53,28 +51,11 @@ const included = [
   { title: 'HR Support', description: 'Dedicated support for you and your employees' },
 ]
 
-const pricingTiers = [
-  {
-    year: 'Year 1',
-    margin: '22%',
-    description: 'Starting rate on salaries',
-  },
-  {
-    year: 'Year 2',
-    margin: '20%',
-    description: '2% reduction',
-  },
-  {
-    year: 'Year 3',
-    margin: '18%',
-    description: '2% reduction',
-  },
-  {
-    year: 'Year 4+',
-    margin: '16%',
-    description: 'Long-term rate',
-  },
-]
+// Helper to format decimal as percentage
+const formatPercent = (decimal: string | number): string => {
+  const num = typeof decimal === 'string' ? parseFloat(decimal) : decimal
+  return `${Math.round(num * 100)}%`
+}
 
 const comparison = [
   {
@@ -111,6 +92,46 @@ const comparison = [
 
 export default function EnterprisePage() {
   const seoDefaults = useSEODefaults()
+  const [pricingConfig, setPricingConfig] = useState<CMSPricingConfig | null>(null)
+
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        const config = await cmsPricing.getConfigPublic()
+        setPricingConfig(config)
+      } catch (error) {
+        console.error('Failed to fetch pricing config:', error)
+      }
+    }
+    fetchPricing()
+  }, [])
+
+  // Build pricing tiers from CMS config
+  const pricingTiers = pricingConfig ? [
+    {
+      year: 'Year 1',
+      margin: formatPercent(pricingConfig.enterprise_markup_year1),
+      description: 'Starting rate on salaries',
+    },
+    {
+      year: 'Year 2',
+      margin: formatPercent(pricingConfig.enterprise_markup_year2),
+      description: '2% reduction',
+    },
+    {
+      year: 'Year 3',
+      margin: formatPercent(pricingConfig.enterprise_markup_year3),
+      description: '2% reduction',
+    },
+    {
+      year: 'Year 4+',
+      margin: formatPercent(pricingConfig.enterprise_markup_year4_plus),
+      description: 'Long-term rate',
+    },
+  ] : []
+
+  // Get the additionals fee for display
+  const additionalsFee = pricingConfig ? formatPercent(pricingConfig.enterprise_additionals_fee) : ''
 
   return (
     <div className="min-h-screen bg-white">
@@ -233,7 +254,7 @@ export default function EnterprisePage() {
                   <span className="font-medium text-gray-900">Salary Margin</span>
                 </div>
                 <p className="text-[14px] text-gray-600">
-                  We charge a margin on employee salaries (starting at 22%, decreasing to 16% by year 4).
+                  We charge a margin on employee salaries (starting at {pricingTiers[0]?.margin || '–'}, decreasing to {pricingTiers[3]?.margin || '–'} by year 4).
                   This covers recruitment, employment, payroll, compliance, and HR support.
                 </p>
               </div>
@@ -243,7 +264,7 @@ export default function EnterprisePage() {
                   <span className="font-medium text-gray-900">Additional Services</span>
                 </div>
                 <p className="text-[14px] text-gray-600">
-                  Asset management, office solutions, and culture activities are charged at a 12% management
+                  Asset management, office solutions, and culture activities are charged at a {additionalsFee || '–'} management
                   fee on actual costs — completely transparent and optional.
                 </p>
               </div>

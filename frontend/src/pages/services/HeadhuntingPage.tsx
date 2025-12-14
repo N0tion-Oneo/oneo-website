@@ -1,8 +1,10 @@
 // Headhunting Service Page
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { SEO } from '@/components/seo'
 import { useSEODefaults } from '@/contexts/SEOContext'
 import Navbar from '@/components/layout/Navbar'
+import { cmsPricing, CMSPricingConfig } from '@/services/cms'
 import {
   Crosshair,
   Users,
@@ -18,7 +20,17 @@ import {
   Zap,
   Lock,
   Trophy,
+  Calculator,
+  Target,
+  Clock,
+  CreditCard,
 } from 'lucide-react'
+
+// Helper to format decimal as percentage
+const formatPercent = (decimal: string | number): string => {
+  const num = typeof decimal === 'string' ? parseFloat(decimal) : decimal
+  return `${Math.round(num * 100)}%`
+}
 
 const benefits = [
   {
@@ -39,7 +51,7 @@ const benefits = [
   {
     icon: Network,
     title: 'Deep Industry Networks',
-    description: 'Years of relationship-building give us access to senior talent and industry leaders across sectors.',
+    description: 'Years of relationship-building give us access to talent and industry experts across sectors.',
   },
 ]
 
@@ -85,28 +97,49 @@ const industries = [
 const roleTypes = [
   {
     icon: Trophy,
-    title: 'C-Suite & Board',
-    description: 'CEOs, CFOs, CTOs, Board Directors, and executive leadership positions.',
+    title: 'Executive & Leadership',
+    description: 'C-Suite, Board Directors, and senior leadership positions.',
   },
   {
     icon: Building2,
-    title: 'Senior Management',
-    description: 'VPs, Directors, General Managers, and senior functional leaders.',
+    title: 'Management Roles',
+    description: 'Directors, General Managers, and functional leaders.',
   },
   {
     icon: Zap,
     title: 'Specialist Experts',
-    description: 'Niche technical experts, industry specialists, and rare skill sets.',
+    description: 'Niche technical experts and rare skill sets.',
   },
   {
     icon: Briefcase,
-    title: 'Revenue Leaders',
-    description: 'Sales directors, business development leaders, and commercial executives.',
+    title: 'Hard-to-Fill Roles',
+    description: 'Any role where passive talent outperforms active applicants.',
   },
+]
+
+const stats = [
+  { value: '85%', label: 'of top performers are passive candidates' },
+  { value: '3x', label: 'higher quality vs job board applicants' },
+  { value: '95%', label: 'placement success rate' },
 ]
 
 export default function HeadhuntingPage() {
   const seoDefaults = useSEODefaults()
+  const [pricingConfig, setPricingConfig] = useState<CMSPricingConfig | null>(null)
+
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        const config = await cmsPricing.getConfigPublic()
+        setPricingConfig(config)
+      } catch (error) {
+        console.error('Failed to fetch pricing config:', error)
+      }
+    }
+    fetchPricing()
+  }, [])
+
+  const placementFee = pricingConfig ? formatPercent(pricingConfig.headhunting_placement_fee) : ''
 
   return (
     <div className="min-h-screen bg-white">
@@ -121,31 +154,30 @@ export default function HeadhuntingPage() {
               <Crosshair className="w-6 h-6 text-purple-300" />
             </div>
             <span className="text-[13px] font-medium text-purple-300 uppercase tracking-wide">
-              Executive Headhunting
+              Headhunting
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-            Finding Leaders Who<br />
-            <span className="text-purple-300">Transform Businesses</span>
+            Find Talent That<br />
+            <span className="text-purple-300">Isn't Looking</span>
           </h1>
           <p className="text-lg text-purple-100 max-w-2xl mb-8">
-            When you need exceptional talent that isn't actively looking, our headhunters
-            go directly to the source. We identify, approach, and secure the industry's
-            best performers for your most critical roles.
+            The best candidates aren't on job boards. Our headhunters proactively identify
+            and approach top performers — bringing you talent your competitors can't reach.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
               to="/contact"
               className="inline-flex items-center gap-2 px-6 py-3 bg-white text-purple-900 font-medium rounded-lg hover:bg-purple-50 transition-colors"
             >
-              Discuss Your Search
+              Start a Search
               <ArrowRight className="w-4 h-4" />
             </Link>
             <a
-              href="#approach"
+              href="#pricing"
               className="inline-flex items-center gap-2 px-6 py-3 border border-white/30 text-white font-medium rounded-lg hover:bg-white/10 transition-colors"
             >
-              Our Approach
+              View Pricing
             </a>
           </div>
         </div>
@@ -159,14 +191,14 @@ export default function HeadhuntingPage() {
               Beyond Traditional Recruitment
             </h2>
             <p className="text-gray-600 mb-6 leading-relaxed">
-              Headhunting is the art and science of identifying exceptional talent and
-              persuading them to consider new opportunities. Unlike traditional recruitment
-              that waits for candidates to apply, headhunting is proactive and targeted.
+              Headhunting is the art of identifying exceptional talent and persuading them to
+              consider new opportunities. Unlike traditional recruitment that waits for candidates
+              to apply, headhunting is proactive and targeted.
             </p>
-            <p className="text-gray-600 mb-6 leading-relaxed">
-              Our headhunters are skilled relationship builders who understand how to
-              engage senior professionals, present compelling opportunities, and navigate
-              the complexities of executive transitions.
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              Our headhunters are skilled relationship builders who understand how to engage
+              professionals, present compelling opportunities, and navigate the complexities
+              of talent acquisition.
             </p>
             <div className="flex flex-wrap gap-3">
               <div className="flex items-center gap-2 text-[13px] text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
@@ -183,26 +215,20 @@ export default function HeadhuntingPage() {
               </div>
               <div className="flex items-center gap-2 text-[13px] text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
                 <CheckCircle2 className="w-4 h-4 text-purple-500" />
-                Executive Focus
+                Pay on Success
               </div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-purple-50 rounded-xl p-6">
-              <div className="text-[40px] font-bold text-purple-600 mb-1">85%</div>
-              <p className="text-[13px] text-gray-600">of senior executives are passive candidates</p>
-            </div>
-            <div className="bg-purple-50 rounded-xl p-6">
-              <div className="text-[40px] font-bold text-purple-600 mb-1">3x</div>
-              <p className="text-[13px] text-gray-600">higher quality candidates vs job boards</p>
-            </div>
-            <div className="bg-purple-50 rounded-xl p-6">
-              <div className="text-[40px] font-bold text-purple-600 mb-1">95%</div>
-              <p className="text-[13px] text-gray-600">placement success rate</p>
-            </div>
-            <div className="bg-purple-50 rounded-xl p-6">
-              <div className="text-[40px] font-bold text-purple-600 mb-1">6mo</div>
-              <p className="text-[13px] text-gray-600">guarantee on all placements</p>
+            {stats.map((stat) => (
+              <div key={stat.value} className="bg-purple-50 rounded-xl p-6">
+                <div className="text-[40px] font-bold text-purple-600 mb-1">{stat.value}</div>
+                <p className="text-[13px] text-gray-600">{stat.label}</p>
+              </div>
+            ))}
+            <div className="bg-purple-600 rounded-xl p-6 text-white">
+              <div className="text-[40px] font-bold mb-1">{placementFee || '–'}</div>
+              <p className="text-[13px] text-purple-100">placement fee on success</p>
             </div>
           </div>
         </div>
@@ -243,36 +269,126 @@ export default function HeadhuntingPage() {
         </div>
       </div>
 
-      {/* Our Approach */}
-      <div id="approach" className="max-w-5xl mx-auto px-6 py-20">
+      {/* Pricing Section */}
+      <div id="pricing" className="max-w-5xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Our Approach
+            Simple, Success-Based Pricing
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            A methodical process refined over years of executive search.
+            No upfront costs, no retainers. You only pay when we successfully place a candidate.
           </p>
         </div>
 
-        <div className="space-y-6">
-          {approach.map((item, index) => (
-            <div
-              key={item.step}
-              className="flex gap-6 items-start p-6 border border-gray-200 rounded-xl hover:border-purple-200 transition-colors"
-            >
-              <div className="w-14 h-14 bg-purple-600 text-white rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0">
-                {item.step}
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            {/* Pricing Header */}
+            <div className="bg-purple-600 text-white p-8 text-center">
+              <p className="text-purple-100 text-sm mb-2">Placement Fee</p>
+              <div className="text-4xl md:text-5xl font-bold mb-2">{placementFee || '–'}</div>
+              <p className="text-purple-100">of total package (CTC)</p>
+            </div>
+
+            {/* Pricing Details */}
+            <div className="p-8">
+              <div className="grid md:grid-cols-3 gap-6 mb-8">
+                <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <CreditCard className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                  <p className="text-[14px] font-medium text-gray-900">Pay on Success</p>
+                  <p className="text-[12px] text-gray-500">Fee due on candidate acceptance</p>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <Target className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                  <p className="text-[14px] font-medium text-gray-900">No Exclusivity</p>
+                  <p className="text-[12px] text-gray-500">We work at risk alongside you</p>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <Clock className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                  <p className="text-[14px] font-medium text-gray-900">4-Month Cover</p>
+                  <p className="text-[12px] text-gray-500">Replacement at 5% if needed</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-[17px] font-semibold text-gray-900 mb-2">
-                  {item.title}
-                </h3>
-                <p className="text-[14px] text-gray-600">
-                  {item.description}
+
+              <div className="border-t border-gray-100 pt-6 mb-6">
+                <h4 className="text-[14px] font-medium text-gray-900 mb-3">Fee Includes</h4>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                    <span className="text-[13px] text-gray-600">Target identification & mapping</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                    <span className="text-[13px] text-gray-600">Direct candidate approach</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                    <span className="text-[13px] text-gray-600">Screening & assessment</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                    <span className="text-[13px] text-gray-600">Interview coordination</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                    <span className="text-[13px] text-gray-600">Offer negotiation support</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                    <span className="text-[13px] text-gray-600">Reference checks</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-purple-50 rounded-lg p-4 mb-6">
+                <p className="text-[13px] text-gray-700">
+                  <strong>Replacement Policy:</strong> If a placed candidate leaves within 4 months,
+                  we'll find a replacement for just 5% of the package (instead of the full {placementFee || '20%'} fee).
                 </p>
               </div>
+
+              <Link
+                to="/contact"
+                className="block w-full text-center px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Start a Search
+              </Link>
             </div>
-          ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Our Approach */}
+      <div id="approach" className="bg-gray-50 border-y border-gray-100">
+        <div className="max-w-5xl mx-auto px-6 py-20">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Our Approach
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              A methodical process refined over years of successful searches.
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {approach.map((item) => (
+              <div
+                key={item.step}
+                className="flex gap-6 items-start p-6 bg-white border border-gray-200 rounded-xl hover:border-purple-200 transition-colors"
+              >
+                <div className="w-14 h-14 bg-purple-600 text-white rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0">
+                  {item.step}
+                </div>
+                <div>
+                  <h3 className="text-[17px] font-semibold text-gray-900 mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-[14px] text-gray-600">
+                    {item.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -281,10 +397,10 @@ export default function HeadhuntingPage() {
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">
-              Roles We Recruit
+              Roles We Headhunt
             </h2>
             <p className="text-purple-200 max-w-2xl mx-auto">
-              We specialize in senior and executive-level positions across industries.
+              Headhunting works for any role where the best talent isn't actively looking.
             </p>
           </div>
 
@@ -359,7 +475,7 @@ export default function HeadhuntingPage() {
                     Thorough Assessment
                   </h3>
                   <p className="text-[13px] text-gray-600">
-                    Beyond skills—we assess leadership style, cultural fit, and long-term potential.
+                    Beyond skills — we assess cultural fit, motivation, and long-term potential.
                   </p>
                 </div>
               </div>
@@ -373,7 +489,7 @@ export default function HeadhuntingPage() {
               <li className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
                 <span className="text-[14px] text-gray-600">
-                  Exclusive, dedicated focus on your search
+                  Transparent communication throughout the search
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -391,13 +507,13 @@ export default function HeadhuntingPage() {
               <li className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
                 <span className="text-[14px] text-gray-600">
-                  Extended guarantee on all placements
+                  4-month replacement cover at reduced rate
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
                 <span className="text-[14px] text-gray-600">
-                  Post-placement support and check-ins
+                  No payment until successful placement
                 </span>
               </li>
             </ul>
@@ -408,13 +524,13 @@ export default function HeadhuntingPage() {
       {/* CTA Section */}
       <div className="border-t border-gray-100">
         <div className="max-w-5xl mx-auto px-6 py-20">
-          <div className="bg-purple-50 rounded-2xl p-8 md:p-12 text-center">
+          <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl p-8 md:p-12 text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-              Ready to Find Your Next Leader?
+              Ready to Find Hidden Talent?
             </h2>
             <p className="text-gray-600 max-w-xl mx-auto mb-8">
-              Let's discuss your executive search requirements and how our
-              headhunting expertise can deliver the talent you need.
+              Let's discuss your hiring needs and how our headhunting
+              expertise can bring you candidates you won't find elsewhere.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link
@@ -426,7 +542,7 @@ export default function HeadhuntingPage() {
               </Link>
               <Link
                 to="/retained-recruitment"
-                className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-white transition-colors"
               >
                 Explore Retained Recruitment
               </Link>

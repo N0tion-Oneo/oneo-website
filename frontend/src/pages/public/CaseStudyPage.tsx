@@ -15,7 +15,8 @@ import {
   Calendar,
   TrendingUp,
   ArrowRight,
-  CheckCircle2
+  CheckCircle2,
+  Quote,
 } from 'lucide-react'
 
 export default function CaseStudyPage() {
@@ -42,8 +43,8 @@ export default function CaseStudyPage() {
         name: seoDefaults.companyName,
         logo: `${window.location.origin}/logo.png`,
       },
-      about: study.company_name ? {
-        name: study.company_name,
+      about: study.client_name ? {
+        name: study.client_name,
         industry: study.industry,
       } : undefined,
     })
@@ -68,7 +69,7 @@ export default function CaseStudyPage() {
     if (!study) return undefined
     return buildCaseStudySEOData({
       title: study.title,
-      client_name: study.company_name || undefined,
+      client_name: study.client_name || undefined,
       industry: study.industry || undefined,
       excerpt: study.excerpt || undefined,
       meta_title: study.meta_title || undefined,
@@ -166,10 +167,18 @@ export default function CaseStudyPage() {
 
           {/* Meta Info */}
           <div className="flex flex-wrap items-center gap-6 text-[13px] text-gray-500">
-            {study.company_name && (
+            {study.client_name && (
               <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
-                <span>{study.company_name}</span>
+                {study.client_logo ? (
+                  <img
+                    src={study.client_logo}
+                    alt={study.client_name}
+                    className="h-5 w-auto object-contain"
+                  />
+                ) : (
+                  <Building2 className="w-4 h-4" />
+                )}
+                <span>{study.client_name}</span>
               </div>
             )}
             {study.published_at && (
@@ -210,12 +219,12 @@ export default function CaseStudyPage() {
                   Key Results
                 </h3>
                 <div className="space-y-4">
-                  {study.highlights.map((highlight: { metric: string; value: string }, index: number) => (
+                  {study.highlights.map((highlight: { label: string; value: string }, index: number) => (
                     <div key={index} className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-2xl font-bold text-gray-900">{highlight.value}</p>
-                        <p className="text-[13px] text-gray-600">{highlight.metric}</p>
+                        <p className="text-[13px] text-gray-600">{highlight.label}</p>
                       </div>
                     </div>
                   ))}
@@ -233,10 +242,10 @@ export default function CaseStudyPage() {
                   Key Results
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
-                  {study.highlights.map((highlight: { metric: string; value: string }, index: number) => (
+                  {study.highlights.map((highlight: { label: string; value: string }, index: number) => (
                     <div key={index}>
                       <p className="text-2xl font-bold text-gray-900">{highlight.value}</p>
-                      <p className="text-[13px] text-gray-600">{highlight.metric}</p>
+                      <p className="text-[13px] text-gray-600">{highlight.label}</p>
                     </div>
                   ))}
                 </div>
@@ -247,6 +256,33 @@ export default function CaseStudyPage() {
             <div className="prose prose-lg max-w-none">
               <BlockRenderer content={study.content} />
             </div>
+
+            {/* Testimonial */}
+            {study.testimonial_quote && (
+              <div className="mt-12 bg-gray-50 rounded-2xl p-8 md:p-10 border border-gray-100">
+                <Quote className="w-10 h-10 text-emerald-500 mb-4" />
+                <blockquote className="text-[18px] md:text-[20px] text-gray-700 leading-relaxed mb-6 font-medium">
+                  "{study.testimonial_quote}"
+                </blockquote>
+                {(study.testimonial_author || study.testimonial_role) && (
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                      <span className="text-emerald-600 font-semibold text-lg">
+                        {study.testimonial_author?.charAt(0) || 'A'}
+                      </span>
+                    </div>
+                    <div>
+                      {study.testimonial_author && (
+                        <p className="text-[15px] font-semibold text-gray-900">{study.testimonial_author}</p>
+                      )}
+                      {study.testimonial_role && (
+                        <p className="text-[13px] text-gray-500">{study.testimonial_role}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </article>
         </div>
       </div>
@@ -258,7 +294,7 @@ export default function CaseStudyPage() {
             Ready to transform your hiring?
           </h2>
           <p className="text-gray-400 mb-8 max-w-xl mx-auto">
-            Join companies like {study.company_name || 'industry leaders'} who have revolutionized their recruitment process with {seoDefaults.companyName}.
+            Join companies like {study.client_name || 'industry leaders'} who have revolutionized their recruitment process with {seoDefaults.companyName}.
           </p>
           <Link
             to="/contact"

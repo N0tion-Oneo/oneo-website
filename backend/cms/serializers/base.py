@@ -2,6 +2,15 @@
 from rest_framework import serializers
 
 
+def get_image_url(image_field, request):
+    """Helper to get full URL for image fields."""
+    if image_field:
+        if request:
+            return request.build_absolute_uri(image_field.url)
+        return image_field.url
+    return None
+
+
 class SEOFieldsMixin(serializers.Serializer):
     """Mixin for SEO fields."""
     meta_title = serializers.CharField(max_length=70, required=False, allow_blank=True)

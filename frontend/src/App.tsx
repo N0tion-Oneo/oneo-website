@@ -96,6 +96,7 @@ import {
 import { BookingPage, RecruiterBookingPage } from '@/pages/booking';
 import { CandidateDashboardLayout, SettingsLayout, CMSLayout } from '@/layouts';
 import { GoogleAnalytics } from '@/components/analytics';
+import { ScrollToTop } from '@/components/ScrollToTop';
 import './App.css';
 
 // Redirect component for old job applications route
@@ -121,6 +122,7 @@ function App() {
         <AuthProvider>
           <ToastProvider>
           <GoogleAnalytics />
+          <ScrollToTop />
         <Routes>
         {/* Home page - accessible to all */}
         <Route path="/" element={<HomePage />} />

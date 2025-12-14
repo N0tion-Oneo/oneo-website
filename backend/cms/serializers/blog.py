@@ -1,15 +1,7 @@
 """Serializers for BlogPost model."""
 from rest_framework import serializers
 from ..models import BlogPost, FAQ
-
-
-def get_image_url(image_field, request):
-    """Helper to get full URL for image fields."""
-    if image_field:
-        if request:
-            return request.build_absolute_uri(image_field.url)
-        return image_field.url
-    return None
+from .base import get_image_url
 
 
 class EmbeddedFAQSerializer(serializers.ModelSerializer):

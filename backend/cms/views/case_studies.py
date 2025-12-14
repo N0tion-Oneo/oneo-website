@@ -54,7 +54,7 @@ def list_case_studies(request):
     if is_featured is not None:
         studies = studies.filter(is_featured=is_featured.lower() == 'true')
 
-    serializer = CaseStudyListSerializer(studies, many=True)
+    serializer = CaseStudyListSerializer(studies, many=True, context={'request': request})
     return Response(serializer.data)
 
 
@@ -74,7 +74,7 @@ def get_case_study(request, study_id):
     except CaseStudy.DoesNotExist:
         return Response({'error': 'Case study not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = CaseStudyDetailSerializer(study)
+    serializer = CaseStudyDetailSerializer(study, context={'request': request})
     return Response(serializer.data)
 
 
@@ -96,7 +96,7 @@ def create_case_study(request):
         if study.status == ContentStatus.PUBLISHED and not study.published_at:
             study.published_at = timezone.now()
             study.save()
-        return Response(CaseStudyDetailSerializer(study).data, status=status.HTTP_201_CREATED)
+        return Response(CaseStudyDetailSerializer(study, context={'request': request}).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -125,7 +125,7 @@ def update_case_study(request, study_id):
         if study.status == ContentStatus.PUBLISHED and not study.published_at:
             study.published_at = timezone.now()
             study.save()
-        return Response(CaseStudyDetailSerializer(study).data)
+        return Response(CaseStudyDetailSerializer(study, context={'request': request}).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -175,7 +175,7 @@ def list_public_case_studies(request):
     if featured is not None:
         studies = studies.filter(is_featured=featured.lower() == 'true')
 
-    serializer = CaseStudyPublicSerializer(studies, many=True)
+    serializer = CaseStudyPublicSerializer(studies, many=True, context={'request': request})
     return Response(serializer.data)
 
 
@@ -192,7 +192,7 @@ def get_public_case_study(request, slug):
     except CaseStudy.DoesNotExist:
         return Response({'error': 'Case study not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = CaseStudyPublicSerializer(study)
+    serializer = CaseStudyPublicSerializer(study, context={'request': request})
     return Response(serializer.data)
 
 
