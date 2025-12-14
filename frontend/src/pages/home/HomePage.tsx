@@ -691,29 +691,31 @@ export default function HomePage() {
           </div>
 
           {/* Talent Types */}
-          <div className="max-w-6xl mx-auto px-6 py-20">
-            <div className="max-w-2xl mb-12">
-              <h2 className="text-3xl font-bold text-gray-900">Specialists We Place</h2>
-              <p className="mt-3 text-gray-600">
-                Deep expertise across the full spectrum of specialist talent.
-              </p>
-            </div>
+          <div className="bg-gray-900 text-white">
+            <div className="max-w-6xl mx-auto px-6 py-20">
+              <div className="max-w-2xl mb-12">
+                <h2 className="text-3xl font-bold">Specialists We Place</h2>
+                <p className="mt-3 text-gray-400">
+                  Deep expertise across the full spectrum of specialist talent.
+                </p>
+              </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {talentTypes.map((talent) => (
-                <div
-                  key={talent.name}
-                  className="p-5 bg-white rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all group"
-                >
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-amber-50 transition-colors">
-                    <talent.icon className="w-5 h-5 text-gray-600 group-hover:text-amber-600 transition-colors" />
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {talentTypes.map((talent) => (
+                  <div
+                    key={talent.name}
+                    className="p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors"
+                  >
+                    <div className="w-9 h-9 bg-amber-500/20 rounded-lg flex items-center justify-center mb-3">
+                      <talent.icon className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <h3 className="text-[14px] font-semibold mb-1">{talent.name}</h3>
+                    <p className="text-[12px] text-gray-400 leading-relaxed">
+                      {talent.description}
+                    </p>
                   </div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 mb-1">{talent.name}</h3>
-                  <p className="text-[12px] text-gray-500 leading-relaxed">
-                    {talent.description}
-                  </p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
 
