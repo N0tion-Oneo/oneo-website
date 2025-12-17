@@ -443,6 +443,58 @@ export default function PricingCalculatorPage() {
     // Format percentages for display
     const formatPct = (val: number) => `${Math.round(val * 100)}%`
 
+    // Calculate detailed breakdowns for each service
+    const totalRegularSalary = roles.filter(r => r.level === 'regular').reduce((sum, r) => sum + (r.salary * r.count * 12), 0)
+    const totalCsuiteSalary = roles.filter(r => r.level === 'csuite').reduce((sum, r) => sum + (r.salary * r.count * 12), 0)
+    const totalRegularHires = roles.filter(r => r.level === 'regular').reduce((sum, r) => sum + r.count, 0)
+    const totalCsuiteHires = roles.filter(r => r.level === 'csuite').reduce((sum, r) => sum + r.count, 0)
+
+    // Enterprise detailed breakdown
+    const enterpriseDetails = {
+      salaryBase: totalAnnualSalary * years,
+      salaryMarkup: sumTotals(enterpriseByYear).salaryMargin,
+      additionalsBase: monthlyAdditionals * 12 * years,
+      additionalsFee: sumTotals(enterpriseByYear).additionalsFees,
+      assetsBase: oneTimeAdditionals,
+      assetsFee: sumTotals(enterpriseByYear).assetsFees,
+      markupRates: enterpriseMarkups,
+      additionalsFeeRate: enterpriseAdditionalsFee,
+      assetsFeeRate: enterpriseAssetsFee,
+    }
+
+    // Retained detailed breakdown
+    const retainedDetails = {
+      retainerMonthly: retainedMonthlyRetainer,
+      retainerTotal: retainedMonthlyRetainer * 12 * years,
+      regularSalary: totalRegularSalary,
+      regularFee: totalRegularSalary * retainedPlacementFee,
+      regularFeeRate: retainedPlacementFee,
+      regularHires: totalRegularHires,
+      csuiteSalary: totalCsuiteSalary,
+      csuiteFee: totalCsuiteSalary * retainedCsuitePlacementFee,
+      csuiteFeeRate: retainedCsuitePlacementFee,
+      csuiteHires: totalCsuiteHires,
+    }
+
+    // Headhunting detailed breakdown
+    const headhuntingDetails = {
+      regularSalary: totalRegularSalary,
+      regularFee: totalRegularSalary * headhuntingPlacementFee,
+      regularFeeRate: headhuntingPlacementFee,
+      regularHires: totalRegularHires,
+      csuiteSalary: totalCsuiteSalary,
+      csuiteFee: totalCsuiteSalary * headhuntingCsuitePlacementFee,
+      csuiteFeeRate: headhuntingCsuitePlacementFee,
+      csuiteHires: totalCsuiteHires,
+    }
+
+    // EOR detailed breakdown
+    const eorDetails = {
+      monthlyFeePerPerson: eorMonthlyFee,
+      totalEmployees: totalHires,
+      monthlyTotal: eorMonthlyFee * totalHires,
+    }
+
     return {
       enterprise: {
         total: enterpriseTotal,
@@ -452,6 +504,7 @@ export default function PricingCalculatorPage() {
         note: `+${formatPct(enterpriseAdditionalsFee)} on additionals`,
         byYear: enterpriseByYear,
         totals: sumTotals(enterpriseByYear),
+        details: enterpriseDetails,
       },
       eor: {
         total: eorTotal,
@@ -461,27 +514,30 @@ export default function PricingCalculatorPage() {
         note: 'Flat monthly fee per employee',
         byYear: eorByYear,
         totals: sumTotals(eorByYear),
+        details: eorDetails,
       },
       retained: {
         total: retainedTotal,
         upfront: retainedByYear[0]?.placementFees || 0,
         monthly: retainedMonthlyRetainer,
         rate: `R${retainedMonthlyRetainer.toLocaleString()}/mo retainer`,
-        note: `+ ${formatPct(retainedPlacementFee)} placement fee`,
+        note: `+ ${formatPct(retainedPlacementFee)} regular / ${formatPct(retainedCsuitePlacementFee)} C-Suite placement`,
         byYear: retainedByYear,
         totals: sumTotals(retainedByYear),
+        details: retainedDetails,
       },
       headhunting: {
         total: headhuntingTotal,
         upfront: headhuntingByYear[0]?.total || 0,
         monthly: 0,
-        rate: `${formatPct(headhuntingPlacementFee)} placement fee`,
-        note: 'Per successful hire',
+        rate: `${formatPct(headhuntingPlacementFee)} regular / ${formatPct(headhuntingCsuitePlacementFee)} C-Suite`,
+        note: 'Placement fee per successful hire',
         byYear: headhuntingByYear,
         totals: sumTotals(headhuntingByYear),
+        details: headhuntingDetails,
       },
     }
-  }, [roles, additionals, years, config, customAdditionals])
+  }, [roles, additionals, years, config, customAdditionals, totalAnnualSalary, monthlyAdditionals, oneTimeAdditionals])
 
   return (
     <div className="min-h-screen bg-white">
@@ -1299,41 +1355,126 @@ export default function PricingCalculatorPage() {
                           )}
                         </div>
 
-                        {/* Cost Breakdown */}
+                        {/* Cost Breakdown - Service Specific */}
                         <div className="px-5 py-4 border-b border-gray-100">
-                          <div className="text-[11px] text-gray-500 uppercase tracking-wide mb-2">Cost Breakdown</div>
-                          <div className="space-y-1.5">
-                            {calc.totals.salaryMargin > 0 && (
+                          <div className="text-[11px] text-gray-500 uppercase tracking-wide mb-3">Fee Breakdown</div>
+
+                          {/* Enterprise Breakdown */}
+                          {s.key === 'enterprise' && calc.details && (
+                            <div className="space-y-2">
+                              {calc.totals.salaryMargin > 0 && (
+                                <div>
+                                  <div className="flex justify-between text-[13px]">
+                                    <span className="text-gray-600">Salary Markup</span>
+                                    <span className="font-medium text-gray-900">{formatCurrency(calc.totals.salaryMargin)}</span>
+                                  </div>
+                                  <p className="text-[11px] text-gray-400 mt-0.5">
+                                    {Math.round(calc.details.markupRates[0] * 100)}%→{Math.round(calc.details.markupRates[3] * 100)}% on salaries (by tenure)
+                                  </p>
+                                </div>
+                              )}
+                              {calc.totals.additionalsFees > 0 && (
+                                <div className="pt-2 border-t border-gray-100">
+                                  <div className="flex justify-between text-[13px]">
+                                    <span className="text-gray-600">Additionals Fee</span>
+                                    <span className="font-medium text-gray-900">{formatCurrency(calc.totals.additionalsFees)}</span>
+                                  </div>
+                                  <p className="text-[11px] text-gray-400 mt-0.5">
+                                    {Math.round(calc.details.additionalsFeeRate * 100)}% on {formatCurrency(calc.details.additionalsBase)}
+                                  </p>
+                                </div>
+                              )}
+                              {calc.totals.assetsFees > 0 && (
+                                <div className="pt-2 border-t border-gray-100">
+                                  <div className="flex justify-between text-[13px]">
+                                    <span className="text-gray-600">Assets Fee</span>
+                                    <span className="font-medium text-gray-900">{formatCurrency(calc.totals.assetsFees)}</span>
+                                  </div>
+                                  <p className="text-[11px] text-gray-400 mt-0.5">
+                                    {Math.round(calc.details.assetsFeeRate * 100)}% on {formatCurrency(calc.details.assetsBase)}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* EOR Breakdown */}
+                          {s.key === 'eor' && calc.details && (
+                            <div className="space-y-2">
                               <div className="flex justify-between text-[13px]">
-                                <span className="text-gray-600">Salary Margin</span>
-                                <span className="font-medium text-gray-900">{formatCurrency(calc.totals.salaryMargin)}</span>
-                              </div>
-                            )}
-                            {calc.totals.monthlyFees > 0 && (
-                              <div className="flex justify-between text-[13px]">
-                                <span className="text-gray-600">{s.key === 'eor' ? 'EOR Fees' : 'Retainer'}</span>
+                                <span className="text-gray-600">Monthly EOR Fees</span>
                                 <span className="font-medium text-gray-900">{formatCurrency(calc.totals.monthlyFees)}</span>
                               </div>
-                            )}
-                            {calc.totals.placementFees > 0 && (
-                              <div className="flex justify-between text-[13px]">
-                                <span className="text-gray-600">Placement Fee</span>
-                                <span className="font-medium text-gray-900">{formatCurrency(calc.totals.placementFees)}</span>
+                              <p className="text-[11px] text-gray-400">
+                                {formatCurrency(calc.details.monthlyFeePerPerson)}/mo × {calc.details.totalEmployees} employee{calc.details.totalEmployees !== 1 ? 's' : ''} × {years * 12} months
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Retained Breakdown */}
+                          {s.key === 'retained' && calc.details && (
+                            <div className="space-y-2">
+                              <div>
+                                <div className="flex justify-between text-[13px]">
+                                  <span className="text-gray-600">Monthly Retainer</span>
+                                  <span className="font-medium text-gray-900">{formatCurrency(calc.details.retainerTotal)}</span>
+                                </div>
+                                <p className="text-[11px] text-gray-400 mt-0.5">
+                                  {formatCurrency(calc.details.retainerMonthly)}/mo × {years * 12} months
+                                </p>
                               </div>
-                            )}
-                            {calc.totals.additionalsFees > 0 && (
-                              <div className="flex justify-between text-[13px]">
-                                <span className="text-gray-600">Additionals</span>
-                                <span className="font-medium text-gray-900">{formatCurrency(calc.totals.additionalsFees)}</span>
-                              </div>
-                            )}
-                            {calc.totals.assetsFees > 0 && (
-                              <div className="flex justify-between text-[13px]">
-                                <span className="text-gray-600">Assets</span>
-                                <span className="font-medium text-gray-900">{formatCurrency(calc.totals.assetsFees)}</span>
-                              </div>
-                            )}
-                          </div>
+                              {calc.details.regularHires > 0 && (
+                                <div className="pt-2 border-t border-gray-100">
+                                  <div className="flex justify-between text-[13px]">
+                                    <span className="text-gray-600">Regular Placements</span>
+                                    <span className="font-medium text-gray-900">{formatCurrency(calc.details.regularFee)}</span>
+                                  </div>
+                                  <p className="text-[11px] text-gray-400 mt-0.5">
+                                    {Math.round(calc.details.regularFeeRate * 100)}% on {formatCurrency(calc.details.regularSalary)} ({calc.details.regularHires} hire{calc.details.regularHires !== 1 ? 's' : ''})
+                                  </p>
+                                </div>
+                              )}
+                              {calc.details.csuiteHires > 0 && (
+                                <div className="pt-2 border-t border-gray-100">
+                                  <div className="flex justify-between text-[13px]">
+                                    <span className="text-gray-600">C-Suite Placements</span>
+                                    <span className="font-medium text-gray-900">{formatCurrency(calc.details.csuiteFee)}</span>
+                                  </div>
+                                  <p className="text-[11px] text-gray-400 mt-0.5">
+                                    {Math.round(calc.details.csuiteFeeRate * 100)}% on {formatCurrency(calc.details.csuiteSalary)} ({calc.details.csuiteHires} hire{calc.details.csuiteHires !== 1 ? 's' : ''})
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Headhunting Breakdown */}
+                          {s.key === 'headhunting' && calc.details && (
+                            <div className="space-y-2">
+                              {calc.details.regularHires > 0 && (
+                                <div>
+                                  <div className="flex justify-between text-[13px]">
+                                    <span className="text-gray-600">Regular Placements</span>
+                                    <span className="font-medium text-gray-900">{formatCurrency(calc.details.regularFee)}</span>
+                                  </div>
+                                  <p className="text-[11px] text-gray-400 mt-0.5">
+                                    {Math.round(calc.details.regularFeeRate * 100)}% on {formatCurrency(calc.details.regularSalary)} ({calc.details.regularHires} hire{calc.details.regularHires !== 1 ? 's' : ''})
+                                  </p>
+                                </div>
+                              )}
+                              {calc.details.csuiteHires > 0 && (
+                                <div className={calc.details.regularHires > 0 ? 'pt-2 border-t border-gray-100' : ''}>
+                                  <div className="flex justify-between text-[13px]">
+                                    <span className="text-gray-600">C-Suite Placements</span>
+                                    <span className="font-medium text-gray-900">{formatCurrency(calc.details.csuiteFee)}</span>
+                                  </div>
+                                  <p className="text-[11px] text-gray-400 mt-0.5">
+                                    {Math.round(calc.details.csuiteFeeRate * 100)}% on {formatCurrency(calc.details.csuiteSalary)} ({calc.details.csuiteHires} hire{calc.details.csuiteHires !== 1 ? 's' : ''})
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         {/* Features */}

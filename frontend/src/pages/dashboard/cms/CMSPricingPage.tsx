@@ -208,14 +208,16 @@ export default function CMSPricingPage() {
     if (!value) return ''
     const num = parseFloat(value)
     if (isNaN(num)) return ''
-    return (num * 100).toString()
+    // Round to avoid floating point precision issues (e.g., 0.28 * 100 = 28.000000000000004)
+    return Math.round(num * 100).toString()
   }
 
   // Convert percentage to decimal for storage
   const toDecimal = (value: string) => {
     const num = parseFloat(value)
     if (isNaN(num)) return ''
-    return (num / 100).toString()
+    // Use toFixed to avoid floating point precision issues
+    return (num / 100).toFixed(4)
   }
 
   const handleConfigChange = (field: keyof CMSPricingConfig, value: string) => {
