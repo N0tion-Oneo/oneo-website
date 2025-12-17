@@ -15,6 +15,7 @@ import {
   Check,
   X,
   Trash2,
+  Plus,
 } from 'lucide-react'
 
 const formatCurrency = (amount: number): string => {
@@ -39,6 +40,14 @@ interface Additionals {
   quarterlyEvents: { enabled: boolean; costPerPerson: number }
   yearEndParty: { enabled: boolean; costPerPerson: number }
   assets: { enabled: boolean; costPerHire: number }
+}
+
+interface CustomAdditional {
+  id: string
+  name: string
+  costPerPerson: number
+  frequency: 'monthly' | 'quarterly' | 'annual' | 'one-off'
+  enabled: boolean
 }
 
 // Default features (fallback if API fails)
@@ -161,6 +170,7 @@ export default function PricingCalculatorPage() {
     yearEndParty: { enabled: true, costPerPerson: 1000 },
     assets: { enabled: true, costPerHire: defaultAssetCost },
   })
+  const [customAdditionals, setCustomAdditionals] = useState<CustomAdditional[]>([])
 
   // Update defaults when config loads
   useEffect(() => {
@@ -192,19 +202,49 @@ export default function PricingCalculatorPage() {
     setRoles(roles.map(r => r.id === id ? { ...r, [field]: value } : r))
   }
 
+  const addCustomAdditional = () => {
+    setCustomAdditionals([
+      ...customAdditionals,
+      { id: Date.now().toString(), name: '', costPerPerson: 0, frequency: 'monthly', enabled: true }
+    ])
+  }
+
+  const removeCustomAdditional = (id: string) => {
+    setCustomAdditionals(customAdditionals.filter(c => c.id !== id))
+  }
+
+  const updateCustomAdditional = (id: string, field: keyof CustomAdditional, value: string | number | boolean) => {
+    setCustomAdditionals(customAdditionals.map(c => c.id === id ? { ...c, [field]: value } : c))
+  }
+
   const monthlyAdditionals = useMemo(() => {
     let total = 0
     if (additionals.deskFees.enabled) total += additionals.deskFees.costPerDesk * totalHires
     if (additionals.monthlyLunches.enabled) total += additionals.monthlyLunches.costPerPerson * totalHires
     if (additionals.quarterlyEvents.enabled) total += (additionals.quarterlyEvents.costPerPerson * totalHires * 4) / 12
     if (additionals.yearEndParty.enabled) total += (additionals.yearEndParty.costPerPerson * totalHires) / 12
+    // Add custom recurring additionals
+    customAdditionals.filter(c => c.enabled && c.frequency !== 'one-off').forEach(custom => {
+      if (custom.frequency === 'monthly') {
+        total += custom.costPerPerson * totalHires
+      } else if (custom.frequency === 'quarterly') {
+        total += (custom.costPerPerson * totalHires * 4) / 12
+      } else if (custom.frequency === 'annual') {
+        total += (custom.costPerPerson * totalHires) / 12
+      }
+    })
     return total
-  }, [additionals, totalHires])
+  }, [additionals, totalHires, customAdditionals])
 
   const oneTimeAdditionals = useMemo(() => {
-    if (additionals.assets.enabled) return additionals.assets.costPerHire * totalHires
-    return 0
-  }, [additionals, totalHires])
+    let total = 0
+    if (additionals.assets.enabled) total += additionals.assets.costPerHire * totalHires
+    // Add custom one-off additionals
+    customAdditionals.filter(c => c.enabled && c.frequency === 'one-off').forEach(custom => {
+      total += custom.costPerPerson * totalHires
+    })
+    return total
+  }, [additionals, totalHires, customAdditionals])
 
   // Filter services based on needs and hire type
   const relevantServices = useMemo(() => {
@@ -294,7 +334,11 @@ export default function PricingCalculatorPage() {
       // Enterprise uses MARKUP (% added on top of salary)
       // IMPORTANT: Markup rate is based on EMPLOYEE TENURE, not client tenure
       // Each employee's markup decreases based on how long THEY have been employed
-      const entAssets = additionals.assets.enabled ? additionals.assets.costPerHire * newHires * enterpriseAssetsFee : 0
+      let entAssets = additionals.assets.enabled ? additionals.assets.costPerHire * newHires * enterpriseAssetsFee : 0
+      // Add custom one-off additionals
+      customAdditionals.filter(c => c.enabled && c.frequency === 'one-off').forEach(custom => {
+        entAssets += custom.costPerPerson * newHires * enterpriseAssetsFee
+      })
       cumulativeHiresEnt += newHires
 
       // Calculate salary margin based on each employee's tenure
@@ -314,6 +358,16 @@ export default function PricingCalculatorPage() {
       if (additionals.monthlyLunches.enabled) entAdditionals += additionals.monthlyLunches.costPerPerson * cumulativeHiresEnt * 12
       if (additionals.quarterlyEvents.enabled) entAdditionals += additionals.quarterlyEvents.costPerPerson * cumulativeHiresEnt * 4
       if (additionals.yearEndParty.enabled) entAdditionals += additionals.yearEndParty.costPerPerson * cumulativeHiresEnt
+      // Add custom recurring additionals
+      customAdditionals.filter(c => c.enabled && c.frequency !== 'one-off').forEach(custom => {
+        if (custom.frequency === 'monthly') {
+          entAdditionals += custom.costPerPerson * cumulativeHiresEnt * 12
+        } else if (custom.frequency === 'quarterly') {
+          entAdditionals += custom.costPerPerson * cumulativeHiresEnt * 4
+        } else if (custom.frequency === 'annual') {
+          entAdditionals += custom.costPerPerson * cumulativeHiresEnt
+        }
+      })
       const entAdditionalsFeeCalc = entAdditionals * enterpriseAdditionalsFee
       enterpriseByYear.push({
         salaryMargin: entSalaryMargin,
@@ -417,7 +471,7 @@ export default function PricingCalculatorPage() {
         totals: sumTotals(headhuntingByYear),
       },
     }
-  }, [roles, additionals, years, config])
+  }, [roles, additionals, years, config, customAdditionals])
 
   return (
     <div className="min-h-screen bg-white">
@@ -903,7 +957,7 @@ export default function PricingCalculatorPage() {
                         value: additionals.quarterlyEvents.costPerPerson,
                         enabled: additionals.quarterlyEvents.enabled,
                         annual: additionals.quarterlyEvents.costPerPerson * totalHires * 4,
-                        inputLabel: '/event/pp'
+                        inputLabel: '/qtr/pp'
                       },
                       {
                         key: 'yearEndParty',
@@ -1004,6 +1058,90 @@ export default function PricingCalculatorPage() {
                     <span className="w-[120px]"></span>
                     <span className="w-[80px] text-[13px] font-semibold text-gray-900 text-right">{formatCurrency(oneTimeAdditionals)}</span>
                   </div>
+                </div>
+
+                {/* Custom Services */}
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-2 px-3">
+                    <span className="text-[10px] text-gray-500 uppercase tracking-wide">Custom Services</span>
+                    <button
+                      onClick={addCustomAdditional}
+                      className="flex items-center gap-1 text-[12px] text-gray-600 hover:text-gray-900 font-medium"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add Custom
+                    </button>
+                  </div>
+                  {customAdditionals.length === 0 ? (
+                    <p className="text-[13px] text-gray-400 italic px-3 py-2">No custom services added</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {customAdditionals.map((custom) => {
+                        // Calculate annual cost for this custom service
+                        let customAnnual = 0
+                        if (custom.enabled) {
+                          if (custom.frequency === 'monthly') {
+                            customAnnual = custom.costPerPerson * totalHires * 12
+                          } else if (custom.frequency === 'quarterly') {
+                            customAnnual = custom.costPerPerson * totalHires * 4
+                          } else if (custom.frequency === 'annual') {
+                            customAnnual = custom.costPerPerson * totalHires
+                          } else if (custom.frequency === 'one-off') {
+                            customAnnual = custom.costPerPerson * totalHires
+                          }
+                        }
+                        return (
+                          <div key={custom.id} className="flex items-center bg-white rounded-lg px-3 py-2 border border-gray-200">
+                            <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={custom.enabled}
+                                onChange={(e) => updateCustomAdditional(custom.id, 'enabled', e.target.checked)}
+                                className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 flex-shrink-0"
+                              />
+                              <input
+                                type="text"
+                                value={custom.name}
+                                onChange={(e) => updateCustomAdditional(custom.id, 'name', e.target.value)}
+                                placeholder="Service name"
+                                className="flex-1 min-w-0 h-6 px-1 border-0 text-[13px] text-gray-700 focus:ring-0 outline-none bg-transparent"
+                              />
+                            </label>
+                            <div className="flex items-center gap-1">
+                              <span className="text-[11px] text-gray-400">R</span>
+                              <input
+                                type="number"
+                                value={custom.costPerPerson}
+                                onChange={(e) => updateCustomAdditional(custom.id, 'costPerPerson', Number(e.target.value))}
+                                className="w-16 h-7 px-1 border border-gray-200 rounded text-[12px] text-right focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none disabled:opacity-50 disabled:bg-gray-100"
+                                disabled={!custom.enabled}
+                              />
+                              <select
+                                value={custom.frequency}
+                                onChange={(e) => updateCustomAdditional(custom.id, 'frequency', e.target.value)}
+                                className="h-7 px-1 border border-gray-200 rounded text-[11px] focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none disabled:opacity-50 disabled:bg-gray-100"
+                                disabled={!custom.enabled}
+                              >
+                                <option value="monthly">/mo/pp</option>
+                                <option value="quarterly">/qtr/pp</option>
+                                <option value="annual">/yr/pp</option>
+                                <option value="one-off">/hire</option>
+                              </select>
+                            </div>
+                            <span className="w-[70px] text-[12px] font-medium text-gray-700 text-right">
+                              {custom.enabled ? formatCurrency(customAnnual) : '—'}
+                            </span>
+                            <button
+                              onClick={() => removeCustomAdditional(custom.id)}
+                              className="ml-2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1152,19 +1290,14 @@ export default function PricingCalculatorPage() {
                         <div className="px-5 py-4 border-b border-gray-100">
                           <div className="text-[11px] text-gray-500 uppercase tracking-wide mb-2">Includes</div>
                           <div className="space-y-1">
-                            {features.map((feature) => {
-                              const included = serviceFeatures[s.key as keyof typeof serviceFeatures]?.[feature.name]
-                              return (
+                            {features
+                              .filter((feature) => serviceFeatures[s.key as keyof typeof serviceFeatures]?.[feature.name])
+                              .map((feature) => (
                                 <div key={feature.name} className="flex items-center gap-2 text-[12px]">
-                                  {included ? (
-                                    <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-                                  ) : (
-                                    <X className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
-                                  )}
-                                  <span className={included ? 'text-gray-700' : 'text-gray-400'}>{feature.name}</span>
+                                  <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                                  <span className="text-gray-700">{feature.name}</span>
                                 </div>
-                              )
-                            })}
+                              ))}
                           </div>
                         </div>
 

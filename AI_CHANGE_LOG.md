@@ -303,3 +303,20 @@ This file tracks all changes made by the AI assistant to the project.
 - Pushed commit (8c3da69) to origin/main branch
 - 5 files changed (282 insertions, 97 deletions)
 
+---
+
+## 2025-12-11 - Git Push: Service Pages Updates
+
+**Time**: Current session
+**Description**: Committed and pushed updates to service pages to GitHub
+**Reason**: User requested to push latest changes to GitHub
+**Affected Files**:
+- `AI_CHANGE_LOG.md` - Updated with recent changes
+- `frontend/src/pages/services/EORPage.tsx` - Modified
+- `frontend/src/pages/services/PricingCalculatorPage.tsx` - Modified
+**Changes**:
+- Staged all changes with `git add -A`
+- Committed changes with message: "Update PricingCalculatorPage, EORPage, and change log"
+- Pushed commit (63226bb) to origin/main branch
+- 3 files changed (120 insertions, 111 deletions)
+
