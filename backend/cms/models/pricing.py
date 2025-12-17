@@ -59,13 +59,21 @@ class PricingConfig(TimestampedModel):
     )
     retained_placement_fee = models.DecimalField(
         max_digits=5, decimal_places=4, default=0.10,
-        help_text="Placement fee as markup (e.g., 0.10 = 10%)"
+        help_text="Placement fee for regular employees (e.g., 0.10 = 10%)"
+    )
+    retained_csuite_placement_fee = models.DecimalField(
+        max_digits=5, decimal_places=4, default=0.15,
+        help_text="Placement fee for C-Suite executives (e.g., 0.15 = 15%)"
     )
 
     # Headhunting pricing
     headhunting_placement_fee = models.DecimalField(
         max_digits=5, decimal_places=4, default=0.20,
-        help_text="Placement fee as markup (e.g., 0.20 = 20%)"
+        help_text="Placement fee for regular employees (e.g., 0.20 = 20%)"
+    )
+    headhunting_csuite_placement_fee = models.DecimalField(
+        max_digits=5, decimal_places=4, default=0.25,
+        help_text="Placement fee for C-Suite executives (e.g., 0.25 = 25%)"
     )
 
     # Default calculator values

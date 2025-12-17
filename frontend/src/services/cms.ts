@@ -584,8 +584,10 @@ export interface CMSPricingConfig {
   // Retained pricing
   retained_monthly_retainer: string;
   retained_placement_fee: string;
+  retained_csuite_placement_fee: string;
   // Headhunting pricing
   headhunting_placement_fee: string;
+  headhunting_csuite_placement_fee: string;
   // Default calculator values
   default_salary: string;
   default_desk_fee: string;
@@ -610,7 +612,9 @@ export interface CMSPricingConfigUpdate {
   eor_assets_fee?: string;
   retained_monthly_retainer?: string;
   retained_placement_fee?: string;
+  retained_csuite_placement_fee?: string;
   headhunting_placement_fee?: string;
+  headhunting_csuite_placement_fee?: string;
   default_salary?: string;
   default_desk_fee?: string;
   default_lunch_fee?: string;

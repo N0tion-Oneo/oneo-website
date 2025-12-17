@@ -196,7 +196,9 @@ export default function CMSPricingPage() {
     'eor_additionals_fee',
     'eor_assets_fee',
     'retained_placement_fee',
+    'retained_csuite_placement_fee',
     'headhunting_placement_fee',
+    'headhunting_csuite_placement_fee',
   ]
 
   const isPercentageField = (field: string) => percentageFields.includes(field)
@@ -452,17 +454,32 @@ export default function CMSPricingPage() {
                   />
                 </div>
               </div>
-              <div className="pt-2 border-t border-gray-100">
-                <label className="block text-[10px] text-gray-500 mb-1">Placement Fee (% of annual salary)</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="1"
-                    value={getDisplayValue('retained_placement_fee')}
-                    onChange={(e) => handleConfigChange('retained_placement_fee', e.target.value)}
-                    className="w-full px-2 py-1.5 pr-6 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                  />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
+              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+                <div>
+                  <label className="block text-[10px] text-gray-500 mb-1">Regular Placement Fee</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="1"
+                      value={getDisplayValue('retained_placement_fee')}
+                      onChange={(e) => handleConfigChange('retained_placement_fee', e.target.value)}
+                      className="w-full px-2 py-1.5 pr-6 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                    />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 mb-1">C-Suite Placement Fee</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="1"
+                      value={getDisplayValue('retained_csuite_placement_fee')}
+                      onChange={(e) => handleConfigChange('retained_csuite_placement_fee', e.target.value)}
+                      className="w-full px-2 py-1.5 pr-6 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                    />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -480,17 +497,32 @@ export default function CMSPricingPage() {
               </div>
             </div>
             <div className="p-4">
-              <div>
-                <label className="block text-[10px] text-gray-500 mb-1">Placement Fee (% of annual salary)</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="1"
-                    value={getDisplayValue('headhunting_placement_fee')}
-                    onChange={(e) => handleConfigChange('headhunting_placement_fee', e.target.value)}
-                    className="w-full px-2 py-1.5 pr-6 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
-                  />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-gray-500 mb-1">Regular Placement Fee</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="1"
+                      value={getDisplayValue('headhunting_placement_fee')}
+                      onChange={(e) => handleConfigChange('headhunting_placement_fee', e.target.value)}
+                      className="w-full px-2 py-1.5 pr-6 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                    />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 mb-1">C-Suite Placement Fee</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="1"
+                      value={getDisplayValue('headhunting_csuite_placement_fee')}
+                      onChange={(e) => handleConfigChange('headhunting_csuite_placement_fee', e.target.value)}
+                      className="w-full px-2 py-1.5 pr-6 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                    />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
+                  </div>
                 </div>
               </div>
               <p className="text-[10px] text-gray-400 mt-3">One-time fee per successful placement</p>

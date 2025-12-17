@@ -25,8 +25,10 @@ class PricingConfigSerializer(serializers.ModelSerializer):
             # Retained pricing
             'retained_monthly_retainer',
             'retained_placement_fee',
+            'retained_csuite_placement_fee',
             # Headhunting pricing
             'headhunting_placement_fee',
+            'headhunting_csuite_placement_fee',
             # Default calculator values
             'default_salary',
             'default_desk_fee',
@@ -66,8 +68,10 @@ class PricingConfigUpdateSerializer(serializers.ModelSerializer):
             # Retained pricing
             'retained_monthly_retainer',
             'retained_placement_fee',
+            'retained_csuite_placement_fee',
             # Headhunting pricing
             'headhunting_placement_fee',
+            'headhunting_csuite_placement_fee',
             # Default calculator values
             'default_salary',
             'default_desk_fee',

@@ -171,6 +171,7 @@ export default function RetainedRecruitmentPage() {
   const monthlyRetainer = pricingConfig ? formatCurrency(pricingConfig.retained_monthly_retainer) : ''
   const annualRetainer = pricingConfig ? formatCurrency(parseFloat(pricingConfig.retained_monthly_retainer) * 12) : ''
   const placementFee = pricingConfig ? formatPercent(pricingConfig.retained_placement_fee) : ''
+  const csuitePlacementFee = pricingConfig ? formatPercent(pricingConfig.retained_csuite_placement_fee) : ''
   const standardFee = pricingConfig ? formatPercent(pricingConfig.headhunting_placement_fee) : ''
 
   return (
@@ -383,14 +384,19 @@ export default function RetainedRecruitmentPage() {
 
               {/* Pricing Details */}
               <div className="p-8">
-                <div className="grid md:grid-cols-2 gap-6 mb-8">
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
-                    <div className="text-3xl font-bold text-emerald-600 mb-1">{placementFee || '–'}</div>
-                    <p className="text-[13px] text-gray-600">Placement fee (reduced from {standardFee || '–'})</p>
-                  </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
-                    <div className="text-3xl font-bold text-emerald-600 mb-1">50%</div>
-                    <p className="text-[13px] text-gray-600">Savings on every placement</p>
+                <div className="mb-8">
+                  <p className="text-[12px] text-gray-500 uppercase tracking-wide mb-3 text-center">Placement Fees</p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-gray-50 rounded-xl">
+                      <div className="text-3xl font-bold text-emerald-600 mb-1">{placementFee || '–'}</div>
+                      <p className="text-[14px] font-medium text-gray-900">Regular Employees</p>
+                      <p className="text-[12px] text-gray-500">Reduced from {standardFee || '–'}</p>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-xl">
+                      <div className="text-3xl font-bold text-emerald-600 mb-1">{csuitePlacementFee || '–'}</div>
+                      <p className="text-[14px] font-medium text-gray-900">C-Suite Executives</p>
+                      <p className="text-[12px] text-gray-500">Executive-level placements</p>
+                    </div>
                   </div>
                 </div>
 
@@ -531,8 +537,13 @@ export default function RetainedRecruitmentPage() {
               </thead>
               <tbody className="text-[14px]">
                 <tr className="border-b border-gray-100">
-                  <td className="py-4 px-4 text-gray-600">Placement Fee</td>
+                  <td className="py-4 px-4 text-gray-600">Placement Fee (Regular)</td>
                   <td className="py-4 px-4 font-medium text-gray-900">{placementFee || '–'}</td>
+                  <td className="py-4 px-4 text-gray-500">{standardFee || '–'}</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-4 px-4 text-gray-600">Placement Fee (C-Suite)</td>
+                  <td className="py-4 px-4 font-medium text-gray-900">{csuitePlacementFee || '–'}</td>
                   <td className="py-4 px-4 text-gray-500">{standardFee || '–'}</td>
                 </tr>
                 <tr className="border-b border-gray-100">

@@ -32,6 +32,7 @@ interface HireRole {
   salary: number
   count: number
   year: number // which year this role is hired
+  level: 'regular' | 'csuite' // employee level for retained pricing
 }
 
 interface Additionals {
@@ -79,7 +80,9 @@ const defaultConfig: Partial<CMSPricingConfig> = {
   eor_assets_fee: '0.20',
   retained_monthly_retainer: '20000',
   retained_placement_fee: '0.05',
+  retained_csuite_placement_fee: '0.15',
   headhunting_placement_fee: '0.20',
+  headhunting_csuite_placement_fee: '0.25',
   default_salary: '45000',
   default_desk_fee: '5000',
   default_lunch_fee: '500',
@@ -160,7 +163,7 @@ export default function PricingCalculatorPage() {
   const [hireType, setHireType] = useState<'single' | 'team'>('team')
   const [expandedPricing, setExpandedPricing] = useState<string | null>(null)
   const [roles, setRoles] = useState<HireRole[]>([
-    { id: '1', title: 'Mid-level', salary: defaultSalary, count: 1, year: 1 },
+    { id: '1', title: 'Mid-level', salary: defaultSalary, count: 1, year: 1, level: 'regular' },
   ])
   const [years, setYears] = useState(1)
   const [additionals, setAdditionals] = useState<Additionals>({
@@ -175,7 +178,7 @@ export default function PricingCalculatorPage() {
   // Update defaults when config loads
   useEffect(() => {
     if (apiConfig) {
-      setRoles([{ id: '1', title: 'Mid-level', salary: Number(apiConfig.default_salary) || 50000, count: 1, year: 1 }])
+      setRoles([{ id: '1', title: 'Mid-level', salary: Number(apiConfig.default_salary) || 50000, count: 1, year: 1, level: 'regular' }])
       setAdditionals({
         deskFees: { enabled: true, costPerDesk: Number(apiConfig.default_desk_fee) || 5000 },
         monthlyLunches: { enabled: true, costPerPerson: Number(apiConfig.default_lunch_fee) || 500 },
@@ -191,7 +194,7 @@ export default function PricingCalculatorPage() {
   const totalAnnualSalary = roles.reduce((sum, r) => sum + (r.salary * r.count * 12), 0)
 
   const addRole = (year: number) => {
-    setRoles([...roles, { id: Date.now().toString(), title: '', salary: 50000, count: 1, year }])
+    setRoles([...roles, { id: Date.now().toString(), title: '', salary: 50000, count: 1, year, level: 'regular' }])
   }
 
   const removeRole = (id: string) => {
@@ -314,7 +317,9 @@ export default function PricingCalculatorPage() {
     const eorMonthlyFee = Number(config.eor_monthly_fee) || 7000
     const retainedMonthlyRetainer = Number(config.retained_monthly_retainer) || 20000
     const retainedPlacementFee = Number(config.retained_placement_fee) || 0.05
+    const retainedCsuitePlacementFee = Number(config.retained_csuite_placement_fee) || 0.15
     const headhuntingPlacementFee = Number(config.headhunting_placement_fee) || 0.20
+    const headhuntingCsuitePlacementFee = Number(config.headhunting_csuite_placement_fee) || 0.25
 
     // Calculate year-by-year for each service with itemized breakdown
     const enterpriseByYear: YearBreakdown[] = []
@@ -392,9 +397,12 @@ export default function PricingCalculatorPage() {
       })
 
       // Retained year breakdown
-      // Retained uses MARKUP (% added on top of salary)
+      // Retained uses different placement fees for regular vs C-Suite
       const retMonthlyFeesCalc = retainedMonthlyRetainer * 12
-      const retPlacement = yearPlacementSalary * retainedPlacementFee
+      // Calculate placement fees separately for regular and C-Suite roles
+      const regularSalary = yearRoles.filter(r => r.level === 'regular').reduce((sum, r) => sum + (r.salary * r.count * 12), 0)
+      const csuiteSalary = yearRoles.filter(r => r.level === 'csuite').reduce((sum, r) => sum + (r.salary * r.count * 12), 0)
+      const retPlacement = (regularSalary * retainedPlacementFee) + (csuiteSalary * retainedCsuitePlacementFee)
       retainedByYear.push({
         salaryMargin: 0,
         monthlyFees: retMonthlyFeesCalc,
@@ -405,8 +413,10 @@ export default function PricingCalculatorPage() {
       })
 
       // Headhunting year breakdown
-      // Headhunting uses MARKUP (% added on top of salary)
-      const headPlacement = yearPlacementSalary * headhuntingPlacementFee
+      // Headhunting uses different placement fees for regular vs C-Suite
+      const headRegularSalary = yearRoles.filter(r => r.level === 'regular').reduce((sum, r) => sum + (r.salary * r.count * 12), 0)
+      const headCsuiteSalary = yearRoles.filter(r => r.level === 'csuite').reduce((sum, r) => sum + (r.salary * r.count * 12), 0)
+      const headPlacement = (headRegularSalary * headhuntingPlacementFee) + (headCsuiteSalary * headhuntingCsuitePlacementFee)
       headhuntingByYear.push({
         salaryMargin: 0,
         monthlyFees: 0,
@@ -681,16 +691,26 @@ export default function PricingCalculatorPage() {
                       <div className="bg-white/10 backdrop-blur rounded-xl p-6">
                         <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">Pricing Model</h3>
                         <p className="text-white text-[18px] font-semibold mb-4">Retainer + Placement Fee</p>
-                        <p className="text-white/70 text-[14px] mb-6">Monthly retainer plus small fee per successful hire</p>
-                        <div className="flex items-center justify-center gap-6">
-                          <div className="text-center">
-                            <span className="text-white text-[40px] font-bold leading-none">R{(Number(config.retained_monthly_retainer || 20000) / 1000)}k</span>
-                            <p className="text-white/80 text-[14px] mt-1">per month</p>
+                        <p className="text-white/70 text-[14px] mb-4">Monthly retainer plus fee per successful hire</p>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-center gap-6">
+                            <div className="text-center">
+                              <span className="text-white text-[36px] font-bold leading-none">R{(Number(config.retained_monthly_retainer || 20000) / 1000)}k</span>
+                              <p className="text-white/80 text-[13px] mt-1">per month</p>
+                            </div>
                           </div>
-                          <span className="text-white/50 text-[32px]">+</span>
-                          <div className="text-center">
-                            <span className="text-white text-[40px] font-bold leading-none">{Math.round(Number(config.retained_placement_fee) * 100 || 5)}%</span>
-                            <p className="text-white/80 text-[14px] mt-1">per placement</p>
+                          <div className="border-t border-white/20 pt-4">
+                            <p className="text-white/70 text-[12px] uppercase tracking-wide mb-3 text-center">Placement Fees</p>
+                            <div className="flex justify-center gap-6">
+                              <div className="text-center">
+                                <span className="text-white text-[28px] font-bold leading-none">{Math.round(Number(config.retained_placement_fee) * 100 || 5)}%</span>
+                                <p className="text-white/70 text-[12px] mt-1">Regular</p>
+                              </div>
+                              <div className="text-center">
+                                <span className="text-white text-[28px] font-bold leading-none">{Math.round(Number(config.retained_csuite_placement_fee) * 100 || 15)}%</span>
+                                <p className="text-white/70 text-[12px] mt-1">C-Suite</p>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -736,10 +756,19 @@ export default function PricingCalculatorPage() {
                       <div className="bg-white/10 backdrop-blur rounded-xl p-6">
                         <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">Pricing Model</h3>
                         <p className="text-white text-[18px] font-semibold mb-4">Success-Based Fee</p>
-                        <p className="text-white/70 text-[14px] mb-6">No upfront costs. Pay only when we deliver.</p>
-                        <div className="text-center">
-                          <span className="text-white text-[56px] font-bold leading-none">{Math.round(Number(config.headhunting_placement_fee) * 100 || 20)}%</span>
-                          <p className="text-white/80 text-[16px] mt-2">of annual salary</p>
+                        <p className="text-white/70 text-[14px] mb-4">No upfront costs. Pay only when we deliver.</p>
+                        <div className="border-t border-white/20 pt-4">
+                          <p className="text-white/70 text-[12px] uppercase tracking-wide mb-3 text-center">Placement Fees</p>
+                          <div className="flex justify-center gap-6">
+                            <div className="text-center">
+                              <span className="text-white text-[28px] font-bold leading-none">{Math.round(Number(config.headhunting_placement_fee) * 100 || 20)}%</span>
+                              <p className="text-white/70 text-[12px] mt-1">Regular</p>
+                            </div>
+                            <div className="text-center">
+                              <span className="text-white text-[28px] font-bold leading-none">{Math.round(Number(config.headhunting_csuite_placement_fee) * 100 || 25)}%</span>
+                              <p className="text-white/70 text-[12px] mt-1">C-Suite</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -839,20 +868,7 @@ export default function PricingCalculatorPage() {
 
             {/* Hiring Plan */}
             <div className="bg-gray-50 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[14px] font-semibold text-gray-900">Hiring Plan</h3>
-                <select
-                  value={years}
-                  onChange={(e) => {
-                    const newYears = Number(e.target.value)
-                    setYears(newYears)
-                    setRoles(roles.filter(r => r.year <= newYears))
-                  }}
-                  className="h-8 px-2 border border-gray-300 rounded text-[13px] bg-white focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
-                >
-                  {[1,2,3,4,5].map(y => <option key={y} value={y}>{y} year{y > 1 ? 's' : ''}</option>)}
-                </select>
-              </div>
+              <h3 className="text-[14px] font-semibold text-gray-900 mb-4">Hiring Plan</h3>
 
               <div className="space-y-3">
                 {Array.from({ length: years }, (_, i) => i + 1).map((year) => {
@@ -861,12 +877,26 @@ export default function PricingCalculatorPage() {
                     <div key={year} className="bg-white rounded-lg p-3 border border-gray-200">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[13px] font-semibold text-gray-700">Year {year}</span>
-                        <button
-                          onClick={() => addRole(year)}
-                          className="text-[12px] text-gray-500 hover:text-gray-900 font-medium"
-                        >
-                          + Add
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => addRole(year)}
+                            className="text-[12px] text-gray-500 hover:text-gray-900 font-medium"
+                          >
+                            + Add Role
+                          </button>
+                          {years > 1 && (
+                            <button
+                              onClick={() => {
+                                setYears(years - 1)
+                                setRoles(roles.filter(r => r.year !== year).map(r => r.year > year ? { ...r, year: r.year - 1 } : r))
+                              }}
+                              className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"
+                              title="Remove year"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       {yearRoles.length === 0 ? (
                         <p className="text-[13px] text-gray-400 italic">No hires planned</p>
@@ -898,6 +928,15 @@ export default function PricingCalculatorPage() {
                                 className="w-12 h-8 px-1 border border-gray-200 rounded text-[13px] text-center focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
                                 min="1"
                               />
+                              <select
+                                value={role.level}
+                                onChange={(e) => updateRole(role.id, 'level', e.target.value)}
+                                className="h-8 px-1 border border-gray-200 rounded text-[11px] focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+                                title="Role level (affects Retained placement fees)"
+                              >
+                                <option value="regular">Regular</option>
+                                <option value="csuite">C-Suite</option>
+                              </select>
                               <button
                                 onClick={() => removeRole(role.id)}
                                 className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 rounded transition-colors"
@@ -911,6 +950,17 @@ export default function PricingCalculatorPage() {
                     </div>
                   )
                 })}
+
+                {/* Add Year Button */}
+                {years < 5 && (
+                  <button
+                    onClick={() => setYears(years + 1)}
+                    className="w-full py-2.5 border-2 border-dashed border-gray-300 rounded-lg text-[13px] font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Year {years + 1}
+                  </button>
+                )}
               </div>
 
               <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
