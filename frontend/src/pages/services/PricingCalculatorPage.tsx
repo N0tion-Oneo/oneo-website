@@ -272,8 +272,6 @@ export default function PricingCalculatorPage() {
     const enterpriseAdditionalsFee = Number(config.enterprise_additionals_fee) || 0.12
     const enterpriseAssetsFee = Number(config.enterprise_assets_fee) || 0.12
     const eorMonthlyFee = Number(config.eor_monthly_fee) || 7000
-    const eorAdditionalsFee = Number(config.eor_additionals_fee) || 0.20
-    const eorAssetsFee = Number(config.eor_assets_fee) || 0.20
     const retainedMonthlyRetainer = Number(config.retained_monthly_retainer) || 20000
     const retainedPlacementFee = Number(config.retained_placement_fee) || 0.05
     const headhuntingPlacementFee = Number(config.headhunting_placement_fee) || 0.20
@@ -326,23 +324,17 @@ export default function PricingCalculatorPage() {
         total: entSalaryMargin + entAdditionalsFeeCalc + entAssets,
       })
 
-      // EOR year breakdown
-      const eorAssets = additionals.assets.enabled ? additionals.assets.costPerHire * newHires * eorAssetsFee : 0
+      // EOR year breakdown - flat monthly fee per employee, cumulative hiring
+      // Each year pays for all employees hired up to that point
       cumulativeHiresEor += newHires
       const eorMonthlyFeesCalc = eorMonthlyFee * cumulativeHiresEor * 12
-      let eorAdditionals = 0
-      if (additionals.deskFees.enabled) eorAdditionals += additionals.deskFees.costPerDesk * cumulativeHiresEor * 12
-      if (additionals.monthlyLunches.enabled) eorAdditionals += additionals.monthlyLunches.costPerPerson * cumulativeHiresEor * 12
-      if (additionals.quarterlyEvents.enabled) eorAdditionals += additionals.quarterlyEvents.costPerPerson * cumulativeHiresEor * 4
-      if (additionals.yearEndParty.enabled) eorAdditionals += additionals.yearEndParty.costPerPerson * cumulativeHiresEor
-      const eorAdditionalsFeeCalc = eorAdditionals * eorAdditionalsFee
       eorByYear.push({
         salaryMargin: 0,
         monthlyFees: eorMonthlyFeesCalc,
         placementFees: 0,
-        additionalsFees: eorAdditionalsFeeCalc,
-        assetsFees: eorAssets,
-        total: eorMonthlyFeesCalc + eorAdditionalsFeeCalc + eorAssets,
+        additionalsFees: 0,
+        assetsFees: 0,
+        total: eorMonthlyFeesCalc,
       })
 
       // Retained year breakdown
@@ -400,9 +392,9 @@ export default function PricingCalculatorPage() {
       eor: {
         total: eorTotal,
         upfront: 0,
-        monthly: eorTotal / months,
+        monthly: eorMonthlyFee * totalHires, // Current monthly cost based on total employees
         rate: `R${eorMonthlyFee.toLocaleString()}/person/mo`,
-        note: `+ ${formatPct(eorAdditionalsFee)} on additionals`,
+        note: 'Flat monthly fee per employee',
         byYear: eorByYear,
         totals: sumTotals(eorByYear),
       },
@@ -550,11 +542,13 @@ export default function PricingCalculatorPage() {
                       <div className="bg-white/10 backdrop-blur rounded-xl p-6">
                         <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">What's Included</h3>
                         <ul className="space-y-3">
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-amber-200" /> Full recruitment & talent sourcing</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-amber-200" /> Legal employment & payroll</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-amber-200" /> Benefits & HR support</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-amber-200" /> Compliance & tax handling</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-amber-200" /> Optional office & perks</li>
+                          {features
+                            .filter(f => serviceFeatures.enterprise[f.name])
+                            .map(f => (
+                              <li key={f.name} className="flex items-center gap-3 text-white">
+                                <Check className="w-5 h-5 text-amber-200" /> {f.name}
+                              </li>
+                            ))}
                         </ul>
                       </div>
                     </div>
@@ -596,11 +590,13 @@ export default function PricingCalculatorPage() {
                       <div className="bg-white/10 backdrop-blur rounded-xl p-6">
                         <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">What's Included</h3>
                         <ul className="space-y-3">
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-200" /> Legal employment contracts</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-200" /> Payroll processing</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-200" /> Benefits administration</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-200" /> Tax compliance & HR</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-blue-200" /> Optional perks & office</li>
+                          {features
+                            .filter(f => serviceFeatures.eor[f.name])
+                            .map(f => (
+                              <li key={f.name} className="flex items-center gap-3 text-white">
+                                <Check className="w-5 h-5 text-blue-200" /> {f.name}
+                              </li>
+                            ))}
                         </ul>
                       </div>
                     </div>
@@ -649,11 +645,13 @@ export default function PricingCalculatorPage() {
                       <div className="bg-white/10 backdrop-blur rounded-xl p-6">
                         <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">What's Included</h3>
                         <ul className="space-y-3">
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-emerald-200" /> Dedicated recruitment team</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-emerald-200" /> Guaranteed placements</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-emerald-200" /> Free replacements</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-emerald-200" /> Priority candidate access</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-emerald-200" /> Always-on recruitment</li>
+                          {features
+                            .filter(f => serviceFeatures.retained[f.name])
+                            .map(f => (
+                              <li key={f.name} className="flex items-center gap-3 text-white">
+                                <Check className="w-5 h-5 text-emerald-200" /> {f.name}
+                              </li>
+                            ))}
                         </ul>
                       </div>
                     </div>
@@ -695,11 +693,13 @@ export default function PricingCalculatorPage() {
                       <div className="bg-white/10 backdrop-blur rounded-xl p-6">
                         <h3 className="text-white/80 text-[13px] font-medium uppercase tracking-wide mb-4">What's Included</h3>
                         <ul className="space-y-3">
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-purple-200" /> No upfront costs</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-purple-200" /> Pay only on success</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-purple-200" /> Thorough candidate vetting</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-purple-200" /> Replacement guarantee</li>
-                          <li className="flex items-center gap-3 text-white"><Check className="w-5 h-5 text-purple-200" /> Flexible engagement</li>
+                          {features
+                            .filter(f => serviceFeatures.headhunting[f.name])
+                            .map(f => (
+                              <li key={f.name} className="flex items-center gap-3 text-white">
+                                <Check className="w-5 h-5 text-purple-200" /> {f.name}
+                              </li>
+                            ))}
                         </ul>
                       </div>
                     </div>
@@ -865,8 +865,8 @@ export default function PricingCalculatorPage() {
               </div>
             </div>
 
-            {/* Additional Services (only when EOR selected) */}
-            {needs.eor && (
+            {/* Additional Services (only for Enterprise - when both recruitment AND EOR selected) */}
+            {needs.recruitment && needs.eor && (
               <div className="bg-gray-50 rounded-xl p-5">
                 <h3 className="text-[14px] font-semibold text-gray-900 mb-4">Additional Services</h3>
 
@@ -1045,35 +1045,69 @@ export default function PricingCalculatorPage() {
 
                         {/* Total Price */}
                         <div className="px-5 py-5 border-b border-gray-100 bg-gray-50">
-                          <div className="text-[12px] text-gray-500 uppercase tracking-wide mb-1">Estimated Total</div>
-                          <div className={`text-[28px] font-bold ${colors.text}`}>
-                            {formatCurrency(calc.total)}
-                          </div>
-                          <div className="text-[13px] text-gray-500">over {years} year{years > 1 ? 's' : ''}</div>
-                          {/* Year by Year (if multi-year) */}
-                          {years > 1 && (
-                            <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
-                              {calc.byYear.map((yearData, idx) => {
-                                const enterpriseMarkups = [
-                                  Number(config.enterprise_markup_year1) || 0.22,
-                                  Number(config.enterprise_markup_year2) || 0.20,
-                                  Number(config.enterprise_markup_year3) || 0.18,
-                                  Number(config.enterprise_markup_year4_plus) || 0.16,
-                                ]
-                                const rateForYear = s.key === 'enterprise' ? enterpriseMarkups[Math.min(idx, 3)] : null
-                                return (
-                                  <div key={idx} className="flex justify-between text-[13px]">
-                                    <span className="text-gray-500">
-                                      Year {idx + 1}
-                                      {rateForYear != null && (
-                                        <span className="text-gray-400 ml-1">({Math.round(rateForYear * 100)}%)</span>
-                                      )}
-                                    </span>
-                                    <span className="font-medium text-gray-700">{formatCurrency(yearData.total)}</span>
-                                  </div>
-                                )
-                              })}
-                            </div>
+                          {s.key === 'eor' ? (
+                            <>
+                              <div className="text-[12px] text-gray-500 uppercase tracking-wide mb-1">Monthly Cost</div>
+                              <div className={`text-[28px] font-bold ${colors.text}`}>
+                                {formatCurrency(calc.monthly)}
+                              </div>
+                              <div className="text-[13px] text-gray-500">
+                                {formatCurrency(calc.monthly * 12)}/year • {formatCurrency(calc.total)} total
+                              </div>
+                              {/* Year by Year for EOR (if multi-year) */}
+                              {years > 1 && (
+                                <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
+                                  {calc.byYear.map((yearData, idx) => {
+                                    // Calculate cumulative employees for this year
+                                    const hiresUpToYear = roles
+                                      .filter(r => r.year <= idx + 1)
+                                      .reduce((sum, r) => sum + r.count, 0)
+                                    return (
+                                      <div key={idx} className="flex justify-between text-[13px]">
+                                        <span className="text-gray-500">
+                                          Year {idx + 1}
+                                          <span className="text-gray-400 ml-1">({hiresUpToYear} employee{hiresUpToYear !== 1 ? 's' : ''})</span>
+                                        </span>
+                                        <span className="font-medium text-gray-700">{formatCurrency(yearData.total)}</span>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-[12px] text-gray-500 uppercase tracking-wide mb-1">Estimated Total</div>
+                              <div className={`text-[28px] font-bold ${colors.text}`}>
+                                {formatCurrency(calc.total)}
+                              </div>
+                              <div className="text-[13px] text-gray-500">over {years} year{years > 1 ? 's' : ''}</div>
+                              {/* Year by Year (if multi-year) */}
+                              {years > 1 && (
+                                <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
+                                  {calc.byYear.map((yearData, idx) => {
+                                    const enterpriseMarkups = [
+                                      Number(config.enterprise_markup_year1) || 0.22,
+                                      Number(config.enterprise_markup_year2) || 0.20,
+                                      Number(config.enterprise_markup_year3) || 0.18,
+                                      Number(config.enterprise_markup_year4_plus) || 0.16,
+                                    ]
+                                    const rateForYear = s.key === 'enterprise' ? enterpriseMarkups[Math.min(idx, 3)] : null
+                                    return (
+                                      <div key={idx} className="flex justify-between text-[13px]">
+                                        <span className="text-gray-500">
+                                          Year {idx + 1}
+                                          {rateForYear != null && (
+                                            <span className="text-gray-400 ml-1">({Math.round(rateForYear * 100)}%)</span>
+                                          )}
+                                        </span>
+                                        <span className="font-medium text-gray-700">{formatCurrency(yearData.total)}</span>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
 

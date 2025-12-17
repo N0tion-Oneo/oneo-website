@@ -13,13 +13,7 @@ import {
   ArrowRight,
   Building2,
   Briefcase,
-  Scale,
   Clock,
-  CreditCard,
-  HeadphonesIcon,
-  Laptop,
-  Building,
-  Heart,
   CheckCircle2,
   Calculator,
 } from 'lucide-react'
@@ -28,12 +22,6 @@ import {
 const formatCurrency = (amount: string | number): string => {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount
   return `R${num.toLocaleString()}`
-}
-
-// Helper to format decimal as percentage
-const formatPercent = (decimal: string | number): string => {
-  const num = typeof decimal === 'string' ? parseFloat(decimal) : decimal
-  return `${Math.round(num * 100)}%`
 }
 
 const benefits = [
@@ -70,23 +58,6 @@ const includedServices = [
   'Termination & offboarding',
 ]
 
-const additionalServices = [
-  {
-    icon: Laptop,
-    title: 'Asset Management',
-    description: 'Provision, track, and manage equipment for your team members.',
-  },
-  {
-    icon: Building,
-    title: 'Office Solutions',
-    description: 'Co-working spaces, local office setup, and workspace solutions.',
-  },
-  {
-    icon: Heart,
-    title: 'Culture & Engagement',
-    description: 'Team events, engagement activities, and culture-building.',
-  },
-]
 
 const process = [
   {
@@ -146,7 +117,6 @@ export default function EORPage() {
   }, [])
 
   const monthlyFee = pricingConfig ? formatCurrency(pricingConfig.eor_monthly_fee) : ''
-  const additionalsFee = pricingConfig ? formatPercent(pricingConfig.eor_additionals_fee) : ''
 
   return (
     <div className="min-h-screen bg-white">
@@ -321,27 +291,13 @@ export default function EORPage() {
             {/* What's Included */}
             <div className="p-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">What's Included</h3>
-              <div className="grid sm:grid-cols-2 gap-3 mb-8">
+              <div className="grid sm:grid-cols-2 gap-3">
                 {includedServices.map((service) => (
                   <div key={service} className="flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
                     <span className="text-[14px] text-gray-700">{service}</span>
                   </div>
                 ))}
-              </div>
-
-              <div className="border-t border-gray-100 pt-6">
-                <h4 className="text-[14px] font-medium text-gray-900 mb-3">
-                  Additional Services (charged at {additionalsFee || '–'} on actual costs)
-                </h4>
-                <div className="grid sm:grid-cols-3 gap-4">
-                  {additionalServices.map((service) => (
-                    <div key={service.title} className="text-center p-4 bg-gray-50 rounded-lg">
-                      <service.icon className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                      <p className="text-[13px] font-medium text-gray-900">{service.title}</p>
-                    </div>
-                  ))}
-                </div>
               </div>
 
               <div className="mt-8">
