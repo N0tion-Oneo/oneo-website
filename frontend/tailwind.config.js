@@ -11,6 +11,8 @@ export default {
     'ring-offset-2',
     'bg-amber-50',
     'animate-pulse',
+    'animate-marquee-left',
+    'animate-marquee-right',
   ],
   theme: {
     extend: {
@@ -59,6 +61,8 @@ export default {
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',
         'slide-in': 'slideIn 0.3s ease-in-out',
+        'marquee-left': 'marqueeLeft 30s linear infinite',
+        'marquee-right': 'marqueeRight 30s linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -68,6 +72,14 @@ export default {
         slideIn: {
           '0%': { transform: 'translateY(-10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        marqueeLeft: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        marqueeRight: {
+          '0%': { transform: 'translateX(-50%)' },
+          '100%': { transform: 'translateX(0)' },
         },
       },
     },

@@ -30,7 +30,7 @@ const resourceLinks = [
 ];
 
 export default function Navbar({ variant = 'default' }: NavbarProps) {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
@@ -80,11 +80,11 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
     <header className={`border-b ${variant === 'transparent' ? 'border-transparent bg-transparent' : 'border-gray-200 bg-white'}`}>
       <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link to="/" className="text-lg font-semibold text-gray-900">
-            {seoDefaults.companyName || 'Home'}
+          <Link to="/" className="text-lg font-semibold text-gray-900 min-w-[60px]">
+            {seoDefaults.isLoaded ? (seoDefaults.companyName || 'Home') : '\u00A0'}
           </Link>
           <nav className="hidden md:flex items-center gap-6">
-            {isAuthenticated ? (
+            {isLoading ? null : isAuthenticated ? (
               // Authenticated users see direct links
               authenticatedLinks.map((item) => (
                 <Link
@@ -218,7 +218,10 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          {isAuthenticated ? (
+          {isLoading ? (
+            // Placeholder to prevent layout shift while auth loads
+            <div className="w-24 h-8" />
+          ) : isAuthenticated ? (
             <>
               <div className="hidden sm:flex items-center gap-3">
                 <div className="w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center text-white text-[11px] font-medium">
@@ -267,7 +270,7 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
       </div>
 
       {/* Mobile nav */}
-      {mobileMenuOpen && (
+      {mobileMenuOpen && !isLoading && (
         <div className="md:hidden border-t border-gray-100 px-6 py-3 space-y-1 bg-white">
           {isAuthenticated ? (
             // Authenticated mobile links

@@ -6,7 +6,8 @@ import { SEO } from '@/components/seo'
 import { useSEODefaults } from '@/contexts/SEOContext'
 import { usePublicBranding } from '@/hooks'
 import { useJobs } from '@/hooks/useJobs'
-import { cmsCaseStudies, cmsBlog } from '@/services/cms'
+import { cmsCaseStudies, cmsBlog, cmsPricing } from '@/services/cms'
+import type { CMSPricingConfig } from '@/services/cms'
 import type { CMSBlogPostListItem, CMSCaseStudy } from '@/types'
 import {
   ArrowRight,
@@ -64,17 +65,34 @@ const clientLogos = [
 // Industries we serve (client sectors)
 const industries = [
   'FinTech',
-  'SaaS & Enterprise Software',
-  'E-commerce & Retail',
-  'Banking & Financial Services',
-  'Media & Entertainment',
-  'Advertising & MarTech',
+  'SaaS',
+  'E-commerce',
+  'Banking',
+  'Financial Services',
+  'Media',
+  'Entertainment',
+  'Advertising',
+  'MarTech',
   'Professional Services',
   'HealthTech',
   'EdTech',
-  'Logistics & Supply Chain',
+  'Logistics',
   'Insurance',
   'Consulting',
+  'Cybersecurity',
+  'AI & Machine Learning',
+  'Gaming & Esports',
+  'Telecommunications',
+  'Cloud & Infrastructure',
+  'Investment Management',
+  'Private Equity & VC',
+  'Crypto',
+  'Blockchain',
+  'CleanTech',
+  'AgriTech',
+  'GovTech',
+  'Automotive',
+  'Legal Tech',
 ]
 
 // Talent types we place (specialist categories)
@@ -93,8 +111,64 @@ const talentTypes = [
   { name: 'Project Management', icon: Target, description: 'Project managers, scrum masters, and delivery leads' },
 ]
 
-// Services data for company view - with colors from dedicated pages
-const services = [
+// Helper to format decimal as percentage
+const formatPercent = (decimal: string | number): string => {
+  const num = typeof decimal === 'string' ? parseFloat(decimal) : decimal
+  return `${Math.round(num * 100)}%`
+}
+
+// Helper to format currency
+const formatCurrency = (amount: string | number): string => {
+  const num = typeof amount === 'string' ? parseFloat(amount) : amount
+  return `R${num.toLocaleString('en-ZA', { maximumFractionDigits: 0 })}`
+}
+
+// Service colors (static)
+const serviceColors = {
+  enterprise: {
+    bg: 'bg-amber-50',
+    border: 'border-amber-200',
+    hoverBorder: 'hover:border-amber-300',
+    iconBg: 'bg-amber-100',
+    iconColor: 'text-amber-600',
+    accent: 'bg-amber-500',
+    accentText: 'text-amber-700',
+    badge: 'bg-amber-200 text-amber-800',
+  },
+  retained: {
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
+    hoverBorder: 'hover:border-blue-300',
+    iconBg: 'bg-blue-100',
+    iconColor: 'text-blue-600',
+    accent: 'bg-blue-500',
+    accentText: 'text-blue-700',
+    badge: 'bg-blue-200 text-blue-800',
+  },
+  eor: {
+    bg: 'bg-teal-50',
+    border: 'border-teal-200',
+    hoverBorder: 'hover:border-teal-300',
+    iconBg: 'bg-teal-100',
+    iconColor: 'text-teal-600',
+    accent: 'bg-teal-500',
+    accentText: 'text-teal-700',
+    badge: 'bg-teal-200 text-teal-800',
+  },
+  headhunting: {
+    bg: 'bg-purple-50',
+    border: 'border-purple-200',
+    hoverBorder: 'hover:border-purple-300',
+    iconBg: 'bg-purple-100',
+    iconColor: 'text-purple-600',
+    accent: 'bg-purple-500',
+    accentText: 'text-purple-700',
+    badge: 'bg-purple-200 text-purple-800',
+  },
+}
+
+// Build services with dynamic pricing
+const buildServices = (pricing: CMSPricingConfig | null) => [
   {
     id: 'enterprise',
     title: 'Enterprise',
@@ -104,17 +178,12 @@ const services = [
     href: '/enterprise',
     featured: true,
     highlights: ['No upfront placement fees', 'Margins decrease over time', 'Full compliance & payroll included', 'Asset & office management'],
-    color: {
-      bg: 'bg-amber-50',
-      border: 'border-amber-200',
-      hoverBorder: 'hover:border-amber-300',
-      iconBg: 'bg-amber-100',
-      iconColor: 'text-amber-600',
-      accent: 'bg-amber-500',
-      accentText: 'text-amber-700',
-      badge: 'bg-amber-200 text-amber-800',
+    color: serviceColors.enterprise,
+    stats: {
+      label: 'Starting margin',
+      value: pricing ? formatPercent(pricing.enterprise_markup_year1) : '22%',
+      sub: pricing ? `decreasing to ${formatPercent(pricing.enterprise_markup_year4_plus)}` : 'decreasing to 16%',
     },
-    stats: { label: 'Starting margin', value: '22%', sub: 'decreasing to 16%' },
   },
   {
     id: 'retained',
@@ -124,17 +193,12 @@ const services = [
     icon: Target,
     href: '/retained-recruitment',
     highlights: ['50% lower placement fees', '10-day shortlist SLA', 'Unlimited searches', 'Full platform access'],
-    color: {
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      hoverBorder: 'hover:border-blue-300',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
-      accent: 'bg-blue-500',
-      accentText: 'text-blue-700',
-      badge: 'bg-blue-200 text-blue-800',
+    color: serviceColors.retained,
+    stats: {
+      label: 'Placement fee',
+      value: pricing ? formatPercent(pricing.retained_placement_fee) : '10%',
+      sub: pricing ? `vs ${formatPercent(pricing.headhunting_placement_fee)} standard` : 'vs 20% standard',
     },
-    stats: { label: 'Placement fee', value: '10%', sub: 'vs 20% standard' },
   },
   {
     id: 'eor',
@@ -144,17 +208,12 @@ const services = [
     icon: Shield,
     href: '/eor',
     highlights: ['Full legal compliance', 'Payroll & benefits admin', 'HR support included', 'No entity required'],
-    color: {
-      bg: 'bg-teal-50',
-      border: 'border-teal-200',
-      hoverBorder: 'hover:border-teal-300',
-      iconBg: 'bg-teal-100',
-      iconColor: 'text-teal-600',
-      accent: 'bg-teal-500',
-      accentText: 'text-teal-700',
-      badge: 'bg-teal-200 text-teal-800',
+    color: serviceColors.eor,
+    stats: {
+      label: 'Monthly fee',
+      value: pricing ? formatCurrency(pricing.eor_monthly_fee) : 'R7,000',
+      sub: 'per employee',
     },
-    stats: { label: 'Monthly fee', value: 'R7,000', sub: 'per employee' },
   },
   {
     id: 'headhunting',
@@ -164,17 +223,12 @@ const services = [
     icon: Crosshair,
     href: '/headhunting',
     highlights: ['Access passive candidates', 'Pay on success only', 'No exclusivity required', '4-month replacement cover'],
-    color: {
-      bg: 'bg-purple-50',
-      border: 'border-purple-200',
-      hoverBorder: 'hover:border-purple-300',
-      iconBg: 'bg-purple-100',
-      iconColor: 'text-purple-600',
-      accent: 'bg-purple-500',
-      accentText: 'text-purple-700',
-      badge: 'bg-purple-200 text-purple-800',
+    color: serviceColors.headhunting,
+    stats: {
+      label: 'Placement fee',
+      value: pricing ? formatPercent(pricing.headhunting_placement_fee) : '20%',
+      sub: 'of total package',
     },
-    stats: { label: 'Placement fee', value: '20%', sub: 'of total package' },
   },
 ]
 
@@ -417,6 +471,17 @@ export default function HomePage() {
   const seoDefaults = useSEODefaults()
   const { branding } = usePublicBranding()
 
+  // Scroll position for parallax effects
+  const [scrollY, setScrollY] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   // View mode state with localStorage persistence
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     if (typeof window !== 'undefined') {
@@ -432,6 +497,7 @@ export default function HomePage() {
   const { jobs } = useJobs({ sort: '-created_at' })
   const [caseStudies, setCaseStudies] = useState<CMSCaseStudy[]>([])
   const [blogPosts, setBlogPosts] = useState<CMSBlogPostListItem[]>([])
+  const [pricingConfig, setPricingConfig] = useState<CMSPricingConfig | null>(null)
 
   // Persist view mode
   useEffect(() => {
@@ -442,7 +508,12 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const caseStudiesRes = await cmsCaseStudies.listPublic({ featured: true })
+        const [caseStudiesRes, blogRes, pricingRes] = await Promise.all([
+          cmsCaseStudies.listPublic({ featured: true }),
+          cmsBlog.listPublic({ featured: true }),
+          cmsPricing.getConfigPublic(),
+        ])
+
         if (caseStudiesRes.length > 0) {
           const fullCaseStudies = await Promise.all(
             caseStudiesRes.slice(0, 3).map(cs => cmsCaseStudies.getPublicBySlug(cs.slug))
@@ -450,11 +521,13 @@ export default function HomePage() {
           setCaseStudies(fullCaseStudies)
         }
 
-        let blogRes = await cmsBlog.listPublic({ featured: true })
-        if (blogRes.length === 0) {
-          blogRes = await cmsBlog.listPublic()
+        let posts = blogRes
+        if (posts.length === 0) {
+          posts = await cmsBlog.listPublic()
         }
-        setBlogPosts(blogRes.slice(0, 3))
+        setBlogPosts(posts.slice(0, 3))
+
+        setPricingConfig(pricingRes)
       } catch (error) {
         console.error('Failed to fetch CMS data:', error)
       }
@@ -492,7 +565,7 @@ export default function HomePage() {
         <>
           {/* Hero Section */}
           <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white">
-            <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
+            <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
               <div className="flex justify-start mb-8">
                 <ViewToggle mode={viewMode} onChange={setViewMode} />
               </div>
@@ -534,20 +607,40 @@ export default function HomePage() {
                 ))}
               </div>
 
-              {/* Industries in Hero */}
+              {/* Industries in Hero - Scroll Animated */}
               <div className="mt-12 pt-8 border-t border-white/10">
                 <p className="text-[12px] font-medium text-gray-500 uppercase tracking-wide mb-4">
                   Industries We Serve
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {industries.map((industry) => (
-                    <span
-                      key={industry}
-                      className="px-3 py-1.5 bg-white/10 text-gray-300 text-[12px] font-medium rounded-full"
-                    >
-                      {industry}
-                    </span>
-                  ))}
+                <div className="space-y-2 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
+                  {/* Row 1 - moves left on scroll */}
+                  <div
+                    className="flex w-max transition-transform duration-100 ease-out"
+                    style={{ transform: `translateX(${-scrollY * 0.15}px)` }}
+                  >
+                    {[...industries.slice(0, 15), ...industries.slice(0, 15)].map((industry, i) => (
+                      <span
+                        key={`row1-${industry}-${i}`}
+                        className="px-3 py-1.5 bg-white/10 text-gray-300 text-[12px] font-medium rounded-full whitespace-nowrap mx-1 flex-shrink-0"
+                      >
+                        {industry}
+                      </span>
+                    ))}
+                  </div>
+                  {/* Row 2 - moves right on scroll */}
+                  <div
+                    className="flex w-max transition-transform duration-100 ease-out"
+                    style={{ transform: `translateX(${-200 + scrollY * 0.15}px)` }}
+                  >
+                    {[...industries.slice(15), ...industries.slice(15)].map((industry, i) => (
+                      <span
+                        key={`row2-${industry}-${i}`}
+                        className="px-3 py-1.5 bg-white/10 text-gray-300 text-[12px] font-medium rounded-full whitespace-nowrap mx-1 flex-shrink-0"
+                      >
+                        {industry}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -555,7 +648,7 @@ export default function HomePage() {
 
           {/* Client Logos */}
           <div className="border-b border-gray-100">
-            <div className="max-w-6xl mx-auto px-6 py-10">
+            <div className="max-w-5xl mx-auto px-6 py-10">
               <p className="text-center text-[12px] font-medium text-gray-400 uppercase tracking-wide mb-6">
                 Trusted by Leading Companies
               </p>
@@ -573,7 +666,7 @@ export default function HomePage() {
           </div>
 
           {/* Services Section */}
-          <div className="max-w-6xl mx-auto px-6 py-20">
+          <div className="max-w-5xl mx-auto px-6 py-20">
             <div className="max-w-2xl mb-12">
               <h2 className="text-3xl font-bold text-gray-900">Choose Your Model</h2>
               <p className="mt-3 text-gray-600">
@@ -583,7 +676,7 @@ export default function HomePage() {
             </div>
 
             <div className="grid lg:grid-cols-2 gap-6">
-              {services.map((service) => (
+              {buildServices(pricingConfig).map((service) => (
                 <Link
                   key={service.id}
                   to={service.href}
@@ -641,7 +734,7 @@ export default function HomePage() {
 
           {/* How We're Different */}
           <div className="bg-gray-50 border-y border-gray-100">
-            <div className="max-w-6xl mx-auto px-6 py-20">
+            <div className="max-w-5xl mx-auto px-6 py-20">
               <div className="max-w-2xl mb-12">
                 <h2 className="text-3xl font-bold text-gray-900">Why Companies Choose Us</h2>
                 <p className="mt-3 text-gray-600">
@@ -664,7 +757,7 @@ export default function HomePage() {
           </div>
 
           {/* Process Section */}
-          <div className="max-w-6xl mx-auto px-6 py-20">
+          <div className="max-w-5xl mx-auto px-6 py-20">
             <div className="max-w-2xl mb-12">
               <h2 className="text-3xl font-bold text-gray-900">How It Works</h2>
               <p className="mt-3 text-gray-600">
@@ -692,7 +785,7 @@ export default function HomePage() {
 
           {/* Talent Types */}
           <div className="bg-gray-900 text-white">
-            <div className="max-w-6xl mx-auto px-6 py-20">
+            <div className="max-w-5xl mx-auto px-6 py-20">
               <div className="max-w-2xl mb-12">
                 <h2 className="text-3xl font-bold">Specialists We Place</h2>
                 <p className="mt-3 text-gray-400">
@@ -721,7 +814,7 @@ export default function HomePage() {
 
           {/* Testimonials */}
           {testimonials.length > 0 && (
-            <div className="max-w-6xl mx-auto px-6 py-20">
+            <div className="max-w-5xl mx-auto px-6 py-20">
               <div className="max-w-2xl mb-12">
                 <h2 className="text-3xl font-bold text-gray-900">What Our Clients Say</h2>
                 <p className="mt-3 text-gray-600">
@@ -771,7 +864,7 @@ export default function HomePage() {
 
           {/* CTA Section */}
           <div className="bg-gradient-to-r from-amber-50 to-amber-100 border-y border-amber-200">
-            <div className="max-w-6xl mx-auto px-6 py-16">
+            <div className="max-w-5xl mx-auto px-6 py-16">
               <div className="md:flex md:items-center md:justify-between">
                 <div className="max-w-xl">
                   <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -807,7 +900,7 @@ export default function HomePage() {
         <>
           {/* Hero Section */}
           <div style={{ background: `linear-gradient(to bottom, ${accentColor}15, white)` }}>
-            <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
+            <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
               <div className="flex justify-start mb-8">
                 <ViewToggle mode={viewMode} onChange={setViewMode} />
               </div>
@@ -861,20 +954,40 @@ export default function HomePage() {
                 ))}
               </div>
 
-              {/* Industries in Hero */}
+              {/* Industries in Hero - Scroll Animated */}
               <div className="mt-12 pt-8 border-t border-gray-200">
                 <p className="text-[12px] font-medium text-gray-400 uppercase tracking-wide mb-4">
                   Industries Hiring
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {industries.map((industry) => (
-                    <span
-                      key={industry}
-                      className="px-3 py-1.5 bg-gray-100 text-gray-600 text-[12px] font-medium rounded-full"
-                    >
-                      {industry}
-                    </span>
-                  ))}
+                <div className="space-y-2 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
+                  {/* Row 1 - moves left on scroll */}
+                  <div
+                    className="flex w-max transition-transform duration-100 ease-out"
+                    style={{ transform: `translateX(${-scrollY * 0.15}px)` }}
+                  >
+                    {[...industries.slice(0, 15), ...industries.slice(0, 15)].map((industry, i) => (
+                      <span
+                        key={`row1-${industry}-${i}`}
+                        className="px-3 py-1.5 bg-gray-100 text-gray-600 text-[12px] font-medium rounded-full whitespace-nowrap mx-1 flex-shrink-0"
+                      >
+                        {industry}
+                      </span>
+                    ))}
+                  </div>
+                  {/* Row 2 - moves right on scroll */}
+                  <div
+                    className="flex w-max transition-transform duration-100 ease-out"
+                    style={{ transform: `translateX(${-200 + scrollY * 0.15}px)` }}
+                  >
+                    {[...industries.slice(15), ...industries.slice(15)].map((industry, i) => (
+                      <span
+                        key={`row2-${industry}-${i}`}
+                        className="px-3 py-1.5 bg-gray-100 text-gray-600 text-[12px] font-medium rounded-full whitespace-nowrap mx-1 flex-shrink-0"
+                      >
+                        {industry}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -882,7 +995,7 @@ export default function HomePage() {
 
           {/* Jobs Preview */}
           {displayJobs.length > 0 && (
-            <div className="max-w-6xl mx-auto px-6 py-20">
+            <div className="max-w-5xl mx-auto px-6 py-20">
               <div className="flex items-end justify-between mb-8">
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900">Latest Opportunities</h2>
@@ -919,7 +1032,7 @@ export default function HomePage() {
 
           {/* Why Join */}
           <div className="bg-gray-50 border-y border-gray-100">
-            <div className="max-w-6xl mx-auto px-6 py-20">
+            <div className="max-w-5xl mx-auto px-6 py-20">
               <div className="max-w-2xl mb-12">
                 <h2 className="text-3xl font-bold text-gray-900">Why Join Our Network?</h2>
                 <p className="mt-3 text-gray-600">
@@ -945,7 +1058,7 @@ export default function HomePage() {
           </div>
 
           {/* How It Works */}
-          <div className="max-w-6xl mx-auto px-6 py-20">
+          <div className="max-w-5xl mx-auto px-6 py-20">
             <div className="max-w-2xl mb-12">
               <h2 className="text-3xl font-bold text-gray-900">How It Works</h2>
               <p className="mt-3 text-gray-600">
@@ -976,7 +1089,7 @@ export default function HomePage() {
 
           {/* Talent Types */}
           <div className="bg-gray-900 text-white">
-            <div className="max-w-6xl mx-auto px-6 py-20">
+            <div className="max-w-5xl mx-auto px-6 py-20">
               <div className="max-w-2xl mb-12">
                 <h2 className="text-3xl font-bold">Roles We Recruit For</h2>
                 <p className="mt-3 text-gray-400">
@@ -1010,7 +1123,7 @@ export default function HomePage() {
             className="border-y"
             style={{ backgroundColor: `${accentColor}10`, borderColor: `${accentColor}30` }}
           >
-            <div className="max-w-6xl mx-auto px-6 py-16">
+            <div className="max-w-5xl mx-auto px-6 py-16">
               <div className="md:flex md:items-center md:justify-between">
                 <div className="max-w-xl">
                   <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -1055,7 +1168,7 @@ export default function HomePage() {
 
       {/* Blog Section (Shared) */}
       {blogPosts.length > 0 && (
-        <div className="max-w-6xl mx-auto px-6 py-20">
+        <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="flex items-end justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold text-gray-900">From Our Blog</h2>
@@ -1092,7 +1205,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8">
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="max-w-5xl mx-auto px-6">
           <p className="text-[13px] text-gray-400 text-center">
             © {new Date().getFullYear()} {seoDefaults.companyName || 'All rights reserved'}.{seoDefaults.companyName ? ' All rights reserved.' : ''}
           </p>
