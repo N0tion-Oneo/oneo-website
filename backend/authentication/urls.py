@@ -30,6 +30,8 @@ urlpatterns = [
     path('invitations/create/', views.create_client_invitation, name='create_invitation'),
     path('invitations/<uuid:token>/validate/', views.validate_invitation, name='validate_invitation'),
     path('invitations/<uuid:token>/signup/', views.signup_with_invitation, name='signup_with_invitation'),
+    path('invitations/<uuid:token>/cancel/', views.cancel_client_invitation, name='cancel_client_invitation'),
+    path('invitations/<uuid:token>/resend/', views.resend_client_invitation, name='resend_client_invitation'),
 
     # Company Team Invitations
     path('company-invitations/<uuid:token>/validate/', views.validate_company_invitation, name='validate_company_invitation'),
@@ -40,6 +42,7 @@ urlpatterns = [
     path('recruiter-invitations/create/', views.create_recruiter_invitation, name='create_recruiter_invitation'),
     path('recruiter-invitations/<uuid:token>/validate/', views.validate_recruiter_invitation, name='validate_recruiter_invitation'),
     path('recruiter-invitations/<uuid:token>/signup/', views.signup_with_recruiter_invitation, name='signup_with_recruiter_invitation'),
+    path('recruiter-invitations/<uuid:token>/cancel/', views.cancel_recruiter_invitation, name='cancel_recruiter_invitation'),
 
     # Candidate Invitations (auto-created from bookings)
     path('candidate-invitations/', views.list_candidate_invitations, name='list_candidate_invitations'),

@@ -34,6 +34,21 @@ class User(AbstractUser):
         help_text='True if user was auto-created from booking and has not completed signup',
     )
 
+    # Archive/deactivation tracking
+    archived_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When the user was archived/deactivated. Null means active.',
+    )
+    archived_by = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='archived_users',
+        help_text='Admin who archived this user',
+    )
+
     # Use email as the username field for authentication
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
@@ -49,6 +64,10 @@ class User(AbstractUser):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
+
+    @property
+    def is_archived(self):
+        return self.archived_at is not None
 
 
 class RecruiterProfile(models.Model):

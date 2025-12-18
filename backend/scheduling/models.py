@@ -199,7 +199,8 @@ class MeetingType(models.Model):
 
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='owned_meeting_types',
         help_text='The admin who created this meeting type',
     )
@@ -354,7 +355,8 @@ class Booking(models.Model):
     )
     organizer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='organized_bookings',
         help_text='The recruiter/admin hosting the meeting',
     )

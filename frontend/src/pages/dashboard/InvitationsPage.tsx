@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { useInvitations, useCreateInvitation } from '@/hooks'
+import { useInvitations, useCreateInvitation, useCancelInvitation, useResendInvitation } from '@/hooks'
 import type { ClientInvitation } from '@/hooks'
-import { Mail, Link2, Copy, Check, Clock, AlertCircle, UserPlus, CheckCircle } from 'lucide-react'
+import { Mail, Link2, Copy, Check, Clock, AlertCircle, UserPlus, CheckCircle, Trash2, RefreshCw, X, AlertTriangle } from 'lucide-react'
 
 export default function InvitationsPage() {
   const { invitations, isLoading, error, refetch } = useInvitations()
   const { createInvitation, isCreating, error: createError } = useCreateInvitation()
+  const { cancelInvitation, isCancelling, error: cancelError } = useCancelInvitation()
+  const { resendInvitation, isResending, error: resendError } = useResendInvitation()
 
   const [email, setEmail] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -14,12 +16,38 @@ export default function InvitationsPage() {
     email: string
   } | null>(null)
 
+  // Cancel/Resend confirmation states
+  const [cancellingInvitation, setCancellingInvitation] = useState<ClientInvitation | null>(null)
+  const [resendingInvitation, setResendingInvitation] = useState<ClientInvitation | null>(null)
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       const result = await createInvitation(email || undefined)
       setNewInvitation({ signup_url: result.signup_url, email: result.email })
       setEmail('')
+      refetch()
+    } catch {
+      // Error is handled by the hook
+    }
+  }
+
+  const handleCancel = async () => {
+    if (!cancellingInvitation) return
+    try {
+      await cancelInvitation(cancellingInvitation.token)
+      setCancellingInvitation(null)
+      refetch()
+    } catch {
+      // Error is handled by the hook
+    }
+  }
+
+  const handleResend = async () => {
+    if (!resendingInvitation) return
+    try {
+      await resendInvitation(resendingInvitation.token)
+      setResendingInvitation(null)
       refetch()
     } catch {
       // Error is handled by the hook
@@ -220,33 +248,202 @@ export default function InvitationsPage() {
                       )}
                     </div>
                   </div>
-                  {invitation.is_valid && (
-                    <button
-                      onClick={() =>
-                        copyToClipboard(invitation.signup_url, invitation.token)
-                      }
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-                      title="Copy signup link"
-                    >
-                      {copiedId === invitation.token ? (
-                        <>
-                          <Check className="w-4 h-4 text-green-600" />
-                          <span className="text-green-600">Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Link2 className="w-4 h-4" />
-                          <span>Copy Link</span>
-                        </>
-                      )}
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {/* Copy Link - only for valid invitations */}
+                    {invitation.is_valid && (
+                      <button
+                        onClick={() =>
+                          copyToClipboard(invitation.signup_url, invitation.token)
+                        }
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                        title="Copy signup link"
+                      >
+                        {copiedId === invitation.token ? (
+                          <>
+                            <Check className="w-4 h-4 text-green-600" />
+                            <span className="text-green-600">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Link2 className="w-4 h-4" />
+                            <span>Copy Link</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {/* Resend - for expired or active invitations (not used) */}
+                    {!invitation.used_at && (
+                      <button
+                        onClick={() => setResendingInvitation(invitation)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                        title="Resend invitation"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>Resend</span>
+                      </button>
+                    )}
+                    {/* Cancel - only for unused invitations */}
+                    {!invitation.used_at && (
+                      <button
+                        onClick={() => setCancellingInvitation(invitation)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                        title="Cancel invitation"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Cancel</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Cancel Invitation Modal */}
+      {cancellingInvitation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h3 className="text-[16px] font-semibold text-gray-900 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                Cancel Invitation
+              </h3>
+              <button
+                onClick={() => setCancellingInvitation(null)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-[14px] text-gray-600">
+                Are you sure you want to cancel this invitation?
+              </p>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-medium text-gray-900">
+                      {cancellingInvitation.email || <span className="italic text-gray-500">No email specified</span>}
+                    </p>
+                    <p className="text-[12px] text-gray-500">
+                      Created {formatDate(cancellingInvitation.created_at)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[13px] text-gray-500">
+                The invitation link will no longer work. You can create a new invitation if needed.
+              </p>
+
+              {cancelError && (
+                <p className="text-[13px] text-red-600 flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4" />
+                  {cancelError}
+                </p>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => setCancellingInvitation(null)}
+                disabled={isCancelling}
+                className="px-4 py-2 text-[14px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                Keep Invitation
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={isCancelling}
+                className="px-4 py-2 text-[14px] font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {isCancelling ? 'Cancelling...' : 'Cancel Invitation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Resend Invitation Modal */}
+      {resendingInvitation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h3 className="text-[16px] font-semibold text-gray-900 flex items-center gap-2">
+                <RefreshCw className="w-5 h-5 text-blue-500" />
+                Resend Invitation
+              </h3>
+              <button
+                onClick={() => setResendingInvitation(null)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-[14px] text-gray-600">
+                This will extend the invitation expiry and resend the email.
+              </p>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-medium text-gray-900">
+                      {resendingInvitation.email || <span className="italic text-gray-500">No email specified</span>}
+                    </p>
+                    <p className="text-[12px] text-gray-500">
+                      {resendingInvitation.is_expired ? (
+                        <span className="text-amber-600">Expired {formatDate(resendingInvitation.expires_at)}</span>
+                      ) : (
+                        <>Expires {formatDate(resendingInvitation.expires_at)}</>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="text-[13px] font-medium text-blue-800 mb-2">This action will:</h4>
+                <ul className="text-[13px] text-blue-700 space-y-1 list-disc list-inside">
+                  <li>Extend expiry by 7 days from now</li>
+                  {resendingInvitation.email && <li>Resend invitation email</li>}
+                </ul>
+              </div>
+
+              {resendError && (
+                <p className="text-[13px] text-red-600 flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4" />
+                  {resendError}
+                </p>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => setResendingInvitation(null)}
+                disabled={isResending}
+                className="px-4 py-2 text-[14px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResend}
+                disabled={isResending}
+                className="px-4 py-2 text-[14px] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {isResending ? 'Resending...' : 'Resend Invitation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

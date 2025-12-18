@@ -717,6 +717,116 @@ def signup_with_invitation(request, token):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema(
+    responses={
+        204: OpenApiResponse(description="Invitation cancelled successfully"),
+        403: OpenApiResponse(description="Permission denied"),
+        404: OpenApiResponse(description="Invitation not found"),
+        400: OpenApiResponse(description="Cannot cancel - invitation already used"),
+    },
+    tags=['Client Invitations'],
+)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def cancel_client_invitation(request, token):
+    """
+    Cancel a client invitation.
+
+    Only Admin/Recruiter users can cancel invitations they created.
+    Cannot cancel invitations that have already been used.
+    """
+    # Only Admin or Recruiter can cancel invitations
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can cancel client invitations'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        invitation = ClientInvitation.objects.get(token=token, created_by=request.user)
+    except ClientInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if invitation.used_at:
+        return Response(
+            {'error': 'Cannot cancel - this invitation has already been used'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    invitation.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@extend_schema(
+    responses={
+        200: ClientInvitationResponseSerializer,
+        403: OpenApiResponse(description="Permission denied"),
+        404: OpenApiResponse(description="Invitation not found"),
+        400: OpenApiResponse(description="Cannot resend - invitation already used"),
+    },
+    tags=['Client Invitations'],
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def resend_client_invitation(request, token):
+    """
+    Resend a client invitation.
+
+    Extends the expiry by 7 days from now and resends the invitation email.
+    Only Admin/Recruiter users can resend invitations they created.
+    Cannot resend invitations that have already been used.
+    """
+    # Only Admin or Recruiter can resend invitations
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can resend client invitations'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        invitation = ClientInvitation.objects.get(token=token, created_by=request.user)
+    except ClientInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if invitation.used_at:
+        return Response(
+            {'error': 'Cannot resend - this invitation has already been used'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Extend expiry by 7 days from now
+    invitation.expires_at = timezone.now() + timedelta(days=7)
+    invitation.save(update_fields=['expires_at'])
+
+    # Build signup URL
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+    signup_url = f"{frontend_url}/signup/client/{invitation.token}"
+
+    # Resend invitation email if email was provided
+    if invitation.email:
+        try:
+            NotificationService.notify_client_invite(
+                email=invitation.email,
+                invited_by=request.user,
+                signup_url=signup_url,
+            )
+        except Exception as e:
+            logger.error(f"Failed to resend client invitation email: {e}")
+
+    return Response({
+        'token': str(invitation.token),
+        'email': invitation.email,
+        'expires_at': invitation.expires_at,
+        'signup_url': signup_url,
+    }, status=status.HTTP_200_OK)
+
+
 # =============================================================================
 # Company Invitation Endpoints (for team member invitations)
 # =============================================================================
@@ -975,6 +1085,49 @@ def validate_recruiter_invitation(request, token):
         'valid': True,
         'email': invitation.email,
     }, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    responses={
+        204: OpenApiResponse(description="Invitation cancelled successfully"),
+        403: OpenApiResponse(description="Permission denied"),
+        404: OpenApiResponse(description="Invitation not found"),
+        400: OpenApiResponse(description="Cannot cancel - invitation already used"),
+    },
+    tags=['Recruiter Invitations'],
+)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def cancel_recruiter_invitation(request, token):
+    """
+    Cancel a recruiter invitation.
+
+    Only Admin users can cancel recruiter invitations.
+    Cannot cancel invitations that have already been used.
+    """
+    # Only Admin can cancel recruiter invitations
+    if request.user.role != UserRole.ADMIN:
+        return Response(
+            {'error': 'Only administrators can cancel recruiter invitations'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        invitation = RecruiterInvitation.objects.get(token=token)
+    except RecruiterInvitation.DoesNotExist:
+        return Response(
+            {'error': 'Invitation not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if invitation.used_at:
+        return Response(
+            {'error': 'Cannot cancel - this invitation has already been used'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    invitation.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @extend_schema(

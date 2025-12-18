@@ -13,7 +13,8 @@ class ClientInvitation(models.Model):
     email = models.EmailField(blank=True, help_text="Optional - can pre-fill signup form")
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='client_invitations_created'
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -53,7 +54,8 @@ class RecruiterInvitation(models.Model):
     email = models.EmailField(blank=True, help_text="Optional - can pre-fill signup form")
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='recruiter_invitations_created'
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -94,7 +96,8 @@ class CandidateInvitation(models.Model):
     name = models.CharField(max_length=255, blank=True, help_text="Name from booking form")
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='candidate_invitations_created',
         help_text="Recruiter/admin who the meeting was booked with"
     )

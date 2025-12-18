@@ -32,7 +32,7 @@ export {
 export type { CompanyInvitation, InviteResult } from './useCompanies'
 
 // Client Invitation hooks
-export { useInvitations, useCreateInvitation } from './useInvitations'
+export { useInvitations, useCreateInvitation, useCancelInvitation, useResendInvitation } from './useInvitations'
 export type { ClientInvitation, CreateInvitationResponse } from './useInvitations'
 
 // Recruiter Invitation hooks
@@ -42,6 +42,7 @@ export {
   useValidateRecruiterInvitation,
   useRecruiterSignup,
   useRecruiters,
+  useCancelRecruiterInvitation,
 } from './useInvitations'
 export type { RecruiterInvitation, CreateRecruiterInvitationResponse } from './useInvitations'
 
@@ -186,6 +187,8 @@ export {
   useStaffWithProfiles,
   useUpdateStaffProfile,
   useStaffRecruiterProfile,
+  useDeactivateStaffUser,
+  useReactivateStaffUser,
 } from './useStaffUsers'
 export type {
   UpdateStaffUserData,

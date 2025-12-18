@@ -103,6 +103,71 @@ export function useCreateInvitation(): UseCreateInvitationReturn {
   return { createInvitation, isCreating, error }
 }
 
+// ============================================================================
+// Cancel Client Invitation Hook
+// ============================================================================
+
+interface UseCancelInvitationReturn {
+  cancelInvitation: (token: string) => Promise<void>
+  isCancelling: boolean
+  error: string | null
+}
+
+export function useCancelInvitation(): UseCancelInvitationReturn {
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const cancelInvitation = useCallback(async (token: string): Promise<void> => {
+    setIsCancelling(true)
+    setError(null)
+    try {
+      await api.delete(`/auth/invitations/${token}/cancel/`)
+    } catch (err) {
+      const axiosError = err as { response?: { status?: number; data?: { error?: string } } }
+      const message = axiosError.response?.data?.error || 'Failed to cancel invitation'
+      setError(message)
+      throw err
+    } finally {
+      setIsCancelling(false)
+    }
+  }, [])
+
+  return { cancelInvitation, isCancelling, error }
+}
+
+// ============================================================================
+// Resend Client Invitation Hook
+// ============================================================================
+
+interface UseResendInvitationReturn {
+  resendInvitation: (token: string) => Promise<CreateInvitationResponse>
+  isResending: boolean
+  error: string | null
+}
+
+export function useResendInvitation(): UseResendInvitationReturn {
+  const [isResending, setIsResending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const resendInvitation = useCallback(async (token: string): Promise<CreateInvitationResponse> => {
+    setIsResending(true)
+    setError(null)
+    try {
+      const response = await api.post<CreateInvitationResponse>(`/auth/invitations/${token}/resend/`)
+      return response.data
+    } catch (err) {
+      const axiosError = err as { response?: { status?: number; data?: { error?: string } } }
+      const message = axiosError.response?.data?.error || 'Failed to resend invitation'
+      setError(message)
+      throw err
+    } finally {
+      setIsResending(false)
+    }
+  }, [])
+
+  return { resendInvitation, isResending, error }
+}
+
 
 // ============================================================================
 // Recruiter Invitation Types
@@ -299,6 +364,38 @@ export function useRecruiterSignup(): UseRecruiterSignupReturn {
   }, [])
 
   return { signup, isSigningUp, error }
+}
+
+// ============================================================================
+// Cancel Recruiter Invitation Hook
+// ============================================================================
+
+interface UseCancelRecruiterInvitationReturn {
+  cancelInvitation: (token: string) => Promise<void>
+  isCancelling: boolean
+  error: string | null
+}
+
+export function useCancelRecruiterInvitation(): UseCancelRecruiterInvitationReturn {
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const cancelInvitation = useCallback(async (token: string): Promise<void> => {
+    setIsCancelling(true)
+    setError(null)
+    try {
+      await api.delete(`/auth/recruiter-invitations/${token}/cancel/`)
+    } catch (err) {
+      const axiosError = err as { response?: { status?: number; data?: { error?: string } } }
+      const message = axiosError.response?.data?.error || 'Failed to cancel invitation'
+      setError(message)
+      throw err
+    } finally {
+      setIsCancelling(false)
+    }
+  }, [])
+
+  return { cancelInvitation, isCancelling, error }
 }
 
 // ============================================================================

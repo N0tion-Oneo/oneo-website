@@ -54,6 +54,8 @@ export interface StaffUserWithProfile {
   avatar: string | null
   phone: string | null
   role: 'admin' | 'recruiter'
+  is_active: boolean
+  archived_at: string | null
   profile: StaffRecruiterProfile | null
 }
 
@@ -141,7 +143,12 @@ interface UseStaffWithProfilesReturn {
   refetch: () => Promise<void>
 }
 
-export function useStaffWithProfiles(): UseStaffWithProfilesReturn {
+interface UseStaffWithProfilesOptions {
+  includeArchived?: boolean
+}
+
+export function useStaffWithProfiles(options: UseStaffWithProfilesOptions = {}): UseStaffWithProfilesReturn {
+  const { includeArchived = false } = options
   const [staffUsers, setStaffUsers] = useState<StaffUserWithProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -150,7 +157,8 @@ export function useStaffWithProfiles(): UseStaffWithProfilesReturn {
     try {
       setIsLoading(true)
       setError(null)
-      const response = await api.get('/staff/profiles/')
+      const params = includeArchived ? { include_archived: 'true' } : {}
+      const response = await api.get('/staff/profiles/', { params })
       setStaffUsers(response.data)
     } catch (err: unknown) {
       const message = err instanceof Error
@@ -161,7 +169,7 @@ export function useStaffWithProfiles(): UseStaffWithProfilesReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [includeArchived])
 
   useEffect(() => {
     fetchStaffUsers()
@@ -252,6 +260,102 @@ export function useStaffRecruiterProfile(userId: string | null): UseStaffRecruit
     isLoading,
     error,
     refetch: fetchProfile,
+  }
+}
+
+// ============================================================================
+// Deactivate Staff User Hook
+// ============================================================================
+
+interface DeactivateStaffUserResponse {
+  message: string
+  user: {
+    id: string
+    email: string
+    full_name: string
+    archived_at: string
+  }
+}
+
+interface UseDeactivateStaffUserReturn {
+  deactivateStaffUser: (userId: string) => Promise<DeactivateStaffUserResponse>
+  isDeactivating: boolean
+  error: string | null
+}
+
+export function useDeactivateStaffUser(): UseDeactivateStaffUserReturn {
+  const [isDeactivating, setIsDeactivating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const deactivateStaffUser = useCallback(async (userId: string): Promise<DeactivateStaffUserResponse> => {
+    try {
+      setIsDeactivating(true)
+      setError(null)
+      const response = await api.post(`/staff/${userId}/deactivate/`)
+      return response.data
+    } catch (err: unknown) {
+      const message = err instanceof Error
+        ? err.message
+        : (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to deactivate staff member'
+      setError(message)
+      throw new Error(message)
+    } finally {
+      setIsDeactivating(false)
+    }
+  }, [])
+
+  return {
+    deactivateStaffUser,
+    isDeactivating,
+    error,
+  }
+}
+
+// ============================================================================
+// Reactivate Staff User Hook
+// ============================================================================
+
+interface ReactivateStaffUserResponse {
+  message: string
+  user: {
+    id: string
+    email: string
+    full_name: string
+    role: string
+  }
+}
+
+interface UseReactivateStaffUserReturn {
+  reactivateStaffUser: (userId: string) => Promise<ReactivateStaffUserResponse>
+  isReactivating: boolean
+  error: string | null
+}
+
+export function useReactivateStaffUser(): UseReactivateStaffUserReturn {
+  const [isReactivating, setIsReactivating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const reactivateStaffUser = useCallback(async (userId: string): Promise<ReactivateStaffUserResponse> => {
+    try {
+      setIsReactivating(true)
+      setError(null)
+      const response = await api.post(`/staff/${userId}/reactivate/`)
+      return response.data
+    } catch (err: unknown) {
+      const message = err instanceof Error
+        ? err.message
+        : (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to reactivate staff member'
+      setError(message)
+      throw new Error(message)
+    } finally {
+      setIsReactivating(false)
+    }
+  }, [])
+
+  return {
+    reactivateStaffUser,
+    isReactivating,
+    error,
   }
 }
 
