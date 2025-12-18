@@ -466,6 +466,7 @@ export interface AdminCompanyListItem {
   company_size: CompanySize | ''
   headquarters_location: string
   is_published: boolean
+  is_platform: boolean
   created_at: string
   jobs_total: number
   jobs_draft: number
@@ -535,6 +536,7 @@ export interface CompanyUser {
   user_last_name: string
   user_avatar: string | null
   user_phone: string | null
+  user_role: string | null
   company: string
   role: CompanyUserRole
   job_title: string
@@ -2419,3 +2421,4 @@ export interface OnboardingHistory {
 
 export * from './analytics'
 export * from './cms'
+export * from './feed'

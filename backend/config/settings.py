@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'branding',
     'resume_parser',
     'cms',
+    'feed',
 ]
 
 MIDDLEWARE = [

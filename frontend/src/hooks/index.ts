@@ -165,7 +165,10 @@ export {
   useResetBranding,
   usePublicBranding,
   useBrandingCSS,
+  usePlatformCompany,
+  useCreatePlatformCompany,
 } from './useBranding'
+export type { PlatformCompany } from './useBranding'
 
 // Profile Suggestions hooks
 export {
@@ -176,8 +179,20 @@ export {
 // Recruiter Profile hooks
 export { useRecruiterProfile } from './useRecruiterProfile'
 
-// Staff Users hooks (for assignment dropdowns)
-export { useStaffUsers } from './useStaffUsers'
+// Staff Users hooks (for assignment dropdowns and team management)
+export {
+  useStaffUsers,
+  useUpdateStaffUser,
+  useStaffWithProfiles,
+  useUpdateStaffProfile,
+  useStaffRecruiterProfile,
+} from './useStaffUsers'
+export type {
+  UpdateStaffUserData,
+  StaffUserWithProfile,
+  StaffRecruiterProfile,
+  UpdateStaffProfileData,
+} from './useStaffUsers'
 
 // Recruiter Booking hooks (public booking pages)
 export {
@@ -289,3 +304,20 @@ export type {
   AssignedRecruiter,
   HiringMetrics,
 } from './useClientDashboard'
+
+// Feed hooks
+export {
+  useFeed,
+  useFeedSummary,
+  useFeedPost,
+  useMyPosts,
+  useMyPost,
+  useCreateFeedPost,
+  useUpdateFeedPost,
+  useDeleteFeedPost,
+  // Comment hooks
+  useComments,
+  useCreateComment,
+  useUpdateComment,
+  useDeleteComment,
+} from './useFeed'

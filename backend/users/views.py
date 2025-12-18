@@ -123,6 +123,218 @@ def list_staff_users(request):
 
 
 @extend_schema(
+    responses={200: OpenApiResponse(description='List of staff users with full profiles')},
+    tags=['Users'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_staff_with_profiles(request):
+    """
+    List all staff users (recruiters and admins) with their full RecruiterProfile data.
+    Admin-only endpoint for team management.
+    """
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    if request.user.role != UserRole.ADMIN:
+        return Response(
+            {'error': 'Admin access required'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Get all staff users with their profiles prefetched
+    staff_users = User.objects.filter(
+        role__in=[UserRole.RECRUITER, UserRole.ADMIN],
+        is_active=True,
+    ).select_related('recruiter_profile').prefetch_related(
+        'recruiter_profile__industries',
+        'recruiter_profile__country',
+        'recruiter_profile__city',
+    ).order_by('first_name', 'last_name')
+
+    data = []
+    for user in staff_users:
+        profile = getattr(user, 'recruiter_profile', None)
+        user_data = {
+            'id': str(user.id),
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'full_name': user.full_name,
+            'avatar': request.build_absolute_uri(user.avatar.url) if user.avatar else None,
+            'phone': user.phone,
+            'role': user.role,
+            'profile': None,
+        }
+
+        if profile:
+            user_data['profile'] = {
+                'id': str(profile.id),
+                'professional_title': profile.professional_title,
+                'bio': profile.bio,
+                'linkedin_url': profile.linkedin_url,
+                'years_of_experience': profile.years_of_experience,
+                'timezone': profile.timezone,
+                'country': {
+                    'id': profile.country.id,
+                    'name': profile.country.name,
+                    'code': profile.country.code,
+                } if profile.country else None,
+                'city': {
+                    'id': profile.city.id,
+                    'name': profile.city.name,
+                } if profile.city else None,
+                'industries': [
+                    {'id': ind.id, 'name': ind.name}
+                    for ind in profile.industries.all()
+                ],
+            }
+
+        data.append(user_data)
+
+    return Response(data)
+
+
+@extend_schema(
+    request={'application/json': {'type': 'object', 'properties': {
+        'role': {'type': 'string', 'enum': ['admin', 'recruiter']},
+        'first_name': {'type': 'string'},
+        'last_name': {'type': 'string'},
+        'phone': {'type': 'string'},
+    }}},
+    responses={
+        200: OpenApiResponse(description='Updated staff user'),
+        400: OpenApiResponse(description='Validation error'),
+        403: OpenApiResponse(description='Admin access required'),
+        404: OpenApiResponse(description='User not found'),
+    },
+    tags=['Users'],
+)
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_staff_user(request, user_id):
+    """
+    Update a staff user's role or profile info.
+    Admin-only endpoint.
+    """
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    # Only admins can update staff users
+    if request.user.role != UserRole.ADMIN:
+        return Response(
+            {'error': 'Only admins can update staff users'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        staff_user = User.objects.get(
+            id=user_id,
+            role__in=[UserRole.RECRUITER, UserRole.ADMIN],
+            is_active=True,
+        )
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'Staff user not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Prevent admins from demoting themselves
+    if staff_user.id == request.user.id and request.data.get('role') == 'recruiter':
+        return Response(
+            {'error': 'You cannot demote yourself'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Update allowed fields
+    if 'role' in request.data:
+        new_role = request.data['role']
+        if new_role not in ['admin', 'recruiter']:
+            return Response(
+                {'error': 'Role must be admin or recruiter'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        staff_user.role = new_role
+
+    if 'first_name' in request.data:
+        staff_user.first_name = request.data['first_name']
+
+    if 'last_name' in request.data:
+        staff_user.last_name = request.data['last_name']
+
+    if 'phone' in request.data:
+        staff_user.phone = request.data['phone']
+
+    staff_user.save()
+
+    return Response({
+        'id': str(staff_user.id),
+        'email': staff_user.email,
+        'first_name': staff_user.first_name,
+        'last_name': staff_user.last_name,
+        'phone': staff_user.phone,
+        'role': staff_user.role,
+        'full_name': staff_user.full_name,
+    })
+
+
+@extend_schema(
+    request=RecruiterProfileUpdateSerializer,
+    responses={
+        200: RecruiterProfileSerializer,
+        400: OpenApiResponse(description='Validation error'),
+        403: OpenApiResponse(description='Admin access required'),
+        404: OpenApiResponse(description='Profile not found'),
+    },
+    tags=['Recruiter Profile'],
+)
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def admin_update_recruiter_profile(request, user_id):
+    """
+    Update another staff user's recruiter profile.
+    Admin-only endpoint for team management.
+    """
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    # Only admins can update other users' profiles
+    if request.user.role != UserRole.ADMIN:
+        return Response(
+            {'error': 'Only admins can update other users\' profiles'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Find the target user
+    try:
+        target_user = User.objects.get(
+            id=user_id,
+            role__in=[UserRole.RECRUITER, UserRole.ADMIN],
+            is_active=True,
+        )
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'Staff user not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Get or create their profile
+    profile, created = RecruiterProfile.objects.get_or_create(user=target_user)
+
+    serializer = RecruiterProfileUpdateSerializer(
+        profile,
+        data=request.data,
+        partial=True
+    )
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(RecruiterProfileSerializer(profile).data)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
     responses={
         200: RecruiterProfileSerializer,
         404: OpenApiResponse(description='Profile not found'),

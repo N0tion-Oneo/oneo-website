@@ -4,6 +4,7 @@ import { useMyProfile, useMyCompany } from '@/hooks';
 import SchedulingCard from '@/components/booking/SchedulingCard';
 import RecruiterDashboard from '@/components/dashboard/RecruiterDashboard';
 import ClientDashboard from '@/components/dashboard/ClientDashboard';
+import { DashboardFeedWidget } from '@/components/feed';
 import { UserRole } from '@/types';
 
 export default function DashboardPage() {
@@ -158,6 +159,11 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Feed Widget */}
+        <div className="mt-6">
+          <DashboardFeedWidget limit={5} />
         </div>
       </div>
 

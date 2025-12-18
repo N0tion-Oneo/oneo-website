@@ -27,7 +27,8 @@ import {
   AdminApplicationsPage,
   AdminJobsPage,
   AdminNewJobPage,
-  AdminRecruitersPage,
+  PlatformTeamPage,
+  PlatformCompanyPage,
   AdminSkillsTechnologiesPage,
   OnboardingStagesSettingsPage,
   DashboardSettingsPage,
@@ -50,6 +51,9 @@ import {
   RecruiterProfilePage,
   BookingManagementPage,
   AnalyticsPage,
+  FeedPage,
+  FeedArticleEditorPage,
+  FeedPostDetailPage,
   // CMS Dashboard Pages
   CMSOverviewPage,
   CMSPagesListPage,
@@ -177,6 +181,9 @@ function App() {
           <Route path="applications" element={<AdminApplicationsPage />} />
           <Route path="my-applications" element={<ApplicationsPage />} />
           <Route path="bookings" element={<BookingManagementPage />} />
+          <Route path="feed" element={<FeedPage />} />
+          <Route path="feed/create/article" element={<FeedArticleEditorPage />} />
+          <Route path="feed/:postId" element={<FeedPostDetailPage />} />
           {/* Settings routes with sidebar */}
           <Route path="settings" element={<SettingsLayout />}>
             <Route index element={<Navigate to="profile" replace />} />
@@ -193,7 +200,8 @@ function App() {
             <Route path="skills-technologies" element={<AdminSkillsTechnologiesPage />} />
             <Route path="onboarding-stages" element={<OnboardingStagesSettingsPage />} />
             <Route path="branding" element={<BrandingSettingsPage />} />
-            <Route path="recruiters" element={<AdminRecruitersPage />} />
+            <Route path="platform-company" element={<PlatformCompanyPage />} />
+            <Route path="team" element={<PlatformTeamPage />} />
             <Route path="dashboard" element={<DashboardSettingsPage />} />
           </Route>
           {/* Admin/Recruiter routes */}

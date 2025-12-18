@@ -44,6 +44,17 @@ export default function CandidateDashboardLayout() {
         </svg>
       ),
     },
+    {
+      name: 'Feed',
+      href: '/dashboard/feed',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M4 11a9 9 0 0 1 9 9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4 4a16 16 0 0 1 16 16" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="5" cy="19" r="1" />
+        </svg>
+      ),
+    },
   ]
 
   // My Profile link - for candidates only (recruiters/admins access their profile via Settings)

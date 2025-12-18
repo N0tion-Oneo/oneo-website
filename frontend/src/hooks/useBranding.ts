@@ -268,3 +268,85 @@ export function useBrandingCSS(): { isLoading: boolean; error: string | null } {
 
   return { isLoading, error }
 }
+
+// ============================================================================
+// Platform Company Hook (Admin)
+// ============================================================================
+
+export interface PlatformCompany {
+  id: string
+  name: string
+  slug: string
+  tagline: string
+  logo: string | null
+  is_published: boolean
+}
+
+interface UsePlatformCompanyReturn {
+  platformCompany: PlatformCompany | null
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export function usePlatformCompany(): UsePlatformCompanyReturn {
+  const [platformCompany, setPlatformCompany] = useState<PlatformCompany | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchPlatformCompany = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await api.get<{ platform_company: PlatformCompany | null }>('/branding/platform-company/')
+      setPlatformCompany(response.data.platform_company)
+    } catch (err) {
+      const axiosError = err as { response?: { data?: { error?: string } } }
+      const message = axiosError.response?.data?.error || 'Failed to load platform company'
+      setError(message)
+      console.error('Error fetching platform company:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchPlatformCompany()
+  }, [fetchPlatformCompany])
+
+  return { platformCompany, isLoading, error, refetch: fetchPlatformCompany }
+}
+
+// ============================================================================
+// Create/Update Platform Company Hook
+// ============================================================================
+
+interface UseCreatePlatformCompanyReturn {
+  createPlatformCompany: (data?: { name?: string; tagline?: string }) => Promise<PlatformCompany>
+  isCreating: boolean
+  error: string | null
+}
+
+export function useCreatePlatformCompany(): UseCreatePlatformCompanyReturn {
+  const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const createPlatformCompany = useCallback(async (data?: { name?: string; tagline?: string }): Promise<PlatformCompany> => {
+    setIsCreating(true)
+    setError(null)
+    try {
+      const response = await api.post<{ platform_company: PlatformCompany }>('/branding/platform-company/create/', data || {})
+      return response.data.platform_company
+    } catch (err) {
+      const axiosError = err as { response?: { data?: { error?: string } } }
+      const message = axiosError.response?.data?.error || 'Failed to create platform company'
+      setError(message)
+      console.error('Error creating platform company:', err)
+      throw err
+    } finally {
+      setIsCreating(false)
+    }
+  }, [])
+
+  return { createPlatformCompany, isCreating, error }
+}

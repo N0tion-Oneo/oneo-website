@@ -24,6 +24,7 @@ import {
   CandidatesAttentionSection,
   RecentActivitySection,
 } from './shared'
+import { DashboardFeedWidget } from '@/components/feed'
 
 // =============================================================================
 // Profile Completion Banner
@@ -350,6 +351,7 @@ export default function ClientDashboard() {
           <CandidatesAttentionSection />
           <PendingOffersSection />
           <HiringMetricsSection />
+          <DashboardFeedWidget limit={5} />
           <RecentActivitySection />
           <AssignedRecruiterSection />
         </div>

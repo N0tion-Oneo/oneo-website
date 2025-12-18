@@ -12,7 +12,8 @@ export { default as AdminCandidateEditPage } from './AdminCandidateEditPage';
 export { default as AdminApplicationsPage } from './AdminApplicationsPage';
 export { default as AdminJobsPage } from './AdminJobsPage';
 export { default as AdminNewJobPage } from './AdminNewJobPage';
-export { default as AdminRecruitersPage } from './AdminRecruitersPage';
+export { default as PlatformTeamPage } from './PlatformTeamPage';
+export { default as PlatformCompanyPage } from './PlatformCompanyPage';
 export { default as AdminSkillsTechnologiesPage } from './AdminSkillsTechnologiesPage';
 export { default as OnboardingStagesSettingsPage } from './OnboardingStagesSettingsPage';
 export { default as DashboardSettingsPage } from './DashboardSettingsPage';
@@ -41,3 +42,8 @@ export { default as BookingManagementPage } from './BookingManagementPage';
 
 // Analytics
 export { default as AnalyticsPage } from './AnalyticsPage';
+
+// Feed
+export { default as FeedPage } from './FeedPage';
+export { default as FeedArticleEditorPage } from './FeedArticleEditorPage';
+export { default as FeedPostDetailPage } from './FeedPostDetailPage';

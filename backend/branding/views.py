@@ -114,3 +114,110 @@ def reset_branding_settings(request):
     settings.save()
 
     return Response(BrandingSettingsSerializer(settings).data)
+
+
+# =============================================================================
+# Platform Company Management
+# =============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_platform_company(request):
+    """
+    Get the platform company if it exists.
+    Admins only.
+    """
+    if request.user.role != UserRole.ADMIN:
+        return Response(
+            {'error': 'Only admins can view platform company settings'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    from companies.models import Company
+
+    platform_company = Company.objects.filter(is_platform=True).first()
+
+    if not platform_company:
+        return Response({'platform_company': None})
+
+    # Return basic company info
+    return Response({
+        'platform_company': {
+            'id': str(platform_company.id),
+            'name': platform_company.name,
+            'slug': platform_company.slug,
+            'tagline': platform_company.tagline,
+            'logo': platform_company.logo.url if platform_company.logo else None,
+            'is_published': platform_company.is_published,
+        }
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_or_update_platform_company(request):
+    """
+    Create or update the platform company.
+    Pre-populates from branding settings if creating new.
+    Admins only.
+    """
+    if request.user.role != UserRole.ADMIN:
+        return Response(
+            {'error': 'Only admins can manage platform company'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    from companies.models import Company, CompanyUser, CompanyUserRole
+
+    # Get branding settings for defaults
+    branding = BrandingSettings.get_settings()
+
+    # Check if platform company already exists
+    platform_company = Company.objects.filter(is_platform=True).first()
+
+    if platform_company:
+        # Update existing platform company
+        name = request.data.get('name', platform_company.name)
+        tagline = request.data.get('tagline', platform_company.tagline)
+
+        platform_company.name = name
+        platform_company.tagline = tagline
+        platform_company.is_platform = True
+        platform_company.is_published = True
+        platform_company.save()
+    else:
+        # Create new platform company with branding defaults
+        name = request.data.get('name') or branding.company_name
+        tagline = request.data.get('tagline') or branding.tagline
+
+        platform_company = Company.objects.create(
+            name=name,
+            tagline=tagline,
+            is_platform=True,
+            is_published=True,
+            website_url=branding.website_url or '',
+        )
+
+        # Copy logo from branding if available
+        if branding.logo:
+            platform_company.logo = branding.logo
+            platform_company.save()
+
+        # Add current admin as company admin
+        CompanyUser.objects.create(
+            user=request.user,
+            company=platform_company,
+            role=CompanyUserRole.ADMIN,
+            job_title='Platform Admin'
+        )
+
+    return Response({
+        'platform_company': {
+            'id': str(platform_company.id),
+            'name': platform_company.name,
+            'slug': platform_company.slug,
+            'tagline': platform_company.tagline,
+            'logo': platform_company.logo.url if platform_company.logo else None,
+            'is_published': platform_company.is_published,
+        }
+    }, status=status.HTTP_201_CREATED if not platform_company else status.HTTP_200_OK)

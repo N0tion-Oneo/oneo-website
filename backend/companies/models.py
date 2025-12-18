@@ -199,6 +199,12 @@ class Company(models.Model):
         help_text='If enabled, users from this company can view all candidates. Otherwise, they only see applicants to their jobs.',
     )
 
+    # Platform company flag
+    is_platform = models.BooleanField(
+        default=False,
+        help_text='If true, this is the platform company. Staff (admin/recruiter) users are automatically added as members.',
+    )
+
     # Meta
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

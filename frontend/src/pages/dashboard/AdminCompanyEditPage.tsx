@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { CompanyTabs } from '@/components/company'
 import { UserRole } from '@/types'
 import type { CompanyInput } from '@/types'
-import { ArrowLeft, AlertCircle, CheckCircle, Briefcase, Plus } from 'lucide-react'
+import { ArrowLeft, AlertCircle, CheckCircle, Briefcase, Plus, Sparkles, Building2 } from 'lucide-react'
 
 export default function AdminCompanyEditPage() {
   const { companyId } = useParams<{ companyId: string }>()
@@ -78,9 +78,22 @@ export default function AdminCompanyEditPage() {
             <ArrowLeft className="w-4 h-4" />
             Back to All Companies
           </Link>
-          <h1 className="text-[22px] font-semibold text-gray-900">
-            Edit: {company.name}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-[22px] font-semibold text-gray-900">
+              Edit: {company.name}
+            </h1>
+            {company.is_platform ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-700">
+                <Sparkles className="w-3 h-3" />
+                Platform
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">
+                <Building2 className="w-3 h-3" />
+                Client
+              </span>
+            )}
+          </div>
           <p className="text-[14px] text-gray-500 mt-0.5">
             Editing company profile as {user.role}
           </p>

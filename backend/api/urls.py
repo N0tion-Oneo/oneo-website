@@ -37,4 +37,7 @@ urlpatterns = [
 
     # CMS endpoints (pages, blog, faqs, glossary, case studies)
     path('cms/', include('cms.urls')),
+
+    # Feed endpoints (private content stream)
+    path('feed/', include('feed.urls')),
 ]

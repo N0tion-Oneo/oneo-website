@@ -112,6 +112,7 @@ class CompanyAdminListSerializer(serializers.ModelSerializer):
             'company_size',
             'headquarters_location',
             'is_published',
+            'is_platform',
             'created_at',
             'jobs_total',
             'jobs_draft',
@@ -202,6 +203,7 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             'billing_contact_phone',
             # Meta
             'is_published',
+            'is_platform',
             # Assigned staff (for admin view)
             'assigned_to',
             # Onboarding
@@ -407,6 +409,7 @@ class CompanyUserSerializer(serializers.ModelSerializer):
     user_last_name = serializers.CharField(source='user.last_name', read_only=True)
     user_avatar = serializers.ImageField(source='user.avatar', read_only=True)
     user_phone = serializers.CharField(source='user.phone', read_only=True)
+    user_role = serializers.CharField(source='user.role', read_only=True)
     invited_by_email = serializers.EmailField(source='invited_by.email', read_only=True)
 
     class Meta:
@@ -419,6 +422,7 @@ class CompanyUserSerializer(serializers.ModelSerializer):
             'user_last_name',
             'user_avatar',
             'user_phone',
+            'user_role',
             'company',
             'role',
             'job_title',

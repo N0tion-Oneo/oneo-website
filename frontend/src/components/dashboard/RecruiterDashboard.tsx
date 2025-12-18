@@ -26,6 +26,7 @@ import {
   RecentActivitySection,
   CandidatesAttentionSection,
 } from './shared'
+import { DashboardFeedWidget } from '@/components/feed'
 
 // =============================================================================
 // Helper Components
@@ -404,6 +405,7 @@ export default function RecruiterDashboard() {
         <div className="space-y-6">
           <CandidatesAttentionSection />
           <InvitationsSection />
+          <DashboardFeedWidget limit={5} />
           <RecentActivitySection />
         </div>
       </div>

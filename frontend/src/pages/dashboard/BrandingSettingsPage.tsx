@@ -15,8 +15,6 @@ import {
   RotateCcw,
   Type,
   Upload,
-  X,
-  ImageIcon,
 } from 'lucide-react'
 import { useBrandingSettings, useUpdateBranding, useResetBranding } from '@/hooks'
 import { getMediaUrl } from '@/services/api'
