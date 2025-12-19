@@ -180,6 +180,17 @@ export default function CandidateDashboardLayout() {
         </svg>
       ),
     },
+    {
+      name: 'Subscriptions',
+      href: '/dashboard/admin/subscriptions',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+          <path d="M1 10h22" strokeLinecap="round" />
+          <path d="M6 16h4M14 16h4" strokeLinecap="round" />
+        </svg>
+      ),
+    },
   ] : []
 
   // CMS navigation (Admin only)

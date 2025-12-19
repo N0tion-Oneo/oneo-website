@@ -392,6 +392,11 @@ export enum RemoteWorkPolicy {
   OFFICE_ONLY = 'office_only',
 }
 
+export enum ServiceType {
+  HEADHUNTING = 'headhunting',
+  RETAINED = 'retained',
+}
+
 export interface Country {
   id: number
   name: string
@@ -444,6 +449,8 @@ export interface Company {
   assigned_to?: AssignedUser[]
   // Access permissions
   can_view_all_candidates?: boolean
+  // Service type
+  service_type: ServiceType | null
   created_at: string
   updated_at: string
 }
@@ -467,6 +474,7 @@ export interface AdminCompanyListItem {
   headquarters_location: string
   is_published: boolean
   is_platform: boolean
+  service_type: ServiceType | null
   created_at: string
   jobs_total: number
   jobs_draft: number
@@ -515,6 +523,8 @@ export interface CompanyInput {
   assigned_to_ids?: number[]
   // Access permissions (admin only)
   can_view_all_candidates?: boolean
+  // Service type
+  service_type?: ServiceType
 }
 
 export interface CompanyLocation {
@@ -996,13 +1006,28 @@ export interface StageNote {
   updated_at: string
 }
 
+export interface Benefit {
+  name: string
+  annual_cost: number
+}
+
+export interface Equity {
+  vesting_years: number
+  shares: number
+  share_value: number
+}
+
 export interface OfferDetails {
-  salary?: number | null
+  annual_salary?: number | null
   currency?: string
   start_date?: string | null
   notes?: string
-  benefits?: string
-  equity?: string
+  benefits?: Benefit[]
+  equity?: Equity | null
+  // Computed fields (read-only, calculated by backend)
+  total_benefits_cost?: number
+  year_1_equity_value?: number
+  total_cost_to_company?: number
 }
 
 export interface Application {

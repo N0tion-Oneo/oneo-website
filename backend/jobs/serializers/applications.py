@@ -361,9 +361,24 @@ class ApplicationStageUpdateSerializer(serializers.Serializer):
     notes = serializers.CharField(required=False, allow_blank=True, default='')
 
 
+class BenefitSerializer(serializers.Serializer):
+    """Serializer for individual benefit with annual cost."""
+    name = serializers.CharField(max_length=200)
+    annual_cost = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0)
+
+
+class EquitySerializer(serializers.Serializer):
+    """Serializer for equity details."""
+    vesting_years = serializers.IntegerField(min_value=1, max_value=10)
+    shares = serializers.IntegerField(min_value=0)
+    share_value = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0)
+
+
 class OfferDetailsSerializer(serializers.Serializer):
     """Serializer for offer details when making an offer."""
-    salary = serializers.IntegerField(required=False, allow_null=True)
+    annual_salary = serializers.DecimalField(
+        max_digits=12, decimal_places=2, required=False, allow_null=True, min_value=0
+    )
     currency = serializers.ChoiceField(
         choices=[('ZAR', 'ZAR'), ('USD', 'USD'), ('EUR', 'EUR'), ('GBP', 'GBP')],
         required=False,
@@ -371,8 +386,34 @@ class OfferDetailsSerializer(serializers.Serializer):
     )
     start_date = serializers.DateField(required=False, allow_null=True)
     notes = serializers.CharField(required=False, allow_blank=True, default='')
-    benefits = serializers.CharField(required=False, allow_blank=True, default='')
-    equity = serializers.CharField(required=False, allow_blank=True, default='')
+    benefits = BenefitSerializer(many=True, required=False, default=list)
+    equity = EquitySerializer(required=False, allow_null=True)
+
+    def to_representation(self, instance):
+        """Add computed fields to output."""
+        data = super().to_representation(instance)
+
+        # Calculate total benefits cost
+        benefits = data.get('benefits') or []
+        total_benefits_cost = sum(
+            float(b.get('annual_cost', 0) or 0) for b in benefits
+        )
+        data['total_benefits_cost'] = total_benefits_cost
+
+        # Calculate year 1 equity value
+        equity = data.get('equity')
+        if equity and equity.get('shares') and equity.get('share_value') and equity.get('vesting_years'):
+            total_equity_value = float(equity['shares']) * float(equity['share_value'])
+            year_1_equity_value = total_equity_value / float(equity['vesting_years'])
+        else:
+            year_1_equity_value = 0
+        data['year_1_equity_value'] = year_1_equity_value
+
+        # Calculate total cost to company
+        annual_salary = float(data.get('annual_salary') or 0)
+        data['total_cost_to_company'] = annual_salary + total_benefits_cost + year_1_equity_value
+
+        return data
 
 
 class MakeOfferSerializer(serializers.Serializer):

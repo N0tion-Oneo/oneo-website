@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { Edit, Users, Receipt } from 'lucide-react'
+import { Edit, Users, Receipt, CreditCard } from 'lucide-react'
 import CompanyForm from './CompanyForm'
 import TeamMembersTable from './TeamMembersTable'
 import BillingLegalForm from './BillingLegalForm'
+import SubscriptionTab from './SubscriptionTab'
 import type { Company, CompanyInput } from '@/types'
 import type { BillingLegalInput } from './BillingLegalForm'
 
-type Tab = 'profile' | 'team' | 'billing'
+type Tab = 'profile' | 'team' | 'billing' | 'subscription'
 
 interface CompanyTabsProps {
   company: Company
@@ -15,6 +16,7 @@ interface CompanyTabsProps {
   currentUserId: string
   isAdmin: boolean
   companyId?: string  // For admin viewing other companies
+  isStaff?: boolean   // Whether user is platform admin/recruiter (can edit subscriptions)
 }
 
 export default function CompanyTabs({
@@ -24,6 +26,7 @@ export default function CompanyTabs({
   currentUserId,
   isAdmin,
   companyId,
+  isStaff = false,
 }: CompanyTabsProps) {
   const [activeTab, setActiveTab] = useState<Tab>('profile')
 
@@ -69,6 +72,17 @@ export default function CompanyTabs({
             <Receipt className="w-4 h-4" />
             Billing & Legal
           </button>
+          <button
+            onClick={() => setActiveTab('subscription')}
+            className={`pb-3 text-[14px] font-medium border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'subscription'
+                ? 'border-gray-900 text-gray-900'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <CreditCard className="w-4 h-4" />
+            Subscription
+          </button>
         </nav>
       </div>
 
@@ -87,6 +101,10 @@ export default function CompanyTabs({
 
       {activeTab === 'billing' && (
         <BillingLegalForm company={company} onSave={handleBillingSave} isSubmitting={isUpdating} />
+      )}
+
+      {activeTab === 'subscription' && (
+        <SubscriptionTab company={company} isAdmin={isStaff} />
       )}
     </>
   )

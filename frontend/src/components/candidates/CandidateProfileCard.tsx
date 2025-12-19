@@ -98,7 +98,7 @@ const getSeniorityLabel = (seniority: string) => {
     senior: 'Senior',
     lead: 'Lead',
     principal: 'Principal',
-    executive: 'Executive',
+    executive: 'Executive / C-Suite',
   }
   return labels[seniority] || seniority
 }

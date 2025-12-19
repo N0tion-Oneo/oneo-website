@@ -129,6 +129,7 @@ export default function AdminCompanyEditPage() {
         currentUserId={user?.id || ''}
         isAdmin={true}  // Admin/Recruiter always have admin access when viewing
         companyId={companyId}
+        isStaff={true}  // Staff can edit subscriptions
       />
     </div>
   )

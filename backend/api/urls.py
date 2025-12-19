@@ -40,4 +40,7 @@ urlpatterns = [
 
     # Feed endpoints (private content stream)
     path('feed/', include('feed.urls')),
+
+    # Subscriptions endpoints (billing, pricing, invoices)
+    path('', include('subscriptions.urls')),
 ]

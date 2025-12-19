@@ -40,6 +40,8 @@ import {
   Users,
   LayoutList,
   Columns3,
+  Target,
+  Handshake,
 } from 'lucide-react'
 
 type ViewMode = 'table' | 'kanban'
@@ -65,6 +67,17 @@ const getJobStatusBadge = (status: string) => {
       return { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Filled' }
     default:
       return { bg: 'bg-gray-100', text: 'text-gray-500', label: status }
+  }
+}
+
+const getServiceTypeBadge = (serviceType: string | null) => {
+  switch (serviceType) {
+    case 'headhunting':
+      return { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Headhunting', icon: Target }
+    case 'retained':
+      return { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Retained', icon: Handshake }
+    default:
+      return { bg: 'bg-gray-100', text: 'text-gray-400', label: 'Not Set', icon: null }
   }
 }
 
@@ -357,6 +370,22 @@ export default function AdminCompaniesPage() {
           const badge = getStatusBadge(getValue())
           return (
             <span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${badge.bg} ${badge.text}`}>
+              {badge.label}
+            </span>
+          )
+        },
+      }),
+      // Service Type
+      columnHelper.accessor('service_type', {
+        header: 'Package',
+        size: 120,
+        cell: ({ getValue }) => {
+          const serviceType = getValue()
+          const badge = getServiceTypeBadge(serviceType)
+          const Icon = badge.icon
+          return (
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded ${badge.bg} ${badge.text}`}>
+              {Icon && <Icon className="w-3 h-3" />}
               {badge.label}
             </span>
           )

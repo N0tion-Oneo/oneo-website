@@ -28,7 +28,8 @@ def is_staff_user(user):
     responses={200: PageListSerializer(many=True)},
     tags=['CMS - Pages (Admin)'],
     parameters=[
-        OpenApiParameter(name='page_type', description='Filter by page type', required=False, type=str),
+        OpenApiParameter(name='document_type', description='Filter by document type', required=False, type=str),
+        OpenApiParameter(name='service_type', description='Filter by service type (all, retained, headhunting)', required=False, type=str),
         OpenApiParameter(name='status', description='Filter by status', required=False, type=str),
     ],
 )
@@ -41,9 +42,13 @@ def list_pages(request):
 
     pages = Page.objects.all()
 
-    page_type = request.query_params.get('page_type')
-    if page_type:
-        pages = pages.filter(page_type=page_type)
+    document_type = request.query_params.get('document_type')
+    if document_type:
+        pages = pages.filter(document_type=document_type)
+
+    service_type_filter = request.query_params.get('service_type')
+    if service_type_filter:
+        pages = pages.filter(service_type=service_type_filter)
 
     status_filter = request.query_params.get('status')
     if status_filter:
@@ -147,6 +152,43 @@ def delete_page(request, page_id):
 # =============================================================================
 # Public Endpoints
 # =============================================================================
+
+@extend_schema(
+    responses={200: PageListSerializer(many=True)},
+    tags=['CMS - Pages (Public)'],
+    parameters=[
+        OpenApiParameter(name='service_type', description='Filter by service type (retained, headhunting)', required=False, type=str),
+        OpenApiParameter(name='include_all', description='Include documents that apply to all service types (default: false)', required=False, type=bool),
+    ],
+)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_public_pages(request):
+    """List all published pages (public). Can filter by service_type."""
+    pages = Page.objects.filter(status=ContentStatus.PUBLISHED)
+
+    service_type_filter = request.query_params.get('service_type')
+    include_all = request.query_params.get('include_all', 'false').lower() == 'true'
+
+    if service_type_filter:
+        if include_all:
+            # Include documents that match the specific service type OR apply to all
+            from django.db.models import Q
+            pages = pages.filter(
+                Q(service_type=service_type_filter) | Q(service_type='all')
+            )
+        else:
+            # Only show documents specifically assigned to this service type
+            # Fall back to 'all' if no specific documents exist
+            specific_pages = pages.filter(service_type=service_type_filter)
+            if specific_pages.exists():
+                pages = specific_pages
+            else:
+                pages = pages.filter(service_type='all')
+
+    serializer = PageListSerializer(pages, many=True)
+    return Response(serializer.data)
+
 
 @extend_schema(
     responses={200: PagePublicSerializer},

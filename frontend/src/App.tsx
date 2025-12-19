@@ -54,6 +54,7 @@ import {
   FeedPage,
   FeedArticleEditorPage,
   FeedPostDetailPage,
+  SubscriptionsPage,
   // CMS Dashboard Pages
   CMSOverviewPage,
   CMSPagesListPage,
@@ -212,6 +213,7 @@ function App() {
           <Route path="admin/jobs" element={<AdminJobsPage />} />
           <Route path="admin/jobs/new" element={<AdminNewJobPage />} />
           <Route path="admin/analytics" element={<AnalyticsPage />} />
+          <Route path="admin/subscriptions" element={<SubscriptionsPage />} />
           {/* Redirect old admin/applications URL */}
           <Route path="admin/applications" element={<Navigate to="/dashboard/applications" replace />} />
           {/* CMS Dashboard routes with CMSLayout */}

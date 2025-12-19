@@ -37,6 +37,11 @@ class CompanyUserRole(models.TextChoices):
     VIEWER = 'viewer', 'Viewer'
 
 
+class ServiceType(models.TextChoices):
+    HEADHUNTING = 'headhunting', 'Headhunting'
+    RETAINED = 'retained', 'Retained'
+
+
 class Country(models.Model):
     """Countries for company headquarters location."""
     name = models.CharField(max_length=100, unique=True)
@@ -203,6 +208,15 @@ class Company(models.Model):
     is_platform = models.BooleanField(
         default=False,
         help_text='If true, this is the platform company. Staff (admin/recruiter) users are automatically added as members.',
+    )
+
+    # Service/Package type
+    service_type = models.CharField(
+        max_length=20,
+        choices=ServiceType.choices,
+        null=True,
+        blank=True,
+        help_text='The recruitment service package for this company (Headhunting or Retained)',
     )
 
     # Meta

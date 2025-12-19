@@ -252,7 +252,7 @@ export function buildJobSEOData(job: {
     senior: 'Senior',
     lead: 'Lead',
     principal: 'Principal',
-    executive: 'Executive',
+    executive: 'Executive / C-Suite',
   }
 
   return {
@@ -294,7 +294,7 @@ export function buildCandidateSEOData(candidate: {
     senior: 'Senior',
     lead: 'Lead',
     principal: 'Principal',
-    executive: 'Executive',
+    executive: 'Executive / C-Suite',
   }
 
   // Format work preference

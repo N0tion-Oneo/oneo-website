@@ -13,6 +13,13 @@ class LegalDocumentType(models.TextChoices):
     OTHER = 'other', 'Other Legal Document'
 
 
+class ServiceTypeApplicability(models.TextChoices):
+    """Which service types a legal document applies to."""
+    ALL = 'all', 'All Service Types'
+    RETAINED = 'retained', 'Retained Only'
+    HEADHUNTING = 'headhunting', 'Headhunting Only'
+
+
 class Page(SluggedModel, SEOFields, PublishableModel, BlockContentModel):
     """
     Legal documents like Terms & Conditions, Privacy Policy, etc.
@@ -29,6 +36,14 @@ class Page(SluggedModel, SEOFields, PublishableModel, BlockContentModel):
         max_length=20,
         choices=LegalDocumentType.choices,
         default=LegalDocumentType.OTHER,
+    )
+
+    # Service type applicability - which service types this document applies to
+    service_type = models.CharField(
+        max_length=20,
+        choices=ServiceTypeApplicability.choices,
+        default=ServiceTypeApplicability.ALL,
+        help_text="Which service types this legal document applies to",
     )
 
     # Version tracking for legal documents

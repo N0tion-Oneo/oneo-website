@@ -86,7 +86,7 @@ class Job(models.Model):
             ('senior', 'Senior'),
             ('lead', 'Lead'),
             ('principal', 'Principal'),
-            ('executive', 'Executive'),
+            ('executive', 'Executive / C-Suite'),
         ],
         blank=True,
     )
@@ -239,6 +239,11 @@ class Job(models.Model):
 
     def __str__(self):
         return f"{self.title} at {self.company.name}"
+
+    @property
+    def is_csuite(self):
+        """Check if this is a C-Suite/Executive level position."""
+        return self.seniority == 'executive'
 
     def publish(self):
         """Publish the job listing."""

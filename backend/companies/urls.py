@@ -11,6 +11,7 @@ urlpatterns = [
     # My company endpoints
     path('my/', views.get_my_company, name='get-my-company'),
     path('my/update/', views.update_my_company, name='update-my-company'),
+    path('my/features/', views.get_company_features, name='get-company-features'),
 
     # Company users management
     path('my/users/', views.list_company_users, name='list-company-users'),

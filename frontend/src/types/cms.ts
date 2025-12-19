@@ -18,6 +18,12 @@ export enum LegalDocumentType {
   OTHER = 'other',
 }
 
+export enum ServiceTypeApplicability {
+  ALL = 'all',
+  RETAINED = 'retained',
+  HEADHUNTING = 'headhunting',
+}
+
 export const ContentStatusLabels: Record<ContentStatus, string> = {
   [ContentStatus.DRAFT]: 'Draft',
   [ContentStatus.PUBLISHED]: 'Published',
@@ -30,6 +36,12 @@ export const LegalDocumentTypeLabels: Record<LegalDocumentType, string> = {
   [LegalDocumentType.COOKIES]: 'Cookie Policy',
   [LegalDocumentType.ACCEPTABLE_USE]: 'Acceptable Use Policy',
   [LegalDocumentType.OTHER]: 'Other Legal Document',
+}
+
+export const ServiceTypeApplicabilityLabels: Record<ServiceTypeApplicability, string> = {
+  [ServiceTypeApplicability.ALL]: 'All Service Types',
+  [ServiceTypeApplicability.RETAINED]: 'Retained Only',
+  [ServiceTypeApplicability.HEADHUNTING]: 'Headhunting Only',
 }
 
 // Legacy alias
@@ -61,6 +73,7 @@ export interface CMSLegalDocument {
   title: string
   slug: string
   document_type: LegalDocumentType
+  service_type: ServiceTypeApplicability
   content: EditorJSData
   // Version tracking
   version: string
@@ -85,6 +98,7 @@ export interface CMSLegalDocumentInput {
   title: string
   slug?: string
   document_type?: LegalDocumentType
+  service_type?: ServiceTypeApplicability
   content?: EditorJSData
   version?: string
   effective_date?: string | null
@@ -100,6 +114,7 @@ export interface CMSLegalDocumentListItem {
   title: string
   slug: string
   document_type: LegalDocumentType
+  service_type: ServiceTypeApplicability
   status: ContentStatus
   version: string
   effective_date: string | null

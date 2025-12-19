@@ -7,6 +7,7 @@ import FullPipelineTimeline from './FullPipelineTimeline'
 import ScheduleInterviewModal from './ScheduleInterviewModal'
 import AssignAssessmentModal from './AssignAssessmentModal'
 import InterviewModeView from './InterviewModeView'
+import OfferForm, { getEmptyOfferDetails } from './OfferForm'
 import { ApplicationStatus, RejectionReason, RejectionReasonLabels, QuestionType, StageTypeConfig } from '@/types'
 import api from '@/services/api'
 import type { Application, InterviewStage, OfferDetails, ApplicationAnswer, ApplicationStageInstance } from '@/types'
@@ -93,14 +94,7 @@ export default function ApplicationDrawer({
   const stageDropdownRef = useRef<HTMLDivElement>(null)
 
   // Offer form state
-  const [offerDetails, setOfferDetails] = useState<OfferDetails>({
-    salary: null,
-    currency: 'ZAR',
-    start_date: null,
-    notes: '',
-    benefits: '',
-    equity: '',
-  })
+  const [offerDetails, setOfferDetails] = useState<OfferDetails>(getEmptyOfferDetails())
 
   // Accept offer form state
   const [finalOfferDetails, setFinalOfferDetails] = useState<OfferDetails>({})
@@ -196,7 +190,7 @@ export default function ApplicationDrawer({
     setActionError(null)
     try {
       await onMakeOffer(applicationId, offerDetails)
-      setOfferDetails({ salary: null, currency: 'ZAR', start_date: null, notes: '', benefits: '', equity: '' })
+      setOfferDetails(getEmptyOfferDetails())
       setActiveTab('profile')
       onClose()
     } catch (err) {
@@ -286,7 +280,7 @@ export default function ApplicationDrawer({
       />
 
       {/* Drawer - 50% width */}
-      <div className="fixed inset-y-0 right-0 w-1/2 min-w-[500px] bg-white shadow-xl z-[201] flex flex-col">
+      <div className="fixed inset-y-0 right-0 w-1/2 min-w-[640px] bg-white shadow-xl z-[201] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div>
@@ -669,12 +663,12 @@ function OfferTab({
   const handleStartEdit = () => {
     if (existingOffer) {
       setOfferDetails({
-        salary: existingOffer.salary || null,
+        annual_salary: existingOffer.annual_salary || null,
         currency: existingOffer.currency || 'ZAR',
         start_date: existingOffer.start_date || null,
         notes: existingOffer.notes || '',
-        benefits: existingOffer.benefits || '',
-        equity: existingOffer.equity || '',
+        benefits: existingOffer.benefits || [],
+        equity: existingOffer.equity || null,
       })
     }
     setIsEditing(true)
@@ -682,7 +676,7 @@ function OfferTab({
 
   const handleCancelEdit = () => {
     setIsEditing(false)
-    setOfferDetails({ salary: null, currency: 'ZAR', start_date: null, notes: '', benefits: '', equity: '' })
+    setOfferDetails(getEmptyOfferDetails())
   }
 
   const handleSaveEdit = async () => {
@@ -705,8 +699,21 @@ function OfferTab({
     return `${symbol}${salary.toLocaleString()}`
   }
 
+  // Calculate totals for offer display
+  const calcOfferTotals = (offer: OfferDetails | null) => {
+    if (!offer) return { totalBenefits: 0, year1Equity: 0, totalCost: 0 }
+    const benefits = offer.benefits || []
+    const equity = offer.equity
+    const totalBenefits = benefits.reduce((sum, b) => sum + (b.annual_cost || 0), 0)
+    const year1Equity = equity && equity.shares && equity.share_value && equity.vesting_years
+      ? (equity.shares * equity.share_value) / equity.vesting_years
+      : 0
+    const annualSalary = offer.annual_salary || 0
+    return { totalBenefits, year1Equity, totalCost: annualSalary + totalBenefits + year1Equity }
+  }
+
   // Determine which offer to display
-  const displayOffer = isAccepted && finalOffer?.salary ? finalOffer : existingOffer
+  const displayOffer = isAccepted && finalOffer?.annual_salary ? finalOffer : existingOffer
 
   // ============================================================================
   // MAKE OFFER MODE (no existing offer)
@@ -833,48 +840,107 @@ function OfferTab({
       )}
 
       {/* Offer Details */}
-      <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
-        <div className="p-4">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Salary</p>
-          <p className="text-[18px] font-semibold text-gray-900">
-            {formatSalary(displayOffer?.salary, displayOffer?.currency)}
-            {displayOffer?.currency && <span className="text-[14px] text-gray-500 ml-1">{displayOffer.currency}</span>}
-          </p>
-        </div>
+      {(() => {
+        const totals = calcOfferTotals(displayOffer)
+        const benefits = displayOffer?.benefits || []
+        const equity = displayOffer?.equity
+        const currency = displayOffer?.currency || 'ZAR'
+        const currencySymbol = CURRENCY_SYMBOLS[currency] || currency
 
-        <div className="p-4">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Start Date</p>
-          <p className="text-[14px] text-gray-900">{formatDisplayDate(displayOffer?.start_date)}</p>
-        </div>
+        return (
+          <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
+            <div className="p-4">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Annual Salary</p>
+              <p className="text-[18px] font-semibold text-gray-900">
+                {formatSalary(displayOffer?.annual_salary, displayOffer?.currency)}
+                {displayOffer?.currency && <span className="text-[14px] text-gray-500 ml-1">{displayOffer.currency}</span>}
+              </p>
+            </div>
 
-        {displayOffer?.benefits && (
-          <div className="p-4">
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Benefits</p>
-            <p className="text-[14px] text-gray-700 whitespace-pre-wrap">{displayOffer.benefits}</p>
+            <div className="p-4">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Start Date</p>
+              <p className="text-[14px] text-gray-900">{formatDisplayDate(displayOffer?.start_date)}</p>
+            </div>
+
+            {benefits.length > 0 && (
+              <div className="p-4">
+                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Benefits</p>
+                <div className="space-y-1.5">
+                  {benefits.map((benefit, idx) => (
+                    <div key={idx} className="flex justify-between text-[14px]">
+                      <span className="text-gray-700">{benefit.name}</span>
+                      <span className="text-gray-500">{currencySymbol}{benefit.annual_cost.toLocaleString()}/yr</span>
+                    </div>
+                  ))}
+                  <div className="pt-1.5 border-t border-gray-100 flex justify-between text-[13px] font-medium">
+                    <span className="text-gray-600">Total Benefits</span>
+                    <span className="text-gray-900">{currencySymbol}{totals.totalBenefits.toLocaleString()}/yr</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {equity && equity.shares > 0 && (
+              <div className="p-4">
+                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Equity</p>
+                <div className="grid grid-cols-3 gap-4 text-[13px]">
+                  <div>
+                    <p className="text-gray-500">Shares</p>
+                    <p className="text-gray-900 font-medium">{equity.shares.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Share Value</p>
+                    <p className="text-gray-900 font-medium">{currencySymbol}{equity.share_value.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Vesting</p>
+                    <p className="text-gray-900 font-medium">{equity.vesting_years} years</p>
+                  </div>
+                </div>
+                <div className="mt-3 pt-2 border-t border-gray-100 space-y-1 text-[13px]">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Total Equity Value</span>
+                    <span className="text-gray-700">{currencySymbol}{(equity.shares * equity.share_value).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Year 1 Value</span>
+                    <span className="text-gray-700">{currencySymbol}{totals.year1Equity.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {displayOffer?.notes && (
+              <div className="p-4">
+                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Notes</p>
+                <p className="text-[14px] text-gray-700 whitespace-pre-wrap">{displayOffer.notes}</p>
+              </div>
+            )}
+
+            {/* Total Cost to Company */}
+            {totals.totalCost > 0 && (
+              <div className="p-4 bg-gray-50">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Cost to Company</p>
+                    <p className="text-[11px] text-gray-400">(Year 1, including vested equity)</p>
+                  </div>
+                  <p className="text-[18px] font-semibold text-gray-900">
+                    {currencySymbol}{totals.totalCost.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-
-        {displayOffer?.equity && (
-          <div className="p-4">
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Equity</p>
-            <p className="text-[14px] text-gray-700">{displayOffer.equity}</p>
-          </div>
-        )}
-
-        {displayOffer?.notes && (
-          <div className="p-4">
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Notes</p>
-            <p className="text-[14px] text-gray-700 whitespace-pre-wrap">{displayOffer.notes}</p>
-          </div>
-        )}
-      </div>
+        )
+      })()}
 
       {/* Show original offer if accepted with different final offer */}
-      {isAccepted && finalOffer?.salary && existingOffer?.salary && finalOffer.salary !== existingOffer.salary && (
+      {isAccepted && finalOffer?.annual_salary && existingOffer?.annual_salary && finalOffer.annual_salary !== existingOffer.annual_salary && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
           <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Original Offer</p>
           <p className="text-[14px] text-gray-600">
-            {formatSalary(existingOffer.salary, existingOffer.currency)} {existingOffer.currency}
+            {formatSalary(existingOffer.annual_salary, existingOffer.currency)} {existingOffer.currency}
           </p>
         </div>
       )}
@@ -896,91 +962,6 @@ function OfferTab({
           </button>
         </div>
       )}
-    </div>
-  )
-}
-
-// ============================================================================
-// Offer Form (reusable form fields)
-// ============================================================================
-
-function OfferForm({
-  offerDetails,
-  setOfferDetails,
-}: {
-  offerDetails: OfferDetails
-  setOfferDetails: (details: OfferDetails) => void
-}) {
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-[13px] font-medium text-gray-700 mb-1">Salary</label>
-          <input
-            type="number"
-            value={offerDetails.salary || ''}
-            onChange={(e) => setOfferDetails({ ...offerDetails, salary: e.target.value ? parseInt(e.target.value) : null })}
-            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-            placeholder="e.g., 50000"
-          />
-        </div>
-        <div>
-          <label className="block text-[13px] font-medium text-gray-700 mb-1">Currency</label>
-          <select
-            value={offerDetails.currency}
-            onChange={(e) => setOfferDetails({ ...offerDetails, currency: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-          >
-            <option value="ZAR">ZAR (R)</option>
-            <option value="USD">USD ($)</option>
-            <option value="EUR">EUR (€)</option>
-            <option value="GBP">GBP (£)</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-[13px] font-medium text-gray-700 mb-1">Start Date</label>
-        <input
-          type="date"
-          value={offerDetails.start_date || ''}
-          onChange={(e) => setOfferDetails({ ...offerDetails, start_date: e.target.value || null })}
-          className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-        />
-      </div>
-
-      <div>
-        <label className="block text-[13px] font-medium text-gray-700 mb-1">Benefits</label>
-        <textarea
-          value={offerDetails.benefits}
-          onChange={(e) => setOfferDetails({ ...offerDetails, benefits: e.target.value })}
-          rows={2}
-          className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-          placeholder="e.g., Medical aid, pension, etc."
-        />
-      </div>
-
-      <div>
-        <label className="block text-[13px] font-medium text-gray-700 mb-1">Equity</label>
-        <input
-          type="text"
-          value={offerDetails.equity}
-          onChange={(e) => setOfferDetails({ ...offerDetails, equity: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-          placeholder="e.g., 0.5% over 4 years"
-        />
-      </div>
-
-      <div>
-        <label className="block text-[13px] font-medium text-gray-700 mb-1">Notes</label>
-        <textarea
-          value={offerDetails.notes}
-          onChange={(e) => setOfferDetails({ ...offerDetails, notes: e.target.value })}
-          rows={2}
-          className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-          placeholder="Any additional notes about the offer..."
-        />
-      </div>
     </div>
   )
 }

@@ -6,7 +6,7 @@
  * - Right: Jobs sidebar
  */
 import { useState } from 'react'
-import { useFeed } from '@/hooks'
+import { useFeed, useCompanyFeatures } from '@/hooks'
 import { FeedList, CreatePostModal, JobsSidebar } from '@/components/feed'
 import { FeedPostType } from '@/types'
 import { useAuth } from '@/contexts/AuthContext'
@@ -22,6 +22,7 @@ export default function FeedPage() {
   const { user } = useAuth()
   const [activeFilter, setActiveFilter] = useState<'all' | FeedPostType.ARTICLE | FeedPostType.UPDATE>('all')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const { hasFeature } = useCompanyFeatures()
 
   // Fetch feed excluding job announcements (those go in sidebar)
   const { posts, isLoading, error, hasMore, loadMore, refetch } = useFeed({
@@ -36,10 +37,13 @@ export default function FeedPage() {
     setActiveFilter(filter)
   }
 
-  // Check if user can create posts (clients or staff)
-  const canCreatePost = user?.role === UserRole.CLIENT ||
-    user?.role === UserRole.ADMIN ||
-    user?.role === UserRole.RECRUITER
+  // Check if user can create posts
+  // - Staff (admin/recruiter) can always create posts
+  // - Clients can only create posts if they have the "Employer Branding" feature
+  const isStaff = user?.role === UserRole.ADMIN || user?.role === UserRole.RECRUITER
+  const isClient = user?.role === UserRole.CLIENT
+  const hasEmployerBranding = hasFeature('Employer Branding')
+  const canCreatePost = isStaff || (isClient && hasEmployerBranding)
 
   return (
     <div className="max-w-5xl mx-auto">

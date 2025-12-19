@@ -35,7 +35,7 @@ const seniorityOptions = [
   { value: Seniority.SENIOR, label: 'Senior' },
   { value: Seniority.LEAD, label: 'Lead' },
   { value: Seniority.PRINCIPAL, label: 'Principal' },
-  { value: Seniority.EXECUTIVE, label: 'Executive' },
+  { value: Seniority.EXECUTIVE, label: 'Executive / C-Suite' },
 ]
 
 const jobTypeOptions = [

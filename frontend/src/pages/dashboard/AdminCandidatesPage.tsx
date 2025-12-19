@@ -61,7 +61,7 @@ const SENIORITY_OPTIONS = [
   { value: 'senior', label: 'Senior' },
   { value: 'lead', label: 'Lead' },
   { value: 'principal', label: 'Principal' },
-  { value: 'executive', label: 'Executive' },
+  { value: 'executive', label: 'Executive / C-Suite' },
 ]
 
 const WORK_PREFERENCE_OPTIONS = [

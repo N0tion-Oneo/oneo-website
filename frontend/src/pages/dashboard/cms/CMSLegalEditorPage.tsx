@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { useSEODefaults } from '@/contexts/SEOContext'
 import { BlockEditor, type BlockEditorHandle } from '@/components/cms'
-import { UserRole, ContentStatus, LegalDocumentType, LegalDocumentTypeLabels } from '@/types'
+import { UserRole, ContentStatus, LegalDocumentType, LegalDocumentTypeLabels, ServiceTypeApplicability, ServiceTypeApplicabilityLabels } from '@/types'
 import type { CMSLegalDocumentInput, EditorJSData } from '@/types'
 import {
   ArrowLeft,
@@ -26,6 +26,11 @@ const STATUS_OPTIONS = [
 
 const DOCUMENT_TYPE_OPTIONS = Object.entries(LegalDocumentTypeLabels).map(([value, label]) => ({
   value: value as LegalDocumentType,
+  label,
+}))
+
+const SERVICE_TYPE_OPTIONS = Object.entries(ServiceTypeApplicabilityLabels).map(([value, label]) => ({
+  value: value as ServiceTypeApplicability,
   label,
 }))
 
@@ -51,6 +56,7 @@ export default function CMSLegalEditorPage() {
     title: '',
     slug: '',
     document_type: LegalDocumentType.OTHER,
+    service_type: ServiceTypeApplicability.ALL,
     version: '',
     effective_date: null,
     meta_title: '',
@@ -74,6 +80,7 @@ export default function CMSLegalEditorPage() {
         title: document.title,
         slug: document.slug,
         document_type: document.document_type,
+        service_type: document.service_type,
         version: document.version || '',
         effective_date: document.effective_date,
         meta_title: document.meta_title,
@@ -325,6 +332,27 @@ export default function CMSLegalEditorPage() {
                 </select>
               </div>
 
+              {/* Service Type Applicability */}
+              <div className="mb-4">
+                <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  Applies To
+                </label>
+                <select
+                  value={formData.service_type}
+                  onChange={(e) => handleChange('service_type', e.target.value)}
+                  className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                >
+                  {SERVICE_TYPE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Which service types require this document when changing plans
+                </p>
+              </div>
+
               {/* Slug */}
               <div className="mb-4">
                 <label className="block text-[12px] font-medium text-gray-700 mb-1">
@@ -412,7 +440,7 @@ export default function CMSLegalEditorPage() {
                     className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 resize-none"
                   />
                   <span className="text-[10px] text-gray-400 mt-1">
-                    {formData.meta_description.length}/160
+                    {(formData.meta_description || '').length}/160
                   </span>
                 </div>
               </div>

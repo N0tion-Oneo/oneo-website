@@ -33,7 +33,7 @@ import ApplicationFilterPanel, {
 import ApplicationBulkActions from '@/components/applications/ApplicationBulkActions'
 import ApplicationDrawer from '@/components/applications/ApplicationDrawer'
 import ApplicationKanbanBoard from '@/components/applications/ApplicationKanbanBoard'
-import { ScheduleInterviewModal, AssignAssessmentModal } from '@/components/applications'
+import { ScheduleInterviewModal, AssignAssessmentModal, OfferForm, getEmptyOfferDetails } from '@/components/applications'
 import { AssignedSelect } from '@/components/forms'
 import api from '@/services/api'
 import type { AssignedUser } from '@/types'
@@ -159,14 +159,7 @@ export default function AdminApplicationsPage() {
   // Form states
   const [rejectionReason, setRejectionReason] = useState<RejectionReason | ''>('')
   const [rejectionFeedback, setRejectionFeedback] = useState('')
-  const [offerDetails, setOfferDetails] = useState<OfferDetails>({
-    salary: null,
-    currency: 'ZAR',
-    start_date: null,
-    notes: '',
-    benefits: '',
-    equity: '',
-  })
+  const [offerDetails, setOfferDetails] = useState<OfferDetails>(getEmptyOfferDetails())
   const [finalOfferDetails, setFinalOfferDetails] = useState<OfferDetails>({})
   const [actionError, setActionError] = useState<string | null>(null)
 
@@ -381,7 +374,7 @@ export default function AdminApplicationsPage() {
       )
       await makeOffer(offerModal.applicationId, { offer_details: offerDetails })
       setOfferModal(null)
-      setOfferDetails({ salary: null, currency: 'ZAR', start_date: null, notes: '', benefits: '', equity: '' })
+      setOfferDetails(getEmptyOfferDetails())
       refetch()
     } catch (err) {
       setActionError((err as Error).message)
@@ -1230,93 +1223,25 @@ export default function AdminApplicationsPage() {
       {/* Make Offer Modal */}
       {offerModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-[16px] font-medium text-gray-900">Make Offer</h3>
               <p className="text-[13px] text-gray-500 mt-1">Enter the offer details for this candidate</p>
             </div>
-            <div className="px-6 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+            <div className="px-6 py-4 max-h-[60vh] overflow-y-auto">
               {actionError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2 mb-4">
                   <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-red-700">{actionError}</p>
                 </div>
               )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1">Salary</label>
-                  <input
-                    type="number"
-                    value={offerDetails.salary || ''}
-                    onChange={(e) => setOfferDetails({ ...offerDetails, salary: e.target.value ? parseInt(e.target.value) : null })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-                    placeholder="e.g., 50000"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1">Currency</label>
-                  <select
-                    value={offerDetails.currency}
-                    onChange={(e) => setOfferDetails({ ...offerDetails, currency: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  >
-                    <option value="ZAR">ZAR (R)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (E)</option>
-                    <option value="GBP">GBP (P)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1">Start Date</label>
-                <input
-                  type="date"
-                  value={offerDetails.start_date || ''}
-                  onChange={(e) => setOfferDetails({ ...offerDetails, start_date: e.target.value || null })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1">Benefits</label>
-                <textarea
-                  value={offerDetails.benefits}
-                  onChange={(e) => setOfferDetails({ ...offerDetails, benefits: e.target.value })}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  placeholder="e.g., Medical aid, pension, etc."
-                />
-              </div>
-
-              <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1">Equity</label>
-                <input
-                  type="text"
-                  value={offerDetails.equity}
-                  onChange={(e) => setOfferDetails({ ...offerDetails, equity: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  placeholder="e.g., 0.5% over 4 years"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1">Notes</label>
-                <textarea
-                  value={offerDetails.notes}
-                  onChange={(e) => setOfferDetails({ ...offerDetails, notes: e.target.value })}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  placeholder="Any additional notes about the offer..."
-                />
-              </div>
+              <OfferForm offerDetails={offerDetails} setOfferDetails={setOfferDetails} />
             </div>
             <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
               <button
                 onClick={() => {
                   setOfferModal(null)
-                  setOfferDetails({ salary: null, currency: 'ZAR', start_date: null, notes: '', benefits: '', equity: '' })
+                  setOfferDetails(getEmptyOfferDetails())
                   setActionError(null)
                 }}
                 disabled={isProcessing}
@@ -1362,11 +1287,11 @@ export default function AdminApplicationsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1">Final Salary</label>
+                  <label className="block text-[13px] font-medium text-gray-700 mb-1">Final Annual Salary</label>
                   <input
                     type="number"
-                    value={finalOfferDetails.salary || ''}
-                    onChange={(e) => setFinalOfferDetails({ ...finalOfferDetails, salary: e.target.value ? parseInt(e.target.value) : null })}
+                    value={finalOfferDetails.annual_salary || ''}
+                    onChange={(e) => setFinalOfferDetails({ ...finalOfferDetails, annual_salary: e.target.value ? parseInt(e.target.value) : null })}
                     className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
                     placeholder="Leave blank to use original"
                   />

@@ -889,7 +889,8 @@ function ActivityEntry({
           const rejectionReason = activity.metadata?.rejection_reason as string | undefined
           const rejectionFeedback = activity.metadata?.rejection_feedback as string | undefined
           const offerDetails = activity.metadata?.offer_details as Record<string, unknown> | undefined
-          const hasContent = rejectionReason || rejectionFeedback || (offerDetails && offerDetails.salary)
+          const offerSalary = offerDetails?.annual_salary
+          const hasContent = rejectionReason || rejectionFeedback || (offerDetails && offerSalary)
 
           if (!hasContent) return null
 
@@ -907,12 +908,12 @@ function ActivityEntry({
                   {rejectionFeedback}
                 </p>
               )}
-              {offerDetails && offerDetails.salary != null && (
+              {offerDetails && offerSalary != null && (
                 <div>
                   <p>
-                    <span className="font-medium">Salary:</span>{' '}
+                    <span className="font-medium">Annual Salary:</span>{' '}
                     {String(offerDetails.currency || 'ZAR')}{' '}
-                    {Number(offerDetails.salary).toLocaleString()}
+                    {Number(offerSalary).toLocaleString()}
                   </p>
                 </div>
               )}

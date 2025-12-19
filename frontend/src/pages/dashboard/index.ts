@@ -47,3 +47,6 @@ export { default as AnalyticsPage } from './AnalyticsPage';
 export { default as FeedPage } from './FeedPage';
 export { default as FeedArticleEditorPage } from './FeedArticleEditorPage';
 export { default as FeedPostDetailPage } from './FeedPostDetailPage';
+
+// Subscriptions Management
+export { default as SubscriptionsPage } from './SubscriptionsPage';

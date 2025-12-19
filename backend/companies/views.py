@@ -162,6 +162,84 @@ def update_my_company(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_company_features(request):
+    """
+    Get features available for the user's company based on service type.
+
+    Returns a list of feature names that are included for the company's
+    service type (headhunting or retained), with company-specific overrides applied.
+
+    Feature resolution order:
+    1. Start with service type defaults (included_in_headhunting or included_in_retained)
+    2. Apply company-specific overrides (CompanyFeatureOverride):
+       - is_enabled=True: Enable feature even if not in service type default
+       - is_enabled=False: Disable feature even if in service type default
+    """
+    from cms.models.pricing import PricingFeature
+    from subscriptions.models import CompanyFeatureOverride
+
+    company = get_user_company(request.user)
+    if not company:
+        return Response({
+            'service_type': None,
+            'service_type_display': None,
+            'features': [],
+        })
+
+    if not company.service_type:
+        return Response({
+            'service_type': None,
+            'service_type_display': None,
+            'features': [],
+        })
+
+    # Get all active features
+    all_features = PricingFeature.objects.filter(is_active=True).order_by('order', 'name')
+
+    # Determine which features are enabled by default based on service type
+    if company.service_type == 'headhunting':
+        default_feature_ids = set(
+            all_features.filter(included_in_headhunting=True).values_list('id', flat=True)
+        )
+    else:  # retained
+        default_feature_ids = set(
+            all_features.filter(included_in_retained=True).values_list('id', flat=True)
+        )
+
+    # Get company-specific overrides
+    overrides = CompanyFeatureOverride.objects.filter(company=company).select_related('feature')
+    override_map = {override.feature_id: override.is_enabled for override in overrides}
+
+    # Build final feature list with overrides applied
+    enabled_feature_ids = set()
+    for feature in all_features:
+        if feature.id in override_map:
+            # Override exists - use the override value
+            if override_map[feature.id]:
+                enabled_feature_ids.add(feature.id)
+        elif feature.id in default_feature_ids:
+            # No override - use service type default
+            enabled_feature_ids.add(feature.id)
+
+    # Get the actual feature objects for enabled features, maintaining order
+    enabled_features = [f for f in all_features if f.id in enabled_feature_ids]
+
+    return Response({
+        'service_type': company.service_type,
+        'service_type_display': company.get_service_type_display() if company.service_type else None,
+        'features': [
+            {
+                'id': str(f.id),
+                'name': f.name,
+                'category': f.category,
+            }
+            for f in enabled_features
+        ],
+    })
+
+
 # =============================================================================
 # Company Users Management
 # =============================================================================

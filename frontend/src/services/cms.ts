@@ -61,7 +61,7 @@ function toFormData(data: Record<string, unknown>): FormData {
 
 export const cmsPages = {
   // Admin
-  list: async (params?: { page_type?: string; status?: string }): Promise<CMSPageListItem[]> => {
+  list: async (params?: { document_type?: string; service_type?: string; status?: string }): Promise<CMSPageListItem[]> => {
     const { data } = await api.get(`${CMS_BASE}/admin/pages/`, { params });
     return data;
   },
@@ -95,6 +95,10 @@ export const cmsPages = {
     await api.delete(`${CMS_BASE}/admin/pages/${id}/delete/`);
   },
   // Public
+  listPublic: async (params?: { service_type?: string }): Promise<CMSPageListItem[]> => {
+    const { data } = await api.get(`${CMS_BASE}/pages/`, { params });
+    return data;
+  },
   getBySlug: async (slug: string): Promise<CMSPage> => {
     const { data } = await api.get(`${CMS_BASE}/pages/${slug}/`);
     return data;

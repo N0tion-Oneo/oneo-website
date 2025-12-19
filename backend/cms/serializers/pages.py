@@ -7,7 +7,7 @@ class LegalDocumentListSerializer(serializers.ModelSerializer):
     """Minimal serializer for legal document listings."""
     class Meta:
         model = Page
-        fields = ['id', 'title', 'slug', 'document_type', 'status', 'version', 'effective_date', 'updated_at']
+        fields = ['id', 'title', 'slug', 'document_type', 'service_type', 'status', 'version', 'effective_date', 'updated_at']
 
 
 class LegalDocumentDetailSerializer(serializers.ModelSerializer):
@@ -18,7 +18,7 @@ class LegalDocumentDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
         fields = [
-            'id', 'title', 'slug', 'document_type', 'content',
+            'id', 'title', 'slug', 'document_type', 'service_type', 'content',
             'version', 'effective_date',
             'meta_title', 'meta_description', 'og_image',
             'status', 'published_at',
@@ -43,7 +43,7 @@ class LegalDocumentCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
         fields = [
-            'title', 'slug', 'document_type', 'content',
+            'title', 'slug', 'document_type', 'service_type', 'content',
             'version', 'effective_date',
             'meta_title', 'meta_description', 'og_image',
             'status', 'published_at',
@@ -61,7 +61,7 @@ class LegalDocumentPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
         fields = [
-            'title', 'slug', 'document_type', 'content',
+            'title', 'slug', 'document_type', 'service_type', 'content',
             'version', 'effective_date',
             'meta_title', 'meta_description', 'og_image', 'published_at',
         ]

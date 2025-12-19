@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'resume_parser',
     'cms',
     'feed',
+    'subscriptions',
 ]
 
 MIDDLEWARE = [
@@ -318,11 +319,19 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULE = {
     'send-interview-reminders': {
         'task': 'jobs.send_interview_reminders',
-        'schedule': 60 * 60 * 24,  # Daily (run at 9 AM via crontab in production)
+        'schedule': 60 * 60 * 24,  # Daily
     },
     'send-assessment-deadline-reminders': {
         'task': 'jobs.send_assessment_deadline_reminders',
         'schedule': 60 * 60 * 24,  # Daily
+    },
+    'generate-retainer-invoices': {
+        'task': 'subscriptions.generate_retainer_invoices',
+        'schedule': 60 * 60 * 24,  # Daily - generates invoices for subscriptions billing today
+    },
+    'update-overdue-invoices': {
+        'task': 'subscriptions.update_overdue_invoices',
+        'schedule': 60 * 60 * 24,  # Daily - marks past-due invoices as overdue
     },
 }
 

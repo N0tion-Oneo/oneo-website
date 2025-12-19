@@ -5,6 +5,7 @@ import type {
   CandidateApplication,
   ApplicationListItem,
   ApplicationStatus,
+  OfferDetails,
 } from '@/types'
 
 // ============================================================================
@@ -308,17 +309,8 @@ export function useRejectApplication(): UseRejectApplicationReturn {
 // Make Offer Hook
 // ============================================================================
 
-interface OfferDetailsInput {
-  salary?: number | null
-  currency?: string
-  start_date?: string | null
-  notes?: string
-  benefits?: string
-  equity?: string
-}
-
 interface MakeOfferInput {
-  offer_details: OfferDetailsInput
+  offer_details: OfferDetails
 }
 
 interface UseMakeOfferReturn {
@@ -360,7 +352,7 @@ export function useMakeOffer(): UseMakeOfferReturn {
 // ============================================================================
 
 interface AcceptOfferInput {
-  final_offer_details?: OfferDetailsInput
+  final_offer_details?: OfferDetails
   notes?: string
 }
 

@@ -45,6 +45,28 @@ def get_user_company(user):
     return membership.company if membership else None
 
 
+def company_has_employer_branding(company):
+    """Check if the company has access to Employer Branding feature based on service type."""
+    if not company or not company.service_type:
+        return False
+
+    from cms.models.pricing import PricingFeature
+
+    # Check if Employer Branding feature is included for this service type
+    if company.service_type == 'headhunting':
+        return PricingFeature.objects.filter(
+            name='Employer Branding',
+            is_active=True,
+            included_in_headhunting=True
+        ).exists()
+    else:  # retained
+        return PricingFeature.objects.filter(
+            name='Employer Branding',
+            is_active=True,
+            included_in_retained=True
+        ).exists()
+
+
 def can_user_create_post(user, company=None):
     """Check if user can create a post for a company."""
     # Staff can create posts for any company
@@ -55,6 +77,10 @@ def can_user_create_post(user, company=None):
     if is_client_user(user):
         user_company = get_user_company(user)
         if user_company and (company is None or company.id == user_company.id):
+            # Check if company has Employer Branding feature
+            if not company_has_employer_branding(user_company):
+                return False
+
             # Check if user has editor or admin role in company
             membership = user.company_memberships.filter(company=user_company).first()
             if membership and membership.role in [CompanyUserRole.ADMIN, CompanyUserRole.EDITOR]:

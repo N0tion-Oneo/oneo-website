@@ -416,6 +416,7 @@ interface CreateCompanyInput {
   company_size?: string
   headquarters_city?: string
   headquarters_country?: string
+  service_type: 'headhunting' | 'retained'
 }
 
 interface UseCreateCompanyReturn {

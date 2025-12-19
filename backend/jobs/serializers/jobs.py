@@ -26,6 +26,7 @@ class JobListSerializer(serializers.ModelSerializer):
     assigned_recruiters = UserProfileSerializer(many=True, read_only=True)
     hired_count = serializers.IntegerField(read_only=True)
     remaining_positions = serializers.IntegerField(read_only=True)
+    is_csuite = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Job
@@ -53,6 +54,7 @@ class JobListSerializer(serializers.ModelSerializer):
             'technologies',
             'assigned_recruiters',
             'positions_to_fill',
+            'is_csuite',
             'hired_count',
             'remaining_positions',
             'views_count',
@@ -61,7 +63,7 @@ class JobListSerializer(serializers.ModelSerializer):
             'application_deadline',
             'created_at',
         ]
-        read_only_fields = ['id', 'slug', 'created_at', 'views_count', 'applications_count', 'hired_count', 'remaining_positions']
+        read_only_fields = ['id', 'slug', 'created_at', 'views_count', 'applications_count', 'hired_count', 'remaining_positions', 'is_csuite']
 
 
 class JobDetailSerializer(serializers.ModelSerializer):
@@ -82,6 +84,7 @@ class JobDetailSerializer(serializers.ModelSerializer):
     hired_count = serializers.IntegerField(read_only=True)
     remaining_positions = serializers.IntegerField(read_only=True)
     is_fully_filled = serializers.BooleanField(read_only=True)
+    is_csuite = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Job
@@ -119,6 +122,7 @@ class JobDetailSerializer(serializers.ModelSerializer):
             'interview_stages',
             'questions',
             'positions_to_fill',
+            'is_csuite',
             'hired_count',
             'remaining_positions',
             'is_fully_filled',
@@ -131,7 +135,7 @@ class JobDetailSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             'id', 'slug', 'created_at', 'updated_at',
-            'views_count', 'applications_count', 'published_at',
+            'views_count', 'applications_count', 'published_at', 'is_csuite',
             'hired_count', 'remaining_positions', 'is_fully_filled'
         ]
 

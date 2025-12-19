@@ -324,3 +324,82 @@ export {
   useUpdateComment,
   useDeleteComment,
 } from './useFeed'
+
+// Company Features hooks (service type-based feature gating)
+export {
+  useCompanyFeatures,
+  useHasFeature,
+  useServiceType,
+} from './useCompanyFeatures'
+export type { CompanyFeature, CompanyFeaturesResponse } from './useCompanyFeatures'
+
+// Subscription hooks (admin subscription management)
+export {
+  // Subscription hooks
+  useSubscriptions,
+  useSubscription,
+  useCompanySubscription,
+  useCreateSubscription,
+  useUpdateSubscription,
+  usePauseSubscription,
+  useResumeSubscription,
+  useTerminateSubscription,
+  useAdjustContract,
+  useChangeServiceType,
+  useCalculateTerminationFee,
+  // Pricing hooks
+  useCompanyPricing,
+  useEffectivePricing,
+  useUpdateCompanyPricing,
+  // Feature override hooks
+  useCompanyFeatureOverrides,
+  useUpdateFeatureOverride,
+  // Invoice hooks
+  useInvoices,
+  useCompanyInvoices,
+  useInvoice,
+  useCreateInvoice,
+  useGenerateRetainerInvoice,
+  useSendInvoice,
+  useCancelInvoice,
+  // Payment hooks
+  useInvoicePayments,
+  useRecordPayment,
+  useDeletePayment,
+  // Activity & Dashboard hooks
+  useSubscriptionActivity,
+  useCompanyActivity,
+  useSubscriptionAlerts,
+  useSubscriptionSummary,
+} from './useSubscriptions'
+export type {
+  SubscriptionStatus,
+  TerminationType,
+  TerminationReason,
+  InvoiceStatus,
+  InvoiceType,
+  BillingMode,
+  PaymentMethod,
+  AlertSeverity,
+  AlertType,
+  ActivityType,
+  Subscription,
+  SubscriptionListItem,
+  CompanyPricing,
+  EffectivePricing,
+  FeatureWithOverride,
+  Invoice,
+  InvoiceListItem,
+  InvoiceLineItem,
+  PlacementInfo,
+  PlacementForInvoice,
+  Payment,
+  PaymentRequiredResponse,
+  SubscriptionActivity,
+  SubscriptionAlert,
+  SubscriptionSummary,
+  TerminationFeeCalculation,
+} from './useSubscriptions'
+
+// Placement hooks for invoice creation
+export { useCompanyPlacements } from './useSubscriptions'

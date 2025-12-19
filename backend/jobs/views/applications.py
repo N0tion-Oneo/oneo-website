@@ -450,9 +450,22 @@ def make_offer(request, application_id):
         is_update = application.status == ApplicationStatus.OFFER_MADE
 
         offer_details = serializer.validated_data.get('offer_details', {})
-        # Convert date to string for JSON storage
+        # Convert types for JSON storage
         if offer_details.get('start_date'):
             offer_details['start_date'] = offer_details['start_date'].isoformat()
+        # Convert Decimal to float for JSON storage
+        if offer_details.get('annual_salary'):
+            offer_details['annual_salary'] = float(offer_details['annual_salary'])
+        # Convert benefit costs to float
+        if offer_details.get('benefits'):
+            for benefit in offer_details['benefits']:
+                if 'annual_cost' in benefit:
+                    benefit['annual_cost'] = float(benefit['annual_cost'])
+        # Convert equity values to float
+        if offer_details.get('equity'):
+            equity = offer_details['equity']
+            if 'share_value' in equity:
+                equity['share_value'] = float(equity['share_value'])
         application.make_offer(offer_details=offer_details)
 
         # Log the activity
@@ -516,8 +529,23 @@ def accept_offer(request, application_id):
         previous_status = application.status
 
         final_details = serializer.validated_data.get('final_offer_details')
-        if final_details and final_details.get('start_date'):
-            final_details['start_date'] = final_details['start_date'].isoformat()
+        if final_details:
+            # Convert types for JSON storage
+            if final_details.get('start_date'):
+                final_details['start_date'] = final_details['start_date'].isoformat()
+            # Convert Decimal to float for JSON storage
+            if final_details.get('annual_salary'):
+                final_details['annual_salary'] = float(final_details['annual_salary'])
+            # Convert benefit costs to float
+            if final_details.get('benefits'):
+                for benefit in final_details['benefits']:
+                    if 'annual_cost' in benefit:
+                        benefit['annual_cost'] = float(benefit['annual_cost'])
+            # Convert equity values to float
+            if final_details.get('equity'):
+                equity = final_details['equity']
+                if 'share_value' in equity:
+                    equity['share_value'] = float(equity['share_value'])
         application.accept_offer(final_details=final_details)
 
         # Log the activity

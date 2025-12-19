@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Company, CompanyUser, CompanySize, FundingStage, CompanyUserRole, Country, City, RemoteWorkPolicy
+from .models import Company, CompanyUser, CompanySize, FundingStage, CompanyUserRole, Country, City, RemoteWorkPolicy, ServiceType
 from candidates.serializers import IndustrySerializer, TechnologySerializer
 from candidates.models import Industry, Technology
 from core.serializers import OnboardingStageMinimalSerializer
@@ -58,6 +58,7 @@ class CompanyListSerializer(serializers.ModelSerializer):
             'company_size',
             'headquarters_location',
             'is_published',
+            'service_type',
         ]
         read_only_fields = ['id', 'slug']
 
@@ -113,6 +114,7 @@ class CompanyAdminListSerializer(serializers.ModelSerializer):
             'headquarters_location',
             'is_published',
             'is_platform',
+            'service_type',
             'created_at',
             'jobs_total',
             'jobs_draft',
@@ -210,6 +212,8 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             'onboarding_stage',
             # Access permissions
             'can_view_all_candidates',
+            # Service type
+            'service_type',
             'created_at',
             'updated_at',
         ]
@@ -335,6 +339,8 @@ class CompanyUpdateSerializer(serializers.ModelSerializer):
             'onboarding_stage_id',
             # Access permissions
             'can_view_all_candidates',
+            # Service type
+            'service_type',
         ]
 
     def __init__(self, *args, **kwargs):
@@ -372,7 +378,7 @@ class CompanyUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
-        """Handle M2M fields and onboarding stage history."""
+        """Handle M2M fields, onboarding stage history, and service type changes."""
         from core.models import OnboardingHistory
 
         technology_ids = validated_data.pop('technology_ids', None)
@@ -381,6 +387,13 @@ class CompanyUpdateSerializer(serializers.ModelSerializer):
         # Track onboarding stage change before update
         old_stage = instance.onboarding_stage
         new_stage = validated_data.get('onboarding_stage')
+
+        # Handle service_type change - automatically update can_view_all_candidates
+        new_service_type = validated_data.get('service_type')
+        if new_service_type is not None and new_service_type != instance.service_type:
+            # Retained clients get access to full talent directory
+            # Headhunting clients only see their job applicants
+            validated_data['can_view_all_candidates'] = (new_service_type == ServiceType.RETAINED)
 
         instance = super().update(instance, validated_data)
 
@@ -533,6 +546,11 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True,
     )
+    service_type = serializers.ChoiceField(
+        choices=ServiceType.choices,
+        required=True,
+        help_text='The recruitment service package for this company (headhunting or retained)',
+    )
 
     class Meta:
         model = Company
@@ -544,6 +562,7 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
             'company_size',
             'headquarters_city',
             'headquarters_country',
+            'service_type',
         ]
 
     def validate_name(self, value):
@@ -551,3 +570,16 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
         if Company.objects.filter(name__iexact=value).exists():
             raise serializers.ValidationError("A company with this name already exists.")
         return value
+
+    def create(self, validated_data):
+        """
+        Create company and automatically set can_view_all_candidates based on service_type.
+        - Retained: can_view_all_candidates = True (access to full talent directory)
+        - Headhunting: can_view_all_candidates = False (only see job applicants)
+        """
+        service_type = validated_data.get('service_type')
+        if service_type == ServiceType.RETAINED:
+            validated_data['can_view_all_candidates'] = True
+        else:
+            validated_data['can_view_all_candidates'] = False
+        return super().create(validated_data)

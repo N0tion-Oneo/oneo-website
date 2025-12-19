@@ -6,6 +6,7 @@ from .pages import (
     create_page,
     update_page,
     delete_page,
+    list_public_pages,
     get_public_page,
 )
 from .blog import (
@@ -102,6 +103,7 @@ __all__ = [
     'create_page',
     'update_page',
     'delete_page',
+    'list_public_pages',
     'get_public_page',
     # Blog
     'list_blog_posts',

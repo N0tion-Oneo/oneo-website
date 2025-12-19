@@ -91,6 +91,7 @@ urlpatterns = [
     # ==========================================================================
 
     # Pages
+    path('pages/', views.list_public_pages, name='cms-public-pages-list'),
     path('pages/<slug:slug>/', views.get_public_page, name='cms-public-page'),
 
     # Blog
