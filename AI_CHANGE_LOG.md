@@ -236,3 +236,40 @@ This file tracks all changes made by the AI assistant to the project.
 - Structured data for rich search results
 - GA4 analytics with custom event tracking
 
+---
+
+## 2025-12-11 - Git Push: Xero Integration and Subscription Enhancements
+
+**Time**: Current session
+**Description**: Committed and pushed Xero integration, Gmail backend, subscription enhancements, and various updates to GitHub
+**Reason**: User requested to push latest changes to GitHub
+**Affected Files**:
+- 72 files changed (7,078 insertions, 908 deletions)
+**Backend Changes**:
+- `backend/integrations/` - New integrations module with Xero service
+- `backend/config/gmail_backend.py` - Gmail backend configuration
+- `backend/companies/` - Updates to models, serializers, views, and migrations
+- `backend/subscriptions/` - Enhanced subscription models, serializers, views, and migrations
+- `backend/notifications/` - Updated notification service and migrations
+- `backend/jobs/` - Job migrations for seniority and column cleanup
+**Frontend Changes**:
+- `frontend/src/components/settings/XeroIntegration.tsx` - Xero integration component
+- `frontend/src/components/subscription/` - New subscription components (SubscriptionBlockedOverlay)
+- `frontend/src/components/subscriptions/` - Enhanced subscription components (NoServiceType, QuickStats, RetainedContractSection, ServiceTypeBadge, ServiceTypeHeader)
+- `frontend/src/components/notifications/NotificationsDrawer.tsx` - New notifications drawer
+- `frontend/src/contexts/SubscriptionContext.tsx` - Subscription context
+- `frontend/src/hooks/useXeroIntegration.ts` - Xero integration hook
+- `frontend/src/pages/dashboard/settings/IntegrationsPage.tsx` - Integrations settings page
+- `frontend/src/pages/settings/XeroOAuthCallback.tsx` - Xero OAuth callback page
+- Updates to various components and pages across the application
+**Changes**:
+- Staged all changes with `git add -A`
+- Committed changes with message: "Add Xero integration, Gmail backend, subscription enhancements, and various updates"
+- Pushed commit (e2e951a) to origin/main branch
+- Added Xero integration module with OAuth flow
+- Added Gmail backend configuration
+- Enhanced subscription system with service type support
+- Added notifications drawer component
+- Added various subscription UI components
+- Updated company, job, and notification functionality
+

@@ -276,6 +276,14 @@ export default function AdminApplicationsPage() {
     }
   }, [searchParams])
 
+  // Sync selectedApplicationId when URL application param changes (e.g., from notification link)
+  useEffect(() => {
+    const urlApplicationId = searchParams.get('application')
+    if (urlApplicationId && urlApplicationId !== selectedApplicationId) {
+      setSelectedApplicationId(urlApplicationId)
+    }
+  }, [searchParams])
+
   const handleClearFilters = () => {
     setFilters(defaultFilters)
     setPage(1)

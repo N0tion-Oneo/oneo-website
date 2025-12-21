@@ -144,8 +144,12 @@ class NotificationService:
 
         elif recipient_type == RecipientType.RECRUITER:
             if job:
-                recruiter = job.assigned_recruiter or job.created_by
-                return [recruiter] if recruiter else []
+                # assigned_recruiters is a ManyToMany field
+                recruiters = list(job.assigned_recruiters.all())
+                if recruiters:
+                    return recruiters
+                # Fall back to created_by if no assigned recruiters
+                return [job.created_by] if job.created_by else []
             return []
 
         elif recipient_type == RecipientType.CLIENT:
@@ -1737,7 +1741,7 @@ class NotificationService:
                     recipient_type=RecipientType.CANDIDATE,
                     application=application,
                     stage_instance=instance,
-                    action_url=f"/applications/{application.id}",
+                    action_url=f"/dashboard/my-applications?application={application.id}",
                 )
 
                 # Notify interviewer
@@ -1749,7 +1753,7 @@ class NotificationService:
                         recipient_type=RecipientType.INTERVIEWER,
                         application=application,
                         stage_instance=instance,
-                        action_url=f"/dashboard/jobs/{job.id}/applications/{application.id}",
+                        action_url=f"/dashboard/applications?application={application.id}",
                     )
 
                 instance.reminder_sent_at = timezone.now()
@@ -1800,7 +1804,7 @@ class NotificationService:
                     recipient_type=RecipientType.CANDIDATE,
                     application=application,
                     stage_instance=instance,
-                    action_url=f"/applications/{application.id}",
+                    action_url=f"/dashboard/my-applications?application={application.id}",
                 )
 
                 instance.reminder_sent_at = timezone.now()
@@ -1866,7 +1870,7 @@ class NotificationService:
                     recipient_type=RecipientType.CANDIDATE,
                     application=application,
                     stage_instance=instance,
-                    action_url=f"/applications/{application.id}",
+                    action_url=f"/dashboard/my-applications?application={application.id}",
                 )
 
                 instance.reminder_sent_at = timezone.now()

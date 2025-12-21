@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useMyApplications, useWithdrawApplication } from '@/hooks'
 import { AssessmentSubmissionModal } from '@/components/applications'
 import { ApplicationStatus } from '@/types'
@@ -91,6 +91,7 @@ const formatInterviewTime = (dateString: string) => {
 }
 
 export default function ApplicationsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const { applications, isLoading, error, refetch } = useMyApplications()
   const { withdraw, isLoading: isWithdrawing } = useWithdrawApplication()
   const [confirmWithdraw, setConfirmWithdraw] = useState<string | null>(null)
@@ -99,6 +100,32 @@ export default function ApplicationsPage() {
     applicationId: string
     assessment: PendingAssessment
   } | null>(null)
+  const [highlightedId, setHighlightedId] = useState<string | null>(null)
+  const highlightedRowRef = useRef<HTMLTableRowElement>(null)
+
+  // Handle ?application= query param for deep linking from notifications
+  useEffect(() => {
+    const applicationId = searchParams.get('application')
+    if (applicationId) {
+      setHighlightedId(applicationId)
+      // Clear the param from URL after a short delay
+      const timer = setTimeout(() => {
+        searchParams.delete('application')
+        setSearchParams(searchParams, { replace: true })
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams, setSearchParams])
+
+  // Scroll to highlighted row when applications load
+  useEffect(() => {
+    if (highlightedId && highlightedRowRef.current && !isLoading) {
+      highlightedRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      // Remove highlight after animation
+      const timer = setTimeout(() => setHighlightedId(null), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [highlightedId, isLoading, applications])
 
   const handleWithdraw = async (applicationId: string) => {
     try {
@@ -178,7 +205,13 @@ export default function ApplicationsPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {applications.map((application) => (
-                  <tr key={application.id} className="hover:bg-gray-50">
+                  <tr
+                    key={application.id}
+                    ref={application.id === highlightedId ? highlightedRowRef : null}
+                    className={`hover:bg-gray-50 transition-colors duration-500 ${
+                      application.id === highlightedId ? 'bg-blue-50 ring-2 ring-blue-200 ring-inset' : ''
+                    }`}
+                  >
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
                         {application.job.company?.logo ? (
