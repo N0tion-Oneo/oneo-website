@@ -1,1 +1,6 @@
 export { default as InvoiceDetailDrawer } from './InvoiceDetailDrawer'
+export { ServiceTypeBadge } from './ServiceTypeBadge'
+export { NoServiceType } from './NoServiceType'
+export { ServiceTypeHeader } from './ServiceTypeHeader'
+export { ContractSection, RetainedContractSection } from './RetainedContractSection'
+export { QuickStats } from './QuickStats'

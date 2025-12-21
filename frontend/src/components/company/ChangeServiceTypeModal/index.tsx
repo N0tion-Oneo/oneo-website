@@ -150,7 +150,9 @@ export function ChangeServiceTypeModal({
         await updatePricing(companyId, pricingData)
       }
 
-      const result = await changeServiceType(companyId, newType)
+      const result = await changeServiceType(companyId, newType, {
+        termsDocumentSlug: termsDocument?.slug,
+      })
 
       // Check if payment is required (402 response)
       if ('payment_required' in result && result.payment_required) {

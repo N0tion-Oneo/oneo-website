@@ -39,18 +39,20 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
         params.append('limit', String(limit))
         params.append('offset', String(currentOffset))
 
-        const response = await api.get<Notification[]>(
+        const response = await api.get<{ notifications: Notification[]; unread_count: number }>(
           `/notifications/?${params.toString()}`
         )
 
+        const notificationsList = response.data.notifications || []
+
         if (reset) {
-          setNotifications(response.data)
+          setNotifications(notificationsList)
           setOffset(limit)
         } else {
-          setNotifications((prev) => [...prev, ...response.data])
+          setNotifications((prev) => [...prev, ...notificationsList])
           setOffset(currentOffset + limit)
         }
-        setHasMore(response.data.length === limit)
+        setHasMore(notificationsList.length === limit)
       } catch (err) {
         setError('Failed to load notifications')
         console.error('Error fetching notifications:', err)

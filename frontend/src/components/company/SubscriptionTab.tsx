@@ -1,13 +1,20 @@
 /**
  * SubscriptionTab Component
  *
- * Admin-only component for managing company subscriptions, pricing,
- * feature overrides, invoices, and billing.
+ * Admin-only component for managing company service types, subscriptions,
+ * pricing, feature overrides, invoices, and billing.
+ *
+ * Service Types:
+ * - Retained: Monthly retainer + placement fees (requires Subscription record)
+ * - Headhunting: Placement fees only (requires Subscription record for contract tracking)
+ *
+ * The service_type on Company determines feature gating.
+ * The Subscription model tracks contracts for both Retained and Headhunting.
+ * Only Retained generates monthly retainer invoices.
  */
 
 import { useState, useEffect } from 'react'
 import {
-  CreditCard,
   Settings,
   FileText,
   Activity,
@@ -51,15 +58,25 @@ import type {
   InvoiceListItem,
   SubscriptionActivity,
 } from '@/hooks'
-import { InvoiceDetailDrawer } from '@/components/subscriptions'
+import {
+  InvoiceDetailDrawer,
+  NoServiceType,
+  ServiceTypeHeader,
+  ContractSection,
+  RetainedContractSection,
+  QuickStats,
+} from '@/components/subscriptions'
 import { ChangeServiceTypeModal } from './ChangeServiceTypeModal'
 
 interface SubscriptionTabProps {
   company: Company
-  isAdmin?: boolean  // If true, show admin-only actions (pause, terminate, edit pricing, etc.)
+  isAdmin?: boolean
 }
 
-// Status badge component
+// =============================================================================
+// Helper Components
+// =============================================================================
+
 function StatusBadge({ status }: { status: SubscriptionStatus | string }) {
   const defaultConfig = { bg: 'bg-gray-100', text: 'text-gray-800', icon: <Clock className="w-3.5 h-3.5" /> }
   const config: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
@@ -77,7 +94,6 @@ function StatusBadge({ status }: { status: SubscriptionStatus | string }) {
   )
 }
 
-// Invoice status badge
 function InvoiceStatusBadge({ status }: { status: string }) {
   const defaultConfig = { bg: 'bg-gray-100', text: 'text-gray-600' }
   const config: Record<string, { bg: string; text: string }> = {
@@ -96,7 +112,6 @@ function InvoiceStatusBadge({ status }: { status: string }) {
   )
 }
 
-// Format currency
 function formatCurrency(amount: string | number): string {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount
   return new Intl.NumberFormat('en-ZA', {
@@ -107,7 +122,6 @@ function formatCurrency(amount: string | number): string {
   }).format(num)
 }
 
-// Format date
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString('en-ZA', {
     year: 'numeric',
@@ -116,333 +130,10 @@ function formatDate(dateString: string): string {
   })
 }
 
-// Adjust Contract Modal
-function AdjustContractModal({
-  subscription,
-  companyName,
-  onClose,
-  onAdjusted,
-  adjustContract,
-  isAdjusting,
-}: {
-  subscription: Subscription
-  companyName: string
-  onClose: () => void
-  onAdjusted: () => void
-  adjustContract: (subscriptionId: string, newEndDate: string) => Promise<Subscription>
-  isAdjusting: boolean
-}) {
-  const [newEndDate, setNewEndDate] = useState(subscription.contract_end_date)
+// =============================================================================
+// Pricing Editor (adapts based on service type)
+// =============================================================================
 
-  const currentEndDate = new Date(subscription.contract_end_date)
-  const selectedEndDate = new Date(newEndDate)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  const isExtending = selectedEndDate > currentEndDate
-  const isValid = selectedEndDate >= today && newEndDate !== subscription.contract_end_date
-
-  // Calculate difference in days
-  const diffTime = selectedEndDate.getTime() - currentEndDate.getTime()
-  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24))
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!isValid) return
-    try {
-      await adjustContract(subscription.id, newEndDate)
-      onAdjusted()
-      onClose()
-    } catch (err) {
-      console.error('Failed to adjust contract:', err)
-    }
-  }
-
-  // Quick adjustment buttons
-  const quickAdjustments = [
-    { months: -3, label: '-3 months' },
-    { months: -1, label: '-1 month' },
-    { months: 1, label: '+1 month' },
-    { months: 3, label: '+3 months' },
-    { months: 6, label: '+6 months' },
-    { months: 12, label: '+1 year' },
-  ]
-
-  const applyQuickAdjustment = (months: number) => {
-    const date = new Date(subscription.contract_end_date)
-    date.setMonth(date.getMonth() + months)
-    if (date >= today) {
-      setNewEndDate(date.toISOString().split('T')[0] ?? '')
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Adjust Contract</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <p className="text-sm text-gray-600 mb-4">
-          Adjust the contract end date for <strong>{companyName}</strong>.
-        </p>
-
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-gray-500">Current End Date</p>
-              <p className="text-sm font-medium text-gray-900">
-                {formatDate(subscription.contract_end_date)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Days Remaining</p>
-              <p className="text-sm font-medium text-gray-900">
-                {subscription.days_until_renewal} days
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Quick Adjust</label>
-            <div className="flex flex-wrap gap-2">
-              {quickAdjustments.map((adj) => (
-                <button
-                  key={adj.months}
-                  type="button"
-                  onClick={() => applyQuickAdjustment(adj.months)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                    adj.months < 0
-                      ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100'
-                      : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
-                  }`}
-                >
-                  {adj.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">New End Date</label>
-            <input
-              type="date"
-              value={newEndDate}
-              onChange={(e) => setNewEndDate(e.target.value)}
-              min={today.toISOString().split('T')[0]}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-            />
-          </div>
-
-          {newEndDate !== subscription.contract_end_date && (
-            <div className={`border rounded-lg p-4 ${
-              isExtending
-                ? 'bg-green-50 border-green-200'
-                : 'bg-red-50 border-red-200'
-            }`}>
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar className={`w-4 h-4 ${isExtending ? 'text-green-600' : 'text-red-600'}`} />
-                <p className={`text-sm font-medium ${isExtending ? 'text-green-900' : 'text-red-900'}`}>
-                  {isExtending ? 'Contract Extended' : 'Contract Reduced'}
-                </p>
-              </div>
-              <p className={`text-lg font-semibold ${isExtending ? 'text-green-900' : 'text-red-900'}`}>
-                {selectedEndDate.toLocaleDateString('en-ZA', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </p>
-              <p className={`text-xs mt-1 ${isExtending ? 'text-green-700' : 'text-red-700'}`}>
-                {isExtending ? '+' : ''}{diffDays} days from current end date
-              </p>
-            </div>
-          )}
-
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isAdjusting || !isValid}
-              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50"
-            >
-              {isAdjusting ? 'Adjusting...' : 'Confirm Adjustment'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
-// Service Type Badge
-function ServiceTypeBadge({ type }: { type: 'retained' | 'headhunting' | string }) {
-  const isRetained = type === 'retained'
-  return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-      isRetained
-        ? 'bg-purple-100 text-purple-800'
-        : 'bg-indigo-100 text-indigo-800'
-    }`}>
-      {isRetained ? 'Retained' : 'Headhunting'}
-    </span>
-  )
-}
-
-// Subscription Overview Section
-function SubscriptionOverview({
-  subscription,
-  serviceType,
-  onPause,
-  onResume,
-  onAdjust,
-  onTerminate,
-  onChangeServiceType,
-  isPausing,
-  isResuming,
-  isAdmin,
-}: {
-  subscription: Subscription
-  serviceType: 'retained' | 'headhunting' | string
-  onPause: () => void
-  onResume: () => void
-  onAdjust: () => void
-  onTerminate: () => void
-  onChangeServiceType: () => void
-  isPausing: boolean
-  isResuming: boolean
-  isAdmin: boolean
-}) {
-  return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-3">
-            <h3 className="text-lg font-semibold text-gray-900">Subscription</h3>
-            <ServiceTypeBadge type={serviceType} />
-            <button
-              onClick={onChangeServiceType}
-              className="text-xs text-gray-500 hover:text-gray-700 underline"
-            >
-              Change
-            </button>
-          </div>
-          <p className="text-sm text-gray-500 mt-1">Manage contract and billing settings</p>
-        </div>
-        <StatusBadge status={subscription.status} />
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-        <div>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Contract Start</p>
-          <p className="text-sm font-medium text-gray-900">{formatDate(subscription.contract_start_date)}</p>
-        </div>
-        <div>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Contract End</p>
-          <p className="text-sm font-medium text-gray-900">{formatDate(subscription.contract_end_date)}</p>
-        </div>
-        <div>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Days Until Renewal</p>
-          <p className={`text-sm font-medium ${subscription.days_until_renewal <= 30 ? 'text-yellow-600' : 'text-gray-900'}`}>
-            {subscription.days_until_renewal} days
-          </p>
-        </div>
-        <div>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Auto-Renew</p>
-          <p className={`text-sm font-medium ${subscription.auto_renew ? 'text-green-600' : 'text-gray-500'}`}>
-            {subscription.auto_renew ? 'Enabled' : 'Disabled'}
-          </p>
-        </div>
-      </div>
-
-      {subscription.status === 'paused' && subscription.pause_reason && (
-        <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
-            <strong>Paused:</strong> {subscription.pause_reason}
-          </p>
-        </div>
-      )}
-
-      {isAdmin && (
-        <div className="flex flex-wrap gap-2">
-          {subscription.status === 'active' && (
-            <>
-              <button
-                onClick={onPause}
-                disabled={isPausing}
-                className="px-3 py-1.5 text-sm font-medium text-yellow-700 bg-yellow-100 rounded-md hover:bg-yellow-200 disabled:opacity-50"
-              >
-                {isPausing ? 'Pausing...' : 'Pause'}
-              </button>
-              <button
-                onClick={onAdjust}
-                className="px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200"
-              >
-                Adjust Contract
-              </button>
-            </>
-          )}
-          {subscription.status === 'paused' && (
-            <button
-              onClick={onResume}
-              disabled={isResuming}
-              className="px-3 py-1.5 text-sm font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 disabled:opacity-50"
-            >
-              {isResuming ? 'Resuming...' : 'Resume'}
-            </button>
-          )}
-          {subscription.status !== 'terminated' && (
-            <button
-              onClick={onTerminate}
-              className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200"
-            >
-              Terminate
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// No Subscription State
-function NoSubscription({ onCreateSubscription, isAdmin }: { onCreateSubscription: () => void; isAdmin: boolean }) {
-  return (
-    <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <CreditCard className="w-6 h-6 text-gray-400" />
-      </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">No Subscription</h3>
-      <p className="text-sm text-gray-500 mb-6">
-        {isAdmin
-          ? "This company doesn't have an active subscription. Create one to enable billing and feature management."
-          : "This company doesn't have an active subscription yet. Contact your account manager for more information."}
-      </p>
-      {isAdmin && (
-        <button
-          onClick={onCreateSubscription}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800"
-        >
-          <Plus className="w-4 h-4" />
-          Create Subscription
-        </button>
-      )}
-    </div>
-  )
-}
-
-// Pricing Editor Section
 function PricingEditor({
   companyId,
   isRetained,
@@ -620,7 +311,10 @@ function PricingEditor({
   )
 }
 
-// Feature Overrides Section
+// =============================================================================
+// Feature Overrides
+// =============================================================================
+
 function FeatureOverrides({ companyId, isAdmin }: { companyId: string; isAdmin: boolean }) {
   const { features, isLoading, refetch } = useCompanyFeatureOverrides(companyId)
   const { updateFeatureOverride, isUpdating } = useUpdateFeatureOverride()
@@ -629,15 +323,11 @@ function FeatureOverrides({ companyId, isAdmin }: { companyId: string; isAdmin: 
   const handleToggle = async (feature: FeatureWithOverride) => {
     setUpdatingFeatureId(feature.id)
     try {
-      // Toggle logic:
-      // - If not overridden and default enabled -> override to false
-      // - If not overridden and default disabled -> override to true
-      // - If overridden -> remove override (null)
       let newValue: boolean | null
       if (feature.is_overridden) {
-        newValue = null // Remove override
+        newValue = null
       } else {
-        newValue = !feature.default_enabled // Override to opposite of default
+        newValue = !feature.default_enabled
       }
       await updateFeatureOverride(companyId, feature.id, newValue)
       refetch()
@@ -661,7 +351,6 @@ function FeatureOverrides({ companyId, isAdmin }: { companyId: string; isAdmin: 
     )
   }
 
-  // Group features by category
   const groupedFeatures = features.reduce(
     (acc, feature) => {
       const category = feature.category || 'Other'
@@ -732,8 +421,19 @@ function FeatureOverrides({ companyId, isAdmin }: { companyId: string; isAdmin: 
   )
 }
 
+// =============================================================================
 // Invoices Section
-function InvoicesList({ companyId, isAdmin }: { companyId: string; isAdmin: boolean }) {
+// =============================================================================
+
+function InvoicesList({
+  companyId,
+  isRetained,
+  isAdmin,
+}: {
+  companyId: string
+  isRetained: boolean
+  isAdmin: boolean
+}) {
   const { invoices, isLoading, refetch } = useCompanyInvoices(companyId)
   const { generateRetainerInvoice, isGenerating } = useGenerateRetainerInvoice()
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
@@ -767,7 +467,7 @@ function InvoicesList({ companyId, isAdmin }: { companyId: string; isAdmin: bool
           <FileText className="w-5 h-5 text-gray-400" />
           <h3 className="text-lg font-semibold text-gray-900">Invoices</h3>
         </div>
-        {isAdmin && (
+        {isAdmin && isRetained && (
           <button
             onClick={handleGenerateInvoice}
             disabled={isGenerating}
@@ -815,7 +515,6 @@ function InvoicesList({ companyId, isAdmin }: { companyId: string; isAdmin: bool
         </div>
       )}
 
-      {/* Invoice Detail Drawer */}
       {selectedInvoiceId && (
         <InvoiceDetailDrawer
           invoiceId={selectedInvoiceId}
@@ -828,7 +527,10 @@ function InvoicesList({ companyId, isAdmin }: { companyId: string; isAdmin: bool
   )
 }
 
-// Activity Log Section
+// =============================================================================
+// Activity Log
+// =============================================================================
+
 function ActivityLog({ companyId }: { companyId: string }) {
   const { activities, isLoading } = useCompanyActivity(companyId)
 
@@ -873,44 +575,45 @@ function ActivityLog({ companyId }: { companyId: string }) {
   )
 }
 
-// Create Subscription Modal
-function CreateSubscriptionModal({
-  company,
+// =============================================================================
+// Create Subscription Contract Modal (for Retained and Headhunting)
+// =============================================================================
+
+type ServiceTypeForContract = 'retained' | 'headhunting'
+
+function CreateContractModal({
+  companyName,
   onClose,
   onCreated,
-  onUpdateCompany,
+  companyId,
+  serviceType = 'retained',
 }: {
-  company: Company
+  companyName: string
   onClose: () => void
   onCreated: () => void
-  onUpdateCompany: (serviceType: 'headhunting' | 'retained') => Promise<void>
+  companyId: string
+  serviceType?: ServiceTypeForContract
 }) {
   const { createSubscription, isCreating, error } = useCreateSubscription()
   const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0] ?? '')
   const [billingDay, setBillingDay] = useState('1')
   const [autoRenew, setAutoRenew] = useState(true)
-  const [serviceType, setServiceType] = useState<'headhunting' | 'retained'>(
-    company.service_type as 'headhunting' | 'retained' || 'retained'
-  )
-  const [isUpdatingServiceType, setIsUpdatingServiceType] = useState(false)
+
+  const isHeadhunting = serviceType === 'headhunting'
+  const serviceLabel = isHeadhunting ? 'Headhunting' : 'Retained'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!startDate) return
+
     const endDate = new Date(startDate)
     endDate.setFullYear(endDate.getFullYear() + 1)
     const endDateStr = endDate.toISOString().split('T')[0] ?? ''
 
     try {
-      // Update service type if changed
-      if (serviceType !== company.service_type) {
-        setIsUpdatingServiceType(true)
-        await onUpdateCompany(serviceType)
-        setIsUpdatingServiceType(false)
-      }
-
       await createSubscription({
-        company: company.id,
+        company: companyId,
+        service_type: serviceType,
         contract_start_date: startDate,
         contract_end_date: endDateStr,
         billing_day_of_month: parseInt(billingDay, 10),
@@ -920,39 +623,33 @@ function CreateSubscriptionModal({
       onClose()
     } catch (err) {
       console.error('Failed to create subscription:', err)
-      setIsUpdatingServiceType(false)
     }
   }
-
-  const isSubmitting = isCreating || isUpdatingServiceType
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Create Subscription</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Create {serviceLabel} Contract</h3>
+          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <p className="text-sm text-gray-600 mb-4">
+          Set up the {serviceLabel.toLowerCase()} contract for <strong>{companyName}</strong>.
+          {isHeadhunting && (
+            <span className="block mt-1 text-xs text-gray-500">
+              This contract tracks agreement terms. Invoices are created per placement.
+            </span>
+          )}
+        </p>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
-            <select
-              value={serviceType}
-              onChange={(e) => setServiceType(e.target.value as 'headhunting' | 'retained')}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-            >
-              <option value="retained">Retained (Monthly Retainer + Placement Fees)</option>
-              <option value="headhunting">Headhunting (Placement Fees Only)</option>
-            </select>
-            {serviceType !== company.service_type && (
-              <p className="mt-1 text-xs text-amber-600">
-                Service type will be changed from {company.service_type} to {serviceType}
-              </p>
-            )}
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Contract Start Date</label>
             <input
@@ -962,6 +659,7 @@ function CreateSubscriptionModal({
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
               required
             />
+            <p className="mt-1 text-xs text-gray-500">Contract will be 1 year from start date</p>
           </div>
 
           <div>
@@ -977,6 +675,7 @@ function CreateSubscriptionModal({
                 </option>
               ))}
             </select>
+            <p className="mt-1 text-xs text-gray-500">Day of month when retainer invoices are generated</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -988,22 +687,22 @@ function CreateSubscriptionModal({
               className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
             />
             <label htmlFor="autoRenew" className="text-sm text-gray-700">
-              Auto-renew subscription
+              Auto-renew contract at end of term
             </label>
           </div>
 
           <div className="flex gap-2 pt-4">
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isCreating}
               className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50"
             >
-              {isSubmitting ? 'Creating...' : 'Create Subscription'}
+              {isCreating ? 'Creating...' : 'Create Contract'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              disabled={isSubmitting}
+              disabled={isCreating}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
             >
               Cancel
@@ -1015,7 +714,181 @@ function CreateSubscriptionModal({
   )
 }
 
-// Permission Denied State
+// =============================================================================
+// Adjust Contract Modal
+// =============================================================================
+
+function AdjustContractModal({
+  subscription,
+  companyName,
+  onClose,
+  onAdjusted,
+  adjustContract,
+  isAdjusting,
+}: {
+  subscription: Subscription
+  companyName: string
+  onClose: () => void
+  onAdjusted: () => void
+  adjustContract: (subscriptionId: string, newEndDate: string) => Promise<Subscription>
+  isAdjusting: boolean
+}) {
+  const [newEndDate, setNewEndDate] = useState(subscription.contract_end_date)
+
+  const currentEndDate = new Date(subscription.contract_end_date)
+  const selectedEndDate = new Date(newEndDate)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const isExtending = selectedEndDate > currentEndDate
+  const isValid = selectedEndDate >= today && newEndDate !== subscription.contract_end_date
+
+  const diffTime = selectedEndDate.getTime() - currentEndDate.getTime()
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24))
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isValid) return
+    try {
+      await adjustContract(subscription.id, newEndDate)
+      onAdjusted()
+      onClose()
+    } catch (err) {
+      console.error('Failed to adjust contract:', err)
+    }
+  }
+
+  const quickAdjustments = [
+    { months: -3, label: '-3 months' },
+    { months: -1, label: '-1 month' },
+    { months: 1, label: '+1 month' },
+    { months: 3, label: '+3 months' },
+    { months: 6, label: '+6 months' },
+    { months: 12, label: '+1 year' },
+  ]
+
+  const applyQuickAdjustment = (months: number) => {
+    const date = new Date(subscription.contract_end_date)
+    date.setMonth(date.getMonth() + months)
+    if (date >= today) {
+      setNewEndDate(date.toISOString().split('T')[0] ?? '')
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Adjust Contract</h3>
+          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <p className="text-sm text-gray-600 mb-4">
+          Adjust the contract end date for <strong>{companyName}</strong>.
+        </p>
+
+        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-gray-500">Current End Date</p>
+              <p className="text-sm font-medium text-gray-900">
+                {formatDate(subscription.contract_end_date)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Days Remaining</p>
+              <p className="text-sm font-medium text-gray-900">
+                {subscription.days_until_renewal} days
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Quick Adjust</label>
+            <div className="flex flex-wrap gap-2">
+              {quickAdjustments.map((adj) => (
+                <button
+                  key={adj.months}
+                  type="button"
+                  onClick={() => applyQuickAdjustment(adj.months)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                    adj.months < 0
+                      ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100'
+                      : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
+                  }`}
+                >
+                  {adj.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">New End Date</label>
+            <input
+              type="date"
+              value={newEndDate}
+              onChange={(e) => setNewEndDate(e.target.value)}
+              min={today.toISOString().split('T')[0]}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+          </div>
+
+          {newEndDate !== subscription.contract_end_date && (
+            <div className={`border rounded-lg p-4 ${
+              isExtending
+                ? 'bg-green-50 border-green-200'
+                : 'bg-red-50 border-red-200'
+            }`}>
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar className={`w-4 h-4 ${isExtending ? 'text-green-600' : 'text-red-600'}`} />
+                <p className={`text-sm font-medium ${isExtending ? 'text-green-900' : 'text-red-900'}`}>
+                  {isExtending ? 'Contract Extended' : 'Contract Reduced'}
+                </p>
+              </div>
+              <p className={`text-lg font-semibold ${isExtending ? 'text-green-900' : 'text-red-900'}`}>
+                {selectedEndDate.toLocaleDateString('en-ZA', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+              <p className={`text-xs mt-1 ${isExtending ? 'text-green-700' : 'text-red-700'}`}>
+                {isExtending ? '+' : ''}{diffDays} days from current end date
+              </p>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isAdjusting || !isValid}
+              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+            >
+              {isAdjusting ? 'Adjusting...' : 'Confirm Adjustment'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// =============================================================================
+// Permission Denied
+// =============================================================================
+
 function PermissionDenied() {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
@@ -1024,19 +897,21 @@ function PermissionDenied() {
       </div>
       <h3 className="text-lg font-semibold text-gray-900 mb-2">Access Denied</h3>
       <p className="text-sm text-gray-500 mb-2">
-        You don't have permission to view subscription details.
+        You don't have permission to view service and billing details.
       </p>
       <p className="text-xs text-gray-400">
-        Staff access (Admin or Recruiter role) is required. Please try logging out and back in,
-        or contact an administrator if you believe this is an error.
+        Staff access (Admin or Recruiter role) is required.
       </p>
     </div>
   )
 }
 
+// =============================================================================
 // Main Component
+// =============================================================================
+
 export default function SubscriptionTab({ company, isAdmin = false }: SubscriptionTabProps) {
-  const { subscription, isLoading, hasSubscription, isPermissionDenied, refetch } = useCompanySubscription(company.id)
+  const { recruitmentSubscription: subscription, isLoading, hasSubscription, isPermissionDenied, refetch } = useCompanySubscription(company.id)
   const { updateCompany, refetch: refetchCompany } = useCompanyById(company.id)
   const { pauseSubscription, isPausing } = usePauseSubscription()
   const { resumeSubscription, isResuming } = useResumeSubscription()
@@ -1044,7 +919,7 @@ export default function SubscriptionTab({ company, isAdmin = false }: Subscripti
   const { terminateSubscription, isTerminating } = useTerminateSubscription()
   const { calculateFee, feeCalculation, isCalculating: isCalculatingFee, error: feeError } = useCalculateTerminationFee()
 
-  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showCreateContractModal, setShowCreateContractModal] = useState(false)
   const [showPauseModal, setShowPauseModal] = useState(false)
   const [showTerminateModal, setShowTerminateModal] = useState(false)
   const [showAdjustModal, setShowAdjustModal] = useState(false)
@@ -1052,19 +927,23 @@ export default function SubscriptionTab({ company, isAdmin = false }: Subscripti
   const [pauseReason, setPauseReason] = useState('')
   const [terminationReason, setTerminationReason] = useState('')
 
-  const isRetained = company.service_type === 'retained'
+  const serviceType = company.service_type as 'retained' | 'headhunting' | undefined
+  const isRetained = serviceType === 'retained'
+  const isHeadhunting = serviceType === 'headhunting'
+  const hasServiceType = !!serviceType
 
-  // Calculate termination fee when modal opens (only for retained services)
+  // Calculate termination fee when modal opens (only for retained)
   useEffect(() => {
     if (showTerminateModal && subscription && isRetained) {
       calculateFee(subscription.id)
     }
   }, [showTerminateModal, subscription, calculateFee, isRetained])
 
-  const handleUpdateServiceType = async (serviceType: 'headhunting' | 'retained') => {
-    const serviceTypeEnum = serviceType === 'retained' ? ServiceType.RETAINED : ServiceType.HEADHUNTING
+  const handleSelectServiceType = async (type: 'retained' | 'headhunting') => {
+    const serviceTypeEnum = type === 'retained' ? ServiceType.RETAINED : ServiceType.HEADHUNTING
     await updateCompany({ service_type: serviceTypeEnum })
     refetchCompany()
+    refetch()
   }
 
   const handlePause = async () => {
@@ -1089,11 +968,10 @@ export default function SubscriptionTab({ company, isAdmin = false }: Subscripti
     }
   }
 
-
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-48 bg-gray-100 rounded-lg" />
+        <div className="h-32 bg-gray-100 rounded-lg" />
         <div className="grid grid-cols-2 gap-6">
           <div className="h-64 bg-gray-100 rounded-lg" />
           <div className="h-64 bg-gray-100 rounded-lg" />
@@ -1102,52 +980,67 @@ export default function SubscriptionTab({ company, isAdmin = false }: Subscripti
     )
   }
 
-  // Show permission denied message if user doesn't have staff access
   if (isPermissionDenied) {
     return <PermissionDenied />
   }
 
+  // No service type set - show selection UI
+  if (!hasServiceType) {
+    return (
+      <NoServiceType
+        companyName={company.name}
+        onSelectServiceType={handleSelectServiceType}
+        isAdmin={isAdmin}
+      />
+    )
+  }
+
   return (
     <div className="space-y-6">
-      {!hasSubscription ? (
-        <NoSubscription
-          onCreateSubscription={() => setShowCreateModal(true)}
+      {/* Service Type Header */}
+      <ServiceTypeHeader
+        serviceType={serviceType}
+        onChangeServiceType={() => setShowChangeServiceTypeModal(true)}
+        subscriptionStatus={subscription ? subscription.status : null}
+        isAdmin={isAdmin}
+      />
+
+      {/* Contract Section - for both retained and headhunting */}
+      {(isRetained || isHeadhunting) && (
+        <ContractSection
+          subscription={subscription}
+          serviceType={serviceType}
+          onPause={() => setShowPauseModal(true)}
+          onResume={handleResume}
+          onAdjust={() => setShowAdjustModal(true)}
+          onTerminate={() => setShowTerminateModal(true)}
+          onCreateSubscription={() => setShowCreateContractModal(true)}
+          isPausing={isPausing}
+          isResuming={isResuming}
           isAdmin={isAdmin}
         />
-      ) : subscription ? (
-        <>
-          <SubscriptionOverview
-            subscription={subscription}
-            serviceType={company.service_type}
-            onPause={() => setShowPauseModal(true)}
-            onResume={handleResume}
-            onAdjust={() => setShowAdjustModal(true)}
-            onTerminate={() => setShowTerminateModal(true)}
-            onChangeServiceType={() => setShowChangeServiceTypeModal(true)}
-            isPausing={isPausing}
-            isResuming={isResuming}
-            isAdmin={isAdmin}
-          />
+      )}
 
-          <div className={`grid grid-cols-1 ${isAdmin ? 'lg:grid-cols-2' : ''} gap-6`}>
-            <PricingEditor companyId={company.id} isRetained={isRetained} isAdmin={isAdmin} />
-            {isAdmin && <FeatureOverrides companyId={company.id} isAdmin={isAdmin} />}
-          </div>
+      {/* Pricing & Features */}
+      <div className={`grid grid-cols-1 ${isAdmin ? 'lg:grid-cols-2' : ''} gap-6`}>
+        <PricingEditor companyId={company.id} isRetained={isRetained} isAdmin={isAdmin} />
+        {isAdmin && <FeatureOverrides companyId={company.id} isAdmin={isAdmin} />}
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <InvoicesList companyId={company.id} isAdmin={isAdmin} />
-            <ActivityLog companyId={company.id} />
-          </div>
-        </>
-      ) : null}
+      {/* Invoices & Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <InvoicesList companyId={company.id} isRetained={isRetained} isAdmin={isAdmin} />
+        <ActivityLog companyId={company.id} />
+      </div>
 
-      {/* Create Subscription Modal */}
-      {showCreateModal && (
-        <CreateSubscriptionModal
-          company={company}
-          onClose={() => setShowCreateModal(false)}
+      {/* Create Contract Modal */}
+      {showCreateContractModal && (
+        <CreateContractModal
+          companyName={company.name}
+          companyId={company.id}
+          serviceType={serviceType}
+          onClose={() => setShowCreateContractModal(false)}
           onCreated={refetch}
-          onUpdateCompany={handleUpdateServiceType}
         />
       )}
 
@@ -1206,63 +1099,60 @@ export default function SubscriptionTab({ company, isAdmin = false }: Subscripti
               </p>
             </div>
 
-            {/* Early Termination Fee Breakdown - Only for retained services */}
-            {isRetained && (
-              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <h4 className="text-sm font-semibold text-amber-800 mb-3">Early Termination Fee</h4>
-                {isCalculatingFee ? (
-                  <div className="flex items-center gap-2 text-sm text-amber-700">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Calculating fee...
+            {/* Early Termination Fee Breakdown */}
+            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <h4 className="text-sm font-semibold text-amber-800 mb-3">Early Termination Fee</h4>
+              {isCalculatingFee ? (
+                <div className="flex items-center gap-2 text-sm text-amber-700">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Calculating fee...
+                </div>
+              ) : feeError ? (
+                <p className="text-sm text-red-600">{feeError}</p>
+              ) : feeCalculation ? (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-amber-700">Monthly Retainer</span>
+                    <span className="font-medium text-amber-900">
+                      {formatCurrency(feeCalculation.monthly_retainer)}
+                    </span>
                   </div>
-                ) : feeError ? (
-                  <p className="text-sm text-red-600">{feeError}</p>
-                ) : feeCalculation ? (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-amber-700">Monthly Retainer</span>
-                      <span className="font-medium text-amber-900">
-                        {new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0 }).format(parseFloat(feeCalculation.monthly_retainer))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-amber-700">Months Remaining</span>
-                      <span className="font-medium text-amber-900">{feeCalculation.months_remaining} months</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-amber-700">Remaining Term Value</span>
-                      <span className="text-amber-900">
-                        {new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0 }).format(parseFloat(feeCalculation.remaining_term_fee))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-amber-700">3-Month Fee (minimum)</span>
-                      <span className="text-amber-900">
-                        {new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0 }).format(parseFloat(feeCalculation.three_month_fee))}
-                      </span>
-                    </div>
-                    <div className="border-t border-amber-300 pt-2 mt-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-semibold text-amber-800">Termination Fee</span>
-                        <span className="text-lg font-bold text-red-600">
-                          {new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0 }).format(parseFloat(feeCalculation.early_termination_fee))}
-                        </span>
-                      </div>
-                      <p className="text-xs text-amber-600 mt-1">Lesser of remaining term value or 3-month fee</p>
-                    </div>
-                    {feeCalculation.is_within_lockout_period && (
-                      <p className="text-xs text-amber-700 mt-2">
-                        ⚠️ This subscription is within the 6-month lockout period. Early termination without cause is not permitted during this time.
-                      </p>
-                    )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-amber-700">Months Remaining</span>
+                    <span className="font-medium text-amber-900">{feeCalculation.months_remaining} months</span>
                   </div>
-                ) : (
-                  <p className="text-sm text-amber-700">Unable to calculate fee</p>
-                )}
-              </div>
-            )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-amber-700">Remaining Term Value</span>
+                    <span className="text-amber-900">
+                      {formatCurrency(feeCalculation.remaining_term_fee)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-amber-700">3-Month Fee (minimum)</span>
+                    <span className="text-amber-900">
+                      {formatCurrency(feeCalculation.three_month_fee)}
+                    </span>
+                  </div>
+                  <div className="border-t border-amber-300 pt-2 mt-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm font-semibold text-amber-800">Termination Fee</span>
+                      <span className="text-lg font-bold text-red-600">
+                        {formatCurrency(feeCalculation.early_termination_fee)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-amber-600 mt-1">Lesser of remaining term value or 3-month fee</p>
+                  </div>
+                  {feeCalculation.is_within_lockout_period && (
+                    <p className="text-xs text-amber-700 mt-2">
+                      Warning: This subscription is within the 6-month lockout period.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-amber-700">Unable to calculate fee</p>
+              )}
+            </div>
 
-            {/* Termination Reason */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Termination</label>
               <textarea
@@ -1291,7 +1181,7 @@ export default function SubscriptionTab({ company, isAdmin = false }: Subscripti
                     console.error('Failed to terminate subscription:', error)
                   }
                 }}
-                disabled={isTerminating || (isRetained && feeCalculation && feeCalculation.can_terminate_without_cause === false)}
+                disabled={isTerminating || (feeCalculation && feeCalculation.can_terminate_without_cause === false)}
                 className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
               >
                 {isTerminating ? 'Terminating...' : 'Terminate Subscription'}
@@ -1327,7 +1217,7 @@ export default function SubscriptionTab({ company, isAdmin = false }: Subscripti
         <ChangeServiceTypeModal
           companyId={company.id}
           companyName={company.name}
-          currentType={company.service_type as 'retained' | 'headhunting'}
+          currentType={serviceType}
           subscriptionId={subscription?.id}
           monthsRemaining={subscription?.months_remaining}
           isWithinLockoutPeriod={subscription?.is_within_lockout_period}

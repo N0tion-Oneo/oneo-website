@@ -13,6 +13,7 @@ import api from '@/services/api'
 // =============================================================================
 
 export type SubscriptionStatus = 'active' | 'paused' | 'terminated' | 'expired'
+export type SubscriptionServiceType = 'retained' | 'headhunting' | 'eor'
 export type TerminationType = 'for_cause' | 'without_cause' | 'mutual' | 'expired'
 export type TerminationReason =
   | 'material_breach'
@@ -57,6 +58,8 @@ export interface Subscription {
     name: string
     slug: string
   }
+  service_type: SubscriptionServiceType
+  service_type_display: string
   contract_start_date: string
   contract_end_date: string
   billing_day_of_month: number
@@ -87,12 +90,15 @@ export interface SubscriptionListItem {
   id: string
   company_id: string
   company_name: string
+  service_type: SubscriptionServiceType
+  service_type_display: string
   contract_start_date: string
   contract_end_date: string
   status: SubscriptionStatus
   status_display: string
   auto_renew: boolean
   days_until_renewal: number
+  months_remaining: number
 }
 
 export interface CompanyPricing {
@@ -265,15 +271,89 @@ export interface SubscriptionAlert {
   amount?: string
 }
 
+export interface UpcomingRenewal {
+  company_id: string
+  company_name: string
+  contract_end_date: string
+  days_until_renewal: number
+  auto_renew: boolean
+  monthly_retainer: string
+}
+
+export interface RecentInvoiceSummary {
+  id: string
+  invoice_number: string
+  company_name: string
+  total_amount: string
+  status: string
+  invoice_date: string
+  invoice_type: string
+}
+
+export interface RecentActivity {
+  id: string
+  activity_type: string
+  activity_type_display: string
+  company_name: string
+  performed_by_name: string | null
+  created_at: string
+}
+
+export interface InvoiceStatusCount {
+  count: number
+  amount: string
+}
+
+export interface PlacementBreakdown {
+  paid: InvoiceStatusCount
+  partially_paid: InvoiceStatusCount
+  pending: InvoiceStatusCount
+  overdue: InvoiceStatusCount
+  draft: InvoiceStatusCount
+  cancelled: InvoiceStatusCount
+}
+
 export interface SubscriptionSummary {
+  // Existing subscription stats
   total_subscriptions: number
   active_subscriptions: number
   paused_subscriptions: number
   terminated_subscriptions: number
+  expired_subscriptions: number
   expiring_this_month: number
   total_mrr: string
   overdue_invoices_count: number
   overdue_invoices_amount: string
+  // Service type breakdown with subscriptions
+  retained_companies: number
+  headhunting_companies: number
+  retained_subscriptions: number
+  headhunting_subscriptions: number
+  retained_mrr: string
+  // Retained placement stats (revenue = placement fees)
+  retained_regular_placements: number
+  retained_csuite_placements: number
+  retained_regular_revenue: string
+  retained_csuite_revenue: string
+  retained_regular_breakdown: PlacementBreakdown
+  retained_csuite_breakdown: PlacementBreakdown
+  // Headhunting placement stats (revenue = placement fees)
+  headhunting_regular_placements: number
+  headhunting_csuite_placements: number
+  headhunting_regular_revenue: string
+  headhunting_csuite_revenue: string
+  headhunting_regular_breakdown: PlacementBreakdown
+  headhunting_csuite_breakdown: PlacementBreakdown
+  // Retained retainer/subscription stats (only retained companies have subscriptions)
+  retained_retainer_count: number
+  retained_retainer_revenue: string
+  retained_retainer_breakdown: PlacementBreakdown
+  // Invoice collection stats
+  collected_this_month: string
+  pending_invoices_count: number
+  pending_invoices_amount: string
+  // Upcoming renewals
+  upcoming_renewals: UpcomingRenewal[]
 }
 
 export interface TerminationFeeCalculation {
@@ -360,8 +440,9 @@ export function useSubscription(subscriptionId: string): UseSubscriptionReturn {
   return { subscription, isLoading, error, refetch: fetchSubscription }
 }
 
-interface UseCompanySubscriptionReturn {
-  subscription: Subscription | null
+interface UseCompanySubscriptionsReturn {
+  subscriptions: Subscription[]
+  recruitmentSubscription: Subscription | null // The retained or headhunting subscription
   isLoading: boolean
   error: string | null
   hasSubscription: boolean
@@ -369,50 +450,59 @@ interface UseCompanySubscriptionReturn {
   refetch: () => Promise<void>
 }
 
-export function useCompanySubscription(companyId: string): UseCompanySubscriptionReturn {
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
+export function useCompanySubscription(companyId: string): UseCompanySubscriptionsReturn {
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [hasSubscription, setHasSubscription] = useState(false)
   const [isPermissionDenied, setIsPermissionDenied] = useState(false)
 
-  const fetchSubscription = useCallback(async () => {
+  const fetchSubscriptions = useCallback(async () => {
     if (!companyId) return
 
     setIsLoading(true)
     setError(null)
     setIsPermissionDenied(false)
     try {
-      const response = await api.get<Subscription>(`/companies/${companyId}/subscription/`)
-      setSubscription(response.data)
-      setHasSubscription(true)
+      const response = await api.get<Subscription[]>(`/companies/${companyId}/subscriptions/`)
+      setSubscriptions(response.data)
     } catch (err) {
       const axiosError = err as { response?: { status?: number } }
-      if (axiosError.response?.status === 404) {
-        // No subscription found - this is expected for companies without subscriptions
-        setSubscription(null)
-        setHasSubscription(false)
-      } else if (axiosError.response?.status === 403) {
+      if (axiosError.response?.status === 403) {
         // Permission denied - user doesn't have staff access
-        setSubscription(null)
-        setHasSubscription(false)
+        setSubscriptions([])
         setIsPermissionDenied(true)
         setError('Permission denied. Staff access required.')
         console.error('Permission denied for subscription access:', err)
       } else {
-        setError('Failed to load subscription')
-        console.error('Error fetching subscription:', err)
+        setError('Failed to load subscriptions')
+        console.error('Error fetching subscriptions:', err)
       }
     } finally {
       setIsLoading(false)
     }
   }, [companyId])
 
-  useEffect(() => {
-    fetchSubscription()
-  }, [fetchSubscription])
+  // Get the recruitment subscription (retained or headhunting)
+  const recruitmentSubscription = subscriptions.find(
+    (s) => s.service_type === 'retained' || s.service_type === 'headhunting'
+  ) || null
 
-  return { subscription, isLoading, error, hasSubscription, isPermissionDenied, refetch: fetchSubscription }
+  // Check if any subscriptions exist
+  const hasSubscription = subscriptions.length > 0
+
+  useEffect(() => {
+    fetchSubscriptions()
+  }, [fetchSubscriptions])
+
+  return {
+    subscriptions,
+    recruitmentSubscription,
+    isLoading,
+    error,
+    hasSubscription,
+    isPermissionDenied,
+    refetch: fetchSubscriptions,
+  }
 }
 
 // =============================================================================
@@ -421,10 +511,10 @@ export function useCompanySubscription(companyId: string): UseCompanySubscriptio
 
 interface CreateSubscriptionInput {
   company: string
+  service_type: SubscriptionServiceType
   contract_start_date: string
   contract_end_date: string
   billing_day_of_month?: number
-  status?: SubscriptionStatus
   auto_renew?: boolean
   internal_notes?: string
 }
@@ -647,8 +737,12 @@ export interface PaymentRequiredResponse {
   message: string
 }
 
+interface ChangeServiceTypeOptions {
+  termsDocumentSlug?: string
+}
+
 interface UseChangeServiceTypeReturn {
-  changeServiceType: (companyId: string, serviceType: 'retained' | 'headhunting') => Promise<ChangeServiceTypeResponse | PaymentRequiredResponse>
+  changeServiceType: (companyId: string, serviceType: 'retained' | 'headhunting', options?: ChangeServiceTypeOptions) => Promise<ChangeServiceTypeResponse | PaymentRequiredResponse>
   isChanging: boolean
   error: string | null
   paymentRequired: PaymentRequiredResponse | null
@@ -662,7 +756,8 @@ export function useChangeServiceType(): UseChangeServiceTypeReturn {
 
   const changeServiceType = useCallback(async (
     companyId: string,
-    serviceType: 'retained' | 'headhunting'
+    serviceType: 'retained' | 'headhunting',
+    options?: ChangeServiceTypeOptions
   ): Promise<ChangeServiceTypeResponse | PaymentRequiredResponse> => {
     setIsChanging(true)
     setError(null)
@@ -670,7 +765,10 @@ export function useChangeServiceType(): UseChangeServiceTypeReturn {
     try {
       const response = await api.post<ChangeServiceTypeResponse>(
         `/companies/${companyId}/service-type/`,
-        { service_type: serviceType }
+        {
+          service_type: serviceType,
+          terms_document_slug: options?.termsDocumentSlug,
+        }
       )
       return response.data
     } catch (err) {
@@ -967,6 +1065,83 @@ export function useInvoices(options: UseInvoicesOptions = {}): UseInvoicesReturn
       setIsLoading(false)
     }
   }, [options.companyId, options.status])
+
+  useEffect(() => {
+    fetchInvoices()
+  }, [fetchInvoices])
+
+  return { invoices, isLoading, error, refetch: fetchInvoices }
+}
+
+// Filtered invoices types
+export type InvoiceTab = 'all' | 'paid' | 'pending' | 'overdue'
+export type TimeRange = '7d' | '30d' | '90d' | '6m' | '1y' | 'all'
+export type PlacementFilterType = 'regular' | 'csuite'
+export type InvoiceStatusFilter = 'paid' | 'partially_paid' | 'pending' | 'overdue' | 'draft' | 'cancelled'
+
+interface UseFilteredInvoicesOptions {
+  tab?: InvoiceTab
+  timeRange?: TimeRange
+  dateFrom?: string
+  dateTo?: string
+  serviceType?: 'retained' | 'headhunting'
+  placementType?: PlacementFilterType
+  invoiceType?: InvoiceType
+  invoiceStatus?: InvoiceStatusFilter
+  enabled?: boolean // Allow disabling the query
+}
+
+interface UseFilteredInvoicesReturn {
+  invoices: InvoiceListItem[]
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export function useFilteredInvoices(options: UseFilteredInvoicesOptions = {}): UseFilteredInvoicesReturn {
+  const [invoices, setInvoices] = useState<InvoiceListItem[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const enabled = options.enabled !== false
+
+  const fetchInvoices = useCallback(async () => {
+    if (!enabled) {
+      setInvoices([])
+      setIsLoading(false)
+      return
+    }
+    setIsLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams()
+      if (options.tab && options.tab !== 'all') params.append('tab', options.tab)
+      if (options.timeRange) params.append('time_range', options.timeRange)
+      if (options.dateFrom) params.append('date_from', options.dateFrom)
+      if (options.dateTo) params.append('date_to', options.dateTo)
+      if (options.serviceType) params.append('service_type', options.serviceType)
+      if (options.placementType) params.append('placement_type', options.placementType)
+      if (options.invoiceType) params.append('invoice_type', options.invoiceType)
+      if (options.invoiceStatus) params.append('invoice_status', options.invoiceStatus)
+      const response = await api.get<InvoiceListItem[]>(`/invoices/filtered/?${params.toString()}`)
+      setInvoices(response.data)
+    } catch (err) {
+      setError('Failed to load invoices')
+      console.error('Error fetching filtered invoices:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [
+    enabled,
+    options.tab,
+    options.timeRange,
+    options.dateFrom,
+    options.dateTo,
+    options.serviceType,
+    options.placementType,
+    options.invoiceType,
+    options.invoiceStatus,
+  ])
 
   useEffect(() => {
     fetchInvoices()

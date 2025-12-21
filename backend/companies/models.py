@@ -384,3 +384,68 @@ class CompanyInvitation(models.Model):
     @property
     def is_valid(self):
         return self.status == InvitationStatus.PENDING and not self.is_expired
+
+
+class TermsAcceptanceContext(models.TextChoices):
+    COMPANY_CREATION = 'company_creation', 'Company Creation'
+    SERVICE_TYPE_CHANGE = 'service_type_change', 'Service Type Change'
+    CONTRACT_RENEWAL = 'contract_renewal', 'Contract Renewal'
+
+
+class TermsAcceptance(models.Model):
+    """
+    Audit trail for terms and conditions acceptances.
+    Records when users accept terms during company creation, service changes, etc.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Who and what
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name='terms_acceptances',
+    )
+    accepted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='terms_acceptances',
+    )
+
+    # Optional subscription reference (for service type changes)
+    subscription = models.ForeignKey(
+        'subscriptions.Subscription',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='terms_acceptances',
+    )
+
+    # Document details
+    document_slug = models.CharField(max_length=255)
+    document_title = models.CharField(max_length=255, blank=True)
+    document_version = models.CharField(max_length=50, blank=True)
+
+    # Context
+    context = models.CharField(
+        max_length=30,
+        choices=TermsAcceptanceContext.choices,
+        default=TermsAcceptanceContext.COMPANY_CREATION,
+    )
+    service_type = models.CharField(
+        max_length=20,
+        choices=ServiceType.choices,
+        blank=True,
+    )
+
+    # Metadata
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    accepted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'terms_acceptances'
+        ordering = ['-accepted_at']
+
+    def __str__(self):
+        return f"{self.company.name} - {self.document_slug} ({self.context})"

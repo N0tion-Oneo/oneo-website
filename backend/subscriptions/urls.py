@@ -74,12 +74,12 @@ urlpatterns = [
     # Company-scoped Subscription Endpoints
     # ==========================================================================
     path(
-        'companies/<uuid:company_id>/subscription/',
-        views.get_company_subscription,
-        name='company-subscription-get'
+        'companies/<uuid:company_id>/subscriptions/',
+        views.get_company_subscriptions,
+        name='company-subscriptions-list'
     ),
     path(
-        'companies/<uuid:company_id>/subscription/create/',
+        'companies/<uuid:company_id>/subscriptions/create/',
         views.create_company_subscription,
         name='company-subscription-create'
     ),
@@ -138,6 +138,11 @@ urlpatterns = [
         'invoices/',
         views.list_invoices,
         name='invoice-list'
+    ),
+    path(
+        'invoices/filtered/',
+        views.list_invoices_filtered,
+        name='invoice-list-filtered'
     ),
     path(
         'invoices/create/',

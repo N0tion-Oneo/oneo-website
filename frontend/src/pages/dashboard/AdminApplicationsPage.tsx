@@ -103,8 +103,9 @@ export default function AdminApplicationsPage() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Get job from URL params
+  // Get job and application from URL params
   const jobIdFromUrl = searchParams.get('job')
+  const applicationIdFromUrl = searchParams.get('application')
 
   // Initialize filters with job from URL if present
   const [filters, setFilters] = useState<ApplicationFilters>(() => ({
@@ -116,7 +117,9 @@ export default function AdminApplicationsPage() {
   const [showFilters, setShowFilters] = useState(true)
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null)
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(
+    applicationIdFromUrl || null
+  )
   const [openActionsMenu, setOpenActionsMenu] = useState<string | null>(null)
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null)
   // Default to kanban when job is pre-selected from URL
@@ -1141,7 +1144,14 @@ export default function AdminApplicationsPage() {
       <ApplicationDrawer
         applicationId={selectedApplicationId}
         isOpen={!!selectedApplicationId}
-        onClose={() => setSelectedApplicationId(null)}
+        onClose={() => {
+          setSelectedApplicationId(null)
+          // Clear application param from URL if present
+          if (searchParams.has('application')) {
+            searchParams.delete('application')
+            setSearchParams(searchParams)
+          }
+        }}
         onUpdate={refetch}
         onShortlist={handleDrawerShortlist}
         onMakeOffer={handleDrawerMakeOffer}

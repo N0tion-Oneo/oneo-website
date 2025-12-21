@@ -53,6 +53,18 @@ class TerminationReason(models.TextChoices):
     MUTUAL_AGREEMENT = 'mutual_agreement', 'Mutual Agreement'
 
 
+class SubscriptionServiceType(models.TextChoices):
+    """Service types that can have subscriptions/contracts."""
+    RETAINED = 'retained', 'Retained Recruitment'
+    HEADHUNTING = 'headhunting', 'Headhunting'
+    EOR = 'eor', 'Employer of Record'
+
+    @classmethod
+    def recruitment_types(cls):
+        """Return mutually exclusive recruitment service types."""
+        return [cls.RETAINED, cls.HEADHUNTING]
+
+
 # =============================================================================
 # Subscription Model
 # =============================================================================
@@ -60,15 +72,23 @@ class TerminationReason(models.TextChoices):
 
 class Subscription(TimestampedModel):
     """
-    Subscription for Retained clients only.
-    Headhunting clients do not have subscriptions (pay-per-placement).
+    Subscription/contract for any service type.
+    A company can have multiple subscriptions for different services,
+    but only one recruitment service (retained OR headhunting, not both).
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    company = models.OneToOneField(
+    company = models.ForeignKey(
         'companies.Company',
         on_delete=models.CASCADE,
-        related_name='subscription',
+        related_name='subscriptions',
+    )
+
+    service_type = models.CharField(
+        max_length=20,
+        choices=SubscriptionServiceType.choices,
+        default=SubscriptionServiceType.RETAINED,  # Default for existing subscriptions
+        help_text='The service this subscription/contract is for',
     )
 
     # Contract Period
@@ -173,9 +193,41 @@ class Subscription(TimestampedModel):
         verbose_name = 'Subscription'
         verbose_name_plural = 'Subscriptions'
         ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['company', 'service_type'],
+                name='unique_company_service_type'
+            ),
+        ]
 
     def __str__(self):
-        return f"{self.company.name} - {self.get_status_display()}"
+        return f"{self.company.name} - {self.get_service_type_display()} ({self.get_status_display()})"
+
+    def clean(self):
+        """Validate that company doesn't have both retained and headhunting."""
+        from django.core.exceptions import ValidationError
+
+        if self.service_type in [SubscriptionServiceType.RETAINED, SubscriptionServiceType.HEADHUNTING]:
+            # Check for existing recruitment subscription of the other type
+            other_type = (
+                SubscriptionServiceType.HEADHUNTING
+                if self.service_type == SubscriptionServiceType.RETAINED
+                else SubscriptionServiceType.RETAINED
+            )
+            existing = Subscription.objects.filter(
+                company=self.company,
+                service_type=other_type,
+            ).exclude(pk=self.pk).exists()
+
+            if existing:
+                raise ValidationError(
+                    f'Company already has a {other_type} subscription. '
+                    f'A company can only have one recruitment service (retained OR headhunting).'
+                )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     @property
     def is_active(self):
@@ -384,6 +436,9 @@ class InvoiceType(models.TextChoices):
 # Invoice Model
 # =============================================================================
 
+# Default payment terms in days
+DEFAULT_PAYMENT_TERMS_DAYS = 14
+
 
 class Invoice(TimestampedModel):
     """
@@ -434,7 +489,9 @@ class Invoice(TimestampedModel):
         help_text='Date the invoice was issued',
     )
     due_date = models.DateField(
-        help_text='Payment due date',
+        blank=True,
+        null=True,
+        help_text='Payment due date (defaults to 14 days from invoice date)',
     )
     billing_period_start = models.DateField(
         null=True,
@@ -598,6 +655,16 @@ class Invoice(TimestampedModel):
             new_num = 1
 
         return f"{prefix}-{new_num:04d}"
+
+    def save(self, *args, **kwargs):
+        """Set default due date if not provided."""
+        from datetime import timedelta
+
+        # Auto-set due_date to 14 days from invoice_date if not provided
+        if not self.due_date and self.invoice_date:
+            self.due_date = self.invoice_date + timedelta(days=DEFAULT_PAYMENT_TERMS_DAYS)
+
+        super().save(*args, **kwargs)
 
 
 # =============================================================================

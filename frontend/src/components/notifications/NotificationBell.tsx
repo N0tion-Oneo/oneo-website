@@ -10,16 +10,22 @@ import {
   X,
   Check,
   Loader2,
+  ChevronRight,
 } from 'lucide-react'
 import {
   useNotifications,
   useUnreadCountPolling,
   useMarkNotificationsRead,
 } from '@/hooks'
-import { Notification, NotificationType, NotificationTypeLabels } from '@/types'
+import { Notification, NotificationType } from '@/types'
+import NotificationsDrawer from './NotificationsDrawer'
 
 interface NotificationBellProps {
   className?: string
+  /** Position dropdown to the right of the bell (for sidebar usage) */
+  dropdownPosition?: 'bottom-right' | 'right'
+  /** Sidebar width for drawer positioning */
+  sidebarWidth?: 'minimized' | 'expanded' | 'none'
 }
 
 const NotificationIcons: Record<NotificationType, React.ReactNode> = {
@@ -36,10 +42,12 @@ const NotificationIcons: Record<NotificationType, React.ReactNode> = {
   [NotificationType.OFFER_RECEIVED]: <CheckCircle className="w-4 h-4 text-green-500" />,
 }
 
-export default function NotificationBell({ className = '' }: NotificationBellProps) {
+export default function NotificationBell({ className = '', dropdownPosition = 'bottom-right', sidebarWidth = 'none' }: NotificationBellProps) {
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const hasOpenedRef = useRef(false)
 
   const { count: unreadCount, refetch: refetchCount } = useUnreadCountPolling({
     intervalMs: 30000,
@@ -66,12 +74,16 @@ export default function NotificationBell({ className = '' }: NotificationBellPro
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Refetch notifications when dropdown opens
+  // Refetch notifications when dropdown opens (only once per open)
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !hasOpenedRef.current) {
+      hasOpenedRef.current = true
       refetchNotifications()
     }
-  }, [isOpen, refetchNotifications])
+    if (!isOpen) {
+      hasOpenedRef.current = false
+    }
+  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.is_read) {
@@ -133,7 +145,11 @@ export default function NotificationBell({ className = '' }: NotificationBellPro
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+        <div className={`absolute w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 ${
+          dropdownPosition === 'right'
+            ? 'left-full top-0 ml-2'
+            : 'right-0 mt-2'
+        }`}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <h3 className="font-semibold text-gray-900">Notifications</h3>
@@ -165,9 +181,9 @@ export default function NotificationBell({ className = '' }: NotificationBellPro
                   <button
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0 ${
+                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-all border-b border-gray-50 last:border-b-0 ${
                       !notification.is_read ? 'bg-blue-50/50' : ''
-                    }`}
+                    } ${notification.action_url ? 'cursor-pointer' : 'cursor-default'}`}
                   >
                     <div className="flex gap-3">
                       <div className="flex-shrink-0 mt-0.5">
@@ -194,11 +210,14 @@ export default function NotificationBell({ className = '' }: NotificationBellPro
                           {formatTime(notification.sent_at)}
                         </p>
                       </div>
-                      {!notification.is_read && (
-                        <div className="flex-shrink-0">
+                      <div className="flex-shrink-0 flex items-center gap-1">
+                        {!notification.is_read && (
                           <div className="w-2 h-2 rounded-full bg-blue-500" />
-                        </div>
-                      )}
+                        )}
+                        {notification.action_url && (
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        )}
+                      </div>
                     </div>
                   </button>
                 ))}
@@ -211,8 +230,8 @@ export default function NotificationBell({ className = '' }: NotificationBellPro
             <div className="px-4 py-3 border-t border-gray-100">
               <button
                 onClick={() => {
-                  navigate('/notifications')
                   setIsOpen(false)
+                  setIsDrawerOpen(true)
                 }}
                 className="w-full text-sm text-center text-blue-600 hover:text-blue-800"
               >
@@ -222,6 +241,15 @@ export default function NotificationBell({ className = '' }: NotificationBellPro
           )}
         </div>
       )}
+
+      {/* Notifications Drawer */}
+      <NotificationsDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        unreadCount={unreadCount}
+        onUnreadCountChange={refetchCount}
+        sidebarWidth={sidebarWidth}
+      />
     </div>
   )
 }

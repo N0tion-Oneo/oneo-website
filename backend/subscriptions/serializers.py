@@ -29,6 +29,7 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
     """Serializer for subscription list view."""
     company_name = serializers.CharField(source='company.name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    service_type_display = serializers.CharField(source='get_service_type_display', read_only=True)
     days_until_renewal = serializers.IntegerField(read_only=True)
     months_remaining = serializers.IntegerField(read_only=True)
 
@@ -38,6 +39,8 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
             'id',
             'company',
             'company_name',
+            'service_type',
+            'service_type_display',
             'status',
             'status_display',
             'contract_start_date',
@@ -52,6 +55,7 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
 class SubscriptionDetailSerializer(serializers.ModelSerializer):
     """Serializer for subscription detail view."""
     company_name = serializers.CharField(source='company.name', read_only=True)
+    service_type_display = serializers.CharField(source='get_service_type_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     termination_type_display = serializers.CharField(
         source='get_termination_type_display', read_only=True
@@ -72,6 +76,8 @@ class SubscriptionDetailSerializer(serializers.ModelSerializer):
             'id',
             'company',
             'company_name',
+            'service_type',
+            'service_type_display',
             # Contract
             'contract_start_date',
             'contract_end_date',
@@ -132,6 +138,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
         model = Subscription
         fields = [
             'company',
+            'service_type',
             'contract_start_date',
             'contract_end_date',
             'billing_day_of_month',
@@ -139,16 +146,33 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
             'internal_notes',
         ]
 
-    def validate_company(self, value):
-        """Ensure company doesn't already have a subscription."""
-        if Subscription.objects.filter(company=value).exists():
-            raise serializers.ValidationError(
-                'This company already has a subscription.'
-            )
-        return value
-
     def validate(self, data):
-        """Validate contract dates."""
+        """Validate contract dates and subscription uniqueness."""
+        company = data.get('company')
+        service_type = data.get('service_type')
+
+        # Check if subscription for this service type already exists
+        if company and service_type:
+            if Subscription.objects.filter(company=company, service_type=service_type).exists():
+                raise serializers.ValidationError({
+                    'service_type': f'This company already has a {service_type} subscription.'
+                })
+
+            # Check for mutually exclusive recruitment types
+            from .models import SubscriptionServiceType
+            if service_type in [SubscriptionServiceType.RETAINED, SubscriptionServiceType.HEADHUNTING]:
+                other_type = (
+                    SubscriptionServiceType.HEADHUNTING
+                    if service_type == SubscriptionServiceType.RETAINED
+                    else SubscriptionServiceType.RETAINED
+                )
+                if Subscription.objects.filter(company=company, service_type=other_type).exists():
+                    raise serializers.ValidationError({
+                        'service_type': f'Company already has a {other_type} subscription. '
+                                        f'A company can only have one recruitment service.'
+                    })
+
+        # Validate contract dates
         start = data.get('contract_start_date')
         end = data.get('contract_end_date')
         if start and end and end <= start:
@@ -792,13 +816,98 @@ class SubscriptionAlertSerializer(serializers.Serializer):
     )
 
 
+class UpcomingRenewalSerializer(serializers.Serializer):
+    """Serializer for upcoming contract renewals."""
+    company_id = serializers.UUIDField()
+    company_name = serializers.CharField()
+    contract_end_date = serializers.DateField()
+    days_until_renewal = serializers.IntegerField()
+    auto_renew = serializers.BooleanField()
+    monthly_retainer = serializers.DecimalField(max_digits=12, decimal_places=2)
+
+
+class RecentInvoiceSummarySerializer(serializers.Serializer):
+    """Serializer for recent invoices in summary."""
+    id = serializers.UUIDField()
+    invoice_number = serializers.CharField()
+    company_name = serializers.CharField()
+    total_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    status = serializers.CharField()
+    invoice_date = serializers.DateField()
+    invoice_type = serializers.CharField()
+
+
+class RecentActivitySerializer(serializers.Serializer):
+    """Serializer for recent activity in summary."""
+    id = serializers.UUIDField()
+    activity_type = serializers.CharField()
+    activity_type_display = serializers.CharField()
+    company_name = serializers.CharField()
+    performed_by_name = serializers.CharField(allow_null=True)
+    created_at = serializers.DateTimeField()
+
+
+class InvoiceStatusCountSerializer(serializers.Serializer):
+    """Serializer for invoice count and amount by status."""
+    count = serializers.IntegerField()
+    amount = serializers.DecimalField(max_digits=14, decimal_places=2)
+
+
+class PlacementBreakdownSerializer(serializers.Serializer):
+    """Serializer for placement invoice breakdown by status."""
+    paid = InvoiceStatusCountSerializer()
+    partially_paid = InvoiceStatusCountSerializer()
+    pending = InvoiceStatusCountSerializer()
+    overdue = InvoiceStatusCountSerializer()
+    draft = InvoiceStatusCountSerializer()
+    cancelled = InvoiceStatusCountSerializer()
+
+
 class SubscriptionSummarySerializer(serializers.Serializer):
     """Serializer for subscription dashboard summary."""
+    # Existing subscription stats
     total_subscriptions = serializers.IntegerField()
     active_subscriptions = serializers.IntegerField()
     paused_subscriptions = serializers.IntegerField()
     terminated_subscriptions = serializers.IntegerField()
+    expired_subscriptions = serializers.IntegerField()
     expiring_this_month = serializers.IntegerField()
     total_mrr = serializers.DecimalField(max_digits=12, decimal_places=2)
     overdue_invoices_count = serializers.IntegerField()
     overdue_invoices_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+
+    # Service type breakdown with subscriptions
+    retained_companies = serializers.IntegerField()
+    headhunting_companies = serializers.IntegerField()
+    retained_subscriptions = serializers.IntegerField()
+    headhunting_subscriptions = serializers.IntegerField()
+    retained_mrr = serializers.DecimalField(max_digits=12, decimal_places=2)
+
+    # Retained placement stats (revenue = placement fees)
+    retained_regular_placements = serializers.IntegerField()
+    retained_csuite_placements = serializers.IntegerField()
+    retained_regular_revenue = serializers.DecimalField(max_digits=14, decimal_places=2)
+    retained_csuite_revenue = serializers.DecimalField(max_digits=14, decimal_places=2)
+    retained_regular_breakdown = PlacementBreakdownSerializer()
+    retained_csuite_breakdown = PlacementBreakdownSerializer()
+
+    # Headhunting placement stats (revenue = placement fees)
+    headhunting_regular_placements = serializers.IntegerField()
+    headhunting_csuite_placements = serializers.IntegerField()
+    headhunting_regular_revenue = serializers.DecimalField(max_digits=14, decimal_places=2)
+    headhunting_csuite_revenue = serializers.DecimalField(max_digits=14, decimal_places=2)
+    headhunting_regular_breakdown = PlacementBreakdownSerializer()
+    headhunting_csuite_breakdown = PlacementBreakdownSerializer()
+
+    # Retained retainer/subscription stats (only retained companies have subscriptions)
+    retained_retainer_count = serializers.IntegerField()
+    retained_retainer_revenue = serializers.DecimalField(max_digits=14, decimal_places=2)
+    retained_retainer_breakdown = PlacementBreakdownSerializer()
+
+    # Invoice collection stats
+    collected_this_month = serializers.DecimalField(max_digits=12, decimal_places=2)
+    pending_invoices_count = serializers.IntegerField()
+    pending_invoices_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+
+    # Upcoming renewals
+    upcoming_renewals = UpcomingRenewalSerializer(many=True)

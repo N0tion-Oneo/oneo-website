@@ -356,6 +356,7 @@ export {
   useUpdateFeatureOverride,
   // Invoice hooks
   useInvoices,
+  useFilteredInvoices,
   useCompanyInvoices,
   useInvoice,
   useCreateInvoice,
@@ -374,10 +375,15 @@ export {
 } from './useSubscriptions'
 export type {
   SubscriptionStatus,
+  SubscriptionServiceType,
   TerminationType,
   TerminationReason,
   InvoiceStatus,
   InvoiceType,
+  InvoiceTab,
+  TimeRange,
+  PlacementFilterType,
+  InvoiceStatusFilter,
   BillingMode,
   PaymentMethod,
   AlertSeverity,
@@ -399,7 +405,25 @@ export type {
   SubscriptionAlert,
   SubscriptionSummary,
   TerminationFeeCalculation,
+  InvoiceStatusCount,
+  PlacementBreakdown,
 } from './useSubscriptions'
 
 // Placement hooks for invoice creation
 export { useCompanyPlacements } from './useSubscriptions'
+
+// Xero Integration hooks
+export {
+  useXeroConnection,
+  useConnectXero,
+  useDisconnectXero,
+  useSyncXeroInvoices,
+  useSyncXeroPayments,
+  useXeroInvoiceStatus,
+  useXeroCallback,
+} from './useXeroIntegration'
+export type {
+  XeroConnection,
+  XeroSyncResult,
+  XeroInvoiceMapping,
+} from './useXeroIntegration'

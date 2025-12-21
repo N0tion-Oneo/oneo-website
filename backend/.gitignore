@@ -38,6 +38,11 @@ db.sqlite3-journal
 # Environment variables
 .env
 
+# Credentials/Secrets
+credentials/
+*-service-account.json
+*-credentials.json
+
 # IDEs
 .vscode/
 .idea/

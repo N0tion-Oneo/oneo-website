@@ -19,6 +19,7 @@ from jobs.models import Application, ApplicationStatus
 from .models import (
     Subscription,
     SubscriptionStatus,
+    SubscriptionServiceType,
     TerminationType,
     CompanyPricing,
     CompanyFeatureOverride,
@@ -606,24 +607,34 @@ def get_subscription_activity(request, subscription_id):
 
 
 @extend_schema(
-    responses={200: SubscriptionDetailSerializer},
+    responses={200: SubscriptionDetailSerializer(many=True)},
     tags=['Company Subscription'],
+    parameters=[
+        OpenApiParameter(
+            name='service_type',
+            description='Filter by service type (retained, headhunting, eor)',
+            required=False,
+            type=str,
+        ),
+    ],
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_company_subscription(request, company_id):
-    """Get subscription for a specific company. Staff or company members can view."""
+def get_company_subscriptions(request, company_id):
+    """Get subscriptions for a specific company. Staff or company members can view."""
     if not can_view_company_subscription(request.user, company_id):
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
-    try:
-        subscription = Subscription.objects.select_related(
-            'company', 'terminated_by', 'paused_by'
-        ).get(company_id=company_id)
-    except Subscription.DoesNotExist:
-        return Response({'error': 'Company does not have a subscription'}, status=status.HTTP_404_NOT_FOUND)
+    subscriptions = Subscription.objects.select_related(
+        'company', 'terminated_by', 'paused_by'
+    ).filter(company_id=company_id)
 
-    serializer = SubscriptionDetailSerializer(subscription)
+    # Optional filter by service_type
+    service_type = request.query_params.get('service_type')
+    if service_type:
+        subscriptions = subscriptions.filter(service_type=service_type)
+
+    serializer = SubscriptionDetailSerializer(subscriptions, many=True)
     return Response(serializer.data)
 
 
@@ -644,9 +655,18 @@ def create_company_subscription(request, company_id):
     except Company.DoesNotExist:
         return Response({'error': 'Company not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    if Subscription.objects.filter(company=company).exists():
+    # Get service_type from request - required field now
+    service_type = request.data.get('service_type')
+    if not service_type:
         return Response(
-            {'error': 'Company already has a subscription'},
+            {'error': 'service_type is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Check if subscription for this service type already exists
+    if Subscription.objects.filter(company=company, service_type=service_type).exists():
+        return Response(
+            {'error': f'Company already has a {service_type} subscription'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -715,8 +735,11 @@ def change_service_type(request, company_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Get subscription if exists
-    subscription = Subscription.objects.filter(company=company).first()
+    # Get recruitment subscription if exists (either retained or headhunting)
+    subscription = Subscription.objects.filter(
+        company=company,
+        service_type__in=[SubscriptionServiceType.RETAINED, SubscriptionServiceType.HEADHUNTING]
+    ).first()
 
     # Handle retained -> headhunting change (requires termination fee)
     if old_service_type == 'retained' and new_service_type == 'headhunting' and subscription:
@@ -822,6 +845,12 @@ def change_service_type(request, company_id):
     company.service_type = new_service_type
     company.save()
 
+    # Update subscription service type if it exists
+    if subscription:
+        subscription.service_type = new_service_type
+        # Use update() to bypass the clean() validation since we're changing, not adding
+        Subscription.objects.filter(pk=subscription.pk).update(service_type=new_service_type)
+
     # Log the activity
     log_activity(
         company=company,
@@ -834,6 +863,32 @@ def change_service_type(request, company_id):
             'changed_by': 'staff' if is_staff else 'company_admin',
         },
     )
+
+    # Record terms acceptance if provided
+    terms_document_slug = request.data.get('terms_document_slug')
+    if terms_document_slug:
+        from companies.models import TermsAcceptance, TermsAcceptanceContext
+
+        # Get client IP and user agent for audit trail
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip_address = x_forwarded_for.split(',')[0].strip()
+        else:
+            ip_address = request.META.get('REMOTE_ADDR')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+        TermsAcceptance.objects.create(
+            company=company,
+            accepted_by=request.user,
+            subscription=subscription,
+            document_slug=terms_document_slug,
+            document_title=request.data.get('terms_document_title', ''),
+            document_version=request.data.get('terms_document_version', ''),
+            context=TermsAcceptanceContext.SERVICE_TYPE_CHANGE,
+            service_type=new_service_type,
+            ip_address=ip_address,
+            user_agent=user_agent[:1000] if user_agent else '',
+        )
 
     return Response({
         'success': True,
@@ -1139,6 +1194,167 @@ def list_invoices(request):
 
 
 @extend_schema(
+    parameters=[
+        OpenApiParameter(name='tab', description='Filter by tab: paid, pending, or overdue', type=str),
+        OpenApiParameter(name='date_from', description='Filter from date (YYYY-MM-DD)', type=str),
+        OpenApiParameter(name='date_to', description='Filter to date (YYYY-MM-DD)', type=str),
+        OpenApiParameter(name='time_range', description='Preset time range: 7d, 30d, 90d, 6m, 1y, all', type=str),
+        OpenApiParameter(name='service_type', description='Filter by company service type: retained or headhunting', type=str),
+        OpenApiParameter(name='placement_type', description='Filter by placement type: regular or csuite', type=str),
+        OpenApiParameter(name='invoice_type', description='Filter by invoice type: placement, retainer, etc', type=str),
+        OpenApiParameter(name='invoice_status', description='Specific status: paid, partially_paid, pending, overdue, draft', type=str),
+    ],
+    responses={200: InvoiceListSerializer(many=True)},
+    tags=['Invoices'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_invoices_filtered(request):
+    """
+    List invoices with tab-based filtering and date range.
+
+    Tabs:
+    - paid: Invoices with status 'paid'
+    - pending: Invoices with status 'sent' or 'partially_paid' that are not overdue
+    - overdue: Invoices with status 'sent' or 'partially_paid' that are past due date
+
+    Additional filters:
+    - service_type: Filter by company's service type (retained/headhunting)
+    - placement_type: Filter placement invoices by regular or csuite
+    - invoice_type: Filter by invoice type (placement, retainer, etc)
+    - invoice_status: More specific status filter (paid, partially_paid, pending, overdue, draft)
+
+    Date filtering:
+    - Use date_from and date_to for custom range
+    - Use time_range for presets (7d, 30d, 90d, 6m, 1y, all)
+    """
+    if not is_staff_user(request.user):
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    today = date.today()
+    invoices = Invoice.objects.select_related(
+        'company', 'placement', 'placement__job'
+    )
+
+    # Only exclude cancelled if not explicitly filtering for them
+    invoice_status = request.query_params.get('invoice_status')
+    if invoice_status != 'cancelled':
+        invoices = invoices.exclude(status=InvoiceStatus.CANCELLED)
+
+    # Service type filtering (company.service_type)
+    service_type = request.query_params.get('service_type')
+    if service_type in ['retained', 'headhunting']:
+        invoices = invoices.filter(company__service_type=service_type)
+
+    # Invoice type filtering
+    invoice_type_filter = request.query_params.get('invoice_type')
+    if invoice_type_filter:
+        invoices = invoices.filter(invoice_type=invoice_type_filter)
+
+    # Placement type filtering (regular vs csuite based on job.seniority)
+    # is_csuite is a property that returns seniority == 'executive'
+    # This matches the summary calculation logic:
+    # - Regular: no placement, or placement.job is null, or job.seniority != 'executive'
+    # - C-Suite: placement exists with job.seniority == 'executive'
+    placement_type = request.query_params.get('placement_type')
+    if placement_type == 'regular':
+        # Regular placements: no placement, or job is null, or job.seniority != 'executive'
+        invoices = invoices.filter(
+            Q(placement__isnull=True) |
+            Q(placement__job__isnull=True) |
+            ~Q(placement__job__seniority='executive')
+        )
+    elif placement_type == 'csuite':
+        # C-Suite placements: has a placement AND job.seniority == 'executive'
+        invoices = invoices.filter(
+            placement__isnull=False,
+            placement__job__seniority='executive'
+        )
+
+    # Invoice status filtering (more specific than tab)
+    # This matches the summary calculation logic exactly
+    invoice_status = request.query_params.get('invoice_status')
+    if invoice_status:
+        if invoice_status == 'paid':
+            invoices = invoices.filter(status=InvoiceStatus.PAID)
+        elif invoice_status == 'partially_paid':
+            invoices = invoices.filter(status=InvoiceStatus.PARTIALLY_PAID)
+        elif invoice_status == 'pending':
+            # Pending = SENT/OVERDUE with due_date null or due_date >= today
+            invoices = invoices.filter(
+                status__in=[InvoiceStatus.SENT, InvoiceStatus.OVERDUE]
+            ).filter(
+                Q(due_date__isnull=True) | Q(due_date__gte=today)
+            )
+        elif invoice_status == 'overdue':
+            # Overdue = SENT/OVERDUE with due_date < today
+            invoices = invoices.filter(
+                status__in=[InvoiceStatus.SENT, InvoiceStatus.OVERDUE],
+                due_date__lt=today
+            )
+        elif invoice_status == 'draft':
+            invoices = invoices.filter(status=InvoiceStatus.DRAFT)
+        elif invoice_status == 'cancelled':
+            invoices = invoices.filter(status=InvoiceStatus.CANCELLED)
+    else:
+        # Fall back to tab-based filtering if no specific status
+        tab = request.query_params.get('tab', 'all')
+        if tab == 'paid':
+            invoices = invoices.filter(status=InvoiceStatus.PAID)
+        elif tab == 'pending':
+            invoices = invoices.filter(
+                status__in=[InvoiceStatus.SENT, InvoiceStatus.PARTIALLY_PAID],
+                due_date__gte=today
+            )
+        elif tab == 'overdue':
+            invoices = invoices.filter(
+                status__in=[InvoiceStatus.SENT, InvoiceStatus.PARTIALLY_PAID, InvoiceStatus.OVERDUE],
+                due_date__lt=today
+            )
+
+    # Time range filtering
+    time_range = request.query_params.get('time_range')
+    date_from = request.query_params.get('date_from')
+    date_to = request.query_params.get('date_to')
+
+    if time_range and time_range != 'all':
+        if time_range == '7d':
+            start_date = today - timedelta(days=7)
+        elif time_range == '30d':
+            start_date = today - timedelta(days=30)
+        elif time_range == '90d':
+            start_date = today - timedelta(days=90)
+        elif time_range == '6m':
+            start_date = today - timedelta(days=180)
+        elif time_range == '1y':
+            start_date = today - timedelta(days=365)
+        else:
+            start_date = None
+
+        if start_date:
+            invoices = invoices.filter(invoice_date__gte=start_date)
+    elif date_from or date_to:
+        from datetime import datetime
+        if date_from:
+            try:
+                parsed_from = datetime.strptime(date_from, '%Y-%m-%d').date()
+                invoices = invoices.filter(invoice_date__gte=parsed_from)
+            except ValueError:
+                pass
+        if date_to:
+            try:
+                parsed_to = datetime.strptime(date_to, '%Y-%m-%d').date()
+                invoices = invoices.filter(invoice_date__lte=parsed_to)
+            except ValueError:
+                pass
+
+    invoices = invoices.order_by('-invoice_date', '-created_at')
+
+    serializer = InvoiceListSerializer(invoices, many=True)
+    return Response(serializer.data)
+
+
+@extend_schema(
     request=InvoiceCreateSerializer,
     responses={201: InvoiceDetailSerializer},
     tags=['Invoices'],
@@ -1434,7 +1650,11 @@ def generate_retainer_invoice(request, company_id):
         return Response({'error': 'Company not found'}, status=status.HTTP_404_NOT_FOUND)
 
     try:
-        subscription = Subscription.objects.get(company=company)
+        # Get the retained subscription specifically (retainer invoices are only for retained)
+        subscription = Subscription.objects.get(
+            company=company,
+            service_type=SubscriptionServiceType.RETAINED
+        )
     except Subscription.DoesNotExist:
         return Response(
             {'error': 'Company does not have an active subscription'},
@@ -1726,17 +1946,22 @@ def get_subscription_alerts(request):
 @permission_classes([IsAuthenticated])
 def get_subscription_summary(request):
     """Get subscription summary statistics."""
+    from companies.models import ServiceType
+
     if not is_staff_user(request.user):
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
     today = date.today()
+    month_start = today.replace(day=1)
     month_end = (today.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+    thirty_days_from_now = today + timedelta(days=30)
 
     # Subscription counts
     total = Subscription.objects.count()
     active = Subscription.objects.filter(status=SubscriptionStatus.ACTIVE).count()
     paused = Subscription.objects.filter(status=SubscriptionStatus.PAUSED).count()
     terminated = Subscription.objects.filter(status=SubscriptionStatus.TERMINATED).count()
+    expired = Subscription.objects.filter(status=SubscriptionStatus.EXPIRED).count()
 
     # Expiring this month
     expiring = Subscription.objects.filter(
@@ -1775,15 +2000,245 @@ def get_subscription_summary(request):
     )['total'] or Decimal('0')
     overdue_amount = overdue_amount - overdue_paid
 
+    # ==========================================================================
+    # Service Type Breakdown with Placements & Income
+    # ==========================================================================
+    retained_companies = Company.objects.filter(service_type=ServiceType.RETAINED).count()
+    headhunting_companies = Company.objects.filter(service_type=ServiceType.HEADHUNTING).count()
+
+    # Retained MRR is same as total_mrr since only retained have subscriptions
+    retained_mrr = total_mrr
+
+    # Count active subscriptions per service type
+    retained_subscriptions = Subscription.objects.filter(
+        status=SubscriptionStatus.ACTIVE,
+        company__service_type=ServiceType.RETAINED
+    ).count()
+    headhunting_subscriptions = Subscription.objects.filter(
+        status=SubscriptionStatus.ACTIVE,
+        company__service_type=ServiceType.HEADHUNTING
+    ).count()
+
+    # ==========================================================================
+    # Placement Stats by Service Type (Actual Invoiced Revenue with Status Breakdown)
+    # ==========================================================================
+    def calculate_placement_stats(service_type):
+        """Calculate placement counts and actual invoiced revenue for a service type."""
+        # Get placement invoices for companies with this service type (including cancelled)
+        placement_invoices = Invoice.objects.filter(
+            invoice_type=InvoiceType.PLACEMENT,
+            company__service_type=service_type,
+        ).select_related('placement__job')
+
+        # Initialize stats structure
+        def empty_status_breakdown():
+            return {
+                'paid': {'count': 0, 'amount': Decimal('0')},
+                'partially_paid': {'count': 0, 'amount': Decimal('0')},
+                'pending': {'count': 0, 'amount': Decimal('0')},
+                'overdue': {'count': 0, 'amount': Decimal('0')},
+                'draft': {'count': 0, 'amount': Decimal('0')},
+                'cancelled': {'count': 0, 'amount': Decimal('0')},
+            }
+
+        regular_breakdown = empty_status_breakdown()
+        csuite_breakdown = empty_status_breakdown()
+        regular_count = 0
+        csuite_count = 0
+        regular_revenue = Decimal('0')
+        csuite_revenue = Decimal('0')
+
+        for inv in placement_invoices:
+            # Determine if C-Suite from the linked placement's job
+            is_csuite = False
+            if inv.placement and inv.placement.job:
+                is_csuite = inv.placement.job.is_csuite
+
+            # Determine status category
+            if inv.status == InvoiceStatus.PAID:
+                status_key = 'paid'
+            elif inv.status == InvoiceStatus.PARTIALLY_PAID:
+                status_key = 'partially_paid'
+            elif inv.status == InvoiceStatus.DRAFT:
+                status_key = 'draft'
+            elif inv.status == InvoiceStatus.CANCELLED:
+                status_key = 'cancelled'
+            elif inv.status in [InvoiceStatus.SENT, InvoiceStatus.OVERDUE]:
+                # Check if overdue
+                if inv.due_date and inv.due_date < today:
+                    status_key = 'overdue'
+                else:
+                    status_key = 'pending'
+            else:
+                status_key = 'pending'
+
+            breakdown = csuite_breakdown if is_csuite else regular_breakdown
+            breakdown[status_key]['count'] += 1
+            breakdown[status_key]['amount'] += inv.total_amount
+
+            # Don't count cancelled invoices in totals
+            if inv.status != InvoiceStatus.CANCELLED:
+                if is_csuite:
+                    csuite_count += 1
+                    csuite_revenue += inv.total_amount
+                else:
+                    regular_count += 1
+                    regular_revenue += inv.total_amount
+
+        return {
+            'regular_placements': regular_count,
+            'csuite_placements': csuite_count,
+            'regular_revenue': regular_revenue,
+            'csuite_revenue': csuite_revenue,
+            'regular_breakdown': regular_breakdown,
+            'csuite_breakdown': csuite_breakdown,
+        }
+
+    retained_stats = calculate_placement_stats(ServiceType.RETAINED)
+    headhunting_stats = calculate_placement_stats(ServiceType.HEADHUNTING)
+
+    # ==========================================================================
+    # Retainer Invoice Stats by Service Type (with Status Breakdown)
+    # ==========================================================================
+    def calculate_retainer_stats(service_type):
+        """Calculate retainer invoice counts and revenue for a service type."""
+        retainer_invoices = Invoice.objects.filter(
+            invoice_type=InvoiceType.RETAINER,
+            company__service_type=service_type,
+        )
+
+        # Initialize stats structure
+        breakdown = {
+            'paid': {'count': 0, 'amount': Decimal('0')},
+            'partially_paid': {'count': 0, 'amount': Decimal('0')},
+            'pending': {'count': 0, 'amount': Decimal('0')},
+            'overdue': {'count': 0, 'amount': Decimal('0')},
+            'draft': {'count': 0, 'amount': Decimal('0')},
+            'cancelled': {'count': 0, 'amount': Decimal('0')},
+        }
+        total_count = 0
+        total_revenue = Decimal('0')
+
+        for inv in retainer_invoices:
+            # Determine status category
+            if inv.status == InvoiceStatus.PAID:
+                status_key = 'paid'
+            elif inv.status == InvoiceStatus.PARTIALLY_PAID:
+                status_key = 'partially_paid'
+            elif inv.status == InvoiceStatus.DRAFT:
+                status_key = 'draft'
+            elif inv.status == InvoiceStatus.CANCELLED:
+                status_key = 'cancelled'
+            elif inv.status in [InvoiceStatus.SENT, InvoiceStatus.OVERDUE]:
+                if inv.due_date and inv.due_date < today:
+                    status_key = 'overdue'
+                else:
+                    status_key = 'pending'
+            else:
+                status_key = 'pending'
+
+            breakdown[status_key]['count'] += 1
+            breakdown[status_key]['amount'] += inv.total_amount
+
+            # Don't count cancelled in totals
+            if inv.status != InvoiceStatus.CANCELLED:
+                total_count += 1
+                total_revenue += inv.total_amount
+
+        return {
+            'count': total_count,
+            'revenue': total_revenue,
+            'breakdown': breakdown,
+        }
+
+    # Only calculate retainer stats for retained (headhunting doesn't have subscriptions)
+    retained_retainer_stats = calculate_retainer_stats(ServiceType.RETAINED)
+
+    # ==========================================================================
+    # Invoice Collection Stats
+    # ==========================================================================
+    # Collected this month (payments recorded this month)
+    collected_this_month = Payment.objects.filter(
+        payment_date__gte=month_start,
+        payment_date__lte=today,
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+    # Pending invoices (sent but not fully paid, not overdue)
+    pending_invoices = Invoice.objects.filter(
+        status__in=[InvoiceStatus.SENT, InvoiceStatus.PARTIALLY_PAID],
+        due_date__gte=today,
+    )
+    pending_count = pending_invoices.count()
+    pending_total = pending_invoices.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+    pending_paid = pending_invoices.aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
+    pending_amount = pending_total - pending_paid
+
+    # ==========================================================================
+    # Upcoming Renewals (next 30 days)
+    # ==========================================================================
+    upcoming_renewals_qs = Subscription.objects.filter(
+        status=SubscriptionStatus.ACTIVE,
+        contract_end_date__gte=today,
+        contract_end_date__lte=thirty_days_from_now,
+    ).select_related('company').order_by('contract_end_date')[:10]
+
+    upcoming_renewals = []
+    for sub in upcoming_renewals_qs:
+        try:
+            pricing = CompanyPricing.objects.get(company=sub.company)
+            retainer = pricing.get_effective_retainer()
+        except CompanyPricing.DoesNotExist:
+            config = PricingConfig.get_config()
+            retainer = Decimal(str(config.retained_monthly_retainer))
+
+        upcoming_renewals.append({
+            'company_id': sub.company.id,
+            'company_name': sub.company.name,
+            'contract_end_date': sub.contract_end_date,
+            'days_until_renewal': (sub.contract_end_date - today).days,
+            'auto_renew': sub.auto_renew,
+            'monthly_retainer': retainer,
+        })
+
     data = {
+        # Existing subscription stats
         'total_subscriptions': total,
         'active_subscriptions': active,
         'paused_subscriptions': paused,
         'terminated_subscriptions': terminated,
+        'expired_subscriptions': expired,
         'expiring_this_month': expiring,
         'total_mrr': total_mrr,
         'overdue_invoices_count': overdue_count,
         'overdue_invoices_amount': overdue_amount,
+        # Service type breakdown with placements
+        'retained_companies': retained_companies,
+        'headhunting_companies': headhunting_companies,
+        'retained_subscriptions': retained_subscriptions,
+        'headhunting_subscriptions': headhunting_subscriptions,
+        'retained_mrr': retained_mrr,
+        'retained_regular_placements': retained_stats['regular_placements'],
+        'retained_csuite_placements': retained_stats['csuite_placements'],
+        'retained_regular_revenue': retained_stats['regular_revenue'],
+        'retained_csuite_revenue': retained_stats['csuite_revenue'],
+        'retained_regular_breakdown': retained_stats['regular_breakdown'],
+        'retained_csuite_breakdown': retained_stats['csuite_breakdown'],
+        'headhunting_regular_placements': headhunting_stats['regular_placements'],
+        'headhunting_csuite_placements': headhunting_stats['csuite_placements'],
+        'headhunting_regular_revenue': headhunting_stats['regular_revenue'],
+        'headhunting_csuite_revenue': headhunting_stats['csuite_revenue'],
+        'headhunting_regular_breakdown': headhunting_stats['regular_breakdown'],
+        'headhunting_csuite_breakdown': headhunting_stats['csuite_breakdown'],
+        # Retainer invoice stats (only retained has subscriptions)
+        'retained_retainer_count': retained_retainer_stats['count'],
+        'retained_retainer_revenue': retained_retainer_stats['revenue'],
+        'retained_retainer_breakdown': retained_retainer_stats['breakdown'],
+        # Invoice collection stats
+        'collected_this_month': collected_this_month,
+        'pending_invoices_count': pending_count,
+        'pending_invoices_amount': pending_amount,
+        # Upcoming renewals
+        'upcoming_renewals': upcoming_renewals,
     }
 
     serializer = SubscriptionSummarySerializer(data)

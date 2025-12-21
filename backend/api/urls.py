@@ -43,4 +43,7 @@ urlpatterns = [
 
     # Subscriptions endpoints (billing, pricing, invoices)
     path('', include('subscriptions.urls')),
+
+    # Integrations endpoints (Xero, etc.)
+    path('integrations/', include('integrations.urls')),
 ]

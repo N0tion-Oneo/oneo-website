@@ -1,6 +1,6 @@
 import { Link, useLocation, Outlet } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { User, Calendar, ChevronLeft, Wrench, Palette, Bell, UserPlus, Users, Briefcase, CalendarClock, ListChecks, Settings, Building2 } from 'lucide-react'
+import { User, Calendar, ChevronLeft, Wrench, Palette, Bell, UserPlus, Users, Briefcase, CalendarClock, ListChecks, Settings, Building2, Link as LinkIcon } from 'lucide-react'
 
 interface SettingsNavItem {
   name: string
@@ -72,6 +72,11 @@ export default function SettingsLayout() {
                 name: 'Branding',
                 href: '/dashboard/settings/branding',
                 icon: <Palette className="w-4 h-4" />,
+              },
+              {
+                name: 'Integrations',
+                href: '/dashboard/settings/integrations',
+                icon: <LinkIcon className="w-4 h-4" />,
               },
             ],
           },

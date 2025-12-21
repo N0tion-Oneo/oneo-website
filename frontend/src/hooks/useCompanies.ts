@@ -414,9 +414,11 @@ interface CreateCompanyInput {
   description?: string
   industry_id?: string | null
   company_size?: string
-  headquarters_city?: string
-  headquarters_country?: string
+  headquarters_city?: number  // City ID from location database
+  headquarters_country?: number  // Country ID from location database
   service_type: 'headhunting' | 'retained'
+  // Terms acceptance
+  terms_document_slug?: string
 }
 
 interface UseCreateCompanyReturn {
@@ -436,13 +438,36 @@ export function useCreateCompany(): UseCreateCompanyReturn {
       const response = await api.post<Company>('/companies/create/', data)
       return response.data
     } catch (err) {
-      const axiosError = err as { response?: { data?: { error?: string; name?: string[] } } }
-      const message =
-        axiosError.response?.data?.error ||
-        axiosError.response?.data?.name?.[0] ||
-        'Failed to create company'
+      const axiosError = err as { response?: { status?: number; data?: Record<string, unknown> } }
+      let message = 'Failed to create company'
+
+      if (axiosError.response?.data) {
+        const data = axiosError.response.data
+        // Check for specific error fields
+        if (typeof data.error === 'string') {
+          message = data.error
+        } else if (Array.isArray(data.name) && data.name.length > 0) {
+          message = String(data.name[0])
+        } else if (typeof data.service_type === 'string') {
+          message = data.service_type
+        } else if (Array.isArray(data.service_type) && data.service_type.length > 0) {
+          message = String(data.service_type[0])
+        } else if (typeof data.detail === 'string') {
+          message = data.detail
+        } else if (typeof data.non_field_errors === 'object' && Array.isArray(data.non_field_errors)) {
+          message = String(data.non_field_errors[0])
+        }
+      }
+
+      // Add status code context for debugging
+      if (axiosError.response?.status === 403) {
+        message = message || 'Permission denied. Please ensure you are logged in as a client.'
+      } else if (axiosError.response?.status === 401) {
+        message = 'Please log in to create a company.'
+      }
+
       setError(message)
-      console.error('Error creating company:', err)
+      console.error('Error creating company:', err, axiosError.response?.data)
       throw err
     } finally {
       setIsCreating(false)
@@ -501,16 +526,22 @@ interface UseCitiesReturn {
 
 export function useCities(options: UseCitiesOptions = {}): UseCitiesReturn {
   const [cities, setCities] = useState<City[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Only fetch cities when a country is selected
+    if (!options.countryId) {
+      setCities([])
+      setIsLoading(false)
+      return
+    }
+
     const fetchCities = async () => {
       setIsLoading(true)
+      setError(null)
       try {
-        const url = options.countryId
-          ? `/companies/countries/${options.countryId}/cities/`
-          : '/companies/cities/'
+        const url = `/companies/countries/${options.countryId}/cities/`
         const response = await api.get<City[]>(url)
         setCities(response.data)
       } catch (err) {

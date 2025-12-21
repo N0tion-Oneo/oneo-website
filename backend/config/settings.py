@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'cms',
     'feed',
     'subscriptions',
+    'integrations',
 ]
 
 MIDDLEWARE = [
@@ -262,16 +263,40 @@ CORS_ALLOW_HEADERS = [
 
 # Email Configuration
 # https://docs.djangoproject.com/en/5.2/topics/email/
+#
+# For production with Gmail API (recommended):
+#   EMAIL_BACKEND=config.gmail_backend.GmailAPIBackend
+#   GMAIL_SERVICE_ACCOUNT_FILE=/path/to/service-account.json
+#   GMAIL_DELEGATED_USER=notifications@yourdomain.com
+#
+# For development (console output):
+#   EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+#
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Oneo <noreply@oneo.com>')
+
+# Gmail API settings (for config.gmail_backend.GmailAPIBackend)
+_gmail_sa_file = os.getenv('GMAIL_SERVICE_ACCOUNT_FILE', '')
+# Support relative paths from BASE_DIR
+if _gmail_sa_file and not os.path.isabs(_gmail_sa_file):
+    GMAIL_SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, _gmail_sa_file)
+else:
+    GMAIL_SERVICE_ACCOUNT_FILE = _gmail_sa_file
+GMAIL_DELEGATED_USER = os.getenv('GMAIL_DELEGATED_USER', '')
+
+# Transactional email settings (CC and Reply-To for all outgoing emails)
+EMAIL_CC = os.getenv('EMAIL_CC', '')  # Comma-separated list of CC addresses
+EMAIL_REPLY_TO = os.getenv('EMAIL_REPLY_TO', '')  # Reply-To address
+
+# Legacy SMTP settings (fallback if not using Gmail API)
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Oneo <noreply@oneo.com>')
 
 # Site URL (used in emails and notifications - points to frontend)
-SITE_URL = os.getenv('SITE_URL', 'http://localhost:3000')
+SITE_URL = os.getenv('SITE_URL', 'http://localhost:5173')
 
 # Backend URL (used for media files in emails)
 BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')
@@ -293,6 +318,21 @@ MICROSOFT_CALENDAR_REDIRECT_URI = os.getenv(
     'MICROSOFT_CALENDAR_REDIRECT_URI',
     f'{SITE_URL}/settings/calendar/microsoft/callback'
 )
+
+# Xero OAuth2
+# https://developer.xero.com/documentation/guides/oauth2/overview
+XERO_CLIENT_ID = os.getenv('XERO_CLIENT_ID', '')
+XERO_CLIENT_SECRET = os.getenv('XERO_CLIENT_SECRET', '')
+XERO_REDIRECT_URI = os.getenv(
+    'XERO_REDIRECT_URI',
+    f'{SITE_URL}/settings/integrations/xero/callback'
+)
+XERO_SCOPES = [
+    'offline_access',
+    'accounting.transactions',
+    'accounting.contacts',
+    'accounting.settings.read',
+]
 
 # Celery Configuration (for background tasks)
 # https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html
@@ -332,6 +372,14 @@ CELERY_BEAT_SCHEDULE = {
     'update-overdue-invoices': {
         'task': 'subscriptions.update_overdue_invoices',
         'schedule': 60 * 60 * 24,  # Daily - marks past-due invoices as overdue
+    },
+    'sync-xero-payments': {
+        'task': 'integrations.sync_xero_payments',
+        'schedule': 60 * 60,  # Hourly - pull payments from Xero
+    },
+    'push-pending-xero-invoices': {
+        'task': 'integrations.push_pending_invoices',
+        'schedule': 60 * 15,  # Every 15 minutes - retry failed invoice syncs
     },
 }
 

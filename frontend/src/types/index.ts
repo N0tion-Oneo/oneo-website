@@ -463,6 +463,29 @@ export interface CompanyJobSummary {
   applications_count: number
 }
 
+export interface AdminCompanySubscription {
+  id: string
+  status: 'active' | 'paused' | 'terminated' | 'pending'
+  service_type: 'retained' | 'headhunting'
+  contract_start_date: string | null
+  contract_end_date: string | null
+  auto_renew: boolean
+  billing_mode: 'in_system' | 'external'
+  days_until_renewal: number
+}
+
+export interface AdminCompanyContact {
+  id: string
+  name: string
+  email: string
+}
+
+export interface AdminCompanyPricing {
+  monthly_retainer: string | null
+  placement_fee: string | null
+  csuite_placement_fee: string | null
+}
+
 export interface AdminCompanyListItem {
   id: string
   name: string
@@ -484,6 +507,9 @@ export interface AdminCompanyListItem {
   jobs: CompanyJobSummary[]
   assigned_to: AssignedUser[]
   onboarding_stage: OnboardingStageMinimal | null
+  subscription: AdminCompanySubscription | null
+  primary_contact: AdminCompanyContact | null
+  pricing: AdminCompanyPricing | null
 }
 
 export interface CompanyInput {

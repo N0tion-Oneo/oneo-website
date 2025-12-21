@@ -101,6 +101,13 @@ class CompanyAdminListSerializer(serializers.ModelSerializer):
     assigned_to = AssignedUserSerializer(many=True, read_only=True)
     onboarding_stage = OnboardingStageMinimalSerializer(read_only=True)
 
+    # Subscription info
+    subscription = serializers.SerializerMethodField()
+    # Primary contact
+    primary_contact = serializers.SerializerMethodField()
+    # Pricing info
+    pricing = serializers.SerializerMethodField()
+
     class Meta:
         model = Company
         fields = [
@@ -124,6 +131,9 @@ class CompanyAdminListSerializer(serializers.ModelSerializer):
             'jobs',
             'assigned_to',
             'onboarding_stage',
+            'subscription',
+            'primary_contact',
+            'pricing',
         ]
         read_only_fields = ['id', 'slug', 'created_at']
 
@@ -144,6 +154,67 @@ class CompanyAdminListSerializer(serializers.ModelSerializer):
             }
             for job in jobs
         ], many=True).data
+
+    def get_subscription(self, obj):
+        """Return active subscription info if exists."""
+        from subscriptions.models import Subscription, SubscriptionServiceType
+        # Get the most recent active or paused subscription for retained/headhunting
+        subscription = Subscription.objects.filter(
+            company=obj,
+            service_type__in=[SubscriptionServiceType.RETAINED, SubscriptionServiceType.HEADHUNTING]
+        ).order_by('-created_at').first()
+
+        if not subscription:
+            return None
+
+        # Get billing mode from most recent invoice, if any
+        from subscriptions.models import Invoice
+        latest_invoice = Invoice.objects.filter(subscription=subscription).order_by('-created_at').first()
+        billing_mode = latest_invoice.billing_mode if latest_invoice else 'in_system'
+
+        return {
+            'id': str(subscription.id),
+            'status': subscription.status,
+            'service_type': subscription.service_type,
+            'contract_start_date': subscription.contract_start_date.isoformat() if subscription.contract_start_date else None,
+            'contract_end_date': subscription.contract_end_date.isoformat() if subscription.contract_end_date else None,
+            'auto_renew': subscription.auto_renew,
+            'billing_mode': billing_mode,
+            'days_until_renewal': subscription.days_until_renewal,
+        }
+
+    def get_primary_contact(self, obj):
+        """Return the primary contact (first admin) for the company."""
+        admin_user = obj.members.filter(
+            role='admin',
+            is_active=True
+        ).select_related('user').first()
+
+        if not admin_user:
+            return None
+
+        user = admin_user.user
+        return {
+            'id': str(user.id),
+            'name': user.full_name or user.email,
+            'email': user.email,
+        }
+
+    def get_pricing(self, obj):
+        """Return company pricing info. Returns None if no custom pricing set."""
+        from subscriptions.models import CompanyPricing
+        try:
+            pricing = CompanyPricing.objects.get(company=obj)
+            # Only return pricing if at least one custom value is set
+            if not pricing.monthly_retainer and not pricing.placement_fee and not pricing.csuite_placement_fee:
+                return None
+            return {
+                'monthly_retainer': str(pricing.monthly_retainer) if pricing.monthly_retainer else None,
+                'placement_fee': str(pricing.placement_fee) if pricing.placement_fee else None,
+                'csuite_placement_fee': str(pricing.csuite_placement_fee) if pricing.csuite_placement_fee else None,
+            }
+        except CompanyPricing.DoesNotExist:
+            return None
 
 
 class CompanyDetailSerializer(serializers.ModelSerializer):

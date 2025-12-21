@@ -1,13 +1,16 @@
 """
 Signals for subscription-related automation.
 """
+import logging
 from datetime import date, timedelta
 from decimal import Decimal
 
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 
 from jobs.models.application import Application, ApplicationStatus
+
+logger = logging.getLogger(__name__)
 from .models import (
     Invoice,
     InvoiceType,
@@ -145,3 +148,51 @@ def auto_generate_placement_invoice(sender, instance, **kwargs):
             'job_title': instance.job.title,
         },
     )
+
+
+@receiver(post_save, sender=Invoice)
+def sync_invoice_to_xero(sender, instance, created, **kwargs):
+    """
+    Sync invoice to Xero when it's sent.
+
+    Triggers async Celery task to push the invoice to Xero.
+    Only syncs if:
+    - Status is SENT (not draft or other statuses)
+    - There's an active Xero connection
+    """
+    # Only sync sent invoices
+    if instance.status != InvoiceStatus.SENT:
+        return
+
+    # Check if status just changed to SENT (on update)
+    if not created:
+        # For updates, we'd need to track previous status
+        # For now, we'll let the periodic task handle retries
+        pass
+
+    try:
+        # Check if Xero connection exists before importing task
+        from integrations.models import XeroConnection
+
+        if not XeroConnection.objects.filter(is_active=True).exists():
+            return
+
+        # Import and queue the async task
+        from integrations.tasks import sync_single_invoice
+
+        # Check if Celery is available
+        try:
+            from celery import current_app
+            if current_app.conf.broker_url:
+                sync_single_invoice.delay(str(instance.id))
+                logger.info(f"Queued invoice {instance.id} for Xero sync")
+        except Exception:
+            # Celery not available, sync will happen via periodic task
+            logger.debug(f"Celery not available, invoice {instance.id} will sync via periodic task")
+
+    except ImportError:
+        # Integrations app not installed
+        pass
+    except Exception as e:
+        # Don't let Xero sync issues break invoice creation
+        logger.error(f"Error queuing invoice {instance.id} for Xero sync: {e}")

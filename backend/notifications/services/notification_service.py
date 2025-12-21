@@ -14,7 +14,7 @@ by enabling/disabling templates for specific recipient types.
 
 import logging
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.template import Template, Context
 from django.utils import timezone
 from django.utils.html import strip_tags
@@ -215,6 +215,7 @@ class NotificationService:
     ) -> str:
         """
         Get the appropriate action URL based on recipient type.
+        URLs must match actual frontend routes.
         """
         if not job and application:
             job = application.job
@@ -222,9 +223,10 @@ class NotificationService:
             application = stage_instance.application
 
         if recipient_type == RecipientType.CANDIDATE:
+            # Candidates view their applications at /dashboard/my-applications
             if application:
-                return f"/applications/{application.id}"
-            return "/dashboard"
+                return f"/dashboard/my-applications?application={application.id}"
+            return "/dashboard/my-applications"
 
         # All non-candidate types get dashboard links
         elif recipient_type in [
@@ -236,11 +238,12 @@ class NotificationService:
             RecipientType.COMPANY_VIEWER,
             RecipientType.COMPANY_TEAM,
         ]:
-            if job and application:
-                return f"/dashboard/jobs/{job.id}/applications/{application.id}"
+            # Staff/clients view applications at /dashboard/applications
+            if application:
+                return f"/dashboard/applications?application={application.id}"
             elif job:
-                return f"/dashboard/jobs/{job.id}"
-            return "/dashboard"
+                return f"/dashboard/admin/jobs"
+            return "/dashboard/applications"
 
         return "/dashboard"
 
@@ -518,15 +521,26 @@ class NotificationService:
 
             text_content = strip_tags(html_content)
 
-            # Send email
-            send_mail(
+            # Build CC and Reply-To from settings
+            cc = []
+            reply_to = []
+            if hasattr(settings, 'EMAIL_CC') and settings.EMAIL_CC:
+                cc = [addr.strip() for addr in settings.EMAIL_CC.split(',') if addr.strip()]
+            if hasattr(settings, 'EMAIL_REPLY_TO') and settings.EMAIL_REPLY_TO:
+                reply_to = [settings.EMAIL_REPLY_TO.strip()]
+
+            # Send email using EmailMessage for CC/Reply-To support
+            email = EmailMessage(
                 subject=email_subject,
-                message=text_content,
+                body=text_content,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[notification.recipient.email],
-                html_message=html_content,
-                fail_silently=False,
+                to=[notification.recipient.email],
+                cc=cc,
+                reply_to=reply_to,
             )
+            email.content_subtype = 'html'
+            email.body = html_content
+            email.send(fail_silently=False)
 
             # Mark email as sent
             notification.email_sent = True
@@ -580,15 +594,26 @@ class NotificationService:
 
             text_content = strip_tags(html_content)
 
-            # Send email
-            send_mail(
+            # Build CC and Reply-To from settings
+            cc = []
+            reply_to = []
+            if hasattr(settings, 'EMAIL_CC') and settings.EMAIL_CC:
+                cc = [addr.strip() for addr in settings.EMAIL_CC.split(',') if addr.strip()]
+            if hasattr(settings, 'EMAIL_REPLY_TO') and settings.EMAIL_REPLY_TO:
+                reply_to = [settings.EMAIL_REPLY_TO.strip()]
+
+            # Send email using EmailMessage for CC/Reply-To support
+            email = EmailMessage(
                 subject=subject,
-                message=text_content,
+                body=text_content,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[to_email],
-                html_message=html_content,
-                fail_silently=False,
+                to=[to_email],
+                cc=cc,
+                reply_to=reply_to,
             )
+            email.content_subtype = 'html'
+            email.body = html_content
+            email.send(fail_silently=False)
 
             return True
 
@@ -1916,14 +1941,26 @@ class NotificationService:
                     html_content = django_template.render(Context(full_context))
                     text_content = strip_tags(html_content)
 
-                    send_mail(
+                    # Build CC and Reply-To from settings
+                    cc = []
+                    reply_to = []
+                    if hasattr(settings, 'EMAIL_CC') and settings.EMAIL_CC:
+                        cc = [addr.strip() for addr in settings.EMAIL_CC.split(',') if addr.strip()]
+                    if hasattr(settings, 'EMAIL_REPLY_TO') and settings.EMAIL_REPLY_TO:
+                        reply_to = [settings.EMAIL_REPLY_TO.strip()]
+
+                    # Send email using EmailMessage for CC/Reply-To support
+                    email = EmailMessage(
                         subject=title,
-                        message=text_content,
+                        body=text_content,
                         from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[recipient.email],
-                        html_message=html_content,
-                        fail_silently=True,
+                        to=[recipient.email],
+                        cc=cc,
+                        reply_to=reply_to,
                     )
+                    email.content_subtype = 'html'
+                    email.body = html_content
+                    email.send(fail_silently=True)
 
                     notification.email_sent = True
                     notification.email_sent_at = timezone.now()

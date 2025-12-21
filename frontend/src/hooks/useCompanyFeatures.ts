@@ -44,9 +44,24 @@ export function useCompanyFeatures(): UseCompanyFeaturesReturn {
       const response = await api.get<CompanyFeaturesResponse>('/companies/my/features/')
       setData(response.data)
     } catch (err) {
-      const axiosError = err as { response?: { status?: number; data?: { error?: string } } }
+      const axiosError = err as {
+        response?: {
+          status?: number
+          data?: { error?: string; error_code?: string }
+        }
+      }
       // 404 is expected if user has no company - not an error
       if (axiosError.response?.status === 404) {
+        setData({
+          service_type: null,
+          service_type_display: null,
+          features: [],
+        })
+      } else if (
+        axiosError.response?.status === 403 &&
+        axiosError.response?.data?.error_code === 'subscription_blocked'
+      ) {
+        // Subscription blocked - don't show as error, SubscriptionContext handles this
         setData({
           service_type: null,
           service_type_display: null,

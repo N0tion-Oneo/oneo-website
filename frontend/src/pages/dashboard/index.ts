@@ -32,7 +32,7 @@ export {
 export { default as BrandingSettingsPage } from './BrandingSettingsPage';
 
 // Settings pages
-export { ProfileSettingsPage, CalendarSettingsPage } from './settings';
+export { ProfileSettingsPage, CalendarSettingsPage, IntegrationsPage } from './settings';
 
 // Recruiter Profile
 export { default as RecruiterProfilePage } from './RecruiterProfilePage';

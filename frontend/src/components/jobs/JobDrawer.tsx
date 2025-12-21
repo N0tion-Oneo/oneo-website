@@ -29,9 +29,7 @@ export default function JobDrawer({
   const isAdminOrRecruiter = user?.role === UserRole.ADMIN || user?.role === UserRole.RECRUITER
 
   const { job, isLoading, refetch } = useJobDetail(jobId || '')
-  const { companies: allCompanies, isLoading: isLoadingCompanies } = useAllCompanies(
-    isAdminOrRecruiter ? { is_published: true } : {}
-  )
+  const { companies: allCompanies, isLoading: isLoadingCompanies } = useAllCompanies()
   const { publishJob, closeJob, markJobFilled, isSubmitting: isStatusSubmitting } = useJobStatus()
   const { updateJob } = useUpdateJob()
 

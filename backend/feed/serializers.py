@@ -49,10 +49,10 @@ class JobEmbedSerializer(serializers.Serializer):
 
     def get_location_display(self, obj):
         parts = []
-        if obj.city:
-            parts.append(obj.city.name if hasattr(obj.city, 'name') else str(obj.city))
-        if obj.country:
-            parts.append(obj.country.name if hasattr(obj.country, 'name') else str(obj.country))
+        if obj.location_city:
+            parts.append(obj.location_city.name if hasattr(obj.location_city, 'name') else str(obj.location_city))
+        if obj.location_country:
+            parts.append(obj.location_country.name if hasattr(obj.location_country, 'name') else str(obj.location_country))
         return ', '.join(parts) if parts else None
 
     def get_salary_display(self, obj):

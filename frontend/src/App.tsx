@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { SEOProvider } from '@/contexts/SEOContext';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import { ProtectedRoute, PublicRoute } from '@/components/auth';
 import { BrandingProvider } from '@/components/branding';
 import {
@@ -46,8 +47,10 @@ import {
   JobsListingPage,
   JobDetailPage,
   CalendarOAuthCallback,
+  XeroOAuthCallback,
   ProfileSettingsPage,
   CalendarSettingsPage,
+  IntegrationsPage,
   RecruiterProfilePage,
   BookingManagementPage,
   AnalyticsPage,
@@ -125,6 +128,7 @@ function App() {
     <BrandingProvider>
       <SEOProvider>
         <AuthProvider>
+          <SubscriptionProvider>
           <ToastProvider>
           <GoogleAnalytics />
           <ScrollToTop />
@@ -192,6 +196,7 @@ function App() {
             <Route path="recruiter-profile" element={<RecruiterProfilePage />} />
             <Route path="bookings" element={<BookingManagementPage />} />
             <Route path="calendar" element={<CalendarSettingsPage />} />
+            <Route path="integrations" element={<IntegrationsPage />} />
             <Route path="invitations" element={<InvitationsPage />} />
             <Route path="notifications" element={<NotificationsAdminPage />} />
             <Route path="notifications/send" element={<SendNotificationPage />} />
@@ -297,6 +302,16 @@ function App() {
           }
         />
 
+        {/* Xero OAuth callback */}
+        <Route
+          path="/settings/integrations/xero/callback"
+          element={
+            <ProtectedRoute>
+              <XeroOAuthCallback />
+            </ProtectedRoute>
+          }
+        />
+
         {/* SEO Files - served as clean URLs */}
         <Route path="/sitemap.xml" element={<SitemapXmlPage />} />
         <Route path="/robots.txt" element={<RobotsTxtPage />} />
@@ -309,6 +324,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
           </ToastProvider>
+          </SubscriptionProvider>
         </AuthProvider>
       </SEOProvider>
     </BrandingProvider>

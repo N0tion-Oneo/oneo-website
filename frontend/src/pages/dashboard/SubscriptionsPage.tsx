@@ -14,6 +14,7 @@ import {
   DollarSign,
   Calendar,
   ChevronRight,
+  ChevronDown,
   Search,
   CheckCircle,
   PauseCircle,
@@ -36,10 +37,13 @@ import {
   Send,
   Trash2,
   Loader2,
+  Briefcase,
+  Users,
 } from 'lucide-react'
 import {
   useSubscriptions,
   useInvoices,
+  useFilteredInvoices,
   useSubscriptionAlerts,
   useSubscriptionSummary,
   useAllCompanies,
@@ -64,6 +68,7 @@ import {
   useCreateInvoice,
   useCompanyPlacements,
   useCalculateTerminationFee,
+  useCompanyById,
 } from '@/hooks'
 import type {
   SubscriptionListItem,
@@ -75,6 +80,9 @@ import type {
   SubscriptionSummary,
   SubscriptionStatus,
   InvoiceStatus,
+  InvoiceTab,
+  TimeRange,
+  PlacementBreakdown,
   InvoiceType,
   Subscription,
   FeatureWithOverride,
@@ -83,7 +91,15 @@ import type {
   EffectivePricing,
 } from '@/hooks'
 import type { AdminCompanyListItem } from '@/types'
+import { ServiceType } from '@/types'
 import { ChangeServiceTypeModal } from '@/components/company/ChangeServiceTypeModal'
+import {
+  NoServiceType,
+  ServiceTypeHeader,
+  ContractSection,
+  RetainedContractSection,
+  QuickStats,
+} from '@/components/subscriptions'
 
 type TabType = 'overview' | 'companies' | 'invoices' | 'alerts'
 
@@ -238,6 +254,7 @@ function CreateSubscriptionModal({
     try {
       await createSubscription({
         company: company.id,
+        service_type: company.service_type || 'retained',
         contract_start_date: startDate,
         contract_end_date: endDateStr,
         billing_day_of_month: parseInt(billingDay, 10),
@@ -250,18 +267,26 @@ function CreateSubscriptionModal({
     }
   }
 
+  const serviceTypeLabel = company.service_type === 'headhunting' ? 'Headhunting' : 'Retained'
+  const isHeadhunting = company.service_type === 'headhunting'
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Create Subscription</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Create {serviceTypeLabel} Contract</h3>
           <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <p className="text-sm text-gray-600 mb-4">
-          Creating subscription for <strong>{company.name}</strong>
+          Creating {serviceTypeLabel.toLowerCase()} contract for <strong>{company.name}</strong>
+          {isHeadhunting && (
+            <span className="block mt-1 text-xs text-gray-500">
+              This contract tracks agreement terms. Invoices are created per placement.
+            </span>
+          )}
         </p>
 
         {error && (
@@ -1709,11 +1734,15 @@ function CompanyDetailDrawer({
   onClose: () => void
   onRefresh: () => void
 }) {
-  const { subscription, hasSubscription, isLoading: subLoading, refetch: refetchSub } = useCompanySubscription(company.id)
+  const { recruitmentSubscription: subscription, hasSubscription, isLoading: subLoading, refetch: refetchSub } = useCompanySubscription(company.id)
   const { pricing, isLoading: pricingLoading, refetch: refetchPricing } = useEffectivePricing(company.id)
   const { features, isLoading: featuresLoading, refetch: refetchFeatures } = useCompanyFeatureOverrides(company.id)
   const { invoices, isLoading: invoicesLoading, refetch: refetchInvoices } = useCompanyInvoices(company.id)
   const { activities, isLoading: activitiesLoading } = useCompanyActivity(company.id)
+  const { company: fetchedCompany, updateCompany, isUpdating: isUpdatingCompany, refetch: refetchCompany } = useCompanyById(company.id)
+
+  // Use fetched company data if available, otherwise fall back to prop
+  const currentCompany = fetchedCompany || company
 
   const { resumeSubscription, isResuming } = useResumeSubscription()
   const { updatePricing, isUpdating: isPricingUpdating } = useUpdateCompanyPricing()
@@ -1743,6 +1772,7 @@ function CompanyDetailDrawer({
     refetchPricing()
     refetchFeatures()
     refetchInvoices()
+    refetchCompany()
     onRefresh()
   }
 
@@ -1756,6 +1786,15 @@ function CompanyDetailDrawer({
     }
   }
 
+  const handleSetServiceType = async (type: 'retained' | 'headhunting') => {
+    try {
+      const serviceTypeEnum = type === 'retained' ? ServiceType.RETAINED : ServiceType.HEADHUNTING
+      await updateCompany({ service_type: serviceTypeEnum })
+      handleRefresh()
+    } catch (err) {
+      console.error('Failed to set service type:', err)
+    }
+  }
 
   const handleSavePricing = async () => {
     try {
@@ -1825,9 +1864,9 @@ function CompanyDetailDrawer({
                 <Building2 className="w-5 h-5 text-gray-500" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">{company.name}</h2>
+                <h2 className="text-lg font-semibold text-gray-900">{currentCompany.name}</h2>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <ServiceTypeBadge type={company.service_type} />
+                  <ServiceTypeBadge type={currentCompany.service_type} />
                   {hasSubscription && subscription && (
                     <SubscriptionStatusBadge status={subscription.status} />
                   )}
@@ -1862,152 +1901,81 @@ function CompanyDetailDrawer({
         <div className="flex-1 overflow-y-auto p-6">
           {/* Overview Section */}
           {activeSection === 'overview' && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {subLoading ? (
                 <div className="animate-pulse space-y-4">
                   <div className="h-32 bg-gray-100 rounded-lg" />
                   <div className="h-24 bg-gray-100 rounded-lg" />
                 </div>
-              ) : hasSubscription && subscription ? (
+              ) : !currentCompany.service_type ? (
+                /* No service type set - show selection */
+                <NoServiceType
+                  companyName={currentCompany.name}
+                  onSelectServiceType={handleSetServiceType}
+                  isAdmin={true}
+                  isUpdating={isUpdatingCompany}
+                  compact
+                />
+              ) : currentCompany.service_type === 'headhunting' ? (
+                /* Headhunting - show contract management (no retainer invoices) */
                 <>
-                  {/* Subscription Details */}
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-gray-900">Contract Details</h3>
-                      <div className="flex items-center gap-2">
-                        <ServiceTypeBadge type={company.service_type} />
-                        {company.service_type && (
-                          <button
-                            onClick={() => setShowChangeServiceTypeModal(true)}
-                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                          >
-                            Change
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs text-gray-500">Start Date</p>
-                        <p className="text-sm font-medium text-gray-900">{formatDate(subscription.contract_start_date)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">End Date</p>
-                        <p className="text-sm font-medium text-gray-900">{formatDate(subscription.contract_end_date)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Days Until Renewal</p>
-                        <p className={`text-sm font-medium ${subscription.days_until_renewal <= 30 ? 'text-yellow-600' : 'text-gray-900'}`}>
-                          {subscription.days_until_renewal} days
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Auto-Renew</p>
-                        <p className={`text-sm font-medium ${subscription.auto_renew ? 'text-green-600' : 'text-gray-500'}`}>
-                          {subscription.auto_renew ? 'Enabled' : 'Disabled'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {subscription.status === 'paused' && subscription.pause_reason && (
-                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <p className="text-sm text-yellow-800">
-                          <strong>Paused:</strong> {subscription.pause_reason}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex flex-wrap gap-2">
-                    {subscription.status === 'active' && (
-                      <>
-                        <button
-                          onClick={() => setShowPauseModal(true)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-yellow-700 bg-yellow-100 rounded-lg hover:bg-yellow-200"
-                        >
-                          <Pause className="w-4 h-4" />
-                          Pause
-                        </button>
-                        <button
-                          onClick={() => setShowAdjustModal(true)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200"
-                        >
-                          <Calendar className="w-4 h-4" />
-                          Adjust Contract
-                        </button>
-                        <button
-                          onClick={() => setShowCreateInvoiceModal(true)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-                        >
-                          <Receipt className="w-4 h-4" />
-                          Generate Invoice
-                        </button>
-                      </>
-                    )}
-                    {subscription.status === 'paused' && (
-                      <button
-                        onClick={handleResume}
-                        disabled={isResuming}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200 disabled:opacity-50"
-                      >
-                        <Play className="w-4 h-4" />
-                        {isResuming ? 'Resuming...' : 'Resume'}
-                      </button>
-                    )}
-                    {subscription.status !== 'terminated' && (
-                      <button
-                        onClick={() => setShowTerminateModal(true)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-lg hover:bg-red-200"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        Terminate
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Quick Stats */}
-                  <div className="grid grid-cols-2 gap-4">
-                    {company.service_type === 'retained' ? (
-                      <div className="bg-white border border-gray-200 rounded-lg p-4">
-                        <p className="text-xs text-gray-500 mb-1">Monthly Retainer</p>
-                        <p className="text-lg font-semibold text-gray-900">
-                          {pricing ? formatCurrency(pricing.monthly_retainer) : '-'}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="bg-white border border-gray-200 rounded-lg p-4">
-                        <p className="text-xs text-gray-500 mb-1">Placement Fee</p>
-                        <p className="text-lg font-semibold text-gray-900">
-                          {pricing ? `${(parseFloat(pricing.placement_fee) * 100).toFixed(0)}%` : '-'}
-                        </p>
-                      </div>
-                    )}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <p className="text-xs text-gray-500 mb-1">Open Invoices</p>
-                      <p className="text-lg font-semibold text-gray-900">
-                        {invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled').length}
-                      </p>
-                    </div>
-                  </div>
+                  <ServiceTypeHeader
+                    serviceType="headhunting"
+                    onChangeServiceType={() => setShowChangeServiceTypeModal(true)}
+                    subscriptionStatus={subscription?.status}
+                    isAdmin={true}
+                    compact
+                  />
+                  <ContractSection
+                    subscription={subscription}
+                    serviceType="headhunting"
+                    onPause={() => setShowPauseModal(true)}
+                    onResume={handleResume}
+                    onAdjust={() => setShowAdjustModal(true)}
+                    onTerminate={() => setShowTerminateModal(true)}
+                    onCreateSubscription={() => setShowCreateSubModal(true)}
+                    isPausing={false}
+                    isResuming={isResuming}
+                    isAdmin={true}
+                    compact
+                  />
+                  <QuickStats
+                    serviceType="headhunting"
+                    pricing={pricing}
+                    invoices={invoices}
+                    compact
+                  />
                 </>
               ) : (
-                <div className="text-center py-8">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CreditCard className="w-6 h-6 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Subscription</h3>
-                  <p className="text-sm text-gray-500 mb-6">
-                    This company doesn't have an active subscription.
-                  </p>
-                  <button
-                    onClick={() => setShowCreateSubModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Create Subscription
-                  </button>
-                </div>
+                /* Retained - show subscription contract management */
+                <>
+                  <ServiceTypeHeader
+                    serviceType="retained"
+                    onChangeServiceType={() => setShowChangeServiceTypeModal(true)}
+                    subscriptionStatus={subscription?.status}
+                    isAdmin={true}
+                    compact
+                  />
+                  <RetainedContractSection
+                    subscription={subscription}
+                    onPause={() => setShowPauseModal(true)}
+                    onResume={handleResume}
+                    onAdjust={() => setShowAdjustModal(true)}
+                    onTerminate={() => setShowTerminateModal(true)}
+                    onCreateSubscription={() => setShowCreateSubModal(true)}
+                    onGenerateInvoice={() => setShowCreateInvoiceModal(true)}
+                    isPausing={false}
+                    isResuming={isResuming}
+                    isAdmin={true}
+                    compact
+                  />
+                  <QuickStats
+                    serviceType="retained"
+                    pricing={pricing}
+                    invoices={invoices}
+                    compact
+                  />
+                </>
               )}
             </div>
           )}
@@ -2058,7 +2026,7 @@ function CompanyDetailDrawer({
                   {editingPricing ? (
                     <div className="space-y-4 bg-gray-50 rounded-lg p-4">
                       {/* Only show Monthly Retainer for retained clients */}
-                      {company.service_type === 'retained' && (
+                      {currentCompany.service_type === 'retained' && (
                         <div>
                           <label className="block text-xs font-medium text-gray-500 mb-1">
                             Monthly Retainer (ZAR)
@@ -2102,7 +2070,7 @@ function CompanyDetailDrawer({
                   ) : (
                     <div className="space-y-3">
                       {/* Only show Monthly Retainer for retained clients */}
-                      {company.service_type === 'retained' && (
+                      {currentCompany.service_type === 'retained' && (
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <span className="text-sm text-gray-600">Monthly Retainer</span>
                           <span className="text-sm font-medium text-gray-900">
@@ -2331,7 +2299,7 @@ function CompanyDetailDrawer({
       {showPauseModal && subscription && (
         <PauseSubscriptionModal
           subscription={subscription}
-          companyName={company.name}
+          companyName={currentCompany.name}
           onClose={() => setShowPauseModal(false)}
           onPaused={handleRefresh}
         />
@@ -2339,16 +2307,16 @@ function CompanyDetailDrawer({
       {showAdjustModal && subscription && (
         <AdjustContractModal
           subscription={subscription}
-          companyName={company.name}
+          companyName={currentCompany.name}
           onClose={() => setShowAdjustModal(false)}
           onAdjusted={handleRefresh}
         />
       )}
-      {showTerminateModal && subscription && company?.service_type && (
+      {showTerminateModal && subscription && currentCompany?.service_type && (
         <TerminateSubscriptionModal
           subscription={subscription}
-          companyName={company.name}
-          serviceType={company.service_type as 'retained' | 'headhunting'}
+          companyName={currentCompany.name}
+          serviceType={currentCompany.service_type as 'retained' | 'headhunting'}
           onClose={() => setShowTerminateModal(false)}
           onTerminated={handleRefresh}
         />
@@ -2387,11 +2355,11 @@ function CompanyDetailDrawer({
           }}
         />
       )}
-      {showChangeServiceTypeModal && company?.service_type && (
+      {showChangeServiceTypeModal && currentCompany?.service_type && (
         <ChangeServiceTypeModal
-          companyId={company.id}
-          companyName={company.name}
-          currentType={company.service_type as 'retained' | 'headhunting'}
+          companyId={currentCompany.id}
+          companyName={currentCompany.name}
+          currentType={currentCompany.service_type as 'retained' | 'headhunting'}
           subscriptionId={subscription?.id}
           monthsRemaining={subscription?.months_remaining}
           isWithinLockoutPeriod={subscription?.is_within_lockout_period}
@@ -2408,9 +2376,613 @@ function CompanyDetailDrawer({
 }
 
 // =====================================================
+// PLACEMENT ROW COMPONENT (Expandable with Invoice List)
+// =====================================================
+function PlacementRow({
+  label,
+  count,
+  revenue,
+  breakdown,
+  variant = 'default',
+  serviceType,
+  placementType,
+  onInvoiceClick,
+}: {
+  label: string
+  count: number
+  revenue: string
+  breakdown: PlacementBreakdown
+  variant?: 'default' | 'csuite'
+  serviceType: 'retained' | 'headhunting'
+  placementType: 'regular' | 'csuite'
+  onInvoiceClick?: (invoiceId: string) => void
+}) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null)
+  const isCsuite = variant === 'csuite'
+
+  // Fetch invoices when a status card is selected
+  const { invoices, isLoading } = useFilteredInvoices({
+    serviceType,
+    placementType,
+    invoiceType: 'placement',
+    invoiceStatus: selectedStatus as 'paid' | 'partially_paid' | 'pending' | 'overdue' | 'draft' | 'cancelled' | undefined,
+    enabled: !!selectedStatus,
+  })
+
+  const statusCards = [
+    { key: 'paid', label: 'Paid', data: breakdown.paid, bgColor: 'bg-green-50', textColor: 'text-green-700', borderColor: 'border-green-200', selectedBg: 'bg-green-100', ring: 'ring-green-400' },
+    { key: 'partially_paid', label: 'Partial', data: breakdown.partially_paid, bgColor: 'bg-yellow-50', textColor: 'text-yellow-700', borderColor: 'border-yellow-200', selectedBg: 'bg-yellow-100', ring: 'ring-yellow-400' },
+    { key: 'pending', label: 'Pending', data: breakdown.pending, bgColor: 'bg-blue-50', textColor: 'text-blue-700', borderColor: 'border-blue-200', selectedBg: 'bg-blue-100', ring: 'ring-blue-400' },
+    { key: 'overdue', label: 'Overdue', data: breakdown.overdue, bgColor: 'bg-red-50', textColor: 'text-red-700', borderColor: 'border-red-200', selectedBg: 'bg-red-100', ring: 'ring-red-400' },
+    { key: 'draft', label: 'Draft', data: breakdown.draft, bgColor: 'bg-gray-50', textColor: 'text-gray-600', borderColor: 'border-gray-200', selectedBg: 'bg-gray-100', ring: 'ring-gray-400' },
+    { key: 'cancelled', label: 'Cancelled', data: breakdown.cancelled, bgColor: 'bg-slate-50', textColor: 'text-slate-500', borderColor: 'border-slate-200', selectedBg: 'bg-slate-100', ring: 'ring-slate-400' },
+  ]
+
+  const handleStatusClick = (statusKey: string) => {
+    if (selectedStatus === statusKey) {
+      setSelectedStatus(null) // Toggle off
+    } else {
+      setSelectedStatus(statusKey)
+    }
+  }
+
+  return (
+    <div className={`rounded-lg overflow-hidden ${isCsuite ? 'bg-amber-50' : 'bg-gray-50'}`}>
+      {/* Main Row - Clickable */}
+      <button
+        onClick={() => {
+          setIsExpanded(!isExpanded)
+          if (isExpanded) setSelectedStatus(null) // Clear selection when collapsing
+        }}
+        className={`w-full flex items-center justify-between p-3 hover:bg-opacity-80 transition-colors ${
+          isCsuite ? 'hover:bg-amber-100' : 'hover:bg-gray-100'
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <ChevronDown
+            className={`w-4 h-4 transition-transform ${isExpanded ? '' : '-rotate-90'} ${
+              isCsuite ? 'text-amber-600' : 'text-gray-500'
+            }`}
+          />
+          <div className="text-left">
+            <p className={`text-sm font-medium ${isCsuite ? 'text-amber-900' : 'text-gray-900'}`}>{label}</p>
+            <p className={`text-xs ${isCsuite ? 'text-amber-700' : 'text-gray-500'}`}>
+              {count} invoice{count !== 1 ? 's' : ''}
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className={`text-sm font-semibold ${isCsuite ? 'text-amber-900' : 'text-gray-900'}`}>
+            {formatCurrency(revenue)}
+          </p>
+          <p className={`text-xs ${isCsuite ? 'text-amber-700' : 'text-gray-500'}`}>Total</p>
+        </div>
+      </button>
+
+      {/* Expanded Breakdown - Cards Grid */}
+      {isExpanded && (
+        <div className={`px-3 pb-3 pt-2 border-t ${isCsuite ? 'border-amber-200' : 'border-gray-200'}`}>
+          <div className="grid grid-cols-6 gap-2">
+            {statusCards.map(({ key, label, data, bgColor, textColor, borderColor, selectedBg, ring }) => {
+              const isSelected = selectedStatus === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => handleStatusClick(key)}
+                  disabled={data.count === 0}
+                  className={`
+                    ${isSelected ? selectedBg : bgColor} ${textColor} border ${borderColor} rounded-lg p-2 text-center
+                    transition-all duration-150
+                    ${data.count > 0 ? 'cursor-pointer hover:scale-105' : 'opacity-50 cursor-not-allowed'}
+                    ${isSelected ? `ring-2 ${ring}` : ''}
+                  `}
+                >
+                  <p className="text-lg font-bold">{data.count}</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wide">{label}</p>
+                  <p className="text-xs font-semibold mt-1">{formatCurrency(data.amount)}</p>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Invoice List when a status is selected */}
+          {selectedStatus && (
+            <div className="mt-3 border-t border-gray-200 pt-3">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                  <span className="ml-2 text-sm text-gray-500">Loading invoices...</span>
+                </div>
+              ) : invoices.length === 0 ? (
+                <p className="text-center text-sm text-gray-500 py-4">No invoices found</p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {invoices.map((invoice) => (
+                    <button
+                      key={invoice.id}
+                      onClick={() => onInvoiceClick?.(invoice.id)}
+                      className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-4 h-4 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{invoice.invoice_number}</p>
+                          <p className="text-xs text-gray-500">{invoice.company_name}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-gray-900">{formatCurrency(invoice.total_amount)}</p>
+                        <p className="text-xs text-gray-500">{formatDate(invoice.invoice_date)}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// =====================================================
+// RETAINER ROW COMPONENT (for subscription invoices)
+// =====================================================
+function RetainerRow({
+  count,
+  revenue,
+  breakdown,
+  serviceType,
+  onInvoiceClick,
+}: {
+  count: number
+  revenue: string
+  breakdown: PlacementBreakdown
+  serviceType: 'retained' | 'headhunting'
+  onInvoiceClick?: (invoiceId: string) => void
+}) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null)
+
+  // Fetch invoices when a status card is selected
+  const { invoices, isLoading } = useFilteredInvoices({
+    serviceType,
+    invoiceType: 'retainer',
+    invoiceStatus: selectedStatus as 'paid' | 'partially_paid' | 'pending' | 'overdue' | 'draft' | 'cancelled' | undefined,
+    enabled: !!selectedStatus,
+  })
+
+  const statusCards = [
+    { key: 'paid', label: 'Paid', data: breakdown.paid, bgColor: 'bg-green-50', textColor: 'text-green-700', borderColor: 'border-green-200', selectedBg: 'bg-green-100', ring: 'ring-green-400' },
+    { key: 'partially_paid', label: 'Partial', data: breakdown.partially_paid, bgColor: 'bg-yellow-50', textColor: 'text-yellow-700', borderColor: 'border-yellow-200', selectedBg: 'bg-yellow-100', ring: 'ring-yellow-400' },
+    { key: 'pending', label: 'Pending', data: breakdown.pending, bgColor: 'bg-blue-50', textColor: 'text-blue-700', borderColor: 'border-blue-200', selectedBg: 'bg-blue-100', ring: 'ring-blue-400' },
+    { key: 'overdue', label: 'Overdue', data: breakdown.overdue, bgColor: 'bg-red-50', textColor: 'text-red-700', borderColor: 'border-red-200', selectedBg: 'bg-red-100', ring: 'ring-red-400' },
+    { key: 'draft', label: 'Draft', data: breakdown.draft, bgColor: 'bg-gray-50', textColor: 'text-gray-600', borderColor: 'border-gray-200', selectedBg: 'bg-gray-100', ring: 'ring-gray-400' },
+    { key: 'cancelled', label: 'Cancelled', data: breakdown.cancelled, bgColor: 'bg-slate-50', textColor: 'text-slate-500', borderColor: 'border-slate-200', selectedBg: 'bg-slate-100', ring: 'ring-slate-400' },
+  ]
+
+  const handleStatusClick = (statusKey: string) => {
+    if (selectedStatus === statusKey) {
+      setSelectedStatus(null) // Toggle off
+    } else {
+      setSelectedStatus(statusKey)
+    }
+  }
+
+  return (
+    <div className="rounded-lg overflow-hidden bg-gray-50">
+      {/* Main Row - Clickable */}
+      <button
+        onClick={() => {
+          setIsExpanded(!isExpanded)
+          if (isExpanded) setSelectedStatus(null) // Clear selection when collapsing
+        }}
+        className="w-full flex items-center justify-between p-3 hover:bg-gray-100 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <ChevronDown
+            className={`w-4 h-4 transition-transform text-gray-500 ${isExpanded ? '' : '-rotate-90'}`}
+          />
+          <div className="text-left">
+            <p className="text-sm font-medium text-gray-900">Subscription Invoices</p>
+            <p className="text-xs text-gray-500">
+              {count} invoice{count !== 1 ? 's' : ''}
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-sm font-semibold text-gray-900">
+            {formatCurrency(revenue)}
+          </p>
+          <p className="text-xs text-gray-500">Total</p>
+        </div>
+      </button>
+
+      {/* Expanded Breakdown - Cards Grid */}
+      {isExpanded && (
+        <div className="px-3 pb-3 pt-2 border-t border-gray-200">
+          <div className="grid grid-cols-6 gap-2">
+            {statusCards.map(({ key, label, data, bgColor, textColor, borderColor, selectedBg, ring }) => {
+              const isSelected = selectedStatus === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => handleStatusClick(key)}
+                  disabled={data.count === 0}
+                  className={`
+                    ${isSelected ? selectedBg : bgColor} ${textColor} border ${borderColor} rounded-lg p-2 text-center
+                    transition-all duration-150
+                    ${data.count > 0 ? 'cursor-pointer hover:scale-105' : 'opacity-50 cursor-not-allowed'}
+                    ${isSelected ? `ring-2 ${ring}` : ''}
+                  `}
+                >
+                  <p className="text-lg font-bold">{data.count}</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wide">{label}</p>
+                  <p className="text-xs font-semibold mt-1">{formatCurrency(data.amount)}</p>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Invoice List when a status is selected */}
+          {selectedStatus && (
+            <div className="mt-3 border-t border-gray-200 pt-3">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                  <span className="ml-2 text-sm text-gray-500">Loading invoices...</span>
+                </div>
+              ) : invoices.length === 0 ? (
+                <p className="text-center text-sm text-gray-500 py-4">No invoices found</p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {invoices.map((invoice) => (
+                    <button
+                      key={invoice.id}
+                      onClick={() => onInvoiceClick?.(invoice.id)}
+                      className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-4 h-4 text-gray-400" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{invoice.invoice_number}</p>
+                          <p className="text-xs text-gray-500">{invoice.company_name}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-gray-900">{formatCurrency(invoice.total_amount)}</p>
+                        <p className="text-xs text-gray-500">{formatDate(invoice.invoice_date)}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// =====================================================
+// SERVICE TYPE CARD COMPONENT
+// =====================================================
+function ServiceTypeCard({
+  type,
+  companies,
+  activeSubscriptions,
+  pausedSubscriptions,
+  terminatedSubscriptions,
+  expiredSubscriptions,
+  regularPlacements,
+  csuitePlacements,
+  regularRevenue,
+  csuiteRevenue,
+  regularBreakdown,
+  csuiteBreakdown,
+  retainerCount,
+  retainerRevenue,
+  retainerBreakdown,
+  mrr,
+  onInvoiceClick,
+}: {
+  type: 'retained' | 'headhunting'
+  companies: number
+  // Subscription status counts (only for retained)
+  activeSubscriptions?: number
+  pausedSubscriptions?: number
+  terminatedSubscriptions?: number
+  expiredSubscriptions?: number
+  regularPlacements: number
+  csuitePlacements: number
+  regularRevenue: string
+  csuiteRevenue: string
+  regularBreakdown: PlacementBreakdown
+  csuiteBreakdown: PlacementBreakdown
+  // Retainer stats only for retained (headhunting doesn't have subscriptions)
+  retainerCount?: number
+  retainerRevenue?: string
+  retainerBreakdown?: PlacementBreakdown
+  mrr?: string
+  onInvoiceClick?: (invoiceId: string) => void
+}) {
+  const isRetained = type === 'retained'
+  const totalPlacements = regularPlacements + csuitePlacements
+  const totalRevenue = parseFloat(regularRevenue) + parseFloat(csuiteRevenue)
+
+  return (
+    <div className={`bg-white border rounded-lg overflow-hidden ${isRetained ? 'border-purple-200' : 'border-indigo-200'}`}>
+      {/* Header */}
+      <div className={`px-6 py-4 ${isRetained ? 'bg-purple-50' : 'bg-indigo-50'}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {isRetained ? (
+              <Briefcase className="w-5 h-5 text-purple-600" />
+            ) : (
+              <Users className="w-5 h-5 text-indigo-600" />
+            )}
+            <h3 className={`text-lg font-semibold ${isRetained ? 'text-purple-900' : 'text-indigo-900'}`}>
+              {isRetained ? 'Retained' : 'Headhunting'}
+            </h3>
+          </div>
+          <div className="text-right">
+            <p className={`text-2xl font-bold ${isRetained ? 'text-purple-600' : 'text-indigo-600'}`}>
+              {companies}
+            </p>
+            <p className={`text-xs ${isRetained ? 'text-purple-700' : 'text-indigo-700'}`}>
+              {companies === 1 ? 'Company' : 'Companies'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="p-6 space-y-4">
+        {/* Subscriptions & MRR (for Retained) */}
+        {isRetained && (
+          <div className="space-y-3">
+            {/* Subscription Status Cards */}
+            <div className="grid grid-cols-4 gap-2">
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-center">
+                <p className="text-2xl font-bold text-green-700">{activeSubscriptions ?? 0}</p>
+                <p className="text-[10px] font-medium text-green-600 uppercase tracking-wide">Active</p>
+              </div>
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                <p className="text-2xl font-bold text-yellow-700">{pausedSubscriptions ?? 0}</p>
+                <p className="text-[10px] font-medium text-yellow-600 uppercase tracking-wide">Paused</p>
+              </div>
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-center">
+                <p className="text-2xl font-bold text-red-700">{terminatedSubscriptions ?? 0}</p>
+                <p className="text-[10px] font-medium text-red-600 uppercase tracking-wide">Terminated</p>
+              </div>
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                <p className="text-2xl font-bold text-gray-600">{expiredSubscriptions ?? 0}</p>
+                <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Expired</p>
+              </div>
+            </div>
+            {/* Monthly MRR */}
+            <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-purple-700 uppercase tracking-wide font-medium">Monthly Recurring Revenue</p>
+                <p className="text-xl font-bold text-purple-700">{formatCurrency(mrr || '0')}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Placements Section */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-medium text-gray-700">Placements</p>
+            <p className="text-sm font-semibold text-gray-900">{totalPlacements} total</p>
+          </div>
+
+          <div className="space-y-2">
+            {/* Regular Placements - Expandable */}
+            <PlacementRow
+              label="Regular"
+              count={regularPlacements}
+              revenue={regularRevenue}
+              breakdown={regularBreakdown}
+              variant="default"
+              serviceType={type}
+              placementType="regular"
+              onInvoiceClick={onInvoiceClick}
+            />
+
+            {/* C-Suite Placements - Expandable */}
+            <PlacementRow
+              label="C-Suite"
+              count={csuitePlacements}
+              revenue={csuiteRevenue}
+              breakdown={csuiteBreakdown}
+              variant="csuite"
+              serviceType={type}
+              placementType="csuite"
+              onInvoiceClick={onInvoiceClick}
+            />
+          </div>
+        </div>
+
+        {/* Subscription Invoices Section (Retainer) - Only for retained */}
+        {retainerCount != null && retainerCount > 0 && retainerBreakdown && retainerRevenue && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-gray-700">Subscriptions</p>
+              <p className="text-sm font-semibold text-gray-900">{retainerCount} invoice{retainerCount !== 1 ? 's' : ''}</p>
+            </div>
+
+            <RetainerRow
+              count={retainerCount}
+              revenue={retainerRevenue}
+              breakdown={retainerBreakdown}
+              serviceType={type}
+              onInvoiceClick={onInvoiceClick}
+            />
+          </div>
+        )}
+
+        {/* Total Revenue */}
+        <div className={`p-4 rounded-lg ${isRetained ? 'bg-purple-50' : 'bg-indigo-50'}`}>
+          <div className="flex items-center justify-between">
+            <p className={`text-sm font-medium ${isRetained ? 'text-purple-900' : 'text-indigo-900'}`}>
+              Total Placement Revenue
+            </p>
+            <p className={`text-lg font-bold ${isRetained ? 'text-purple-600' : 'text-indigo-600'}`}>
+              {formatCurrency(totalRevenue)}
+            </p>
+          </div>
+          {retainerCount != null && retainerCount > 0 && retainerRevenue && (
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
+              <p className={`text-sm font-medium ${isRetained ? 'text-purple-900' : 'text-indigo-900'}`}>
+                Total Subscription Revenue
+              </p>
+              <p className={`text-lg font-bold ${isRetained ? 'text-purple-600' : 'text-indigo-600'}`}>
+                {formatCurrency(retainerRevenue)}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// =====================================================
+// INVOICE LIST SECTION WITH TABS
+// =====================================================
+function InvoiceListSection() {
+  const [activeTab, setActiveTab] = useState<InvoiceTab>('all')
+  const [timeRange, setTimeRange] = useState<TimeRange>('30d')
+
+  const { invoices, isLoading, error } = useFilteredInvoices({
+    tab: activeTab,
+    timeRange: timeRange,
+  })
+
+  const tabs: { key: InvoiceTab; label: string }[] = [
+    { key: 'all', label: 'All' },
+    { key: 'paid', label: 'Paid' },
+    { key: 'pending', label: 'Pending' },
+    { key: 'overdue', label: 'Overdue' },
+  ]
+
+  const timeRanges: { key: TimeRange; label: string }[] = [
+    { key: '7d', label: '7 days' },
+    { key: '30d', label: '30 days' },
+    { key: '90d', label: '90 days' },
+    { key: '6m', label: '6 months' },
+    { key: '1y', label: '1 year' },
+    { key: 'all', label: 'All time' },
+  ]
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg">
+      {/* Header with tabs and time range */}
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          {/* Tabs */}
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === tab.key
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Time Range Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Show:</span>
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+              className="text-sm border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {timeRanges.map((range) => (
+                <option key={range.key} value={range.key}>
+                  {range.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Invoice List */}
+      <div className="divide-y divide-gray-100">
+        {isLoading ? (
+          <div className="p-8 text-center">
+            <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" />
+            <p className="text-sm text-gray-500 mt-2">Loading invoices...</p>
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center">
+            <AlertCircle className="w-6 h-6 text-red-400 mx-auto" />
+            <p className="text-sm text-red-600 mt-2">{error}</p>
+          </div>
+        ) : invoices.length === 0 ? (
+          <div className="p-8 text-center">
+            <FileText className="w-8 h-8 text-gray-300 mx-auto" />
+            <p className="text-sm text-gray-500 mt-2">No invoices found</p>
+          </div>
+        ) : (
+          invoices.slice(0, 10).map((invoice) => (
+            <div key={invoice.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3">
+                    <p className="text-sm font-medium text-gray-900">{invoice.invoice_number}</p>
+                    <InvoiceStatusBadge status={invoice.status} />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {invoice.company_name} &middot; {formatDate(invoice.invoice_date)}
+                    {invoice.due_date && (
+                      <span className="ml-2">Due: {formatDate(invoice.due_date)}</span>
+                    )}
+                  </p>
+                </div>
+                <div className="text-right ml-4">
+                  <p className="text-sm font-semibold text-gray-900">{formatCurrency(invoice.total_amount)}</p>
+                  {invoice.balance_due && parseFloat(invoice.balance_due) > 0 && parseFloat(invoice.balance_due) < parseFloat(invoice.total_amount) && (
+                    <p className="text-xs text-gray-500">
+                      Balance: {formatCurrency(invoice.balance_due)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+
+        {invoices.length > 10 && (
+          <div className="px-6 py-3 text-center bg-gray-50">
+            <p className="text-sm text-gray-500">
+              Showing 10 of {invoices.length} invoices
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// =====================================================
 // OVERVIEW TAB
 // =====================================================
 function OverviewTab({ summary }: { summary: SubscriptionSummary | null }) {
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
+
   if (!summary) {
     return (
       <div className="animate-pulse space-y-6">
@@ -2419,69 +2991,128 @@ function OverviewTab({ summary }: { summary: SubscriptionSummary | null }) {
             <div key={i} className="h-32 bg-gray-100 rounded-lg" />
           ))}
         </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="h-64 bg-gray-100 rounded-lg" />
+          <div className="h-64 bg-gray-100 rounded-lg" />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <SummaryCard
-          title="Total Subscriptions"
-          value={summary.total_subscriptions}
-          subtitle={`${summary.active_subscriptions} active`}
-          icon={CreditCard}
-          color="blue"
-        />
-        <SummaryCard
-          title="Monthly Recurring Revenue"
-          value={formatCurrency(summary.total_mrr)}
-          subtitle="From active subscriptions"
-          icon={DollarSign}
-          color="green"
-        />
-        <SummaryCard
-          title="Overdue Invoices"
-          value={summary.overdue_invoices_count}
-          subtitle={formatCurrency(summary.overdue_invoices_amount)}
-          icon={AlertTriangle}
-          color={summary.overdue_invoices_count > 0 ? 'red' : 'gray'}
-        />
-        <SummaryCard
-          title="Expiring This Month"
-          value={summary.expiring_this_month}
-          subtitle="Contracts up for renewal"
-          icon={Calendar}
-          color={summary.expiring_this_month > 0 ? 'yellow' : 'gray'}
-        />
-      </div>
+    <>
+      <div className="space-y-6">
+        {/* Summary Cards - Row 1 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <SummaryCard
+            title="Monthly Recurring Revenue"
+            value={formatCurrency(summary.total_mrr)}
+            subtitle={`${summary.active_subscriptions} active subscriptions`}
+            icon={DollarSign}
+            color="green"
+          />
+          <SummaryCard
+            title="Collected This Month"
+            value={formatCurrency(summary.collected_this_month)}
+            subtitle="Payments received"
+            icon={TrendingUp}
+            color="blue"
+          />
+          <SummaryCard
+            title="Overdue Invoices"
+            value={summary.overdue_invoices_count}
+            subtitle={formatCurrency(summary.overdue_invoices_amount)}
+            icon={AlertTriangle}
+            color={summary.overdue_invoices_count > 0 ? 'red' : 'gray'}
+          />
+          <SummaryCard
+            title="Pending Invoices"
+            value={summary.pending_invoices_count}
+            subtitle={formatCurrency(summary.pending_invoices_amount)}
+            icon={Clock}
+            color={summary.pending_invoices_count > 0 ? 'yellow' : 'gray'}
+          />
+        </div>
 
-      {/* Status Breakdown */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Subscription Status</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4 bg-green-50 rounded-lg">
-            <p className="text-3xl font-bold text-green-600">{summary.active_subscriptions}</p>
-            <p className="text-sm text-green-700 mt-1">Active</p>
+        {/* Service Type Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ServiceTypeCard
+            type="retained"
+            companies={summary.retained_companies}
+            activeSubscriptions={summary.active_subscriptions}
+            pausedSubscriptions={summary.paused_subscriptions}
+            terminatedSubscriptions={summary.terminated_subscriptions}
+            expiredSubscriptions={summary.expired_subscriptions}
+            regularPlacements={summary.retained_regular_placements}
+            csuitePlacements={summary.retained_csuite_placements}
+            regularRevenue={summary.retained_regular_revenue}
+            csuiteRevenue={summary.retained_csuite_revenue}
+            regularBreakdown={summary.retained_regular_breakdown}
+            csuiteBreakdown={summary.retained_csuite_breakdown}
+            retainerCount={summary.retained_retainer_count}
+            retainerRevenue={summary.retained_retainer_revenue}
+            retainerBreakdown={summary.retained_retainer_breakdown}
+            mrr={summary.retained_mrr}
+            onInvoiceClick={setSelectedInvoiceId}
+          />
+          <ServiceTypeCard
+            type="headhunting"
+            companies={summary.headhunting_companies}
+            regularPlacements={summary.headhunting_regular_placements}
+            csuitePlacements={summary.headhunting_csuite_placements}
+            regularRevenue={summary.headhunting_regular_revenue}
+            csuiteRevenue={summary.headhunting_csuite_revenue}
+            regularBreakdown={summary.headhunting_regular_breakdown}
+            csuiteBreakdown={summary.headhunting_csuite_breakdown}
+            onInvoiceClick={setSelectedInvoiceId}
+          />
+        </div>
+
+        {/* Upcoming Renewals */}
+        {summary.upcoming_renewals.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Renewals (30 days)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {summary.upcoming_renewals.map((renewal) => (
+                <div key={renewal.company_id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{renewal.company_name}</p>
+                    <p className="text-xs text-gray-500">
+                      Expires {formatDate(renewal.contract_end_date)} ({renewal.days_until_renewal} days)
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">{formatCurrency(renewal.monthly_retainer)}</p>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${
+                      renewal.auto_renew ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {renewal.auto_renew ? 'Auto-renew' : 'Manual'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="text-center p-4 bg-yellow-50 rounded-lg">
-            <p className="text-3xl font-bold text-yellow-600">{summary.paused_subscriptions}</p>
-            <p className="text-sm text-yellow-700 mt-1">Paused</p>
-          </div>
-          <div className="text-center p-4 bg-red-50 rounded-lg">
-            <p className="text-3xl font-bold text-red-600">{summary.terminated_subscriptions}</p>
-            <p className="text-sm text-red-700 mt-1">Terminated</p>
-          </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-3xl font-bold text-gray-600">
-              {summary.total_subscriptions - summary.active_subscriptions - summary.paused_subscriptions - summary.terminated_subscriptions}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">Expired</p>
-          </div>
+        )}
+
+        {/* Invoice List with Tabs */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Invoices</h3>
+          <InvoiceListSection />
         </div>
       </div>
-    </div>
+
+      {/* Invoice Detail Drawer */}
+      {selectedInvoiceId && (
+        <InvoiceDetailDrawer
+          invoiceId={selectedInvoiceId}
+          onClose={() => setSelectedInvoiceId(null)}
+          onUpdated={() => {
+            // Summary will refresh on next load
+          }}
+        />
+      )}
+    </>
   )
 }
 
@@ -2500,21 +3131,14 @@ function CompaniesTab({
   const { companies, isLoading, refetch } = useAllCompanies({
     search: searchQuery || undefined,
   })
-  const { subscriptions } = useSubscriptions()
 
-  // Create a map of company IDs to their subscription status
-  const subscriptionMap = new Map<string, SubscriptionListItem>()
-  subscriptions.forEach(sub => {
-    subscriptionMap.set(sub.company_id, sub)
-  })
-
-  // Filter companies
+  // Filter companies using embedded subscription data
   const filteredCompanies = companies.filter((company) => {
     if (serviceTypeFilter && company.service_type !== serviceTypeFilter) {
       return false
     }
     if (subscriptionFilter) {
-      const sub = subscriptionMap.get(company.id)
+      const sub = company.subscription
       if (subscriptionFilter === 'none' && sub) return false
       if (subscriptionFilter === 'active' && (!sub || sub.status !== 'active')) return false
       if (subscriptionFilter === 'paused' && (!sub || sub.status !== 'paused')) return false
@@ -2522,6 +3146,11 @@ function CompaniesTab({
     }
     return true
   })
+
+  // Stats
+  const activeCount = companies.filter(c => c.subscription?.status === 'active').length
+  const retainedCount = companies.filter(c => c.service_type === 'retained').length
+  const headhuntingCount = companies.filter(c => c.service_type === 'headhunting').length
 
   return (
     <div className="space-y-4">
@@ -2568,13 +3197,21 @@ function CompaniesTab({
       </div>
 
       {/* Stats Row */}
-      <div className="flex gap-4 text-sm">
+      <div className="flex flex-wrap gap-4 text-sm">
         <span className="text-gray-500">
-          Showing <span className="font-medium text-gray-900">{filteredCompanies.length}</span> companies
+          Showing <span className="font-medium text-gray-900">{filteredCompanies.length}</span> of {companies.length} companies
         </span>
         <span className="text-gray-300">|</span>
         <span className="text-gray-500">
-          <span className="font-medium text-green-600">{subscriptions.filter(s => s.status === 'active').length}</span> active subscriptions
+          <span className="font-medium text-green-600">{activeCount}</span> active contracts
+        </span>
+        <span className="text-gray-300">|</span>
+        <span className="text-gray-500">
+          <span className="font-medium text-purple-600">{retainedCount}</span> retained
+        </span>
+        <span className="text-gray-300">|</span>
+        <span className="text-gray-500">
+          <span className="font-medium text-blue-600">{headhuntingCount}</span> headhunting
         </span>
       </div>
 
@@ -2591,58 +3228,131 @@ function CompaniesTab({
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Company
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Service Type
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contact
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Subscription
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Service
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contract End
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contract
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Pricing
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredCompanies.map((company) => {
-                  const sub = subscriptionMap.get(company.id)
+                  const sub = company.subscription
+                  const contact = company.primary_contact
+                  const pricing = company.pricing
                   return (
                     <tr key={company.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
+                      {/* Company */}
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Building2 className="w-5 h-5 text-gray-400" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{company.name}</p>
+                          {company.logo ? (
+                            <img
+                              src={company.logo}
+                              alt={company.name}
+                              className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Building2 className="w-4 h-4 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">{company.name}</p>
                             <p className="text-xs text-gray-500">{company.jobs_total} jobs</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      {/* Contact */}
+                      <td className="px-4 py-3">
+                        {contact ? (
+                          <div className="min-w-0">
+                            <p className="text-sm text-gray-900 truncate">{contact.name}</p>
+                            <p className="text-xs text-gray-500 truncate">{contact.email}</p>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">No contact</span>
+                        )}
+                      </td>
+                      {/* Service Type */}
+                      <td className="px-4 py-3">
                         <ServiceTypeBadge type={company.service_type} />
                       </td>
-                      <td className="px-6 py-4">
-                        <SubscriptionStatusBadge status={sub?.status || 'none'} />
+                      {/* Status */}
+                      <td className="px-4 py-3">
+                        <div className="space-y-1">
+                          <SubscriptionStatusBadge status={sub?.status || 'none'} />
+                          {sub && (
+                            <div className="flex items-center gap-1.5 text-xs">
+                              {sub.auto_renew ? (
+                                <span className="text-green-600 flex items-center gap-0.5">
+                                  <RefreshCw className="w-3 h-3" />
+                                  Auto
+                                </span>
+                              ) : (
+                                <span className="text-gray-400">No auto-renew</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-6 py-4">
-                        {sub ? (
+                      {/* Contract */}
+                      <td className="px-4 py-3">
+                        {sub?.contract_end_date ? (
                           <div className="text-sm">
                             <p className="text-gray-900">{formatDate(sub.contract_end_date)}</p>
-                            <p className={`text-xs ${sub.days_until_renewal <= 30 ? 'text-yellow-600' : 'text-gray-500'}`}>
-                              {sub.days_until_renewal} days left
+                            <p className={`text-xs ${
+                              sub.days_until_renewal <= 30
+                                ? sub.days_until_renewal <= 7
+                                  ? 'text-red-600 font-medium'
+                                  : 'text-yellow-600'
+                                : 'text-gray-500'
+                            }`}>
+                              {sub.days_until_renewal <= 0
+                                ? 'Expired'
+                                : `${sub.days_until_renewal} days left`}
                             </p>
                           </div>
                         ) : (
-                          <span className="text-sm text-gray-400">-</span>
+                          <span className="text-xs text-gray-400">No contract</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      {/* Pricing */}
+                      <td className="px-4 py-3">
+                        {pricing ? (
+                          <div className="text-xs space-y-0.5">
+                            {pricing.monthly_retainer && (
+                              <p className="text-gray-900">
+                                R{parseInt(pricing.monthly_retainer).toLocaleString()}/mo
+                              </p>
+                            )}
+                            <p className="text-gray-500">
+                              {pricing.placement_fee
+                                ? `${(parseFloat(pricing.placement_fee) * 100).toFixed(0)}%`
+                                : '—'} placement
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">Default</span>
+                        )}
+                      </td>
+                      {/* Actions */}
+                      <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => onSelectCompany(company)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"

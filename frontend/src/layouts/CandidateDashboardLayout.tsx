@@ -3,6 +3,8 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePublicBranding } from '@/hooks';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { SubscriptionBlockedOverlay } from '@/components/subscription';
+import { NotificationBell } from '@/components/notifications';
 
 interface NavItem {
   name: string;
@@ -286,6 +288,9 @@ export default function CandidateDashboardLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Subscription blocked overlay - shown when subscription is paused/terminated */}
+      <SubscriptionBlockedOverlay />
+
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -334,7 +339,7 @@ export default function CandidateDashboardLayout() {
 
         {/* User info */}
         <div className={`p-4 border-b border-gray-100 ${isMinimized ? 'px-2' : ''}`}>
-          <div className={`flex items-center ${isMinimized ? 'justify-center' : 'gap-3'}`}>
+          <div className={`flex ${isMinimized ? 'flex-col items-center gap-2' : 'items-center gap-3'}`}>
             <div
               className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white text-[12px] font-medium flex-shrink-0"
               title={isMinimized ? `${user?.first_name} ${user?.last_name}` : undefined}
@@ -350,6 +355,7 @@ export default function CandidateDashboardLayout() {
                 <p className="text-[12px] text-gray-500 truncate">{user?.email}</p>
               </div>
             )}
+            <NotificationBell dropdownPosition="right" sidebarWidth={isMinimized ? 'minimized' : 'expanded'} />
           </div>
         </div>
 
@@ -409,7 +415,7 @@ export default function CandidateDashboardLayout() {
       {/* Main content */}
       <div className={`${mainPadding} transition-all duration-200`}>
         {/* Top header - mobile only */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 h-14 flex items-center px-4 lg:hidden">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 h-14 flex items-center justify-between px-4 lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-2 -ml-2 text-gray-500 hover:text-gray-900"
@@ -418,6 +424,7 @@ export default function CandidateDashboardLayout() {
               <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
+          <NotificationBell />
         </header>
 
         {/* Page content */}

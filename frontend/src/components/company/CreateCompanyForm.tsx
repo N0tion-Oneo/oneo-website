@@ -1,17 +1,21 @@
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useCreateCompany } from '@/hooks'
-import { Building2, Target, Handshake, Check } from 'lucide-react'
+import { useCreateCompany, useCountries, useCities } from '@/hooks'
+import { Building2, Target, Handshake, Check, ChevronDown } from 'lucide-react'
+import { TermsSection } from './ChangeServiceTypeModal/TermsSection'
 
 const createCompanySchema = z.object({
   name: z.string().min(1, 'Company name is required').max(100, 'Name too long'),
   tagline: z.string().max(200, 'Tagline too long').optional(),
-  headquarters_city: z.string().max(100, 'City name too long').optional(),
-  headquarters_country: z.string().max(100, 'Country name too long').optional(),
+  headquarters_country: z.number().nullable().optional(),
+  headquarters_city: z.number().nullable().optional(),
   service_type: z.enum(['headhunting', 'retained'], {
     required_error: 'Please select a service package',
+  }),
+  terms_agreed: z.literal(true, {
+    errorMap: () => ({ message: 'You must agree to the terms and conditions' }),
   }),
 })
 
@@ -120,25 +124,74 @@ function ServiceTypeCard({ type, selected, onSelect }: ServiceTypeCardProps) {
 
 export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps) {
   const { createCompany, isCreating, error: createError } = useCreateCompany()
-  const [serverError, setServerError] = useState<string | null>(null)
+  const { countries, isLoading: countriesLoading } = useCountries()
+  const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null)
+  const { cities, isLoading: citiesLoading } = useCities({ countryId: selectedCountryId })
+
+  // Terms state
+  const [selectedTermsSlug, setSelectedTermsSlug] = useState('')
+  const [termsAgreed, setTermsAgreed] = useState(false)
 
   const {
     register,
     handleSubmit,
     control,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CreateCompanyFormData>({
     resolver: zodResolver(createCompanySchema),
+    defaultValues: {
+      headquarters_country: null,
+      headquarters_city: null,
+    },
   })
+
+  const selectedServiceType = watch('service_type')
+
+  // Reset terms when service type changes
+  useEffect(() => {
+    setSelectedTermsSlug('')
+    setTermsAgreed(false)
+    setValue('terms_agreed', undefined as unknown as true)
+  }, [selectedServiceType, setValue])
+
+  // Handle document selection
+  const handleSelectDocument = useCallback((slug: string) => {
+    setSelectedTermsSlug(slug)
+  }, [])
+
+  // Handle terms agreement
+  const handleAgreeChange = useCallback(
+    (agreed: boolean) => {
+      setTermsAgreed(agreed)
+      setValue('terms_agreed', agreed as true, { shouldValidate: true })
+    },
+    [setValue]
+  )
 
   const onSubmit = async (data: CreateCompanyFormData) => {
     try {
-      setServerError(null)
-      await createCompany(data)
+      await createCompany({
+        name: data.name,
+        tagline: data.tagline,
+        service_type: data.service_type,
+        headquarters_country: data.headquarters_country ?? undefined,
+        headquarters_city: data.headquarters_city ?? undefined,
+        // Terms acceptance - will be recorded in backend
+        terms_document_slug: selectedTermsSlug || undefined,
+      })
       onSuccess()
     } catch {
-      setServerError(createError || 'Failed to create company')
+      // Error is already set by the hook
     }
+  }
+
+  const handleCountryChange = (countryId: number | null) => {
+    setSelectedCountryId(countryId)
+    setValue('headquarters_country', countryId)
+    // Reset city when country changes
+    setValue('headquarters_city', null)
   }
 
   return (
@@ -154,9 +207,9 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {(serverError || createError) && (
+        {createError && (
           <div className="px-3 py-2.5 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-[13px] text-red-600">{serverError || createError}</p>
+            <p className="text-[13px] text-red-600">{createError}</p>
           </div>
         )}
 
@@ -237,26 +290,7 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label
-                  htmlFor="headquarters_city"
-                  className="block text-[13px] font-medium text-gray-700 mb-1.5"
-                >
-                  City
-                </label>
-                <input
-                  {...register('headquarters_city')}
-                  id="headquarters_city"
-                  type="text"
-                  placeholder="Cape Town"
-                  className={`w-full h-10 px-3 text-[14px] border rounded-md bg-white transition-colors
-                    ${
-                      errors.headquarters_city
-                        ? 'border-red-300 focus:border-red-400 focus:ring-1 focus:ring-red-400'
-                        : 'border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900'
-                    } outline-none`}
-                />
-              </div>
+              {/* Country Dropdown */}
               <div>
                 <label
                   htmlFor="headquarters_country"
@@ -264,26 +298,88 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
                 >
                   Country
                 </label>
-                <input
-                  {...register('headquarters_country')}
-                  id="headquarters_country"
-                  type="text"
-                  placeholder="South Africa"
-                  className={`w-full h-10 px-3 text-[14px] border rounded-md bg-white transition-colors
-                    ${
-                      errors.headquarters_country
-                        ? 'border-red-300 focus:border-red-400 focus:ring-1 focus:ring-red-400'
-                        : 'border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900'
-                    } outline-none`}
+                <div className="relative">
+                  <select
+                    id="headquarters_country"
+                    value={selectedCountryId ?? ''}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseInt(e.target.value, 10) : null
+                      handleCountryChange(value)
+                    }}
+                    disabled={countriesLoading}
+                    className="w-full h-10 px-3 pr-8 text-[14px] border border-gray-300 rounded-md bg-white transition-colors focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none appearance-none cursor-pointer disabled:opacity-50"
+                  >
+                    <option value="">Select country</option>
+                    {countries.map((country) => (
+                      <option key={country.id} value={country.id}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* City Dropdown */}
+              <div>
+                <label
+                  htmlFor="headquarters_city"
+                  className="block text-[13px] font-medium text-gray-700 mb-1.5"
+                >
+                  City
+                </label>
+                <Controller
+                  name="headquarters_city"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="relative">
+                      <select
+                        id="headquarters_city"
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const value = e.target.value ? parseInt(e.target.value, 10) : null
+                          field.onChange(value)
+                        }}
+                        disabled={!selectedCountryId || citiesLoading}
+                        className="w-full h-10 px-3 pr-8 text-[14px] border border-gray-300 rounded-md bg-white transition-colors focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none appearance-none cursor-pointer disabled:opacity-50 disabled:bg-gray-50"
+                      >
+                        <option value="">
+                          {!selectedCountryId ? 'Select country first' : 'Select city'}
+                        </option>
+                        {cities.map((city) => (
+                          <option key={city.id} value={city.id}>
+                            {city.name}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                  )}
                 />
               </div>
             </div>
           </div>
         </div>
 
+        {/* Terms & Conditions Section */}
+        {selectedServiceType && (
+          <div className="border-t border-gray-200 pt-6">
+            <TermsSection
+              newType={selectedServiceType}
+              selectedSlug={selectedTermsSlug}
+              onSelectDocument={handleSelectDocument}
+              termsAgreed={termsAgreed}
+              onAgreeChange={handleAgreeChange}
+            />
+            {errors.terms_agreed && (
+              <p className="mt-2 text-[12px] text-red-500">{errors.terms_agreed.message}</p>
+            )}
+          </div>
+        )}
+
         <button
           type="submit"
-          disabled={isCreating}
+          disabled={isCreating || !termsAgreed}
           className="w-full h-10 bg-gray-900 text-white text-[14px] font-medium rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isCreating ? 'Creating...' : 'Create Company'}

@@ -12,7 +12,7 @@ from notifications.services import NotificationService
 
 logger = logging.getLogger(__name__)
 
-from .models import Company, CompanyUser, CompanyUserRole, Country, City
+from .models import Company, CompanyUser, CompanyUserRole, Country, City, ServiceType, TermsAcceptance, TermsAcceptanceContext
 from users.models import UserRole
 from .serializers import (
     CompanyListSerializer,
@@ -178,20 +178,43 @@ def get_company_features(request):
        - is_enabled=False: Disable feature even if in service type default
     """
     from cms.models.pricing import PricingFeature
-    from subscriptions.models import CompanyFeatureOverride
+    from subscriptions.models import CompanyFeatureOverride, Subscription, SubscriptionStatus
 
     company = get_user_company(request.user)
     if not company:
         return Response({
             'service_type': None,
             'service_type_display': None,
+            'subscription_status': None,
             'features': [],
         })
+
+    # Check subscription status for client users
+    if request.user.role == UserRole.CLIENT:
+        subscription = Subscription.objects.filter(
+            company=company,
+            service_type__in=['retained', 'headhunting']
+        ).first()
+
+        if subscription and subscription.status in [
+            SubscriptionStatus.PAUSED,
+            SubscriptionStatus.TERMINATED,
+            SubscriptionStatus.EXPIRED
+        ]:
+            return Response({
+                'error': 'Subscription inactive',
+                'error_code': 'subscription_blocked',
+                'subscription_status': subscription.status,
+                'subscription_status_display': subscription.get_status_display(),
+                'message': f'Your subscription is {subscription.get_status_display().lower()}. Please contact support to restore access.',
+                'contact_email': 'hello@oneo.com',
+            }, status=status.HTTP_403_FORBIDDEN)
 
     if not company.service_type:
         return Response({
             'service_type': None,
             'service_type_display': None,
+            'subscription_status': None,
             'features': [],
         })
 
@@ -229,6 +252,7 @@ def get_company_features(request):
     return Response({
         'service_type': company.service_type,
         'service_type_display': company.get_service_type_display() if company.service_type else None,
+        'subscription_status': 'active',
         'features': [
             {
                 'id': str(f.id),
@@ -611,7 +635,16 @@ def create_company(request):
     Only CLIENT, RECRUITER, or ADMIN users can create companies.
     The creator becomes the first company admin.
     User must not already be associated with a company.
+
+    Automatically creates a subscription/contract for the selected service type
+    with a 1-year term and auto-renew enabled.
+
+    Records terms acceptance if terms_document_slug is provided.
     """
+    from subscriptions.models import Subscription, SubscriptionServiceType
+    from datetime import date
+    from dateutil.relativedelta import relativedelta
+
     # Only invited clients, recruiters, or admins can create companies
     allowed_roles = [UserRole.CLIENT, UserRole.RECRUITER, UserRole.ADMIN]
     if request.user.role not in allowed_roles:
@@ -637,6 +670,54 @@ def create_company(request):
             company=company,
             role=CompanyUserRole.ADMIN,
         )
+
+        # Auto-create subscription/contract for the selected service type
+        service_type = company.service_type
+        subscription = None
+        if service_type in [ServiceType.RETAINED, ServiceType.HEADHUNTING]:
+            # Map company service type to subscription service type
+            subscription_service_type = (
+                SubscriptionServiceType.RETAINED
+                if service_type == ServiceType.RETAINED
+                else SubscriptionServiceType.HEADHUNTING
+            )
+
+            # Create 1-year contract starting today
+            today = date.today()
+            end_date = today + relativedelta(years=1)
+
+            subscription = Subscription.objects.create(
+                company=company,
+                service_type=subscription_service_type,
+                contract_start_date=today,
+                contract_end_date=end_date,
+                billing_day_of_month=today.day,  # Use today's day for billing
+                auto_renew=True,
+            )
+
+        # Record terms acceptance if provided
+        terms_document_slug = request.data.get('terms_document_slug')
+        if terms_document_slug:
+            # Get client IP and user agent for audit trail
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip_address = x_forwarded_for.split(',')[0].strip()
+            else:
+                ip_address = request.META.get('REMOTE_ADDR')
+            user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+            TermsAcceptance.objects.create(
+                company=company,
+                accepted_by=request.user,
+                subscription=subscription,
+                document_slug=terms_document_slug,
+                document_title=request.data.get('terms_document_title', ''),
+                document_version=request.data.get('terms_document_version', ''),
+                context=TermsAcceptanceContext.COMPANY_CREATION,
+                service_type=service_type or '',
+                ip_address=ip_address,
+                user_agent=user_agent[:1000] if user_agent else '',  # Limit length
+            )
 
         return Response(
             CompanyDetailSerializer(company, context={'request': request}).data,
