@@ -293,3 +293,51 @@ This file tracks all changes made by the AI assistant to the project.
 - Updated notification service functionality
 - Updated admin and regular applications pages
 
+---
+
+## 2025-12-11 - Git Push: Candidates, CMS Pricing, and Subscriptions Updates
+
+**Time**: Current session
+**Description**: Committed and pushed updates to candidates, CMS pricing, subscriptions utils, and various views to GitHub
+**Reason**: User requested to push latest changes to GitHub
+**Affected Files**:
+- 15 files changed (441 insertions, 46 deletions)
+**Backend Changes**:
+- `backend/candidates/views.py` - Modified
+- `backend/cms/models/pricing.py` - Modified
+- `backend/cms/serializers/pricing.py` - Modified
+- `backend/cms/migrations/0017_add_slug_to_pricingfeature.py` - New migration
+- `backend/companies/views.py` - Modified
+- `backend/feed/views.py` - Modified
+- `backend/subscriptions/utils.py` - New utility file
+**Frontend Changes**:
+- `frontend/src/hooks/useCompanyFeatures.ts` - Modified
+- `frontend/src/pages/candidates/CandidateProfilePage.tsx` - Modified
+- `frontend/src/pages/candidates/CandidatesDirectoryPage.tsx` - Modified
+- `frontend/src/pages/dashboard/AdminCandidatesPage.tsx` - Modified
+- `frontend/src/pages/dashboard/FeedPage.tsx` - Modified
+- `frontend/src/pages/dashboard/cms/CMSPricingPage.tsx` - Modified
+- `frontend/src/services/cms.ts` - Modified
+**Changes**:
+- Staged all changes with `git add -A`
+- Committed changes with message: "Update candidates, CMS pricing, subscriptions utils, and various views"
+- Pushed commit (847e927) to origin/main branch
+- Added slug field to PricingFeature model
+- Added subscriptions utils module
+- Updated candidate views and pages
+- Updated CMS pricing functionality
+- Updated feed and company views
+
+## 2025-12-11 - Backend Server Startup
+
+**Time**: Current session
+**Description**: Started Django backend development server
+**Reason**: User requested to run start-backend.sh script
+**Affected Files**:
+- `scripts/start-backend.sh` - Executed (no changes to file)
+**Changes**:
+- Made startup script executable with chmod +x
+- Ran backend startup script in background mode (Django server on http://localhost:8000)
+- Verified server is running successfully
+- Backend: Django development server (PIDs 72619, 72620)
+
