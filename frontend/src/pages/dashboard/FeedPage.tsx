@@ -42,7 +42,7 @@ export default function FeedPage() {
   // - Clients can only create posts if they have the "Employer Branding" feature
   const isStaff = user?.role === UserRole.ADMIN || user?.role === UserRole.RECRUITER
   const isClient = user?.role === UserRole.CLIENT
-  const hasEmployerBranding = hasFeature('Employer Branding')
+  const hasEmployerBranding = hasFeature('employer-branding')
   const canCreatePost = isStaff || (isClient && hasEmployerBranding)
 
   return (

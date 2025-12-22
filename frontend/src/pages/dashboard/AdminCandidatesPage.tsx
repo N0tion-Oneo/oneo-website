@@ -11,7 +11,7 @@ import {
   RowSelectionState,
   ColumnSizingState,
 } from '@tanstack/react-table'
-import { useAllCandidates, useCompanyCandidates, useAssignedUpdate, useMyCompany } from '@/hooks'
+import { useAllCandidates, useCompanyCandidates, useAssignedUpdate, useMyCompany, useCompanyFeatures } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole, Seniority, WorkPreference, ProfileVisibility, Currency } from '@/types'
 import type { CandidateAdminListItem, ExperienceListItem } from '@/types'
@@ -52,6 +52,7 @@ import {
   MoreVertical,
   LayoutList,
   Columns3,
+  Lock,
 } from 'lucide-react'
 
 const SENIORITY_OPTIONS = [
@@ -144,10 +145,17 @@ interface AdminCandidatesPageProps {
 export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesPageProps) {
   const { user } = useAuth()
   const isClientMode = mode === 'client'
+  const { hasFeature, isLoading: featuresLoading } = useCompanyFeatures()
 
   // For client mode, fetch company info
   const { company, isLoading: companyLoading } = useMyCompany()
 
+  // Check if client user has access to Talent Directory
+  const isClient = user?.role === UserRole.CLIENT
+  const hasTalentDirectory = hasFeature('talent-directory')
+  const isFeatureLocked = isClient && !hasTalentDirectory && !featuresLoading
+
+  // All useState hooks must be called unconditionally (before any early returns)
   const [filters, setFilters] = useState<CandidateFilters>(defaultFilters)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
@@ -901,6 +909,29 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         <p className="text-[13px] text-gray-500">
           You need to be associated with a company to view candidates.
         </p>
+      </div>
+    )
+  }
+
+  // Show locked state for clients without the Talent Directory feature
+  if (isFeatureLocked) {
+    return (
+      <div className="p-6">
+        <div className="bg-white border border-gray-200 rounded-lg p-12 text-center max-w-xl mx-auto">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-8 h-8 text-gray-400" />
+          </div>
+          <h2 className="text-[18px] font-semibold text-gray-900 mb-2">
+            Talent Directory Access Required
+          </h2>
+          <p className="text-[14px] text-gray-500 max-w-md mx-auto mb-6">
+            The Talent Directory feature allows you to browse and discover pre-vetted candidates
+            from our talent pool. This feature is included in the Retained service plan.
+          </p>
+          <p className="text-[13px] text-gray-400">
+            Contact your account manager to upgrade your plan and unlock this feature.
+          </p>
+        </div>
       </div>
     )
   }

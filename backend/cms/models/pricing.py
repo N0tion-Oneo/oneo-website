@@ -2,6 +2,7 @@
 import uuid
 from django.db import models
 from django.conf import settings
+from django.utils.text import slugify
 from .base import TimestampedModel
 
 
@@ -144,10 +145,19 @@ class PricingFeature(TimestampedModel):
     """
     Feature that can be included in pricing comparison.
     Each feature can be toggled on/off for each service.
+
+    The `slug` field is used for feature gating in code. It is immutable
+    once set, allowing the `name` to be changed freely in the CMS without
+    breaking feature gates.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     name = models.CharField(max_length=100)
+    slug = models.SlugField(
+        max_length=100,
+        unique=True,
+        help_text="Unique identifier for feature gating. Auto-generated from name if not provided. Cannot be changed after creation."
+    )
     category = models.CharField(
         max_length=20,
         choices=FeatureCategory.choices,
@@ -169,3 +179,16 @@ class PricingFeature(TimestampedModel):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # Auto-generate slug from name if not provided (only on creation)
+        if not self.slug:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            # Ensure uniqueness
+            while PricingFeature.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)

@@ -1,11 +1,14 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useCandidate } from '@/hooks'
+import { useCandidate, useCompanyFeatures } from '@/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import CandidateProfileCard from '@/components/candidates/CandidateProfileCard'
 import Navbar from '@/components/layout/Navbar'
 import { SEO } from '@/components/seo'
 import { buildCandidateSEOData } from '@/utils/seoTemplates'
+import { UserRole } from '@/types'
 import type { CandidateProfile, CandidateProfileSanitized } from '@/types'
+import { Lock } from 'lucide-react'
 
 // Type guard to check if profile is full or sanitized
 function isFullProfile(profile: CandidateProfile | CandidateProfileSanitized): profile is CandidateProfile {
@@ -14,7 +17,14 @@ function isFullProfile(profile: CandidateProfile | CandidateProfileSanitized): p
 
 export default function CandidateProfilePage() {
   const { slug } = useParams<{ slug: string }>()
+  const { user } = useAuth()
+  const { hasFeature, isLoading: featuresLoading } = useCompanyFeatures()
   const { candidate, isLoading, error } = useCandidate(slug || '')
+
+  // Check if user is a client without the Talent Directory feature
+  const isClient = user?.role === UserRole.CLIENT
+  const hasTalentDirectory = hasFeature('talent-directory')
+  const isFeatureLocked = isClient && !hasTalentDirectory && !featuresLoading
 
   // Build SEO data for programmatic templates - must be before any early returns
   // For public profiles, we use initials instead of full name
@@ -54,6 +64,35 @@ export default function CandidateProfilePage() {
             <p className="text-[15px] text-gray-700 mb-2">Profile not found</p>
             <p className="text-[13px] text-gray-500 mb-4">
               This profile may be private or doesn't exist
+            </p>
+            <Link
+              to="/candidates"
+              className="text-[14px] font-medium text-gray-900 hover:underline"
+            >
+              Back to directory
+            </Link>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // Show locked state for clients without the Talent Directory feature
+  if (isFeatureLocked) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <main className="max-w-5xl mx-auto px-6 py-10">
+          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-gray-400" />
+            </div>
+            <h2 className="text-[18px] font-semibold text-gray-900 mb-2">
+              Talent Directory Access Required
+            </h2>
+            <p className="text-[14px] text-gray-500 max-w-md mx-auto mb-6">
+              Viewing candidate profiles from the Talent Directory requires access to this feature.
+              This feature is included in the Retained service plan.
             </p>
             <Link
               to="/candidates"

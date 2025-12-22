@@ -17,7 +17,29 @@ import {
   X,
   Pencil,
   Info,
+  Code,
 } from 'lucide-react'
+
+// Features that have coded feature gates in the application
+// These slugs are checked in code to control access to features
+const CODED_FEATURE_GATES: Record<string, { description: string; locations: string[] }> = {
+  'talent-directory': {
+    description: 'Controls access to browse all candidates in the talent pool',
+    locations: [
+      'backend/candidates/views.py - list_company_candidates()',
+      'frontend/src/pages/candidates/CandidatesDirectoryPage.tsx',
+      'frontend/src/pages/candidates/CandidateProfilePage.tsx',
+      'frontend/src/pages/dashboard/AdminCandidatesPage.tsx',
+    ],
+  },
+  'employer-branding': {
+    description: 'Controls ability to create company posts in the feed',
+    locations: [
+      'backend/feed/views.py - company_has_employer_branding()',
+      'frontend/src/pages/dashboard/FeedPage.tsx',
+    ],
+  },
+}
 
 const categoryLabels: Record<string, string> = {
   recruitment: 'Recruitment',
@@ -625,9 +647,16 @@ export default function CMSPricingPage() {
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4">
           <div className="flex gap-2">
             <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-blue-700">
-              Drag rows to reorder. Toggle checkboxes to set which services include each feature. Changes save automatically.
-            </p>
+            <div className="text-sm text-blue-700 space-y-1">
+              <p>Drag rows to reorder. Toggle checkboxes to set which services include each feature. Changes save automatically.</p>
+              <p className="flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-violet-100 text-violet-700">
+                  <Code className="w-3 h-3" />
+                  Gated
+                </span>
+                <span>Features with this badge have coded access controls. Hover for details and code locations.</span>
+              </p>
+            </div>
           </div>
         </div>
 
@@ -768,9 +797,35 @@ export default function CMSPricingPage() {
                         className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       />
                     ) : (
-                      <span className={!feature.is_active ? 'text-gray-400' : 'text-gray-900'}>
-                        {feature.name}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={!feature.is_active ? 'text-gray-400' : 'text-gray-900'}>
+                          {feature.name}
+                        </span>
+                        {CODED_FEATURE_GATES[feature.slug] && (
+                          <div className="relative group">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-violet-100 text-violet-700 cursor-help">
+                              <Code className="w-3 h-3" />
+                              Gated
+                            </span>
+                            {/* Tooltip */}
+                            <div className="absolute left-0 top-full mt-1 z-50 hidden group-hover:block">
+                              <div className="bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg min-w-[420px] max-w-[500px]">
+                                <p className="font-medium mb-2">{CODED_FEATURE_GATES[feature.slug].description}</p>
+                                <div className="border-t border-gray-700 pt-2 mt-2">
+                                  <p className="text-gray-400 text-[10px] uppercase tracking-wide mb-1">Code Locations</p>
+                                  <ul className="space-y-1">
+                                    {CODED_FEATURE_GATES[feature.slug].locations.map((loc, i) => (
+                                      <li key={i} className="text-gray-300 font-mono text-[11px] break-all">{loc}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                {/* Arrow */}
+                                <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-900 rotate-45" />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -876,13 +931,31 @@ export default function CMSPricingPage() {
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleDeleteFeature(feature.id)}
-                            disabled={deleteFeatureMutation.isPending}
-                            className="p-1.5 text-red-400 hover:bg-red-50 rounded"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {CODED_FEATURE_GATES[feature.slug] ? (
+                            <div className="relative group">
+                              <button
+                                disabled
+                                className="p-1.5 text-gray-300 cursor-not-allowed rounded"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                              {/* Tooltip */}
+                              <div className="absolute right-0 bottom-full mb-1 z-50 hidden group-hover:block">
+                                <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg whitespace-nowrap">
+                                  Cannot delete: feature has coded gates
+                                  <div className="absolute -bottom-1 right-3 w-2 h-2 bg-gray-900 rotate-45" />
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleDeleteFeature(feature.id)}
+                              disabled={deleteFeatureMutation.isPending}
+                              className="p-1.5 text-red-400 hover:bg-red-50 rounded"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </>
                       )}
                     </div>

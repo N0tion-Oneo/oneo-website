@@ -7,6 +7,7 @@ import api from '@/services/api'
 
 export interface CompanyFeature {
   id: string
+  slug: string
   name: string
   category: string
 }
@@ -25,8 +26,11 @@ interface UseCompanyFeaturesReturn {
   serviceType: 'headhunting' | 'retained' | null
   serviceTypeDisplay: string | null
   features: CompanyFeature[]
+  featureSlugs: string[]
+  /** @deprecated Use hasFeature with slug instead */
   featureNames: string[]
-  hasFeature: (featureName: string) => boolean
+  /** Check if company has a feature by its slug (e.g., 'talent-directory') */
+  hasFeature: (featureSlug: string) => boolean
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
@@ -80,21 +84,27 @@ export function useCompanyFeatures(): UseCompanyFeaturesReturn {
     fetchFeatures()
   }, [fetchFeatures])
 
+  const featureSlugs = useMemo(() => {
+    return data?.features.map((f) => f.slug) || []
+  }, [data?.features])
+
+  // Deprecated: use featureSlugs instead
   const featureNames = useMemo(() => {
     return data?.features.map((f) => f.name) || []
   }, [data?.features])
 
   const hasFeature = useCallback(
-    (featureName: string): boolean => {
-      return featureNames.includes(featureName)
+    (featureSlug: string): boolean => {
+      return featureSlugs.includes(featureSlug)
     },
-    [featureNames]
+    [featureSlugs]
   )
 
   return {
     serviceType: data?.service_type || null,
     serviceTypeDisplay: data?.service_type_display || null,
     features: data?.features || [],
+    featureSlugs,
     featureNames,
     hasFeature,
     isLoading,

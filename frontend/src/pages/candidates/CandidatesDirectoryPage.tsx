@@ -1,12 +1,24 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useCandidates } from '@/hooks'
-import { Seniority, WorkPreference } from '@/types'
-import type { CandidateProfileSanitized } from '@/types'
+import { useCandidates, useCompanyCandidates, useCompanyFeatures } from '@/hooks'
+import { useAuth } from '@/contexts/AuthContext'
+import { Seniority, WorkPreference, UserRole } from '@/types'
+import type { CandidateProfileSanitized, CandidateAdminListItem } from '@/types'
 import Navbar from '@/components/layout/Navbar'
 import { SEO } from '@/components/seo'
+import { Lock } from 'lucide-react'
 
 export default function CandidatesDirectoryPage() {
+  const { user } = useAuth()
+  const { hasFeature, isLoading: featuresLoading } = useCompanyFeatures()
+
+  // Check if user is a client without the Talent Directory feature
+  const isClient = user?.role === UserRole.CLIENT
+  const isStaff = user?.role === UserRole.ADMIN || user?.role === UserRole.RECRUITER
+  const hasTalentDirectory = hasFeature('talent-directory')
+
+  // Clients without the feature should see a locked state
+  const isFeatureLocked = isClient && !hasTalentDirectory && !featuresLoading
   const [filters, setFilters] = useState({
     seniority: '',
     work_preference: '',
@@ -14,12 +26,34 @@ export default function CandidatesDirectoryPage() {
     page: 1,
   })
 
-  const { candidates, count, hasNext, hasPrevious, isLoading, error } = useCandidates({
+  // Use different endpoints based on user role:
+  // - Clients use /candidates/company/ which is feature-gated on the backend
+  // - Others use the public /candidates/ endpoint
+  const publicCandidates = useCandidates({
     seniority: filters.seniority || undefined,
     work_preference: filters.work_preference || undefined,
     search: filters.search || undefined,
     page: filters.page,
   })
+
+  const companyCandidates = useCompanyCandidates({
+    seniority: filters.seniority || undefined,
+    work_preference: filters.work_preference || undefined,
+    search: filters.search || undefined,
+    page: filters.page,
+  })
+
+  // Select the appropriate data source based on user role
+  const { candidates, count, hasNext, hasPrevious, isLoading, error } = isClient
+    ? {
+        candidates: companyCandidates.candidates as unknown as CandidateProfileSanitized[],
+        count: companyCandidates.count,
+        hasNext: companyCandidates.hasNext,
+        hasPrevious: companyCandidates.hasPrevious,
+        isLoading: companyCandidates.isLoading,
+        error: companyCandidates.error,
+      }
+    : publicCandidates
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }))
@@ -46,6 +80,43 @@ export default function CandidatesDirectoryPage() {
       flexible: 'Flexible',
     }
     return labels[pref] || pref
+  }
+
+  // Show locked state for clients without the feature
+  if (isFeatureLocked) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <SEO />
+        <Navbar />
+
+        <main className="max-w-5xl mx-auto px-6 py-10">
+          {/* Page Header */}
+          <div className="mb-8">
+            <h1 className="text-[26px] font-semibold text-gray-900">Talent Directory</h1>
+            <p className="text-[15px] text-gray-500 mt-1">
+              Browse our pool of pre-vetted candidates
+            </p>
+          </div>
+
+          {/* Locked Feature State */}
+          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-gray-400" />
+            </div>
+            <h2 className="text-[18px] font-semibold text-gray-900 mb-2">
+              Talent Directory Access Required
+            </h2>
+            <p className="text-[14px] text-gray-500 max-w-md mx-auto mb-6">
+              The Talent Directory feature allows you to browse and discover pre-vetted candidates
+              from our talent pool. This feature is included in the Retained service plan.
+            </p>
+            <p className="text-[13px] text-gray-400">
+              Contact your account manager to upgrade your plan and unlock this feature.
+            </p>
+          </div>
+        </main>
+      </div>
+    )
   }
 
   return (

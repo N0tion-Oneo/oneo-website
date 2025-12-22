@@ -12,6 +12,7 @@ from operator import attrgetter
 
 from users.models import UserRole
 from companies.models import CompanyUser
+from subscriptions.utils import company_has_feature
 from .models import (
     Skill, Industry, Technology, CandidateProfile, ProfileVisibility,
     Experience, Education, CandidateActivity, CandidateActivityNote,
@@ -543,8 +544,8 @@ def list_company_candidates(request):
 
     company = company_membership.company
 
-    # Check if this company can view all candidates
-    if company.can_view_all_candidates:
+    # Check if this company has the Talent Directory feature
+    if company_has_feature(company, 'talent-directory'):
         # Show all candidates
         candidates = CandidateProfile.objects.all()
     else:

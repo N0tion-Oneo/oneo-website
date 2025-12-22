@@ -629,6 +629,7 @@ export interface CMSPricingConfigUpdate {
 
 export interface CMSPricingFeature {
   id: string;
+  slug: string;
   name: string;
   category: 'recruitment' | 'retained' | 'employment' | 'additional';
   order: number;

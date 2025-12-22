@@ -256,6 +256,7 @@ def get_company_features(request):
         'features': [
             {
                 'id': str(f.id),
+                'slug': f.slug,
                 'name': f.name,
                 'category': f.category,
             }

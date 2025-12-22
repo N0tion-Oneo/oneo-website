@@ -46,25 +46,9 @@ def get_user_company(user):
 
 
 def company_has_employer_branding(company):
-    """Check if the company has access to Employer Branding feature based on service type."""
-    if not company or not company.service_type:
-        return False
-
-    from cms.models.pricing import PricingFeature
-
-    # Check if Employer Branding feature is included for this service type
-    if company.service_type == 'headhunting':
-        return PricingFeature.objects.filter(
-            name='Employer Branding',
-            is_active=True,
-            included_in_headhunting=True
-        ).exists()
-    else:  # retained
-        return PricingFeature.objects.filter(
-            name='Employer Branding',
-            is_active=True,
-            included_in_retained=True
-        ).exists()
+    """Check if the company has access to Employer Branding feature."""
+    from subscriptions.utils import company_has_feature
+    return company_has_feature(company, 'employer-branding')
 
 
 def can_user_create_post(user, company=None):

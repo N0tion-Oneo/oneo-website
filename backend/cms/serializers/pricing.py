@@ -89,6 +89,7 @@ class PricingFeatureSerializer(serializers.ModelSerializer):
         model = PricingFeature
         fields = [
             'id',
+            'slug',
             'name',
             'category',
             'order',
@@ -100,7 +101,7 @@ class PricingFeatureSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
 
 
 class PricingFeatureCreateUpdateSerializer(serializers.ModelSerializer):
