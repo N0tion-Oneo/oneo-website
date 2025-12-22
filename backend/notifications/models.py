@@ -82,6 +82,14 @@ class NotificationType(models.TextChoices):
     JOB_UPDATED = 'job_updated', 'Job Updated'
 
     # =========================================================================
+    # Replacements
+    # =========================================================================
+    REPLACEMENT_REQUESTED = 'replacement_requested', 'Replacement Requested'
+    REPLACEMENT_APPROVED = 'replacement_approved', 'Replacement Approved'
+    REPLACEMENT_REJECTED = 'replacement_rejected', 'Replacement Rejected'
+    JOB_REOPENED_FOR_REPLACEMENT = 'job_reopened_for_replacement', 'Job Reopened for Replacement'
+
+    # =========================================================================
     # Admin/Custom
     # =========================================================================
     ADMIN_BROADCAST = 'admin_broadcast', 'Admin Broadcast'

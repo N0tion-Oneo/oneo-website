@@ -238,6 +238,7 @@ class CompanyPricingSerializer(serializers.ModelSerializer):
     effective_retainer = serializers.SerializerMethodField()
     effective_placement_fee = serializers.SerializerMethodField()
     effective_csuite_fee = serializers.SerializerMethodField()
+    effective_replacement_period = serializers.SerializerMethodField()
 
     class Meta:
         model = CompanyPricing
@@ -248,6 +249,7 @@ class CompanyPricingSerializer(serializers.ModelSerializer):
             'monthly_retainer',
             'placement_fee',
             'csuite_placement_fee',
+            'replacement_period_days',
             'effective_from',
             'updated_by',
             'updated_by_name',
@@ -255,6 +257,7 @@ class CompanyPricingSerializer(serializers.ModelSerializer):
             'effective_retainer',
             'effective_placement_fee',
             'effective_csuite_fee',
+            'effective_replacement_period',
             'created_at',
             'updated_at',
         ]
@@ -274,6 +277,9 @@ class CompanyPricingSerializer(serializers.ModelSerializer):
     def get_effective_csuite_fee(self, obj):
         return str(obj.get_effective_csuite_fee())
 
+    def get_effective_replacement_period(self, obj):
+        return obj.get_effective_replacement_period()
+
 
 class CompanyPricingUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating company pricing."""
@@ -284,6 +290,7 @@ class CompanyPricingUpdateSerializer(serializers.ModelSerializer):
             'monthly_retainer',
             'placement_fee',
             'csuite_placement_fee',
+            'replacement_period_days',
             'effective_from',
         ]
 
@@ -301,6 +308,13 @@ class CompanyPricingUpdateSerializer(serializers.ModelSerializer):
             )
         return value
 
+    def validate_replacement_period_days(self, value):
+        if value is not None and value < 0:
+            raise serializers.ValidationError(
+                'Replacement period must be a positive number of days'
+            )
+        return value
+
 
 class EffectivePricingSerializer(serializers.Serializer):
     """Serializer for effective pricing (custom or defaults)."""
@@ -309,9 +323,11 @@ class EffectivePricingSerializer(serializers.Serializer):
     placement_fee_percent = serializers.SerializerMethodField()
     csuite_placement_fee = serializers.DecimalField(max_digits=5, decimal_places=4)
     csuite_placement_fee_percent = serializers.SerializerMethodField()
+    replacement_period_days = serializers.IntegerField()
     is_custom_retainer = serializers.BooleanField()
     is_custom_placement = serializers.BooleanField()
     is_custom_csuite = serializers.BooleanField()
+    is_custom_replacement_period = serializers.BooleanField()
 
     def get_placement_fee_percent(self, obj):
         return float(obj['placement_fee']) * 100
@@ -328,6 +344,7 @@ class EffectivePricingSerializer(serializers.Serializer):
 class CompanyFeatureOverrideSerializer(serializers.ModelSerializer):
     """Serializer for feature override."""
     feature_name = serializers.CharField(source='feature.name', read_only=True)
+    feature_slug = serializers.CharField(source='feature.slug', read_only=True)
     feature_category = serializers.CharField(source='feature.category', read_only=True)
     updated_by_name = serializers.SerializerMethodField()
 
@@ -338,8 +355,10 @@ class CompanyFeatureOverrideSerializer(serializers.ModelSerializer):
             'company',
             'feature',
             'feature_name',
+            'feature_slug',
             'feature_category',
             'is_enabled',
+            'custom_replacement_period_days',
             'updated_by',
             'updated_by_name',
             'created_at',
@@ -356,17 +375,20 @@ class CompanyFeatureOverrideSerializer(serializers.ModelSerializer):
 class FeatureWithOverrideSerializer(serializers.Serializer):
     """Serializer for feature with override status."""
     id = serializers.UUIDField()
+    slug = serializers.CharField()
     name = serializers.CharField()
     category = serializers.CharField()
     default_enabled = serializers.BooleanField()
     is_overridden = serializers.BooleanField()
     override_enabled = serializers.BooleanField(allow_null=True)
     effective_enabled = serializers.BooleanField()
+    custom_replacement_period_days = serializers.IntegerField(allow_null=True)
 
 
 class FeatureOverrideUpdateSerializer(serializers.Serializer):
     """Serializer for updating a feature override."""
     is_enabled = serializers.BooleanField(required=False, allow_null=True)
+    custom_replacement_period_days = serializers.IntegerField(required=False, allow_null=True)
 
     def validate_is_enabled(self, value):
         # null means remove override (use default)

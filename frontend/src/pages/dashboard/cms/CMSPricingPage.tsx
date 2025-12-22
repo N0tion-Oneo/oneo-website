@@ -39,6 +39,15 @@ const CODED_FEATURE_GATES: Record<string, { description: string; locations: stri
       'frontend/src/pages/dashboard/FeedPage.tsx',
     ],
   },
+  'free-replacements': {
+    description: 'Controls eligibility for free replacement hires within the replacement period',
+    locations: [
+      'backend/jobs/services/replacement.py - check_replacement_eligibility()',
+      'backend/subscriptions/signals.py - auto_generate_placement_invoice()',
+      'frontend/src/components/applications/ApplicationDrawer.tsx - ReplacementTab',
+      'frontend/src/components/replacements/ReplacementRequestModal.tsx',
+    ],
+  },
 }
 
 const categoryLabels: Record<string, string> = {
@@ -394,6 +403,20 @@ export default function CMSPricingPage() {
                   </div>
                 </div>
               </div>
+              <div className="pt-2 border-t border-gray-100">
+                <label className="block text-[10px] text-gray-500 mb-1">Free Replacement Period</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={configData?.enterprise_replacement_period_days || ''}
+                    onChange={(e) => setConfigData(prev => prev ? { ...prev, enterprise_replacement_period_days: parseInt(e.target.value) || 0 } : prev)}
+                    className="w-full px-2 py-1.5 pr-12 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">days</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -506,6 +529,20 @@ export default function CMSPricingPage() {
                   </div>
                 </div>
               </div>
+              <div className="pt-2 border-t border-gray-100">
+                <label className="block text-[10px] text-gray-500 mb-1">Free Replacement Period</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={configData?.retained_replacement_period_days || ''}
+                    onChange={(e) => setConfigData(prev => prev ? { ...prev, retained_replacement_period_days: parseInt(e.target.value) || 0 } : prev)}
+                    className="w-full px-2 py-1.5 pr-12 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">days</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -520,7 +557,7 @@ export default function CMSPricingPage() {
                 <p className="text-[10px] text-white/80">Executive search services</p>
               </div>
             </div>
-            <div className="p-4">
+            <div className="p-4 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] text-gray-500 mb-1">Regular Placement Fee</label>
@@ -549,7 +586,21 @@ export default function CMSPricingPage() {
                   </div>
                 </div>
               </div>
-              <p className="text-[10px] text-gray-400 mt-3">One-time fee per successful placement</p>
+              <div className="pt-2 border-t border-gray-100">
+                <label className="block text-[10px] text-gray-500 mb-1">Free Replacement Period</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={configData?.headhunting_replacement_period_days || ''}
+                    onChange={(e) => setConfigData(prev => prev ? { ...prev, headhunting_replacement_period_days: parseInt(e.target.value) || 0 } : prev)}
+                    className="w-full px-2 py-1.5 pr-12 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">days</span>
+                </div>
+              </div>
+              <p className="text-[10px] text-gray-400">One-time fee per successful placement</p>
             </div>
           </div>
         </div>
@@ -809,16 +860,18 @@ export default function CMSPricingPage() {
                             </span>
                             {/* Tooltip */}
                             <div className="absolute left-0 top-full mt-1 z-50 hidden group-hover:block">
-                              <div className="bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg min-w-[420px] max-w-[500px]">
-                                <p className="font-medium mb-2">{CODED_FEATURE_GATES[feature.slug].description}</p>
-                                <div className="border-t border-gray-700 pt-2 mt-2">
-                                  <p className="text-gray-400 text-[10px] uppercase tracking-wide mb-1">Code Locations</p>
-                                  <ul className="space-y-1">
+                              <div className="bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg min-w-[320px] max-w-[500px]">
+                                <p className="font-medium">{CODED_FEATURE_GATES[feature.slug].description}</p>
+                                <details className="mt-2 border-t border-gray-700 pt-2">
+                                  <summary className="text-gray-400 text-[10px] uppercase tracking-wide cursor-pointer hover:text-gray-300 select-none">
+                                    Code Locations ({CODED_FEATURE_GATES[feature.slug].locations.length})
+                                  </summary>
+                                  <ul className="mt-2 space-y-1">
                                     {CODED_FEATURE_GATES[feature.slug].locations.map((loc, i) => (
                                       <li key={i} className="text-gray-300 font-mono text-[11px] break-all">{loc}</li>
                                     ))}
                                   </ul>
-                                </div>
+                                </details>
                                 {/* Arrow */}
                                 <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-900 rotate-45" />
                               </div>

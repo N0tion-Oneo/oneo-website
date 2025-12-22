@@ -29,6 +29,10 @@ class PricingConfigSerializer(serializers.ModelSerializer):
             # Headhunting pricing
             'headhunting_placement_fee',
             'headhunting_csuite_placement_fee',
+            # Replacement periods (days)
+            'retained_replacement_period_days',
+            'headhunting_replacement_period_days',
+            'enterprise_replacement_period_days',
             # Default calculator values
             'default_salary',
             'default_desk_fee',
@@ -72,6 +76,10 @@ class PricingConfigUpdateSerializer(serializers.ModelSerializer):
             # Headhunting pricing
             'headhunting_placement_fee',
             'headhunting_csuite_placement_fee',
+            # Replacement periods (days)
+            'retained_replacement_period_days',
+            'headhunting_replacement_period_days',
+            'enterprise_replacement_period_days',
             # Default calculator values
             'default_salary',
             'default_desk_fee',

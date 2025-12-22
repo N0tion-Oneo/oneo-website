@@ -22,6 +22,7 @@ import {
   useCompleteStage,
   useReopenStage,
   useAssignedUpdate,
+  useHasFeature,
 } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole, ApplicationStatus, RejectionReason, RejectionReasonLabels, StageTypeConfig, StageType } from '@/types'
@@ -102,6 +103,13 @@ const columnHelper = createColumnHelper<ApplicationListItem>()
 export default function AdminApplicationsPage() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
+
+  // Check if user can access replacement feature (clients with feature, or admins/recruiters)
+  const hasReplacementFeature = useHasFeature('free-replacements')
+  const isClient = user?.role === UserRole.CLIENT
+  const isAdminOrRecruiter = user?.role === UserRole.ADMIN || user?.role === UserRole.RECRUITER
+  // Admins/recruiters always see the tab for accepted offers; clients only if they have the feature
+  const showReplacementOption = isAdminOrRecruiter || (isClient && hasReplacementFeature)
 
   // Get job and application from URL params
   const jobIdFromUrl = searchParams.get('job')
@@ -1167,6 +1175,7 @@ export default function AdminApplicationsPage() {
         onReject={handleDrawerReject}
         onMoveToStage={handleDrawerMoveToStage}
         isProcessing={isProcessing}
+        showReplacementOption={showReplacementOption}
       />
 
       {/* Reject Modal */}

@@ -1001,9 +1001,11 @@ def get_effective_pricing(request, company_id):
         'monthly_retainer': pricing.get_effective_retainer(),
         'placement_fee': pricing.get_effective_placement_fee(),
         'csuite_placement_fee': pricing.get_effective_csuite_fee(),
+        'replacement_period_days': pricing.get_effective_replacement_period(),
         'is_custom_retainer': pricing.monthly_retainer is not None,
         'is_custom_placement': pricing.placement_fee is not None,
         'is_custom_csuite': pricing.csuite_placement_fee is not None,
+        'is_custom_replacement_period': pricing.replacement_period_days is not None,
     }
 
     serializer = EffectivePricingSerializer(data)
@@ -1034,9 +1036,12 @@ def get_company_features_with_overrides(request, company_id):
     # Get all active features
     features = PricingFeature.objects.filter(is_active=True).order_by('order', 'name')
 
-    # Get overrides for this company
+    # Get overrides for this company (including custom replacement period)
     overrides = {
-        o.feature_id: o.is_enabled
+        o.feature_id: {
+            'is_enabled': o.is_enabled,
+            'custom_replacement_period_days': o.custom_replacement_period_days,
+        }
         for o in CompanyFeatureOverride.objects.filter(company=company)
     }
 
@@ -1052,17 +1057,21 @@ def get_company_features_with_overrides(request, company_id):
 
         # Check for override
         is_overridden = feature.id in overrides
-        override_enabled = overrides.get(feature.id)
+        override_data = overrides.get(feature.id, {})
+        override_enabled = override_data.get('is_enabled') if is_overridden else None
         effective_enabled = override_enabled if is_overridden else default_enabled
+        custom_replacement_period = override_data.get('custom_replacement_period_days') if is_overridden else None
 
         result.append({
             'id': feature.id,
+            'slug': feature.slug,
             'name': feature.name,
             'category': feature.category,
             'default_enabled': default_enabled,
             'is_overridden': is_overridden,
             'override_enabled': override_enabled,
             'effective_enabled': effective_enabled,
+            'custom_replacement_period_days': custom_replacement_period,
         })
 
     serializer = FeatureWithOverrideSerializer(result, many=True)
@@ -1145,12 +1154,14 @@ def update_feature_override(request, company_id, feature_id):
 
         result = {
             'id': feature.id,
+            'slug': feature.slug,
             'name': feature.name,
             'category': feature.category,
             'default_enabled': default_enabled,
             'is_overridden': override is not None,
             'override_enabled': override.is_enabled if override else None,
             'effective_enabled': override.is_enabled if override else default_enabled,
+            'custom_replacement_period_days': override.custom_replacement_period_days if override else None,
         }
 
         return Response(FeatureWithOverrideSerializer(result).data)

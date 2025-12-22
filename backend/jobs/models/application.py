@@ -161,6 +161,20 @@ class Application(models.Model):
     shortlisted_at = models.DateTimeField(null=True, blank=True)
     last_status_change = models.DateTimeField(auto_now=True)
 
+    # Replacement tracking
+    is_replacement = models.BooleanField(
+        default=False,
+        help_text='True if this application filled a replacement position',
+    )
+    replaced_application = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='replacement_applications',
+        help_text='The original application/placement this is replacing',
+    )
+
     class Meta:
         db_table = 'applications'
         ordering = ['-applied_at']
@@ -195,9 +209,25 @@ class Application(models.Model):
         self.save()
 
     def accept_offer(self, final_details=None):
-        """Confirm offer acceptance with final details."""
+        """Confirm offer acceptance with final details.
+
+        Merges final_details with existing offer_details so that any fields
+        not explicitly provided in final_details are preserved from the original offer.
+        """
         self.status = ApplicationStatus.OFFER_ACCEPTED
-        self.final_offer_details = final_details or self.offer_details
+        # Merge offer_details with final_details - final_details takes precedence
+        # but missing fields (like start_date) are preserved from original offer
+        base_offer = self.offer_details or {}
+        if final_details:
+            # Start with base offer and overlay final details
+            merged = {**base_offer}
+            for key, value in final_details.items():
+                # Only update if value is not None/empty (preserve original if not explicitly set)
+                if value is not None and value != '' and value != []:
+                    merged[key] = value
+            self.final_offer_details = merged
+        else:
+            self.final_offer_details = base_offer
         self.offer_accepted_at = timezone.now()
         self.save()
 

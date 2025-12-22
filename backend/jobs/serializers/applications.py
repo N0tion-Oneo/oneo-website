@@ -7,6 +7,7 @@ from ..models import (
     ApplicationQuestion, ApplicationAnswer,
     StageInstanceStatus, ApplicationStageInstance,
     InterviewStageTemplate,
+    ReplacementRequest,
 )
 from scheduling.models import BookingToken
 from companies.serializers import CompanyListSerializer
@@ -152,6 +153,42 @@ class ApplicationListSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'applied_at', 'shortlisted_at', 'last_status_change']
 
 
+class EmbeddedReplacementRequestSerializer(serializers.ModelSerializer):
+    """Simplified serializer for embedding replacement request in application."""
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    reason_category_display = serializers.CharField(source='get_reason_category_display', read_only=True)
+    requested_by_name = serializers.SerializerMethodField()
+    reviewed_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReplacementRequest
+        fields = [
+            'id',
+            'reason_category',
+            'reason_category_display',
+            'reason_details',
+            'status',
+            'status_display',
+            'discount_percentage',
+            'requested_by_name',
+            'requested_at',
+            'reviewed_by_name',
+            'reviewed_at',
+            'review_notes',
+        ]
+        read_only_fields = fields
+
+    def get_requested_by_name(self, obj):
+        if obj.requested_by:
+            return obj.requested_by.get_full_name() or obj.requested_by.email
+        return None
+
+    def get_reviewed_by_name(self, obj):
+        if obj.reviewed_by:
+            return obj.reviewed_by.get_full_name() or obj.reviewed_by.email
+        return None
+
+
 class ApplicationSerializer(serializers.ModelSerializer):
     """Full application serializer with job interview stages."""
     job = JobListSerializer(read_only=True)
@@ -163,6 +200,9 @@ class ApplicationSerializer(serializers.ModelSerializer):
     interview_stages = serializers.SerializerMethodField()
     questions = serializers.SerializerMethodField()
     answers = serializers.SerializerMethodField()
+    # Replacement fields
+    is_replacement = serializers.BooleanField(read_only=True)
+    replacement_request = serializers.SerializerMethodField()
 
     class Meta:
         model = Application
@@ -202,8 +242,19 @@ class ApplicationSerializer(serializers.ModelSerializer):
             'applied_score',
             'shortlisted_feedback',
             'shortlisted_score',
+            # Replacement fields
+            'is_replacement',
+            'replacement_request',
         ]
         read_only_fields = ['id', 'applied_at', 'shortlisted_at', 'last_status_change']
+
+    def get_replacement_request(self, obj):
+        """Return the replacement request if one exists."""
+        try:
+            request = obj.replacement_request
+            return EmbeddedReplacementRequestSerializer(request).data
+        except ReplacementRequest.DoesNotExist:
+            return None
 
     def get_interview_stages(self, obj):
         """Return the job's interview stages from InterviewStageTemplate model."""

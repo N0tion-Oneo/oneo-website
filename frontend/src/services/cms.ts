@@ -592,6 +592,10 @@ export interface CMSPricingConfig {
   // Headhunting pricing
   headhunting_placement_fee: string;
   headhunting_csuite_placement_fee: string;
+  // Replacement periods (in days)
+  retained_replacement_period_days: number;
+  headhunting_replacement_period_days: number;
+  enterprise_replacement_period_days: number;
   // Default calculator values
   default_salary: string;
   default_desk_fee: string;
@@ -619,6 +623,11 @@ export interface CMSPricingConfigUpdate {
   retained_csuite_placement_fee?: string;
   headhunting_placement_fee?: string;
   headhunting_csuite_placement_fee?: string;
+  // Replacement periods (in days)
+  retained_replacement_period_days?: number;
+  headhunting_replacement_period_days?: number;
+  enterprise_replacement_period_days?: number;
+  // Default calculator values
   default_salary?: string;
   default_desk_fee?: string;
   default_lunch_fee?: string;

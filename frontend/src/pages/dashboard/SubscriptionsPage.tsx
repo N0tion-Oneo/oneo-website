@@ -69,6 +69,8 @@ import {
   useCompanyPlacements,
   useCalculateTerminationFee,
   useCompanyById,
+  useReplacementRequests,
+  useReplacementActions,
 } from '@/hooks'
 import type {
   SubscriptionListItem,
@@ -100,6 +102,8 @@ import {
   RetainedContractSection,
   QuickStats,
 } from '@/components/subscriptions'
+import { ReplacementStatusBadge } from '@/components/replacements'
+import type { ReplacementRequest, ReplacementStatus } from '@/types'
 
 type TabType = 'overview' | 'companies' | 'invoices' | 'alerts'
 
@@ -1740,6 +1744,8 @@ function CompanyDetailDrawer({
   const { invoices, isLoading: invoicesLoading, refetch: refetchInvoices } = useCompanyInvoices(company.id)
   const { activities, isLoading: activitiesLoading } = useCompanyActivity(company.id)
   const { company: fetchedCompany, updateCompany, isUpdating: isUpdatingCompany, refetch: refetchCompany } = useCompanyById(company.id)
+  const { requests: replacementRequests, isLoading: replacementsLoading, refetch: refetchReplacements } = useReplacementRequests({ companyId: company.id })
+  const { isApproving, isRejecting, approveRequest, rejectRequest } = useReplacementActions()
 
   // Use fetched company data if available, otherwise fall back to prop
   const currentCompany = fetchedCompany || company
@@ -1750,7 +1756,7 @@ function CompanyDetailDrawer({
   const { sendInvoice, isSending } = useSendInvoice()
   const { cancelInvoice, isCancelling } = useCancelInvoice()
 
-  const [activeSection, setActiveSection] = useState<'overview' | 'pricing' | 'features' | 'invoices' | 'activity'>('overview')
+  const [activeSection, setActiveSection] = useState<'overview' | 'pricing' | 'features' | 'invoices' | 'activity' | 'replacements'>('overview')
   const [showCreateSubModal, setShowCreateSubModal] = useState(false)
   const [showAdjustModal, setShowAdjustModal] = useState(false)
   const [showPauseModal, setShowPauseModal] = useState(false)
@@ -1766,6 +1772,7 @@ function CompanyDetailDrawer({
   const [retainerValue, setRetainerValue] = useState('')
   const [placementValue, setPlacementValue] = useState('')
   const [csuiteValue, setCsuiteValue] = useState('')
+  const [replacementPeriodValue, setReplacementPeriodValue] = useState('')
 
   const handleRefresh = () => {
     refetchSub()
@@ -1773,6 +1780,7 @@ function CompanyDetailDrawer({
     refetchFeatures()
     refetchInvoices()
     refetchCompany()
+    refetchReplacements()
     onRefresh()
   }
 
@@ -1802,6 +1810,7 @@ function CompanyDetailDrawer({
         monthly_retainer: retainerValue || null,
         placement_fee: placementValue ? (parseFloat(placementValue) / 100).toFixed(4) : null,
         csuite_placement_fee: csuiteValue ? (parseFloat(csuiteValue) / 100).toFixed(4) : null,
+        replacement_period_days: replacementPeriodValue ? parseInt(replacementPeriodValue) : null,
       })
       setEditingPricing(false)
       refetchPricing()
@@ -1849,6 +1858,7 @@ function CompanyDetailDrawer({
     { id: 'pricing', label: 'Pricing', icon: DollarSign },
     { id: 'features', label: 'Features', icon: Settings },
     { id: 'invoices', label: 'Invoices', icon: FileText },
+    { id: 'replacements', label: 'Replacements', icon: RefreshCw },
     { id: 'activity', label: 'Activity', icon: Activity },
   ] as const
 
@@ -2066,6 +2076,20 @@ function CompanyDetailDrawer({
                           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
                         />
                       </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                          Free Replacement Period (days)
+                        </label>
+                        <input
+                          type="number"
+                          value={replacementPeriodValue}
+                          onChange={(e) => setReplacementPeriodValue(e.target.value)}
+                          placeholder={pricing ? `Default: ${pricing.replacement_period_days} days` : 'Default based on service type'}
+                          step="1"
+                          min="0"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+                        />
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -2095,6 +2119,15 @@ function CompanyDetailDrawer({
                         <span className="text-sm font-medium text-gray-900">
                           {pricing ? `${(parseFloat(pricing.csuite_placement_fee) * 100).toFixed(1)}%` : '-'}
                           {pricing?.is_custom_csuite && (
+                            <span className="ml-1 text-xs text-blue-600">(custom)</span>
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm text-gray-600">Free Replacement Period</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {pricing ? `${pricing.replacement_period_days} days` : '-'}
+                          {pricing?.is_custom_replacement_period && (
                             <span className="ml-1 text-xs text-blue-600">(custom)</span>
                           )}
                         </span>
@@ -2250,6 +2283,54 @@ function CompanyDetailDrawer({
                         </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Replacements Section */}
+          {activeSection === 'replacements' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-900">Replacement Requests</h3>
+                {replacementRequests.length > 0 && (
+                  <span className="text-xs text-gray-500">
+                    {replacementRequests.filter(r => r.status === 'pending').length} pending
+                  </span>
+                )}
+              </div>
+              {replacementsLoading ? (
+                <div className="animate-pulse space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-20 bg-gray-100 rounded-lg" />
+                  ))}
+                </div>
+              ) : replacementRequests.length === 0 ? (
+                <div className="text-center py-8">
+                  <RefreshCw className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No replacement requests</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Replacement requests from this company will appear here
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {replacementRequests.map((request) => (
+                    <ReplacementRequestCard
+                      key={request.id}
+                      request={request}
+                      onApprove={async (type, discount) => {
+                        await approveRequest(request.id, { approval_type: type, discount_percentage: discount })
+                        refetchReplacements()
+                      }}
+                      onReject={async (notes) => {
+                        await rejectRequest(request.id, { review_notes: notes })
+                        refetchReplacements()
+                      }}
+                      isApproving={isApproving}
+                      isRejecting={isRejecting}
+                    />
                   ))}
                 </div>
               )}
@@ -3715,6 +3796,182 @@ export function SubscriptionsPage() {
           onClose={() => setSelectedCompany(null)}
           onRefresh={refetchCompanies}
         />
+      )}
+    </div>
+  )
+}
+
+// =====================================================
+// REPLACEMENT REQUEST CARD
+// =====================================================
+function ReplacementRequestCard({
+  request,
+  onApprove,
+  onReject,
+  isApproving,
+  isRejecting,
+}: {
+  request: ReplacementRequest
+  onApprove: (type: 'free' | 'discounted', discount?: number) => Promise<void>
+  onReject: (notes?: string) => Promise<void>
+  isApproving: boolean
+  isRejecting: boolean
+}) {
+  const [showActions, setShowActions] = useState(false)
+  const [approvalType, setApprovalType] = useState<'free' | 'discounted'>('free')
+  const [discountPercentage, setDiscountPercentage] = useState('50')
+  const [rejectNotes, setRejectNotes] = useState('')
+
+  const handleApprove = async () => {
+    await onApprove(
+      approvalType,
+      approvalType === 'discounted' ? parseInt(discountPercentage) : undefined
+    )
+    setShowActions(false)
+  }
+
+  const handleReject = async () => {
+    await onReject(rejectNotes || undefined)
+    setShowActions(false)
+  }
+
+  const isPending = request.status === 'pending'
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium text-gray-900">{request.candidate_name}</p>
+            <ReplacementStatusBadge status={request.status} discountPercentage={request.discount_percentage} />
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {request.job_title} &middot; Requested {formatDate(request.created_at)}
+          </p>
+          <div className="mt-2">
+            <p className="text-xs font-medium text-gray-600">
+              {request.reason_category_display || request.reason_category}
+            </p>
+            {request.reason_details && (
+              <p className="text-xs text-gray-500 mt-0.5">{request.reason_details}</p>
+            )}
+          </div>
+        </div>
+        {isPending && (
+          <button
+            onClick={() => setShowActions(!showActions)}
+            className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+          >
+            Review
+          </button>
+        )}
+      </div>
+
+      {/* Review actions panel */}
+      {showActions && isPending && (
+        <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
+          {/* Approval type selection */}
+          <div>
+            <p className="text-xs font-medium text-gray-700 mb-2">Approval Type</p>
+            <div className="flex gap-2">
+              <label className={`flex-1 flex items-center gap-2 p-3 border rounded-lg cursor-pointer ${
+                approvalType === 'free' ? 'border-green-500 bg-green-50' : 'border-gray-200'
+              }`}>
+                <input
+                  type="radio"
+                  name="approvalType"
+                  value="free"
+                  checked={approvalType === 'free'}
+                  onChange={() => setApprovalType('free')}
+                  className="w-4 h-4 text-green-600"
+                />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Free Replacement</p>
+                  <p className="text-xs text-gray-500">No charge for the replacement</p>
+                </div>
+              </label>
+              <label className={`flex-1 flex items-center gap-2 p-3 border rounded-lg cursor-pointer ${
+                approvalType === 'discounted' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+              }`}>
+                <input
+                  type="radio"
+                  name="approvalType"
+                  value="discounted"
+                  checked={approvalType === 'discounted'}
+                  onChange={() => setApprovalType('discounted')}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Discounted</p>
+                  <p className="text-xs text-gray-500">Partial fee for replacement</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Discount percentage input */}
+          {approvalType === 'discounted' && (
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Discount Percentage
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  max="99"
+                  value={discountPercentage}
+                  onChange={(e) => setDiscountPercentage(e.target.value)}
+                  className="w-20 px-2 py-1.5 text-sm border border-gray-200 rounded-md"
+                />
+                <span className="text-sm text-gray-500">% off the placement fee</span>
+              </div>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleApprove}
+              disabled={isApproving}
+              className="flex-1 px-3 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {isApproving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CheckCircle className="w-4 h-4" />
+              )}
+              Approve
+            </button>
+            <button
+              onClick={handleReject}
+              disabled={isRejecting}
+              className="flex-1 px-3 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {isRejecting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <XCircle className="w-4 h-4" />
+              )}
+              Reject
+            </button>
+            <button
+              onClick={() => setShowActions(false)}
+              className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-800"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Review notes if rejected */}
+      {request.status === 'rejected' && request.review_notes && (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <p className="text-xs text-gray-500">
+            <span className="font-medium">Rejection reason:</span> {request.review_notes}
+          </p>
+        </div>
       )}
     </div>
   )

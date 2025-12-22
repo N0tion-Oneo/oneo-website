@@ -427,3 +427,12 @@ export type {
   XeroSyncResult,
   XeroInvoiceMapping,
 } from './useXeroIntegration'
+
+// Replacement Request hooks
+export {
+  useReplacementEligibility,
+  useSubmitReplacement,
+  useReplacementRequests,
+  useReplacementRequest,
+  useReplacementActions,
+} from './useReplacements'

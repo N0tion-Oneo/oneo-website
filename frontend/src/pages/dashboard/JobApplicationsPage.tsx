@@ -11,7 +11,9 @@ import {
   useCancelStage,
   useCompleteStage,
   useReopenStage,
+  useHasFeature,
 } from '@/hooks'
+import { useAuth } from '@/contexts/AuthContext'
 import { ApplicationDrawer, ScheduleInterviewModal, AssignAssessmentModal, OfferForm, getEmptyOfferDetails } from '@/components/applications'
 import { ApplicationStatus, RejectionReason, RejectionReasonLabels, StageTypeConfig } from '@/types'
 import type { ApplicationListItem, InterviewStage, OfferDetails, ApplicationStageInstance } from '@/types'
@@ -65,6 +67,7 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 
 export default function JobApplicationsPage() {
   const { jobId } = useParams<{ jobId: string }>()
+  const { user } = useAuth()
   const { job, isLoading: isJobLoading } = useJobDetail(jobId || '')
   const { applications, isLoading, error, refetch } = useJobApplications(jobId || '')
   const { shortlist, isLoading: isShortlisting } = useShortlistApplication()
@@ -75,6 +78,13 @@ export default function JobApplicationsPage() {
   const { cancel: cancelStage, isCancelling } = useCancelStage()
   const { complete: completeStage, isCompleting } = useCompleteStage()
   const { reopen: reopenStage, isReopening } = useReopenStage()
+
+  // Check if user can access replacement feature (clients with feature, or admins/recruiters)
+  const hasReplacementFeature = useHasFeature('free-replacements')
+  const isClient = user?.role === 'client'
+  const isAdminOrRecruiter = user?.role === 'admin' || user?.role === 'recruiter'
+  // Admins/recruiters always see the tab for accepted offers; clients only if they have the feature
+  const showReplacementOption = isAdminOrRecruiter || (isClient && hasReplacementFeature)
 
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -593,6 +603,7 @@ export default function JobApplicationsPage() {
           refetch()
         }}
         isProcessing={isProcessing}
+        showReplacementOption={showReplacementOption}
       />
 
       {/* Reject Modal */}

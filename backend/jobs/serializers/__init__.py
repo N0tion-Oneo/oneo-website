@@ -76,6 +76,15 @@ from .shortlist_questions import (
     ShortlistReviewSummarySerializer,
 )
 
+from .replacement import (
+    ReplacementRequestListSerializer,
+    ReplacementRequestDetailSerializer,
+    ReplacementRequestCreateSerializer,
+    ReplacementApproveSerializer,
+    ReplacementRejectSerializer,
+    ReplacementEligibilitySerializer,
+)
+
 __all__ = [
     # Job serializers
     'JobListSerializer',
@@ -138,4 +147,11 @@ __all__ = [
     'ShortlistAnswerCreateSerializer',
     'ShortlistAnswersBulkCreateSerializer',
     'ShortlistReviewSummarySerializer',
+    # Replacement serializers
+    'ReplacementRequestListSerializer',
+    'ReplacementRequestDetailSerializer',
+    'ReplacementRequestCreateSerializer',
+    'ReplacementApproveSerializer',
+    'ReplacementRejectSerializer',
+    'ReplacementEligibilitySerializer',
 ]

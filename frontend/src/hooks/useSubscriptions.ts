@@ -107,6 +107,7 @@ export interface CompanyPricing {
   monthly_retainer: string | null
   placement_fee: string | null
   csuite_placement_fee: string | null
+  replacement_period_days: number | null
   effective_from: string
   updated_by: string | null
   created_at: string
@@ -117,9 +118,11 @@ export interface EffectivePricing {
   monthly_retainer: string
   placement_fee: string
   csuite_placement_fee: string
+  replacement_period_days: number
   is_custom_retainer: boolean
   is_custom_placement: boolean
   is_custom_csuite: boolean
+  is_custom_replacement_period: boolean
 }
 
 export interface FeatureWithOverride {
@@ -916,6 +919,7 @@ interface UpdatePricingInput {
   monthly_retainer?: string | null
   placement_fee?: string | null
   csuite_placement_fee?: string | null
+  replacement_period_days?: number | null
   effective_from?: string
 }
 

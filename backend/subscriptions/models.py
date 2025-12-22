@@ -305,6 +305,13 @@ class CompanyPricing(TimestampedModel):
         help_text='Custom C-Suite placement fee as decimal (e.g., 0.15 = 15%)',
     )
 
+    # Replacement period (for free replacements feature)
+    replacement_period_days = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='Custom replacement period in days (overrides service type default)',
+    )
+
     # Effective date for pricing changes
     effective_from = models.DateField(
         default=date.today,
@@ -358,6 +365,19 @@ class CompanyPricing(TimestampedModel):
         else:
             return Decimal(str(config.headhunting_csuite_placement_fee))
 
+    def get_effective_replacement_period(self):
+        """Get effective replacement period in days (custom or default based on service type)."""
+        if self.replacement_period_days is not None:
+            return self.replacement_period_days
+        from cms.models.pricing import PricingConfig
+        config = PricingConfig.get_config()
+        if self.company.service_type == 'retained':
+            return config.retained_replacement_period_days
+        elif self.company.service_type == 'headhunting':
+            return config.headhunting_replacement_period_days
+        else:
+            return config.enterprise_replacement_period_days
+
 
 # =============================================================================
 # Feature Override Model
@@ -384,6 +404,13 @@ class CompanyFeatureOverride(TimestampedModel):
 
     is_enabled = models.BooleanField(
         help_text='True to enable, False to disable (overrides service type default)',
+    )
+
+    # Custom replacement period (only applicable for free-replacements feature)
+    custom_replacement_period_days = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='Custom replacement period for this company in days (overrides service type default). Only used for free-replacements feature.',
     )
 
     # Audit
@@ -466,6 +493,28 @@ class Invoice(TimestampedModel):
         blank=True,
         related_name='invoices',
         help_text='For placement fee invoices, the associated application/placement',
+    )
+
+    # Replacement tracking
+    is_replacement = models.BooleanField(
+        default=False,
+        help_text='True if this is an invoice for a replacement hire',
+    )
+    replacement_request = models.ForeignKey(
+        'jobs.ReplacementRequest',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='invoices',
+        help_text='The replacement request that led to this invoice',
+    )
+    original_placement_invoice = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='replacement_invoices',
+        help_text='Link to the original hire\'s placement invoice',
     )
 
     # Invoice details

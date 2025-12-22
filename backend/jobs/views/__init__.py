@@ -82,6 +82,16 @@ from .shortlist_questions import (
     my_shortlist_answers,
 )
 
+from .replacement import (
+    check_eligibility,
+    submit_replacement_request,
+    list_replacement_requests,
+    get_replacement_request,
+    approve_request,
+    reject_request,
+    list_company_replacement_requests,
+)
+
 __all__ = [
     # Jobs
     'list_jobs',
@@ -150,4 +160,12 @@ __all__ = [
     'list_create_shortlist_answers',
     'shortlist_review_summary',
     'my_shortlist_answers',
+    # Replacements
+    'check_eligibility',
+    'submit_replacement_request',
+    'list_replacement_requests',
+    'get_replacement_request',
+    'approve_request',
+    'reject_request',
+    'list_company_replacement_requests',
 ]

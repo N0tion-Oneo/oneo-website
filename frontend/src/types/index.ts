@@ -1090,6 +1090,10 @@ export interface Application {
   applied_score: number | null
   shortlisted_feedback: string | null
   shortlisted_score: number | null
+  // Replacement fields
+  is_replacement?: boolean
+  replaced_application?: string | null
+  replacement_request?: ReplacementRequest | null
 }
 
 // Stage Feedback (threaded comments)
@@ -2464,6 +2468,95 @@ export interface OnboardingHistory {
   changed_by_name: string | null
   notes: string
   created_at: string
+}
+
+// ============================================================================
+// Replacements
+// ============================================================================
+
+export enum ReplacementStatus {
+  PENDING = 'pending',
+  APPROVED_FREE = 'approved_free',
+  APPROVED_DISCOUNTED = 'approved_discounted',
+  REJECTED = 'rejected',
+}
+
+export const ReplacementStatusLabels: Record<ReplacementStatus, string> = {
+  [ReplacementStatus.PENDING]: 'Pending Review',
+  [ReplacementStatus.APPROVED_FREE]: 'Approved (Free)',
+  [ReplacementStatus.APPROVED_DISCOUNTED]: 'Approved (Discounted)',
+  [ReplacementStatus.REJECTED]: 'Rejected',
+}
+
+export enum ReplacementReasonCategory {
+  RESIGNATION = 'resignation',
+  TERMINATION = 'termination',
+  PERFORMANCE = 'performance',
+  CULTURAL_FIT = 'cultural_fit',
+  NO_SHOW = 'no_show',
+  OTHER = 'other',
+}
+
+export const ReplacementReasonLabels: Record<ReplacementReasonCategory, string> = {
+  [ReplacementReasonCategory.RESIGNATION]: 'Candidate Resigned',
+  [ReplacementReasonCategory.TERMINATION]: 'Candidate Terminated',
+  [ReplacementReasonCategory.PERFORMANCE]: 'Performance Issues',
+  [ReplacementReasonCategory.CULTURAL_FIT]: 'Cultural Fit Issues',
+  [ReplacementReasonCategory.NO_SHOW]: 'Candidate Did Not Start',
+  [ReplacementReasonCategory.OTHER]: 'Other',
+}
+
+export interface ReplacementRequest {
+  id: string
+  application: string
+  company_id: string
+  company_name: string
+  job_id: string
+  job_title: string
+  candidate_name: string
+  candidate_slug: string
+  reason_category: ReplacementReasonCategory
+  reason_category_display: string
+  reason_details: string
+  status: ReplacementStatus
+  status_display: string
+  discount_percentage: number | null
+  requested_by: string | null
+  requested_by_name: string | null
+  requested_at: string
+  reviewed_by: string | null
+  reviewed_by_name: string | null
+  reviewed_at: string | null
+  review_notes: string
+  created_at: string
+  original_offer_details?: Record<string, unknown>
+  original_start_date?: string | null
+}
+
+export interface ReplacementEligibility {
+  eligible: boolean
+  reason: string | null
+  replacement_period_days: number
+  start_date: string | null
+  expiry_date: string | null
+  days_remaining: number | null
+  has_existing_request: boolean
+  existing_request_status: ReplacementStatus | null
+}
+
+export interface ReplacementRequestInput {
+  reason_category: ReplacementReasonCategory
+  reason_details?: string
+}
+
+export interface ReplacementApproveInput {
+  approval_type: 'free' | 'discounted'
+  discount_percentage?: number
+  review_notes?: string
+}
+
+export interface ReplacementRejectInput {
+  review_notes?: string
 }
 
 // ============================================================================

@@ -77,6 +77,20 @@ class PricingConfig(TimestampedModel):
         help_text="Placement fee for C-Suite executives (e.g., 0.25 = 25%)"
     )
 
+    # Replacement period (days within which a free replacement can be requested)
+    retained_replacement_period_days = models.PositiveIntegerField(
+        default=90,
+        help_text="Days within which a free replacement can be requested (Retained service)"
+    )
+    headhunting_replacement_period_days = models.PositiveIntegerField(
+        default=0,
+        help_text="Days within which a free replacement can be requested (Headhunting). 0 = not available."
+    )
+    enterprise_replacement_period_days = models.PositiveIntegerField(
+        default=90,
+        help_text="Days within which a free replacement can be requested (Enterprise service)"
+    )
+
     # Default calculator values
     default_salary = models.DecimalField(
         max_digits=10, decimal_places=2, default=45000,

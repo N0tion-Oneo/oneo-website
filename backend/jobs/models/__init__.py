@@ -51,6 +51,12 @@ from .shortlist_questions import (
     ShortlistAnswer,
 )
 
+from .replacement import (
+    ReplacementRequest,
+    ReplacementStatus,
+    ReplacementReasonCategory,
+)
+
 __all__ = [
     # Job domain
     'Job',
@@ -88,4 +94,8 @@ __all__ = [
     'ShortlistTemplateQuestion',
     'ShortlistQuestion',
     'ShortlistAnswer',
+    # Replacement domain
+    'ReplacementRequest',
+    'ReplacementStatus',
+    'ReplacementReasonCategory',
 ]

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import { X, User, Clock, Gift, Ban, CheckCircle, AlertCircle, ChevronDown, FileText, ExternalLink, Paperclip, Calendar, Maximize2 } from 'lucide-react'
+import { X, User, Clock, Gift, Ban, CheckCircle, AlertCircle, ChevronDown, FileText, ExternalLink, Paperclip, Calendar, Maximize2, RefreshCw } from 'lucide-react'
 import { useApplication, useRecordApplicationView, useStageInstances, useCancelStage, useCompleteStage } from '@/hooks'
 import { CandidateProfileCard } from '@/components/candidates'
+import { ReplacementRequestModal, ReplacementStatusBadge } from '@/components/replacements'
 import ActivityTimeline from './ActivityTimeline'
 import FullPipelineTimeline from './FullPipelineTimeline'
 import ScheduleInterviewModal from './ScheduleInterviewModal'
@@ -25,9 +26,11 @@ interface ApplicationDrawerProps {
   onMoveToStage?: (applicationId: string, stageOrder: number) => void
   onResetToApplied?: (applicationId: string) => void
   isProcessing?: boolean
+  // Replacement support (for client users)
+  showReplacementOption?: boolean
 }
 
-type TabType = 'profile' | 'answers' | 'stages' | 'activity' | 'offer' | 'reject'
+type TabType = 'profile' | 'answers' | 'stages' | 'activity' | 'offer' | 'reject' | 'replacement'
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -86,6 +89,7 @@ export default function ApplicationDrawer({
   onMoveToStage,
   onResetToApplied,
   isProcessing = false,
+  showReplacementOption = false,
 }: ApplicationDrawerProps) {
   const [activeTab, setActiveTab] = useState<TabType>('profile')
   const [actionError, setActionError] = useState<string | null>(null)
@@ -116,6 +120,9 @@ export default function ApplicationDrawer({
   // Assessment modal state
   const [assessmentModalOpen, setAssessmentModalOpen] = useState(false)
   const [assessmentStageInstance, setAssessmentStageInstance] = useState<ApplicationStageInstance | null>(null)
+
+  // Replacement modal state
+  const [replacementModalOpen, setReplacementModalOpen] = useState(false)
 
   // Stage action hooks
   const { cancel: cancelStage } = useCancelStage()
@@ -269,6 +276,11 @@ export default function ApplicationDrawer({
   // Show reject tab except for accepted offers
   if (application && onReject && application.status !== ApplicationStatus.OFFER_ACCEPTED) {
     tabs.push({ id: 'reject', label: 'Reject', icon: Ban })
+  }
+
+  // Show replacement tab for accepted offers (client view)
+  if (application && showReplacementOption && application.status === ApplicationStatus.OFFER_ACCEPTED) {
+    tabs.push({ id: 'replacement', label: 'Replacement', icon: RefreshCw })
   }
 
   return (
@@ -576,6 +588,12 @@ export default function ApplicationDrawer({
                   error={actionError}
                 />
               )}
+              {activeTab === 'replacement' && (
+                <ReplacementTab
+                  application={application}
+                  onRequestReplacement={() => setReplacementModalOpen(true)}
+                />
+              )}
             </>
           ) : (
             <div className="flex items-center justify-center h-32">
@@ -610,6 +628,22 @@ export default function ApplicationDrawer({
           onSuccess={() => {
             setAssessmentModalOpen(false)
             refetchStages()
+            refetch()
+            onUpdate?.()
+          }}
+        />
+      )}
+
+      {/* Replacement Request Modal */}
+      {applicationId && application && (
+        <ReplacementRequestModal
+          isOpen={replacementModalOpen}
+          onClose={() => setReplacementModalOpen(false)}
+          applicationId={applicationId}
+          candidateName={application?.candidate?.full_name || 'Candidate'}
+          jobTitle={application?.job?.title || 'Position'}
+          onSuccess={() => {
+            setReplacementModalOpen(false)
             refetch()
             onUpdate?.()
           }}
@@ -1202,4 +1236,123 @@ function getQuestionTypeLabel(type: QuestionType): string {
     [QuestionType.EXTERNAL_LINK]: 'Link',
   }
   return labels[type] || type
+}
+
+// ============================================================================
+// Replacement Tab
+// ============================================================================
+
+function ReplacementTab({
+  application,
+  onRequestReplacement,
+}: {
+  application: Application
+  onRequestReplacement: () => void
+}) {
+  const existingRequest = application.replacement_request
+  const isReplacement = application.is_replacement
+
+  // If this application is a replacement hire, show that info
+  if (isReplacement) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h4 className="text-[14px] font-medium text-gray-900 mb-1">Replacement Hire</h4>
+          <p className="text-[13px] text-gray-500">This placement is a replacement hire</p>
+        </div>
+
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <RefreshCw className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[14px] font-medium text-blue-800">
+                Replacement Placement
+              </p>
+              <p className="text-[13px] text-blue-700 mt-1">
+                This candidate was hired as a replacement for a previous placement. No replacement guarantee applies to this hire.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // If there's an existing replacement request, show its status
+  if (existingRequest) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h4 className="text-[14px] font-medium text-gray-900 mb-1">Replacement Request</h4>
+          <p className="text-[13px] text-gray-500">Status of your replacement request</p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</p>
+              <ReplacementStatusBadge
+                status={existingRequest.status}
+                discountPercentage={existingRequest.discount_percentage}
+                size="md"
+              />
+            </div>
+          </div>
+
+          <div className="p-4">
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Reason</p>
+            <p className="text-[14px] text-gray-900 font-medium">
+              {existingRequest.reason_category_display || existingRequest.reason_category}
+            </p>
+            {existingRequest.reason_details && (
+              <p className="text-[13px] text-gray-600 mt-1">{existingRequest.reason_details}</p>
+            )}
+          </div>
+
+          <div className="p-4">
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Submitted</p>
+            <p className="text-[14px] text-gray-900">
+              {new Date(existingRequest.requested_at || existingRequest.created_at).toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </p>
+          </div>
+
+          {existingRequest.review_notes && (
+            <div className="p-4">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Review Notes</p>
+              <p className="text-[14px] text-gray-700">{existingRequest.review_notes}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // No existing request - show option to request replacement
+  return (
+    <div className="space-y-6">
+      <div>
+        <h4 className="text-[14px] font-medium text-gray-900 mb-1">Request Replacement</h4>
+        <p className="text-[13px] text-gray-500">
+          If this placement didn't work out, you may be eligible for a free replacement
+        </p>
+      </div>
+
+      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <p className="text-[13px] text-gray-700 mb-4">
+          Our free replacement guarantee allows you to request a replacement candidate at no additional cost if the placement doesn't work out within the replacement period.
+        </p>
+        <button
+          onClick={onRequestReplacement}
+          className="w-full px-4 py-2.5 text-[14px] font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 flex items-center justify-center gap-2"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Check Eligibility & Request
+        </button>
+      </div>
+    </div>
+  )
 }

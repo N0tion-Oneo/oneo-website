@@ -88,6 +88,19 @@ urlpatterns = [
     path('applications/<uuid:application_id>/shortlist-answers/my/', views.my_shortlist_answers, name='my-shortlist-answers'),
     path('applications/<uuid:application_id>/shortlist-summary/', views.shortlist_review_summary, name='shortlist-review-summary'),
 
+    # Replacement request endpoints
+    path('applications/<uuid:application_id>/replacement/eligibility/', views.check_eligibility, name='check-replacement-eligibility'),
+    path('applications/<uuid:application_id>/replacement/request/', views.submit_replacement_request, name='submit-replacement-request'),
+
+    # Admin replacement request endpoints
+    path('replacement-requests/', views.list_replacement_requests, name='list-replacement-requests'),
+    path('replacement-requests/<uuid:request_id>/', views.get_replacement_request, name='get-replacement-request'),
+    path('replacement-requests/<uuid:request_id>/approve/', views.approve_request, name='approve-replacement-request'),
+    path('replacement-requests/<uuid:request_id>/reject/', views.reject_request, name='reject-replacement-request'),
+
+    # Company-specific replacement requests (for company detail page)
+    path('companies/<uuid:company_id>/replacement-requests/', views.list_company_replacement_requests, name='list-company-replacement-requests'),
+
     # Public single job by slug (must be last - catches any remaining slug)
     path('<slug:slug>/', views.get_job, name='get-job'),
 ]
