@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { ApplicationStatus, RejectionReasonLabels } from '@/types'
 import type { ApplicationListItem } from '@/types'
+import { KanbanBoard, type KanbanColumnConfig, type DropResult, type CardRenderProps } from '@/components/common/KanbanBoard'
 import {
   Building2,
   Calendar,
@@ -26,14 +27,6 @@ interface InterviewStage {
   order: number
   name: string
   stage_type?: string
-}
-
-interface KanbanColumn {
-  id: string
-  order: number
-  title: string
-  color: string
-  applications: ApplicationListItem[]
 }
 
 interface ApplicationKanbanBoardProps {
@@ -86,26 +79,24 @@ export default function ApplicationKanbanBoard({
 }: ApplicationKanbanBoardProps) {
 
   // Build columns based on whether we're filtering by job or not
-  const columns = useMemo<KanbanColumn[]>(() => {
+  const columns = useMemo<KanbanColumnConfig<ApplicationListItem>[]>(() => {
     if (isJobFiltered && jobStages && jobStages.length > 0) {
       // Job-specific: Use interview stages as columns
-      const stageColumns: KanbanColumn[] = [
+      const stageColumns: KanbanColumnConfig<ApplicationListItem>[] = [
         {
           id: 'applied',
-          order: -2,
           title: 'Applied',
           color: 'bg-gray-500',
-          applications: applications.filter(
+          items: applications.filter(
             app => app.status === ApplicationStatus.APPLIED &&
                    (app.current_stage_order === 0 || app.current_stage_order === null)
           ),
         },
         {
           id: 'shortlisted',
-          order: -1,
           title: 'Shortlisted',
           color: 'bg-blue-500',
-          applications: applications.filter(
+          items: applications.filter(
             app => app.status === ApplicationStatus.SHORTLISTED
           ),
         },
@@ -115,10 +106,9 @@ export default function ApplicationKanbanBoard({
       jobStages.forEach((stage) => {
         stageColumns.push({
           id: `stage-${stage.order}`,
-          order: stage.order,
           title: stage.name,
           color: 'bg-yellow-500',
-          applications: applications.filter(
+          items: applications.filter(
             app => app.current_stage_order === stage.order &&
                    app.status === ApplicationStatus.IN_PROGRESS
           ),
@@ -128,40 +118,37 @@ export default function ApplicationKanbanBoard({
       // Add final columns for outcomes
       stageColumns.push({
         id: 'offer_made',
-        order: 100,
         title: 'Offer Made',
         color: 'bg-purple-500',
-        applications: applications.filter(
+        items: applications.filter(
           app => app.status === ApplicationStatus.OFFER_MADE
         ),
       })
 
       stageColumns.push({
         id: 'offer_accepted',
-        order: 101,
         title: 'Offer Accepted',
         color: 'bg-green-500',
-        applications: applications.filter(
+        items: applications.filter(
           app => app.status === ApplicationStatus.OFFER_ACCEPTED
         ),
       })
 
       stageColumns.push({
         id: 'offer_declined',
-        order: 102,
         title: 'Offer Declined',
         color: 'bg-orange-500',
-        applications: applications.filter(
+        items: applications.filter(
           app => app.status === ApplicationStatus.OFFER_DECLINED
         ),
+        droppable: false, // Can't directly move to declined
       })
 
       stageColumns.push({
         id: 'rejected',
-        order: 103,
         title: 'Rejected',
         color: 'bg-red-500',
-        applications: applications.filter(
+        items: applications.filter(
           app => app.status === ApplicationStatus.REJECTED
         ),
       })
@@ -172,264 +159,104 @@ export default function ApplicationKanbanBoard({
       return [
         {
           id: 'applied',
-          order: -2,
           title: 'Applied',
           color: 'bg-gray-500',
-          applications: applications.filter(app => app.status === ApplicationStatus.APPLIED),
+          items: applications.filter(app => app.status === ApplicationStatus.APPLIED),
         },
         {
           id: 'shortlisted',
-          order: -1,
           title: 'Shortlisted',
           color: 'bg-blue-500',
-          applications: applications.filter(app => app.status === ApplicationStatus.SHORTLISTED),
+          items: applications.filter(app => app.status === ApplicationStatus.SHORTLISTED),
         },
         {
           id: 'in_progress',
-          order: 0,
           title: 'In Progress',
           color: 'bg-yellow-500',
-          applications: applications.filter(app => app.status === ApplicationStatus.IN_PROGRESS),
+          items: applications.filter(app => app.status === ApplicationStatus.IN_PROGRESS),
+          droppable: false, // Can't drop directly to in_progress in status view
         },
         {
           id: 'offer_made',
-          order: 100,
           title: 'Offer Made',
           color: 'bg-purple-500',
-          applications: applications.filter(app => app.status === ApplicationStatus.OFFER_MADE),
+          items: applications.filter(app => app.status === ApplicationStatus.OFFER_MADE),
         },
         {
           id: 'offer_accepted',
-          order: 101,
           title: 'Accepted',
           color: 'bg-green-500',
-          applications: applications.filter(app => app.status === ApplicationStatus.OFFER_ACCEPTED),
+          items: applications.filter(app => app.status === ApplicationStatus.OFFER_ACCEPTED),
         },
         {
           id: 'rejected',
-          order: 102,
           title: 'Rejected',
           color: 'bg-red-500',
-          applications: applications.filter(app => app.status === ApplicationStatus.REJECTED),
+          items: applications.filter(app => app.status === ApplicationStatus.REJECTED),
         },
       ]
     }
   }, [applications, jobStages, isJobFiltered])
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-[14px] text-gray-500">Loading...</p>
-      </div>
-    )
-  }
-
   // Check if drag/drop is enabled
   const isDragEnabled = !!(onShortlist && onResetToApplied && onMoveToStage && onOpenOfferModal && onOpenRejectModal)
 
-  return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
-      {columns.map((column) => (
-        <KanbanColumnComponent
-          key={column.id}
-          column={column}
-          isJobFiltered={isJobFiltered}
-          isDragEnabled={isDragEnabled}
-          onApplicationClick={onApplicationClick}
-          onShortlist={onShortlist}
-          onResetToApplied={onResetToApplied}
-          onMoveToStage={onMoveToStage}
-          onOpenOfferModal={onOpenOfferModal}
-          onOpenAcceptModal={onOpenAcceptModal}
-          onOpenRejectModal={onOpenRejectModal}
-          onSchedule={onSchedule}
-          onReschedule={onReschedule}
-          onCancel={onCancel}
-          onComplete={onComplete}
-          onReopen={onReopen}
-          onAssignAssessment={onAssignAssessment}
-        />
-      ))}
-    </div>
-  )
-}
+  // Handle drop with routing logic
+  const handleDrop = useCallback(async (result: DropResult<ApplicationListItem>) => {
+    const { item, targetColumnId } = result
 
-// ============================================================================
-// Kanban Column Component
-// ============================================================================
-
-interface KanbanColumnProps {
-  column: KanbanColumn
-  isJobFiltered: boolean
-  isDragEnabled: boolean
-  onApplicationClick: (applicationId: string) => void
-  onShortlist?: (applicationId: string) => void
-  onResetToApplied?: (applicationId: string) => void
-  onMoveToStage?: (applicationId: string, stageOrder: number) => Promise<void>
-  onOpenOfferModal?: (applicationId: string) => void
-  onOpenAcceptModal?: (app: ApplicationListItem) => void
-  onOpenRejectModal?: (applicationId: string) => void
-  onSchedule?: (application: ApplicationListItem) => void
-  onReschedule?: (application: ApplicationListItem) => void
-  onCancel?: (application: ApplicationListItem) => void
-  onComplete?: (application: ApplicationListItem) => void
-  onReopen?: (application: ApplicationListItem) => void
-  onAssignAssessment?: (application: ApplicationListItem) => void
-}
-
-function KanbanColumnComponent({
-  column,
-  isJobFiltered,
-  isDragEnabled,
-  onApplicationClick,
-  onShortlist,
-  onResetToApplied,
-  onMoveToStage,
-  onOpenOfferModal,
-  onOpenAcceptModal,
-  onOpenRejectModal,
-  onSchedule,
-  onReschedule,
-  onCancel,
-  onComplete,
-  onReopen,
-  onAssignAssessment,
-}: KanbanColumnProps) {
-  const [isDragOver, setIsDragOver] = useState(false)
-
-  const handleDragStart = (e: React.DragEvent, applicationId: string, sourceStatus: ApplicationStatus) => {
-    e.dataTransfer.setData('applicationId', applicationId)
-    e.dataTransfer.setData('sourceStatus', sourceStatus)
-    e.dataTransfer.effectAllowed = 'move'
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    setIsDragOver(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(false)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(false)
-    const applicationId = e.dataTransfer.getData('applicationId')
-    const sourceStatus = e.dataTransfer.getData('sourceStatus') as ApplicationStatus
-
-    if (!applicationId || !isDragEnabled) return
-
-    // Don't do anything if dropping on the same column type
-    if (
-      (column.id === 'applied' && sourceStatus === ApplicationStatus.APPLIED) ||
-      (column.id === 'shortlisted' && sourceStatus === ApplicationStatus.SHORTLISTED) ||
-      (column.id === 'in_progress' && sourceStatus === ApplicationStatus.IN_PROGRESS) ||
-      (column.id === 'offer_made' && sourceStatus === ApplicationStatus.OFFER_MADE) ||
-      (column.id === 'offer_accepted' && sourceStatus === ApplicationStatus.OFFER_ACCEPTED) ||
-      (column.id === 'offer_declined' && sourceStatus === ApplicationStatus.OFFER_DECLINED) ||
-      (column.id === 'rejected' && sourceStatus === ApplicationStatus.REJECTED)
-    ) {
-      return
-    }
-
-    // Handle drop based on target column
-    switch (column.id) {
+    switch (targetColumnId) {
       case 'applied':
-        onResetToApplied?.(applicationId)
+        onResetToApplied?.(item.id)
         break
       case 'shortlisted':
-        onShortlist?.(applicationId)
-        break
-      case 'in_progress':
-        // For status-based view, move to first interview stage if available
-        if (isJobFiltered) {
-          onMoveToStage?.(applicationId, 1)
-        }
+        onShortlist?.(item.id)
         break
       case 'offer_made':
-        onOpenOfferModal?.(applicationId)
+        onOpenOfferModal?.(item.id)
         break
       case 'offer_accepted':
-        // Find the application in the current list
-        const app = column.applications.find(a => a.id === applicationId) || { id: applicationId } as ApplicationListItem
-        onOpenAcceptModal?.(app)
-        break
-      case 'offer_declined':
-        // Can't directly move to declined - would need specific action
+        onOpenAcceptModal?.(item)
         break
       case 'rejected':
-        onOpenRejectModal?.(applicationId)
+        onOpenRejectModal?.(item.id)
         break
       default:
         // Interview stages
-        if (column.id.startsWith('stage-')) {
-          onMoveToStage?.(applicationId, column.order)
+        if (targetColumnId.startsWith('stage-')) {
+          const stageOrder = parseInt(targetColumnId.replace('stage-', ''))
+          await onMoveToStage?.(item.id, stageOrder)
         }
         break
     }
-  }
+  }, [onResetToApplied, onShortlist, onOpenOfferModal, onOpenAcceptModal, onOpenRejectModal, onMoveToStage])
 
-  const canDrop = isDragEnabled
+  // Render card function
+  const renderCard = useCallback((props: CardRenderProps<ApplicationListItem>) => (
+    <ApplicationCard
+      application={props.item}
+      showStageBadge={!isJobFiltered && props.item.status === ApplicationStatus.IN_PROGRESS}
+      isDragEnabled={props.isDragEnabled}
+      onOpenDrawer={() => onApplicationClick(props.item.id)}
+      dragHandleProps={props.dragHandleProps}
+      onSchedule={onSchedule}
+      onReschedule={onReschedule}
+      onCancel={onCancel}
+      onComplete={onComplete}
+      onReopen={onReopen}
+      onAssignAssessment={onAssignAssessment}
+    />
+  ), [isJobFiltered, onApplicationClick, onSchedule, onReschedule, onCancel, onComplete, onReopen, onAssignAssessment])
 
   return (
-    <div
-      className={`w-72 flex-shrink-0 flex flex-col bg-gray-50 rounded-lg transition-all ${
-        isDragOver && canDrop ? 'ring-2 ring-blue-400 bg-blue-50' : ''
-      }`}
-      onDragOver={canDrop ? handleDragOver : undefined}
-      onDragLeave={canDrop ? handleDragLeave : undefined}
-      onDrop={canDrop ? handleDrop : undefined}
-    >
-      {/* Column Header */}
-      <div className="p-3 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${column.color}`} />
-            <h3 className="text-[13px] font-medium text-gray-900">{column.title}</h3>
-          </div>
-          <span className="text-[12px] text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-            {column.applications.length}
-          </span>
-        </div>
-      </div>
-
-      {/* Column Content */}
-      <div
-        className={`flex-1 p-2 space-y-2 overflow-y-auto max-h-[calc(100vh-280px)] ${
-          isDragOver && canDrop ? 'bg-blue-50/50' : ''
-        }`}
-      >
-        {column.applications.map((application) => (
-          <ApplicationCard
-            key={application.id}
-            application={application}
-            showStageBadge={!isJobFiltered && application.status === ApplicationStatus.IN_PROGRESS}
-            isDragEnabled={isDragEnabled}
-            onOpenDrawer={onApplicationClick}
-            onDragStart={handleDragStart}
-            onSchedule={onSchedule}
-            onReschedule={onReschedule}
-            onCancel={onCancel}
-            onComplete={onComplete}
-            onReopen={onReopen}
-            onAssignAssessment={onAssignAssessment}
-          />
-        ))}
-
-        {column.applications.length === 0 && (
-          <div
-            className={`py-8 text-center ${isDragOver && canDrop ? 'border-2 border-dashed border-blue-300 rounded-md' : ''}`}
-          >
-            <p className="text-[12px] text-gray-400">
-              {canDrop ? 'Drop here' : 'No applications'}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
+    <KanbanBoard
+      columns={columns}
+      getItemId={(app) => app.id}
+      renderCard={renderCard}
+      dragEnabled={isDragEnabled}
+      onDrop={handleDrop}
+      isLoading={isLoading}
+    />
   )
 }
 
@@ -441,8 +268,11 @@ interface ApplicationCardProps {
   application: ApplicationListItem
   showStageBadge: boolean
   isDragEnabled: boolean
-  onOpenDrawer: (applicationId: string) => void
-  onDragStart: (e: React.DragEvent, applicationId: string, sourceStatus: ApplicationStatus) => void
+  onOpenDrawer: () => void
+  dragHandleProps: {
+    draggable: boolean
+    onDragStart: (e: React.DragEvent) => void
+  }
   onSchedule?: (application: ApplicationListItem) => void
   onReschedule?: (application: ApplicationListItem) => void
   onCancel?: (application: ApplicationListItem) => void
@@ -472,7 +302,7 @@ function ApplicationCard({
   showStageBadge,
   isDragEnabled,
   onOpenDrawer,
-  onDragStart,
+  dragHandleProps,
   onSchedule,
   onReschedule,
   onCancel,
@@ -506,20 +336,24 @@ function ApplicationCard({
     }
   }
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger if clicking on interactive elements
+    const target = e.target as HTMLElement
+    if (target.closest('button') || target.closest('a')) return
+    onOpenDrawer()
+  }
+
   return (
     <div
-      draggable={isDragEnabled}
-      onDragStart={(e) => isDragEnabled && onDragStart(e, application.id, application.status)}
-      className={`bg-white border border-gray-200 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow ${
-        isDragEnabled ? 'cursor-grab active:cursor-grabbing' : ''
+      {...dragHandleProps}
+      onClick={handleCardClick}
+      className={`bg-white border border-gray-200 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
+        isDragEnabled ? 'active:cursor-grabbing' : ''
       }`}
     >
       {/* Card Header */}
       <div className="flex items-start justify-between mb-2">
-        <div
-          className="flex items-center gap-2 cursor-pointer flex-1"
-          onClick={() => onOpenDrawer(application.id)}
-        >
+        <div className="flex items-center gap-2 flex-1">
           <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center text-white text-[10px] font-medium flex-shrink-0">
             {application.candidate_name
               ?.split(' ')

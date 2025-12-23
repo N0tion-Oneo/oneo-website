@@ -1,16 +1,12 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import type { CandidateAdminListItem, OnboardingStage } from '@/types'
 import { getOnboardingStages, updateCandidate } from '@/services/api'
+import { KanbanBoard, type KanbanColumnConfig, type DropResult, type CardRenderProps } from '@/components/common/KanbanBoard'
 import {
   MapPin,
   Briefcase,
   GripVertical,
 } from 'lucide-react'
-
-interface KanbanColumn {
-  stage: OnboardingStage | null
-  candidates: CandidateAdminListItem[]
-}
 
 interface CandidateKanbanBoardProps {
   candidates: CandidateAdminListItem[]
@@ -27,7 +23,6 @@ export default function CandidateKanbanBoard({
 }: CandidateKanbanBoardProps) {
   const [stages, setStages] = useState<OnboardingStage[]>([])
   const [stagesLoading, setStagesLoading] = useState(true)
-  const [dragOverStageId, setDragOverStageId] = useState<number | 'no-stage' | null>(null)
 
   // Fetch stages
   useEffect(() => {
@@ -45,138 +40,90 @@ export default function CandidateKanbanBoard({
   }, [])
 
   // Build columns from stages
-  const columns = useMemo<KanbanColumn[]>(() => {
+  const columns = useMemo<KanbanColumnConfig<CandidateAdminListItem>[]>(() => {
     // Create a column for candidates with no stage
-    const noStageColumn: KanbanColumn = {
-      stage: null,
-      candidates: candidates.filter(c => !c.onboarding_stage),
+    const noStageColumn: KanbanColumnConfig<CandidateAdminListItem> = {
+      id: 'no-stage',
+      title: 'Not Started',
+      color: '#6B7280',
+      items: candidates.filter(c => !c.onboarding_stage),
     }
 
     // Create columns for each stage
-    const stageColumns: KanbanColumn[] = stages.map(stage => ({
-      stage,
-      candidates: candidates.filter(c => c.onboarding_stage?.id === stage.id),
+    const stageColumns: KanbanColumnConfig<CandidateAdminListItem>[] = stages.map(stage => ({
+      id: `stage-${stage.id}`,
+      title: stage.name,
+      color: stage.color,
+      items: candidates.filter(c => c.onboarding_stage?.id === stage.id),
     }))
 
     return [noStageColumn, ...stageColumns]
   }, [candidates, stages])
 
-  const handleDragStart = (e: React.DragEvent, candidateSlug: string) => {
-    e.dataTransfer.setData('candidateSlug', candidateSlug)
-    e.dataTransfer.effectAllowed = 'move'
-  }
+  // Handle drop
+  const handleDrop = useCallback(async (result: DropResult<CandidateAdminListItem>) => {
+    const { item, targetColumnId, sourceColumnId } = result
+    if (sourceColumnId === targetColumnId) return
 
-  const handleDragOver = (e: React.DragEvent, stageId: number | null) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    setDragOverStageId(stageId ?? 'no-stage')
-  }
-
-  const handleDragLeave = () => {
-    setDragOverStageId(null)
-  }
-
-  const handleDrop = async (e: React.DragEvent, targetStageId: number | null) => {
-    e.preventDefault()
-    setDragOverStageId(null)
-
-    const candidateSlug = e.dataTransfer.getData('candidateSlug')
-    if (!candidateSlug) return
-
-    // Find the candidate
-    const candidate = candidates.find(c => c.slug === candidateSlug)
-    if (!candidate) return
-
-    // Skip if same stage
-    if (candidate.onboarding_stage?.id === targetStageId) return
+    const targetStageId = targetColumnId === 'no-stage'
+      ? null
+      : parseInt(targetColumnId.replace('stage-', ''))
 
     try {
-      await updateCandidate(candidateSlug, { onboarding_stage_id: targetStageId })
+      await updateCandidate(item.slug, { onboarding_stage_id: targetStageId })
       onStageChange?.()
     } catch (error) {
       console.error('Failed to update candidate stage:', error)
     }
-  }
+  }, [onStageChange])
 
-  if (isLoading || stagesLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-[14px] text-gray-500">Loading...</p>
-      </div>
-    )
-  }
+  // Render card
+  const renderCard = useCallback((props: CardRenderProps<CandidateAdminListItem>) => (
+    <CandidateCard
+      candidate={props.item}
+      dragHandleProps={props.dragHandleProps}
+      onClick={props.onClick}
+    />
+  ), [])
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
-      {columns.map((column) => (
-        <div
-          key={column.stage?.id ?? 'no-stage'}
-          className={`w-72 flex-shrink-0 flex flex-col bg-gray-50 rounded-lg transition-all ${
-            dragOverStageId === (column.stage?.id ?? 'no-stage') ? 'ring-2 ring-blue-400 bg-blue-50' : ''
-          }`}
-          onDragOver={(e) => handleDragOver(e, column.stage?.id ?? null)}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, column.stage?.id ?? null)}
-        >
-          {/* Column Header */}
-          <div className="p-3 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: column.stage?.color ?? '#6B7280' }}
-                />
-                <h3 className="text-[13px] font-medium text-gray-900">
-                  {column.stage?.name ?? 'Not Started'}
-                </h3>
-              </div>
-              <span className="text-[12px] text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-                {column.candidates.length}
-              </span>
-            </div>
-          </div>
-
-          {/* Column Content */}
-          <div className="flex-1 p-2 space-y-2 overflow-y-auto max-h-[calc(100vh-280px)]">
-            {column.candidates.map((candidate) => (
-              <CandidateCard
-                key={candidate.id}
-                candidate={candidate}
-                onDragStart={(e) => handleDragStart(e, candidate.slug)}
-                onClick={() => onCandidateClick?.(candidate)}
-              />
-            ))}
-            {column.candidates.length === 0 && (
-              <div className="py-8 text-center text-[12px] text-gray-400">
-                No candidates
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
+    <KanbanBoard
+      columns={columns}
+      getItemId={(c) => c.slug}
+      renderCard={renderCard}
+      onDrop={handleDrop}
+      onItemClick={onCandidateClick}
+      isLoading={isLoading || stagesLoading}
+    />
   )
 }
 
 interface CandidateCardProps {
   candidate: CandidateAdminListItem
-  onDragStart: (e: React.DragEvent) => void
+  dragHandleProps: {
+    draggable: boolean
+    onDragStart: (e: React.DragEvent) => void
+  }
   onClick?: () => void
 }
 
-function CandidateCard({ candidate, onDragStart, onClick }: CandidateCardProps) {
+function CandidateCard({ candidate, dragHandleProps, onClick }: CandidateCardProps) {
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger if clicking on interactive elements
+    const target = e.target as HTMLElement
+    if (target.closest('button') || target.closest('a')) return
+    onClick?.()
+  }
+
   return (
     <div
-      draggable
-      onDragStart={onDragStart}
-      className="bg-white border border-gray-200 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
+      {...dragHandleProps}
+      onClick={handleCardClick}
+      className="bg-white border border-gray-200 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
     >
       {/* Card Header */}
       <div className="flex items-start justify-between mb-2">
-        <div
-          className="flex items-center gap-2 cursor-pointer flex-1"
-          onClick={onClick}
-        >
+        <div className="flex items-center gap-2 flex-1">
           {/* Avatar */}
           <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center text-white text-[10px] font-medium flex-shrink-0">
             {candidate.initials || '--'}

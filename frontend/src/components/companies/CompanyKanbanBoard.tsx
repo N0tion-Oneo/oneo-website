@@ -1,7 +1,8 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import type { AdminCompanyListItem, OnboardingStage } from '@/types'
 import { getOnboardingStages, updateCompany } from '@/services/api'
 import { getMediaUrl } from '@/services/api'
+import { KanbanBoard, type KanbanColumnConfig, type DropResult, type CardRenderProps } from '@/components/common/KanbanBoard'
 import {
   Building2,
   Briefcase,
@@ -9,11 +10,6 @@ import {
   GripVertical,
   Calendar,
 } from 'lucide-react'
-
-interface KanbanColumn {
-  stage: OnboardingStage | null
-  companies: AdminCompanyListItem[]
-}
 
 interface CompanyKanbanBoardProps {
   companies: AdminCompanyListItem[]
@@ -37,7 +33,6 @@ export default function CompanyKanbanBoard({
 }: CompanyKanbanBoardProps) {
   const [stages, setStages] = useState<OnboardingStage[]>([])
   const [stagesLoading, setStagesLoading] = useState(true)
-  const [dragOverStageId, setDragOverStageId] = useState<number | 'no-stage' | null>(null)
 
   // Fetch stages
   useEffect(() => {
@@ -55,138 +50,90 @@ export default function CompanyKanbanBoard({
   }, [])
 
   // Build columns from stages
-  const columns = useMemo<KanbanColumn[]>(() => {
+  const columns = useMemo<KanbanColumnConfig<AdminCompanyListItem>[]>(() => {
     // Create a column for companies with no stage
-    const noStageColumn: KanbanColumn = {
-      stage: null,
-      companies: companies.filter(c => !c.onboarding_stage),
+    const noStageColumn: KanbanColumnConfig<AdminCompanyListItem> = {
+      id: 'no-stage',
+      title: 'Not Started',
+      color: '#6B7280',
+      items: companies.filter(c => !c.onboarding_stage),
     }
 
     // Create columns for each stage
-    const stageColumns: KanbanColumn[] = stages.map(stage => ({
-      stage,
-      companies: companies.filter(c => c.onboarding_stage?.id === stage.id),
+    const stageColumns: KanbanColumnConfig<AdminCompanyListItem>[] = stages.map(stage => ({
+      id: `stage-${stage.id}`,
+      title: stage.name,
+      color: stage.color,
+      items: companies.filter(c => c.onboarding_stage?.id === stage.id),
     }))
 
     return [noStageColumn, ...stageColumns]
   }, [companies, stages])
 
-  const handleDragStart = (e: React.DragEvent, companyId: string) => {
-    e.dataTransfer.setData('companyId', companyId)
-    e.dataTransfer.effectAllowed = 'move'
-  }
+  // Handle drop
+  const handleDrop = useCallback(async (result: DropResult<AdminCompanyListItem>) => {
+    const { item, targetColumnId, sourceColumnId } = result
+    if (sourceColumnId === targetColumnId) return
 
-  const handleDragOver = (e: React.DragEvent, stageId: number | null) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    setDragOverStageId(stageId ?? 'no-stage')
-  }
-
-  const handleDragLeave = () => {
-    setDragOverStageId(null)
-  }
-
-  const handleDrop = async (e: React.DragEvent, targetStageId: number | null) => {
-    e.preventDefault()
-    setDragOverStageId(null)
-
-    const companyId = e.dataTransfer.getData('companyId')
-    if (!companyId) return
-
-    // Find the company
-    const company = companies.find(c => c.id === companyId)
-    if (!company) return
-
-    // Skip if same stage
-    if (company.onboarding_stage?.id === targetStageId) return
+    const targetStageId = targetColumnId === 'no-stage'
+      ? null
+      : parseInt(targetColumnId.replace('stage-', ''))
 
     try {
-      await updateCompany(companyId, { onboarding_stage_id: targetStageId })
+      await updateCompany(item.id, { onboarding_stage_id: targetStageId })
       onStageChange?.()
     } catch (error) {
       console.error('Failed to update company stage:', error)
     }
-  }
+  }, [onStageChange])
 
-  if (isLoading || stagesLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-[14px] text-gray-500">Loading...</p>
-      </div>
-    )
-  }
+  // Render card
+  const renderCard = useCallback((props: CardRenderProps<AdminCompanyListItem>) => (
+    <CompanyCard
+      company={props.item}
+      dragHandleProps={props.dragHandleProps}
+      onClick={props.onClick}
+    />
+  ), [])
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
-      {columns.map((column) => (
-        <div
-          key={column.stage?.id ?? 'no-stage'}
-          className={`w-72 flex-shrink-0 flex flex-col bg-gray-50 rounded-lg transition-all ${
-            dragOverStageId === (column.stage?.id ?? 'no-stage') ? 'ring-2 ring-blue-400 bg-blue-50' : ''
-          }`}
-          onDragOver={(e) => handleDragOver(e, column.stage?.id ?? null)}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, column.stage?.id ?? null)}
-        >
-          {/* Column Header */}
-          <div className="p-3 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: column.stage?.color ?? '#6B7280' }}
-                />
-                <h3 className="text-[13px] font-medium text-gray-900">
-                  {column.stage?.name ?? 'Not Started'}
-                </h3>
-              </div>
-              <span className="text-[12px] text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-                {column.companies.length}
-              </span>
-            </div>
-          </div>
-
-          {/* Column Content */}
-          <div className="flex-1 p-2 space-y-2 overflow-y-auto max-h-[calc(100vh-280px)]">
-            {column.companies.map((company) => (
-              <CompanyCard
-                key={company.id}
-                company={company}
-                onDragStart={(e) => handleDragStart(e, company.id)}
-                onClick={() => onCompanyClick?.(company)}
-              />
-            ))}
-            {column.companies.length === 0 && (
-              <div className="py-8 text-center text-[12px] text-gray-400">
-                No companies
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
+    <KanbanBoard
+      columns={columns}
+      getItemId={(c) => c.id}
+      renderCard={renderCard}
+      onDrop={handleDrop}
+      onItemClick={onCompanyClick}
+      isLoading={isLoading || stagesLoading}
+    />
   )
 }
 
 interface CompanyCardProps {
   company: AdminCompanyListItem
-  onDragStart: (e: React.DragEvent) => void
+  dragHandleProps: {
+    draggable: boolean
+    onDragStart: (e: React.DragEvent) => void
+  }
   onClick?: () => void
 }
 
-function CompanyCard({ company, onDragStart, onClick }: CompanyCardProps) {
+function CompanyCard({ company, dragHandleProps, onClick }: CompanyCardProps) {
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger if clicking on interactive elements
+    const target = e.target as HTMLElement
+    if (target.closest('button') || target.closest('a')) return
+    onClick?.()
+  }
+
   return (
     <div
-      draggable
-      onDragStart={onDragStart}
-      className="bg-white border border-gray-200 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
+      {...dragHandleProps}
+      onClick={handleCardClick}
+      className="bg-white border border-gray-200 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
     >
       {/* Card Header */}
       <div className="flex items-start justify-between mb-2">
-        <div
-          className="flex items-center gap-2 cursor-pointer flex-1"
-          onClick={onClick}
-        >
+        <div className="flex items-center gap-2 flex-1">
           {/* Logo/Avatar */}
           {company.logo ? (
             <img

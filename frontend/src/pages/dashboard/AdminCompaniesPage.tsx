@@ -747,6 +747,7 @@ export default function AdminCompaniesPage() {
               companies={localCompanies}
               isLoading={isLoading}
               onStageChange={refetch}
+              onCompanyClick={(company) => setSelectedCompanyId(company.id)}
             />
           )}
 
