@@ -24,6 +24,10 @@ import {
   Send,
   Trash2,
   Briefcase,
+  Settings,
+  Activity,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react'
 import { useMeetingTypes, useRecruiterBookings, useCandidateInvitations, useStaffUsers } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
@@ -517,6 +521,10 @@ function MeetingTypeModal({
     allowed_user_ids: meetingType?.allowed_users_details?.map(u => u.id) || [],
   })
 
+  // Expandable sections state
+  const [showDisplaySettings, setShowDisplaySettings] = useState(false)
+  const [showOnboardingSettings, setShowOnboardingSettings] = useState(false)
+
   // Fetch staff users for allowed users selection
   const { staffUsers, isLoading: loadingStaff } = useStaffUsers()
 
@@ -547,390 +555,456 @@ function MeetingTypeModal({
     await onSave(formData)
   }
 
+  // Calculate modal width based on expanded sections
+  const getModalWidth = () => {
+    if (showDisplaySettings && showOnboardingSettings) return 'max-w-4xl'
+    if (showDisplaySettings || showOnboardingSettings) return 'max-w-2xl'
+    return 'max-w-md'
+  }
+
+  // Calculate column count
+  const getColumnCount = () => {
+    let count = 1
+    if (showDisplaySettings) count++
+    if (showOnboardingSettings) count++
+    return count
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-[16px] font-semibold text-gray-900">
-            {meetingType ? 'Edit Meeting Type' : 'New Meeting Type'}
-          </h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
-            <X className="w-5 h-5 text-gray-500" />
+      <div className={`relative bg-white rounded-xl shadow-xl w-full ${getModalWidth()} max-h-[90vh] flex flex-col transition-all duration-200`}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 flex-shrink-0">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">
+              {meetingType ? 'Edit Meeting Type' : 'New Meeting Type'}
+            </h2>
+            {meetingType && (
+              <p className="text-xs text-gray-500 mt-0.5">{meetingType.name}</p>
+            )}
+          </div>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Name */}
-          <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-              Name *
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-              placeholder="e.g., Sales Discovery Call"
-            />
-          </div>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          <form id="meeting-type-form" onSubmit={handleSubmit}>
+            <div className={`grid gap-5 ${getColumnCount() === 3 ? 'grid-cols-3' : getColumnCount() === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {/* Column 1: Basic Details (always visible) */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                  <Calendar className="w-4 h-4 text-gray-400" />
+                  <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Basic Details</h4>
+                </div>
 
-          {/* Category */}
-          <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-              Category *
-            </label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-            >
-              <option value="sales">Sales</option>
-              <option value="recruitment">Recruitment</option>
-            </select>
-          </div>
+                {/* Name */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Name *</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    placeholder="e.g., Sales Discovery Call"
+                  />
+                </div>
 
-          {/* Allowed Users - Who can use this meeting type */}
-          <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-              Allowed Users
-            </label>
-            <p className="text-[12px] text-gray-500 mb-2">
-              Select which recruiters can use this meeting type on their booking pages
-            </p>
-            {loadingStaff ? (
-              <div className="flex items-center gap-2 text-[13px] text-gray-500">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Loading users...
-              </div>
-            ) : (
-              <div className="border border-gray-200 rounded-md max-h-48 overflow-y-auto">
-                {staffUsers.map((staffUser) => (
-                  <label
-                    key={staffUser.id}
-                    className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                {/* Category */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Category *</label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                   >
+                    <option value="sales">Sales</option>
+                    <option value="recruitment">Recruitment</option>
+                  </select>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows={4}
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+                    placeholder="Brief description shown on the booking page"
+                  />
+                </div>
+
+                {/* Duration and Location */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Duration (min)</label>
                     <input
-                      type="checkbox"
-                      checked={formData.allowed_user_ids?.includes(staffUser.id) || false}
-                      onChange={(e) => {
-                        const currentIds = formData.allowed_user_ids || []
-                        const newIds = e.target.checked
-                          ? [...currentIds, staffUser.id]
-                          : currentIds.filter((id) => id !== staffUser.id)
-                        setFormData((prev) => ({ ...prev, allowed_user_ids: newIds }))
-                      }}
-                      className="w-4 h-4 rounded border-gray-300"
+                      type="number"
+                      name="duration_minutes"
+                      value={formData.duration_minutes || ''}
+                      onChange={handleChange}
+                      min={5}
+                      max={480}
+                      className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                     />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium text-gray-900 truncate">
-                        {staffUser.full_name}
-                      </p>
-                      <p className="text-[12px] text-gray-500 truncate">
-                        {staffUser.email} · {staffUser.role}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Location</label>
+                    <select
+                      name="location_type"
+                      value={formData.location_type}
+                      onChange={handleChange}
+                      className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    >
+                      <option value="video">Video Call</option>
+                      <option value="phone">Phone Call</option>
+                      <option value="in_person">In Person</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Buffer Times */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Buffer Before</label>
+                    <input
+                      type="number"
+                      name="buffer_before_minutes"
+                      value={formData.buffer_before_minutes || ''}
+                      onChange={handleChange}
+                      min={0}
+                      max={60}
+                      className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
+                    <p className="text-[10px] text-gray-400 mt-0.5">Minutes</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Buffer After</label>
+                    <input
+                      type="number"
+                      name="buffer_after_minutes"
+                      value={formData.buffer_after_minutes || ''}
+                      onChange={handleChange}
+                      min={0}
+                      max={60}
+                      className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
+                    <p className="text-[10px] text-gray-400 mt-0.5">Minutes</p>
+                  </div>
+                </div>
+
+                {/* Toggle buttons for expandable sections */}
+                <div className="flex flex-col gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowDisplaySettings(!showDisplaySettings)}
+                    className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                      showDisplaySettings
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Settings className="w-3.5 h-3.5" />
+                      Display & Access
+                    </span>
+                    {showDisplaySettings ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowOnboardingSettings(!showOnboardingSettings)}
+                    className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                      showOnboardingSettings
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Activity className="w-3.5 h-3.5" />
+                      Onboarding Settings
+                    </span>
+                    {showOnboardingSettings ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Column 2: Display & Access Settings (when expanded) */}
+              {showDisplaySettings && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                    <Settings className="w-4 h-4 text-gray-400" />
+                    <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Display & Access</h4>
+                  </div>
+
+                  {/* Allowed Users */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Allowed Users</label>
+                    <p className="text-[10px] text-gray-500 mb-1.5">
+                      Which recruiters can use this meeting type
+                    </p>
+                    {loadingStaff ? (
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Loading...
+                      </div>
+                    ) : (
+                      <div className="border border-gray-200 rounded-lg max-h-32 overflow-y-auto">
+                        {staffUsers.map((staffUser) => (
+                          <label
+                            key={staffUser.id}
+                            className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.allowed_user_ids?.includes(staffUser.id) || false}
+                              onChange={(e) => {
+                                const currentIds = formData.allowed_user_ids || []
+                                const newIds = e.target.checked
+                                  ? [...currentIds, staffUser.id]
+                                  : currentIds.filter((id) => id !== staffUser.id)
+                                setFormData((prev) => ({ ...prev, allowed_user_ids: newIds }))
+                              }}
+                              className="w-3.5 h-3.5 rounded border-gray-300"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-gray-900 truncate">
+                                {staffUser.full_name}
+                              </p>
+                              <p className="text-[10px] text-gray-500 truncate">
+                                {staffUser.role}
+                              </p>
+                            </div>
+                          </label>
+                        ))}
+                        {staffUsers.length === 0 && (
+                          <p className="text-xs text-gray-500 p-2.5">No staff users found</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Color */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Color</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        name="color"
+                        value={formData.color}
+                        onChange={handleChange}
+                        className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={formData.color}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, color: e.target.value }))
+                        }
+                        className="flex-1 px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Confirmation Message */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Confirmation Message</label>
+                    <textarea
+                      name="confirmation_message"
+                      value={formData.confirmation_message}
+                      onChange={handleChange}
+                      rows={4}
+                      className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+                      placeholder="Message shown after booking"
+                    />
+                  </div>
+
+                  {/* Redirect URL */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Redirect URL</label>
+                    <input
+                      type="url"
+                      name="redirect_url"
+                      value={formData.redirect_url}
+                      onChange={handleChange}
+                      className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      placeholder="https://example.com/thank-you"
+                    />
+                    <p className="text-[10px] text-gray-400 mt-0.5">After successful booking</p>
+                  </div>
+
+                  {/* Checkboxes */}
+                  <div className="space-y-2 pt-2 border-t border-gray-100">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="is_active"
+                        checked={formData.is_active}
+                        onChange={handleChange}
+                        className="w-3.5 h-3.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                      />
+                      <span className="text-xs text-gray-700">Active (visible on booking page)</span>
+                    </label>
+                    <label className="flex items-start gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="show_on_dashboard"
+                        checked={formData.show_on_dashboard}
+                        onChange={handleChange}
+                        className="w-3.5 h-3.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900 mt-0.5"
+                      />
+                      <div>
+                        <span className="text-xs text-gray-700">Show on Dashboard</span>
+                        <p className="text-[10px] text-gray-500">
+                          Display on {formData.category === 'recruitment' ? 'candidate' : 'company'} dashboards
+                        </p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="requires_approval"
+                        checked={formData.requires_approval}
+                        onChange={handleChange}
+                        className="w-3.5 h-3.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                      />
+                      <span className="text-xs text-gray-700">Require approval</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Column 3: Onboarding Settings (when expanded) */}
+              {showOnboardingSettings && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                    <Activity className="w-4 h-4 text-gray-400" />
+                    <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Onboarding</h4>
+                  </div>
+
+                  <p className="text-[10px] text-gray-500">
+                    Auto-update {formData.category === 'recruitment' ? 'candidate' : 'company'} stage on booking
+                  </p>
+
+                  {/* Target Stage for New/Unauthenticated Users */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      New Users Stage
+                    </label>
+                    <p className="text-[10px] text-gray-500 mb-1">
+                      When booking without login
+                    </p>
+                    <select
+                      name="target_onboarding_stage"
+                      value={formData.target_onboarding_stage ?? ''}
+                      onChange={(e) => {
+                        const value = e.target.value ? parseInt(e.target.value) : null
+                        setFormData((prev) => ({ ...prev, target_onboarding_stage: value }))
+                      }}
+                      className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    >
+                      <option value="">No stage change</option>
+                      {onboardingStages.map((stage) => (
+                        <option key={stage.id} value={stage.id}>
+                          {stage.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Target Stage for Existing/Authenticated Users */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Existing Users Stage
+                    </label>
+                    <p className="text-[10px] text-gray-500 mb-1">
+                      When logged-in user books
+                    </p>
+                    <select
+                      name="target_onboarding_stage_authenticated"
+                      value={formData.target_onboarding_stage_authenticated ?? ''}
+                      onChange={(e) => {
+                        const value = e.target.value ? parseInt(e.target.value) : null
+                        setFormData((prev) => ({ ...prev, target_onboarding_stage_authenticated: value }))
+                      }}
+                      className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    >
+                      <option value="">Same as new users</option>
+                      {onboardingStages.map((stage) => (
+                        <option key={stage.id} value={stage.id}>
+                          {stage.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Stage Change Behavior */}
+                  {(formData.target_onboarding_stage || formData.target_onboarding_stage_authenticated) && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Change Behavior
+                      </label>
+                      <select
+                        name="stage_change_behavior"
+                        value={formData.stage_change_behavior}
+                        onChange={handleChange}
+                        className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      >
+                        <option value="only_forward">
+                          {StageChangeBehaviorLabels.only_forward}
+                        </option>
+                        <option value="always">
+                          {StageChangeBehaviorLabels.always}
+                        </option>
+                        <option value="only_if_not_set">
+                          {StageChangeBehaviorLabels.only_if_not_set}
+                        </option>
+                      </select>
+                      <p className="mt-1 text-[10px] text-gray-500">
+                        {formData.stage_change_behavior === 'only_forward' &&
+                          'Only change if target is after current stage'}
+                        {formData.stage_change_behavior === 'always' &&
+                          'Always set to target, even if going backwards'}
+                        {formData.stage_change_behavior === 'only_if_not_set' &&
+                          'Only set if no current stage'}
                       </p>
                     </div>
-                  </label>
-                ))}
-                {staffUsers.length === 0 && (
-                  <p className="text-[13px] text-gray-500 p-3">No staff users found</p>
-                )}
-              </div>
-            )}
-          </div>
+                  )}
 
-          {/* Description */}
-          <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
-              placeholder="Brief description shown on the booking page"
-            />
-          </div>
-
-          {/* Duration and Location */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                Duration (minutes)
-              </label>
-              <input
-                type="number"
-                name="duration_minutes"
-                value={formData.duration_minutes || ''}
-                onChange={handleChange}
-                min={5}
-                max={480}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                Location Type
-              </label>
-              <select
-                name="location_type"
-                value={formData.location_type}
-                onChange={handleChange}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-              >
-                <option value="video">Video Call</option>
-                <option value="phone">Phone Call</option>
-                <option value="in_person">In Person</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Buffer Times */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                Buffer Before (min)
-              </label>
-              <input
-                type="number"
-                name="buffer_before_minutes"
-                value={formData.buffer_before_minutes || ''}
-                onChange={handleChange}
-                min={0}
-                max={60}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                Buffer After (min)
-              </label>
-              <input
-                type="number"
-                name="buffer_after_minutes"
-                value={formData.buffer_after_minutes || ''}
-                onChange={handleChange}
-                min={0}
-                max={60}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-              />
-            </div>
-          </div>
-
-          {/* Color */}
-          <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-              Color
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                name="color"
-                value={formData.color}
-                onChange={handleChange}
-                className="w-10 h-10 rounded border border-gray-200 cursor-pointer"
-              />
-              <input
-                type="text"
-                value={formData.color}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, color: e.target.value }))
-                }
-                className="flex-1 px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-              />
-            </div>
-          </div>
-
-          {/* Confirmation Message */}
-          <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-              Confirmation Message
-            </label>
-            <textarea
-              name="confirmation_message"
-              value={formData.confirmation_message}
-              onChange={handleChange}
-              rows={2}
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
-              placeholder="Message shown after successful booking"
-            />
-          </div>
-
-          {/* Redirect URL */}
-          <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-              Redirect URL (after booking)
-            </label>
-            <input
-              type="url"
-              name="redirect_url"
-              value={formData.redirect_url}
-              onChange={handleChange}
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-              placeholder="https://example.com/thank-you"
-            />
-          </div>
-
-          {/* Checkboxes */}
-          <div className="space-y-3">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="is_active"
-                checked={formData.is_active}
-                onChange={handleChange}
-                className="w-4 h-4 rounded border-gray-300"
-              />
-              <span className="text-[13px] text-gray-700">Active (visible on booking page)</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="show_on_dashboard"
-                checked={formData.show_on_dashboard}
-                onChange={handleChange}
-                className="w-4 h-4 rounded border-gray-300"
-              />
-              <div>
-                <span className="text-[13px] text-gray-700">Show on Dashboard</span>
-                <p className="text-[11px] text-gray-500">
-                  Display this meeting type on {formData.category === 'recruitment' ? 'candidate' : 'company'} dashboards for booking with assigned contacts
-                </p>
-              </div>
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="requires_approval"
-                checked={formData.requires_approval}
-                onChange={handleChange}
-                className="w-4 h-4 rounded border-gray-300"
-              />
-              <span className="text-[13px] text-gray-700">Require approval before confirming</span>
-            </label>
-          </div>
-
-          {/* Onboarding Stage Settings */}
-          <div className="pt-4 border-t border-gray-100">
-            <h3 className="text-[14px] font-medium text-gray-900 mb-3">
-              Onboarding Stage Settings
-            </h3>
-            <p className="text-[12px] text-gray-500 mb-4">
-              Automatically update {formData.category === 'recruitment' ? 'candidate' : 'company'} onboarding stage when a booking is made
-            </p>
-
-            <div className="space-y-4">
-              {/* Target Stage for New/Unauthenticated Users */}
-              <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                  Stage for New Users (Unauthenticated)
-                </label>
-                <p className="text-[11px] text-gray-500 mb-1.5">
-                  Applied when someone books without being logged in
-                </p>
-                <select
-                  name="target_onboarding_stage"
-                  value={formData.target_onboarding_stage ?? ''}
-                  onChange={(e) => {
-                    const value = e.target.value ? parseInt(e.target.value) : null
-                    setFormData((prev) => ({ ...prev, target_onboarding_stage: value }))
-                  }}
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-                >
-                  <option value="">No stage change</option>
-                  {onboardingStages.map((stage) => (
-                    <option key={stage.id} value={stage.id}>
-                      {stage.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Target Stage for Existing/Authenticated Users */}
-              <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                  Stage for Existing Users (Authenticated)
-                </label>
-                <p className="text-[11px] text-gray-500 mb-1.5">
-                  Applied when a logged-in user books (e.g., existing candidate scheduling an interview)
-                </p>
-                <select
-                  name="target_onboarding_stage_authenticated"
-                  value={formData.target_onboarding_stage_authenticated ?? ''}
-                  onChange={(e) => {
-                    const value = e.target.value ? parseInt(e.target.value) : null
-                    setFormData((prev) => ({ ...prev, target_onboarding_stage_authenticated: value }))
-                  }}
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-                >
-                  <option value="">Use same as unauthenticated</option>
-                  {onboardingStages.map((stage) => (
-                    <option key={stage.id} value={stage.id}>
-                      {stage.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Stage Change Behavior */}
-              {(formData.target_onboarding_stage || formData.target_onboarding_stage_authenticated) && (
-                <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                    Stage Change Behavior
-                  </label>
-                  <select
-                    name="stage_change_behavior"
-                    value={formData.stage_change_behavior}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  >
-                    <option value="only_forward">
-                      {StageChangeBehaviorLabels.only_forward}
-                    </option>
-                    <option value="always">
-                      {StageChangeBehaviorLabels.always}
-                    </option>
-                    <option value="only_if_not_set">
-                      {StageChangeBehaviorLabels.only_if_not_set}
-                    </option>
-                  </select>
-                  <p className="mt-1 text-[11px] text-gray-500">
-                    {formData.stage_change_behavior === 'only_forward' &&
-                      'Stage will only change if the target stage comes after their current stage'}
-                    {formData.stage_change_behavior === 'always' &&
-                      'Stage will always be set to the target, even if going backwards'}
-                    {formData.stage_change_behavior === 'only_if_not_set' &&
-                      'Stage will only be set if they don\'t currently have a stage'}
-                  </p>
+                  <div className="pt-2 border-t border-gray-100">
+                    <p className="text-[10px] text-gray-400 italic">Leave empty to skip stage changes</p>
+                  </div>
                 </div>
               )}
             </div>
-          </div>
+          </form>
+        </div>
 
-          {/* Submit */}
-          <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-[14px] text-gray-600 hover:text-gray-900"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="px-5 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-              {meetingType ? 'Save Changes' : 'Create Meeting Type'}
-            </button>
-          </div>
-        </form>
+        {/* Footer */}
+        <div className="flex gap-3 px-5 py-4 border-t border-gray-200 flex-shrink-0 bg-gray-50">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="meeting-type-form"
+            disabled={isSaving}
+            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {meetingType ? 'Save Changes' : 'Create Meeting Type'}
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -679,11 +679,14 @@ def create_company_subscription(request, company_id):
     if serializer.is_valid():
         subscription = serializer.save()
 
-        # Handle custom pricing if provided
+        # Always create CompanyPricing when subscription is created
+        # This ensures pricing is tied to the subscription lifecycle
+        pricing, created = CompanyPricing.objects.get_or_create(company=company)
+
+        # Apply custom pricing if provided
         custom_pricing = request.data.get('custom_pricing')
         if custom_pricing and isinstance(custom_pricing, dict):
             from decimal import Decimal
-            pricing, created = CompanyPricing.objects.get_or_create(company=company)
 
             pricing_changed = False
             if custom_pricing.get('monthly_retainer') is not None:
@@ -980,7 +983,7 @@ def change_service_type(request, company_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_company_pricing(request, company_id):
-    """Get custom pricing for a company. Staff or company members can view."""
+    """Get custom pricing for a company. Requires an active subscription. Staff or company members can view."""
     if not can_view_company_subscription(request.user, company_id):
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -989,7 +992,21 @@ def get_company_pricing(request, company_id):
     except Company.DoesNotExist:
         return Response({'error': 'Company not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    pricing, created = CompanyPricing.objects.get_or_create(company=company)
+    # Check that company has a subscription (pricing is tied to subscription)
+    if not Subscription.objects.filter(company=company).exists():
+        return Response(
+            {'error': 'No subscription found. Pricing requires an active contract.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    try:
+        pricing = CompanyPricing.objects.get(company=company)
+    except CompanyPricing.DoesNotExist:
+        return Response(
+            {'error': 'No pricing configuration found.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
     serializer = CompanyPricingSerializer(pricing)
     return Response(serializer.data)
 
@@ -1002,7 +1019,7 @@ def get_company_pricing(request, company_id):
 @api_view(['POST', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def update_company_pricing(request, company_id):
-    """Create or update custom pricing for a company."""
+    """Update custom pricing for a company. Requires an active subscription."""
     if not is_staff_user(request.user):
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -1011,7 +1028,21 @@ def update_company_pricing(request, company_id):
     except Company.DoesNotExist:
         return Response({'error': 'Company not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    pricing, created = CompanyPricing.objects.get_or_create(company=company)
+    # Check that company has a subscription (pricing is tied to subscription)
+    if not Subscription.objects.filter(company=company).exists():
+        return Response(
+            {'error': 'No subscription found. Pricing requires an active contract.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        pricing = CompanyPricing.objects.get(company=company)
+    except CompanyPricing.DoesNotExist:
+        return Response(
+            {'error': 'No pricing configuration found. Create a subscription first.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
     old_retainer = pricing.monthly_retainer
     old_placement = pricing.placement_fee
     old_csuite = pricing.csuite_placement_fee
@@ -1057,7 +1088,7 @@ def update_company_pricing(request, company_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_effective_pricing(request, company_id):
-    """Get effective pricing for a company (custom values or defaults). Staff or company members can view."""
+    """Get effective pricing for a company (custom values or defaults). Requires an active subscription."""
     if not can_view_company_subscription(request.user, company_id):
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -1066,7 +1097,20 @@ def get_effective_pricing(request, company_id):
     except Company.DoesNotExist:
         return Response({'error': 'Company not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    pricing, _ = CompanyPricing.objects.get_or_create(company=company)
+    # Check that company has a subscription (pricing is tied to subscription)
+    if not Subscription.objects.filter(company=company).exists():
+        return Response(
+            {'error': 'No subscription found. Pricing requires an active contract.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    try:
+        pricing = CompanyPricing.objects.get(company=company)
+    except CompanyPricing.DoesNotExist:
+        return Response(
+            {'error': 'No pricing configuration found.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
     data = {
         'monthly_retainer': pricing.get_effective_retainer(),
@@ -1095,7 +1139,7 @@ def get_effective_pricing(request, company_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_company_features_with_overrides(request, company_id):
-    """Get all features with override status for a company. Staff or company members can view."""
+    """Get all features with override status for a company. Requires an active subscription."""
     if not can_view_company_subscription(request.user, company_id):
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -1103,6 +1147,13 @@ def get_company_features_with_overrides(request, company_id):
         company = Company.objects.get(id=company_id)
     except Company.DoesNotExist:
         return Response({'error': 'Company not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check that company has a subscription (features are tied to subscription)
+    if not Subscription.objects.filter(company=company).exists():
+        return Response(
+            {'error': 'No subscription found. Features require an active contract.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
     # Get all active features
     features = PricingFeature.objects.filter(is_active=True).order_by('order', 'name')
@@ -1157,7 +1208,7 @@ def get_company_features_with_overrides(request, company_id):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_feature_override(request, company_id, feature_id):
-    """Update or remove a feature override for a company."""
+    """Update or remove a feature override for a company. Requires an active subscription."""
     if not is_staff_user(request.user):
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -1165,6 +1216,13 @@ def update_feature_override(request, company_id, feature_id):
         company = Company.objects.get(id=company_id)
     except Company.DoesNotExist:
         return Response({'error': 'Company not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check that company has a subscription (features are tied to subscription)
+    if not Subscription.objects.filter(company=company).exists():
+        return Response(
+            {'error': 'No subscription found. Features require an active contract.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     try:
         feature = PricingFeature.objects.get(id=feature_id, is_active=True)

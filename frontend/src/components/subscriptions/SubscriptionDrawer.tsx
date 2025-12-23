@@ -1767,7 +1767,15 @@ export default function SubscriptionDrawer({
           {/* Pricing Section */}
           {activeSection === 'pricing' && (
             <div className="space-y-4">
-              {pricingLoading ? (
+              {!hasSubscription ? (
+                <div className="text-center py-12">
+                  <DollarSign className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">No Active Contract</h3>
+                  <p className="text-sm text-gray-500">
+                    Pricing configuration requires an active subscription contract.
+                  </p>
+                </div>
+              ) : pricingLoading ? (
                 <div className="animate-pulse space-y-3">
                   <div className="h-16 bg-gray-100 rounded-lg" />
                   <div className="h-16 bg-gray-100 rounded-lg" />
@@ -2120,7 +2128,15 @@ export default function SubscriptionDrawer({
           {/* Features Section */}
           {activeSection === 'features' && (
             <div className="space-y-4">
-              {featuresLoading ? (
+              {!hasSubscription ? (
+                <div className="text-center py-12">
+                  <Settings className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">No Active Contract</h3>
+                  <p className="text-sm text-gray-500">
+                    Feature configuration requires an active subscription contract.
+                  </p>
+                </div>
+              ) : featuresLoading ? (
                 <div className="animate-pulse space-y-2">
                   {[1, 2, 3, 4].map((i) => (
                     <div key={i} className="h-14 bg-gray-100 rounded-lg" />

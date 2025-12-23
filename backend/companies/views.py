@@ -642,7 +642,7 @@ def create_company(request):
 
     Records terms acceptance if terms_document_slug is provided.
     """
-    from subscriptions.models import Subscription, SubscriptionServiceType
+    from subscriptions.models import Subscription, SubscriptionServiceType, CompanyPricing
     from datetime import date
     from dateutil.relativedelta import relativedelta
 
@@ -695,6 +695,9 @@ def create_company(request):
                 billing_day_of_month=today.day,  # Use today's day for billing
                 auto_renew=True,
             )
+
+            # Create CompanyPricing with defaults (null values fall back to CMS defaults)
+            CompanyPricing.objects.create(company=company)
 
         # Record terms acceptance if provided
         terms_document_slug = request.data.get('terms_document_slug')
