@@ -149,6 +149,7 @@ function CreateSubscriptionModal({
   const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0] ?? '')
   const [billingDay, setBillingDay] = useState('1')
   const [autoRenew, setAutoRenew] = useState(true)
+  const [internalNotes, setInternalNotes] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -165,6 +166,7 @@ function CreateSubscriptionModal({
         contract_end_date: endDateStr,
         billing_day_of_month: parseInt(billingDay, 10),
         auto_renew: autoRenew,
+        internal_notes: internalNotes || undefined,
       })
       onCreated()
       onClose()
@@ -236,6 +238,20 @@ function CreateSubscriptionModal({
               className="w-4 h-4 rounded border-gray-300"
             />
             <label htmlFor="autoRenew" className="text-sm text-gray-700">Auto-renew annually</label>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Contract Notes <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <textarea
+              value={internalNotes}
+              onChange={(e) => setInternalNotes(e.target.value)}
+              rows={3}
+              placeholder="Special terms, negotiated conditions, internal notes..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm"
+            />
+            <p className="text-xs text-gray-500 mt-1">Internal use only - not visible to client</p>
           </div>
 
           <div className="flex gap-3 pt-4">
