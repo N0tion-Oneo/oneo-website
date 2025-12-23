@@ -10,6 +10,7 @@ from .submissions import ContactSubmission, NewsletterSubscriber
 from .site_settings import SiteSettings
 from .seo import Redirect, RedirectType, RobotsTxt, MetaTagDefaults, PageSEO
 from .pricing import PricingConfig, PricingFeature, FeatureCategory
+from .billing import BillingConfig
 
 __all__ = [
     # Enums
@@ -37,4 +38,6 @@ __all__ = [
     'PricingConfig',
     'PricingFeature',
     'FeatureCategory',
+    # Billing
+    'BillingConfig',
 ]

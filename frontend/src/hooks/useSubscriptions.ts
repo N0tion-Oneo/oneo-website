@@ -51,6 +51,15 @@ export type ActivityType =
   | 'payment_recorded'
   | 'payment_deleted'
 
+export interface CustomPaymentTerms {
+  retainer?: number
+  placement?: number
+  termination?: number
+  service_type_change?: number
+  adjustment?: number
+  other?: number
+}
+
 export interface Subscription {
   id: string
   company: {
@@ -78,6 +87,8 @@ export interface Subscription {
   paused_at: string | null
   paused_by: string | null
   pause_reason: string
+  payment_terms_days: number | null
+  custom_payment_terms: CustomPaymentTerms | null
   internal_notes: string
   created_at: string
   updated_at: string
@@ -99,6 +110,7 @@ export interface SubscriptionListItem {
   auto_renew: boolean
   days_until_renewal: number
   months_remaining: number
+  payment_terms_days: number | null
 }
 
 export interface CompanyPricing {
@@ -518,6 +530,15 @@ interface CustomPricingInput {
   csuite_placement_fee?: number
 }
 
+interface CustomPaymentTermsInput {
+  retainer_payment_terms_days?: number
+  placement_payment_terms_days?: number
+  termination_payment_terms_days?: number
+  service_type_change_payment_terms_days?: number
+  adjustment_payment_terms_days?: number
+  other_payment_terms_days?: number
+}
+
 interface CreateSubscriptionInput {
   company: string
   service_type: SubscriptionServiceType
@@ -527,6 +548,7 @@ interface CreateSubscriptionInput {
   auto_renew?: boolean
   internal_notes?: string
   custom_pricing?: CustomPricingInput
+  custom_payment_terms?: CustomPaymentTermsInput
 }
 
 interface UseCreateSubscriptionReturn {
@@ -563,6 +585,8 @@ interface UpdateSubscriptionInput {
   auto_renew?: boolean
   internal_notes?: string
   contract_end_date?: string
+  payment_terms_days?: number | null
+  custom_payment_terms?: CustomPaymentTerms | null
 }
 
 interface UseUpdateSubscriptionReturn {

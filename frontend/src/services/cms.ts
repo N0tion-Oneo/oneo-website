@@ -706,3 +706,57 @@ export const cmsPricing = {
   },
 };
 
+// ============================================================================
+// Billing Configuration
+// ============================================================================
+
+export interface CMSBillingConfig {
+  id: string;
+  // Available payment term options (for dropdowns)
+  available_payment_terms: number[];
+  payment_terms_options: Array<{ value: number; label: string }>;
+  // Default payment terms per invoice type (in days)
+  retainer_payment_terms_days: number;
+  placement_payment_terms_days: number;
+  termination_payment_terms_days: number;
+  service_type_change_payment_terms_days: number;
+  adjustment_payment_terms_days: number;
+  other_payment_terms_days: number;
+  // Tax
+  default_vat_rate: string;
+  // Invoice settings
+  invoice_number_prefix: string;
+  // Audit
+  updated_at: string;
+  updated_by_name: string | null;
+}
+
+export interface CMSBillingConfigUpdate {
+  available_payment_terms?: number[];
+  retainer_payment_terms_days?: number;
+  placement_payment_terms_days?: number;
+  termination_payment_terms_days?: number;
+  service_type_change_payment_terms_days?: number;
+  adjustment_payment_terms_days?: number;
+  other_payment_terms_days?: number;
+  default_vat_rate?: string;
+  invoice_number_prefix?: string;
+}
+
+export const cmsBilling = {
+  // Admin endpoints
+  getConfig: async (): Promise<CMSBillingConfig> => {
+    const { data } = await api.get(`${CMS_BASE}/admin/billing/config/`);
+    return data;
+  },
+  updateConfig: async (input: CMSBillingConfigUpdate): Promise<CMSBillingConfig> => {
+    const { data } = await api.patch(`${CMS_BASE}/admin/billing/config/update/`, input);
+    return data;
+  },
+  // Public endpoints
+  getPaymentTerms: async (): Promise<{ retainer: number; placement: number; termination: number; service_type_change: number; adjustment: number; other: number }> => {
+    const { data } = await api.get(`${CMS_BASE}/billing/payment-terms/`);
+    return data;
+  },
+};
+

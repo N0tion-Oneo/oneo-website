@@ -28,6 +28,7 @@ from subscriptions.models import (
     CompanyPricing,
     SubscriptionActivityLog,
     SubscriptionActivityType,
+    get_payment_terms_for_invoice,
 )
 
 
@@ -115,9 +116,12 @@ class Command(BaseCommand):
                 config = PricingConfig.get_config()
                 monthly_retainer = Decimal(str(config.retained_monthly_retainer))
 
+            # Get payment terms from CMS or subscription override
+            payment_terms = get_payment_terms_for_invoice('retainer', subscription)
+
             if dry_run:
                 self.stdout.write(
-                    f"  WOULD CREATE: {company.name} - R{monthly_retainer:,.2f} for {billing_period_start.strftime('%B %Y')}"
+                    f"  WOULD CREATE: {company.name} - R{monthly_retainer:,.2f} for {billing_period_start.strftime('%B %Y')} (due in {payment_terms} days)"
                 )
                 invoices_created += 1
                 continue
@@ -130,7 +134,7 @@ class Command(BaseCommand):
                 invoice_type=InvoiceType.RETAINER,
                 billing_mode=BillingMode.IN_SYSTEM,
                 invoice_date=today,
-                due_date=today + timedelta(days=30),
+                due_date=today + timedelta(days=payment_terms),
                 billing_period_start=billing_period_start,
                 billing_period_end=billing_period_end,
                 subtotal=monthly_retainer,

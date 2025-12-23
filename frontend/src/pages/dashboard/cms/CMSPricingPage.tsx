@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { cmsPricing, CMSPricingConfig, CMSPricingFeature, CMSPricingFeatureInput } from '@/services/cms'
+import { cmsPricing, cmsBilling, CMSPricingConfig, CMSPricingFeature, CMSPricingFeatureInput, CMSBillingConfig } from '@/services/cms'
 import { useToast } from '@/contexts/ToastContext'
 import {
   Loader2,
@@ -18,6 +18,7 @@ import {
   Pencil,
   Info,
   Code,
+  Receipt,
 } from 'lucide-react'
 
 // Features that have coded feature gates in the application
@@ -72,6 +73,10 @@ export default function CMSPricingPage() {
   const [configData, setConfigData] = useState<CMSPricingConfig | null>(null)
   const [configInitialized, setConfigInitialized] = useState(false)
 
+  // Billing config state
+  const [billingData, setBillingData] = useState<CMSBillingConfig | null>(null)
+  const [billingInitialized, setBillingInitialized] = useState(false)
+
   // Feature editing state
   const [editingFeature, setEditingFeature] = useState<CMSPricingFeature | null>(null)
   const [newFeature, setNewFeature] = useState<CMSPricingFeatureInput | null>(null)
@@ -91,6 +96,11 @@ export default function CMSPricingPage() {
     queryFn: cmsPricing.listFeatures,
   })
 
+  const { data: billingConfig, isLoading: billingLoading } = useQuery({
+    queryKey: ['cms', 'billing', 'config'],
+    queryFn: cmsBilling.getConfig,
+  })
+
   // Initialize config form
   useEffect(() => {
     if (config && !configInitialized) {
@@ -98,6 +108,14 @@ export default function CMSPricingPage() {
       setConfigInitialized(true)
     }
   }, [config, configInitialized])
+
+  // Initialize billing config form
+  useEffect(() => {
+    if (billingConfig && !billingInitialized) {
+      setBillingData(billingConfig)
+      setBillingInitialized(true)
+    }
+  }, [billingConfig, billingInitialized])
 
   // Mutations
   const updateConfigMutation = useMutation({
@@ -108,6 +126,17 @@ export default function CMSPricingPage() {
     },
     onError: () => {
       showToast('error', 'Failed to save pricing configuration')
+    },
+  })
+
+  const updateBillingMutation = useMutation({
+    mutationFn: cmsBilling.updateConfig,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cms', 'billing', 'config'] })
+      showToast('success', 'Payment terms saved')
+    },
+    onError: () => {
+      showToast('error', 'Failed to save payment terms')
     },
   })
 
@@ -216,6 +245,17 @@ export default function CMSPricingPage() {
     updateConfigMutation.mutate(configData)
   }
 
+  const handleBillingSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!billingData) return
+    updateBillingMutation.mutate(billingData)
+  }
+
+  const handleBillingChange = (field: keyof CMSBillingConfig, value: number) => {
+    if (!billingData) return
+    setBillingData({ ...billingData, [field]: value })
+  }
+
   // Fields that are stored as decimals but displayed as percentages
   const percentageFields = [
     'enterprise_markup_year1',
@@ -317,7 +357,7 @@ export default function CMSPricingPage() {
     })
   }
 
-  if (configLoading || featuresLoading) {
+  if (configLoading || featuresLoading || billingLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
@@ -671,6 +711,85 @@ export default function CMSPricingPage() {
               <Save className="w-4 h-4" />
             )}
             Save Changes
+          </button>
+        </div>
+      </form>
+
+      {/* Payment Terms Section */}
+      <form onSubmit={handleBillingSubmit} className="border-t border-gray-200 pt-8 mt-8">
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-indigo-600 px-4 py-3 flex items-center gap-3">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+              <Receipt className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-white">Invoice Payment Terms</h3>
+              <p className="text-[10px] text-white/80">Default payment terms by invoice type (days until due)</p>
+            </div>
+          </div>
+          <div className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {[
+                { label: 'Retainer Invoices', field: 'retainer_payment_terms_days' as const, description: 'Monthly retainer fees' },
+                { label: 'Placement Invoices', field: 'placement_payment_terms_days' as const, description: 'Successful placements' },
+                { label: 'Termination Invoices', field: 'termination_payment_terms_days' as const, description: 'Early termination fees' },
+                { label: 'Service Type Change', field: 'service_type_change_payment_terms_days' as const, description: 'Switching service plans' },
+                { label: 'Adjustment Invoices', field: 'adjustment_payment_terms_days' as const, description: 'Manual adjustments' },
+                { label: 'Other Invoices', field: 'other_payment_terms_days' as const, description: 'Miscellaneous invoices' },
+              ].map(({ label, field, description }) => (
+                <div key={field}>
+                  <label className="block text-[10px] text-gray-500 mb-1">{label}</label>
+                  <div className="relative">
+                    <select
+                      value={billingData?.[field] || 30}
+                      onChange={(e) => handleBillingChange(field, parseInt(e.target.value, 10))}
+                      className="w-full px-2 py-1.5 pr-8 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none bg-white"
+                    >
+                      <option value={7}>7 days</option>
+                      <option value={14}>14 days</option>
+                      <option value={21}>21 days</option>
+                      <option value={30}>30 days</option>
+                      <option value={45}>45 days</option>
+                      <option value={60}>60 days</option>
+                      <option value={90}>90 days</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{description}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg mt-4">
+              <span className="font-medium">Note:</span> These are default values. Individual subscriptions can override payment terms when creating a contract.
+            </p>
+          </div>
+        </div>
+
+        {/* Billing Footer with Last Updated & Save */}
+        <div className="flex items-center justify-between pt-4">
+          {billingData?.updated_at ? (
+            <p className="text-xs text-gray-400">
+              Last updated {new Date(billingData.updated_at).toLocaleDateString()}
+              {billingData.updated_by_name && ` by ${billingData.updated_by_name}`}
+            </p>
+          ) : (
+            <div />
+          )}
+          <button
+            type="submit"
+            disabled={updateBillingMutation.isPending}
+            className="inline-flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          >
+            {updateBillingMutation.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            Save Payment Terms
           </button>
         </div>
       </form>

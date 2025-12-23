@@ -31,6 +31,7 @@ from .models import (
     Payment,
     SubscriptionActivityLog,
     SubscriptionActivityType,
+    get_payment_terms_for_invoice,
 )
 from .serializers import (
     SubscriptionListSerializer,
@@ -469,6 +470,7 @@ def terminate_subscription(request, subscription_id):
 
         # Create termination fee invoice if applicable
         if early_termination_fee and early_termination_fee > 0:
+            payment_terms = get_payment_terms_for_invoice('termination', subscription)
             invoice = Invoice.objects.create(
                 company=subscription.company,
                 subscription=subscription,
@@ -476,7 +478,7 @@ def terminate_subscription(request, subscription_id):
                 invoice_type=InvoiceType.TERMINATION,
                 billing_mode=BillingMode.IN_SYSTEM,
                 invoice_date=date.today(),
-                due_date=date.today() + timedelta(days=30),
+                due_date=date.today() + timedelta(days=payment_terms),
                 subtotal=early_termination_fee,
                 vat_rate=Decimal('0.15'),
                 vat_amount=early_termination_fee * Decimal('0.15'),
@@ -711,6 +713,39 @@ def create_company_subscription(request, company_id):
                     },
                 )
 
+        # Handle custom payment terms if provided
+        custom_payment_terms = request.data.get('custom_payment_terms')
+        if custom_payment_terms and isinstance(custom_payment_terms, dict):
+            # Build the custom_payment_terms dict with only non-null values
+            terms_data = {}
+            term_fields = [
+                ('retainer_payment_terms_days', 'retainer'),
+                ('placement_payment_terms_days', 'placement'),
+                ('termination_payment_terms_days', 'termination'),
+                ('service_type_change_payment_terms_days', 'service_type_change'),
+                ('adjustment_payment_terms_days', 'adjustment'),
+                ('other_payment_terms_days', 'other'),
+            ]
+            for input_key, storage_key in term_fields:
+                value = custom_payment_terms.get(input_key)
+                if value is not None:
+                    terms_data[storage_key] = int(value)
+
+            if terms_data:
+                subscription.custom_payment_terms = terms_data
+                subscription.save(update_fields=['custom_payment_terms', 'updated_at'])
+
+                log_activity(
+                    company=company,
+                    activity_type=SubscriptionActivityType.PAYMENT_TERMS_CHANGED,
+                    performed_by=request.user,
+                    subscription=subscription,
+                    metadata={
+                        'custom_payment_terms': terms_data,
+                        'set_during_creation': True,
+                    },
+                )
+
         log_activity(
             company=company,
             activity_type=SubscriptionActivityType.SUBSCRIPTION_CREATED,
@@ -828,6 +863,8 @@ def change_service_type(request, company_id):
 
             if not paid_invoice:
                 # Create new termination fee invoice
+                # Use service_type_change payment terms (typically shorter - blocking payment)
+                payment_terms = get_payment_terms_for_invoice('service_type_change', subscription)
                 invoice = Invoice.objects.create(
                     company=company,
                     subscription=subscription,
@@ -835,7 +872,7 @@ def change_service_type(request, company_id):
                     invoice_type=InvoiceType.TERMINATION,
                     billing_mode=BillingMode.IN_SYSTEM,
                     invoice_date=date.today(),
-                    due_date=date.today() + timedelta(days=7),  # 7 days to pay
+                    due_date=date.today() + timedelta(days=payment_terms),
                     subtotal=early_termination_fee,
                     vat_rate=Decimal('0.15'),
                     vat_amount=early_termination_fee * Decimal('0.15'),
@@ -1725,6 +1762,7 @@ def generate_retainer_invoice(request, company_id):
         billing_period_end = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
 
     # Create invoice
+    payment_terms = get_payment_terms_for_invoice('retainer', subscription)
     invoice = Invoice.objects.create(
         company=company,
         subscription=subscription,
@@ -1732,7 +1770,7 @@ def generate_retainer_invoice(request, company_id):
         invoice_type=InvoiceType.RETAINER,
         billing_mode=BillingMode.IN_SYSTEM,
         invoice_date=today,
-        due_date=today + timedelta(days=30),
+        due_date=today + timedelta(days=payment_terms),
         billing_period_start=billing_period_start,
         billing_period_end=billing_period_end,
         subtotal=monthly_retainer,

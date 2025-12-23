@@ -48,6 +48,7 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
             'auto_renew',
             'days_until_renewal',
             'months_remaining',
+            'payment_terms_days',
             'created_at',
         ]
 
@@ -109,6 +110,9 @@ class SubscriptionDetailSerializer(serializers.ModelSerializer):
             'paused_by',
             'paused_by_name',
             'pause_reason',
+            # Payment terms override
+            'payment_terms_days',
+            'custom_payment_terms',
             # Notes
             'internal_notes',
             # Timestamps
@@ -143,6 +147,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
             'contract_end_date',
             'billing_day_of_month',
             'auto_renew',
+            'payment_terms_days',
             'internal_notes',
         ]
 
@@ -191,6 +196,8 @@ class SubscriptionUpdateSerializer(serializers.ModelSerializer):
             'contract_end_date',
             'billing_day_of_month',
             'auto_renew',
+            'payment_terms_days',
+            'custom_payment_terms',
             'internal_notes',
         ]
 

@@ -39,6 +39,7 @@ import {
   useAdjustContract,
   useUpdateCompanyPricing,
   useUpdateFeatureOverride,
+  useUpdateSubscription,
   useSendInvoice,
   useCancelInvoice,
   useRecordPayment,
@@ -59,6 +60,7 @@ import type {
   PlacementForInvoice,
   EffectivePricing,
   InvoiceType,
+  CustomPaymentTerms,
 } from '@/hooks'
 import type { AdminCompanyListItem, ReplacementRequest } from '@/types'
 import { ServiceType } from '@/types'
@@ -156,10 +158,21 @@ function CreateSubscriptionModal({
 
   // Custom pricing state
   const [showPricing, setShowPricing] = useState(false)
+  const [showPaymentTerms, setShowPaymentTerms] = useState(false)
   const [pricingConfig, setPricingConfig] = useState<CMSPricingConfig | null>(null)
   const [customRetainer, setCustomRetainer] = useState('')
   const [customPlacementFee, setCustomPlacementFee] = useState('')
   const [customCsuiteFee, setCustomCsuiteFee] = useState('')
+
+  // Custom payment terms per invoice type
+  const [customPaymentTerms, setCustomPaymentTerms] = useState<{
+    retainer?: string
+    placement?: string
+    termination?: string
+    service_type_change?: string
+    adjustment?: string
+    other?: string
+  }>({})
 
   // Fetch default pricing config
   useEffect(() => {
@@ -181,6 +194,17 @@ function CreateSubscriptionModal({
       csuite_placement_fee: customCsuiteFee ? parseFloat(customCsuiteFee) / 100 : undefined,
     } : undefined
 
+    // Build custom payment terms if any values are set
+    const hasCustomTerms = Object.values(customPaymentTerms).some(v => v)
+    const paymentTerms = hasCustomTerms ? {
+      retainer_payment_terms_days: customPaymentTerms.retainer ? parseInt(customPaymentTerms.retainer) : undefined,
+      placement_payment_terms_days: customPaymentTerms.placement ? parseInt(customPaymentTerms.placement) : undefined,
+      termination_payment_terms_days: customPaymentTerms.termination ? parseInt(customPaymentTerms.termination) : undefined,
+      service_type_change_payment_terms_days: customPaymentTerms.service_type_change ? parseInt(customPaymentTerms.service_type_change) : undefined,
+      adjustment_payment_terms_days: customPaymentTerms.adjustment ? parseInt(customPaymentTerms.adjustment) : undefined,
+      other_payment_terms_days: customPaymentTerms.other ? parseInt(customPaymentTerms.other) : undefined,
+    } : undefined
+
     try {
       await createSubscription({
         company: company.id,
@@ -191,6 +215,7 @@ function CreateSubscriptionModal({
         auto_renew: autoRenew,
         internal_notes: internalNotes || undefined,
         custom_pricing: customPricing,
+        custom_payment_terms: paymentTerms,
       })
       onCreated()
       onClose()
@@ -211,177 +236,286 @@ function CreateSubscriptionModal({
     ? (parseFloat(pricingConfig?.headhunting_csuite_placement_fee || '0.25') * 100).toFixed(0)
     : (parseFloat(pricingConfig?.retained_csuite_placement_fee || '0.15') * 100).toFixed(0)
 
+  // Calculate modal width based on expanded sections
+  const getModalWidth = () => {
+    if (showPricing && showPaymentTerms) return 'max-w-4xl'
+    if (showPricing || showPaymentTerms) return 'max-w-2xl'
+    return 'max-w-md'
+  }
+
+  // Calculate column count
+  const getColumnCount = () => {
+    let count = 1
+    if (showPricing) count++
+    if (showPaymentTerms) count++
+    return count
+  }
+
+  const paymentTermOptions = [
+    { value: '', label: 'Default' },
+    { value: '7', label: '7 days' },
+    { value: '14', label: '14 days' },
+    { value: '21', label: '21 days' },
+    { value: '30', label: '30 days' },
+    { value: '45', label: '45 days' },
+    { value: '60', label: '60 days' },
+    { value: '90', label: '90 days' },
+  ]
+
+  const invoiceTypes = [
+    { key: 'retainer', label: 'Retainer', show: !isHeadhunting },
+    { key: 'placement', label: 'Placement', show: true },
+    { key: 'termination', label: 'Termination', show: true },
+    { key: 'service_type_change', label: 'Service Change', show: true },
+    { key: 'adjustment', label: 'Adjustment', show: true },
+    { key: 'other', label: 'Other', show: true },
+  ]
+
   return (
-    <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Create {serviceTypeLabel} Contract</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+    <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50 p-4">
+      <div className={`bg-white rounded-lg shadow-xl w-full ${getModalWidth()} max-h-[90vh] flex flex-col transition-all duration-200`}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 flex-shrink-0">
+          <div>
+            <h3 className="text-base font-semibold text-gray-900">Create {serviceTypeLabel} Contract</h3>
+            <p className="text-xs text-gray-500 mt-0.5">{company.name}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4">
-          Creating {serviceTypeLabel.toLowerCase()} contract for <strong>{company.name}</strong>
-          {isHeadhunting && (
-            <span className="block mt-1 text-xs text-gray-500">
-              This contract tracks agreement terms. Invoices are created per placement.
-            </span>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          {error && (
+            <div className="mb-4 p-2.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              {error}
+            </div>
           )}
-        </p>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contract Start Date</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-            />
-            <p className="text-xs text-gray-500 mt-1">Contract will be for 1 year from this date</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Billing Day of Month</label>
-            <select
-              value={billingDay}
-              onChange={(e) => setBillingDay(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-            >
-              {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                <option key={day} value={day}>{day}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="autoRenew"
-              checked={autoRenew}
-              onChange={(e) => setAutoRenew(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300"
-            />
-            <label htmlFor="autoRenew" className="text-sm text-gray-700">Auto-renew annually</label>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contract Notes <span className="text-gray-400 font-normal">(optional)</span>
-            </label>
-            <textarea
-              value={internalNotes}
-              onChange={(e) => setInternalNotes(e.target.value)}
-              rows={3}
-              placeholder="Special terms, negotiated conditions, internal notes..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm"
-            />
-            <p className="text-xs text-gray-500 mt-1">Internal use only - not visible to client</p>
-          </div>
-
-          {/* Custom Pricing Section */}
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setShowPricing(!showPricing)}
-              className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
-            >
-              <span className="text-sm font-medium text-gray-700">Custom Pricing (Optional)</span>
-              {showPricing ? (
-                <ChevronDown className="w-4 h-4 text-gray-500" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-gray-500" />
-              )}
-            </button>
-
-            {showPricing && (
-              <div className="p-4 space-y-4 border-t border-gray-200 bg-white">
-                <p className="text-xs text-gray-500">
-                  Leave fields empty to use standard pricing. Custom values override defaults for this contract.
-                </p>
-
-                {/* Monthly Retainer - Only for Retained */}
-                {!isHeadhunting && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Monthly Retainer (ZAR)
-                    </label>
-                    <input
-                      type="number"
-                      value={customRetainer}
-                      onChange={(e) => setCustomRetainer(e.target.value)}
-                      placeholder={`Default: R${parseInt(defaultRetainer).toLocaleString()}`}
-                      min="0"
-                      step="1000"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm"
-                    />
-                  </div>
-                )}
-
-                {/* Placement Fee */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Placement Fee (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={customPlacementFee}
-                    onChange={(e) => setCustomPlacementFee(e.target.value)}
-                    placeholder={`Default: ${defaultPlacementFee}%`}
-                    min="0"
-                    max="100"
-                    step="0.5"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Fee charged on regular placements (% of annual salary)</p>
+          <form id="create-subscription-form" onSubmit={handleSubmit}>
+            <div className={`grid gap-5 ${getColumnCount() === 3 ? 'grid-cols-3' : getColumnCount() === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {/* Column 1: Contract Details */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                  <CreditCard className="w-4 h-4 text-gray-400" />
+                  <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Contract Details</h4>
                 </div>
 
-                {/* C-Suite Fee */}
+                {/* Start Date */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    C-Suite Placement Fee (%)
-                  </label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
                   <input
-                    type="number"
-                    value={customCsuiteFee}
-                    onChange={(e) => setCustomCsuiteFee(e.target.value)}
-                    placeholder={`Default: ${defaultCsuiteFee}%`}
-                    min="0"
-                    max="100"
-                    step="0.5"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    required
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Fee charged on executive-level placements</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">1 year term</p>
+                </div>
+
+                {/* Billing Day */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Billing Day</label>
+                  <select
+                    value={billingDay}
+                    onChange={(e) => setBillingDay(e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  >
+                    {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                      <option key={day} value={day}>{day}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Day of month for invoices</p>
+                </div>
+
+                {/* Auto-renew */}
+                <label className="flex items-center gap-2 cursor-pointer py-1">
+                  <input
+                    type="checkbox"
+                    checked={autoRenew}
+                    onChange={(e) => setAutoRenew(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                  />
+                  <span className="text-sm text-gray-700">Auto-renew annually</span>
+                </label>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Notes <span className="text-gray-400 font-normal">(internal)</span>
+                  </label>
+                  <textarea
+                    value={internalNotes}
+                    onChange={(e) => setInternalNotes(e.target.value)}
+                    rows={2}
+                    placeholder="Special terms..."
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+                  />
+                </div>
+
+                {/* Toggle buttons for custom sections */}
+                <div className="flex flex-col gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPricing(!showPricing)}
+                    className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                      showPricing
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <DollarSign className="w-3.5 h-3.5" />
+                      Custom Pricing
+                    </span>
+                    {showPricing ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPaymentTerms(!showPaymentTerms)}
+                    className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                      showPaymentTerms
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5" />
+                      Custom Payment Terms
+                    </span>
+                    {showPaymentTerms ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
 
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isCreating}
-              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50"
-            >
-              {isCreating ? 'Creating...' : 'Create Subscription'}
-            </button>
-          </div>
-        </form>
+              {/* Column 2: Custom Pricing (when expanded) */}
+              {showPricing && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                    <DollarSign className="w-4 h-4 text-gray-400" />
+                    <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Custom Pricing</h4>
+                  </div>
+
+                  <p className="text-[10px] text-gray-500">Override default rates for this company</p>
+
+                  {/* Monthly Retainer - Only for Retained */}
+                  {!isHeadhunting && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Monthly Retainer</label>
+                      <div className="relative">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-gray-400">R</span>
+                        <input
+                          type="number"
+                          value={customRetainer}
+                          onChange={(e) => setCustomRetainer(e.target.value)}
+                          placeholder={parseInt(defaultRetainer).toLocaleString()}
+                          min="0"
+                          step="1000"
+                          className="w-full pl-7 pr-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        />
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-0.5">Default: R{parseInt(defaultRetainer).toLocaleString()}</p>
+                    </div>
+                  )}
+
+                  {/* Placement Fee */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Placement Fee</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={customPlacementFee}
+                        onChange={(e) => setCustomPlacementFee(e.target.value)}
+                        placeholder={defaultPlacementFee}
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        className="w-full pr-7 px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-gray-400">%</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Default: {defaultPlacementFee}%</p>
+                  </div>
+
+                  {/* C-Suite Fee */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">C-Suite Placement Fee</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={customCsuiteFee}
+                        onChange={(e) => setCustomCsuiteFee(e.target.value)}
+                        placeholder={defaultCsuiteFee}
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        className="w-full pr-7 px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-gray-400">%</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Default: {defaultCsuiteFee}%</p>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-100">
+                    <p className="text-[10px] text-gray-400 italic">Empty fields use CMS defaults</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Column 3: Custom Payment Terms (when expanded) */}
+              {showPaymentTerms && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Payment Terms</h4>
+                  </div>
+
+                  <p className="text-[10px] text-gray-500">Set custom terms per invoice type</p>
+
+                  {invoiceTypes.filter(t => t.show).map((type) => (
+                    <div key={type.key}>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{type.label}</label>
+                      <select
+                        value={customPaymentTerms[type.key as keyof typeof customPaymentTerms] || ''}
+                        onChange={(e) => setCustomPaymentTerms(prev => ({ ...prev, [type.key]: e.target.value }))}
+                        className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      >
+                        {paymentTermOptions.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+
+                  <div className="pt-2 border-t border-gray-100">
+                    <p className="text-[10px] text-gray-400 italic">"Default" uses CMS settings</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-3 px-5 py-4 border-t border-gray-200 flex-shrink-0 bg-gray-50">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="create-subscription-form"
+            disabled={isCreating}
+            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+          >
+            {isCreating ? 'Creating...' : 'Create Contract'}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -1340,6 +1474,7 @@ export default function SubscriptionDrawer({
   const { resumeSubscription, isResuming } = useResumeSubscription()
   const { updatePricing, isUpdating: isPricingUpdating } = useUpdateCompanyPricing()
   const { updateFeatureOverride } = useUpdateFeatureOverride()
+  const { updateSubscription, isUpdating: isSubscriptionUpdating } = useUpdateSubscription()
   const { sendInvoice, isSending } = useSendInvoice()
   const { cancelInvoice, isCancelling } = useCancelInvoice()
 
@@ -1359,6 +1494,24 @@ export default function SubscriptionDrawer({
   const [placementValue, setPlacementValue] = useState('')
   const [csuiteValue, setCsuiteValue] = useState('')
   const [replacementPeriodValue, setReplacementPeriodValue] = useState('')
+
+  // Payment terms editing state
+  const [editingPaymentTerms, setEditingPaymentTerms] = useState(false)
+  const [paymentTermsValues, setPaymentTermsValues] = useState<{
+    retainer: string
+    placement: string
+    termination: string
+    service_type_change: string
+    adjustment: string
+    other: string
+  }>({
+    retainer: '',
+    placement: '',
+    termination: '',
+    service_type_change: '',
+    adjustment: '',
+    other: '',
+  })
 
   const handleRefresh = () => {
     refetchSub()
@@ -1403,6 +1556,44 @@ export default function SubscriptionDrawer({
     } catch (err) {
       console.error('Failed to update pricing:', err)
     }
+  }
+
+  const handleSavePaymentTerms = async () => {
+    if (!subscription) return
+    try {
+      // Build custom payment terms object with only non-empty values
+      const customTerms: CustomPaymentTerms = {}
+      if (paymentTermsValues.retainer) customTerms.retainer = parseInt(paymentTermsValues.retainer)
+      if (paymentTermsValues.placement) customTerms.placement = parseInt(paymentTermsValues.placement)
+      if (paymentTermsValues.termination) customTerms.termination = parseInt(paymentTermsValues.termination)
+      if (paymentTermsValues.service_type_change) customTerms.service_type_change = parseInt(paymentTermsValues.service_type_change)
+      if (paymentTermsValues.adjustment) customTerms.adjustment = parseInt(paymentTermsValues.adjustment)
+      if (paymentTermsValues.other) customTerms.other = parseInt(paymentTermsValues.other)
+
+      // If no custom terms, set to null to clear them
+      const hasCustomTerms = Object.keys(customTerms).length > 0
+
+      await updateSubscription(subscription.id, {
+        custom_payment_terms: hasCustomTerms ? customTerms : null,
+      })
+      setEditingPaymentTerms(false)
+      refetchSub()
+    } catch (err) {
+      console.error('Failed to update payment terms:', err)
+    }
+  }
+
+  const initPaymentTermsEdit = () => {
+    const terms = subscription?.custom_payment_terms
+    setPaymentTermsValues({
+      retainer: terms?.retainer?.toString() || '',
+      placement: terms?.placement?.toString() || '',
+      termination: terms?.termination?.toString() || '',
+      service_type_change: terms?.service_type_change?.toString() || '',
+      adjustment: terms?.adjustment?.toString() || '',
+      other: terms?.other?.toString() || '',
+    })
+    setEditingPaymentTerms(true)
   }
 
   const handleToggleFeature = async (feature: FeatureWithOverride) => {
@@ -1715,6 +1906,211 @@ export default function SubscriptionDrawer({
                         </span>
                       </div>
                     </div>
+                  )}
+
+                  {/* Payment Terms Section */}
+                  {subscription && (
+                    <>
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                        <h3 className="text-sm font-semibold text-gray-900">Payment Terms</h3>
+                        {!editingPaymentTerms ? (
+                          <button
+                            onClick={initPaymentTermsEdit}
+                            className="text-sm text-gray-600 hover:text-gray-900"
+                          >
+                            Edit
+                          </button>
+                        ) : (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setEditingPaymentTerms(false)}
+                              className="text-sm text-gray-500 hover:text-gray-700"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleSavePaymentTerms}
+                              disabled={isSubscriptionUpdating}
+                              className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
+                            >
+                              {isSubscriptionUpdating ? 'Saving...' : 'Save'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-gray-500 mt-1">
+                        Custom payment terms per invoice type. Leave empty to use CMS defaults.
+                      </p>
+
+                      {editingPaymentTerms ? (
+                        <div className="grid grid-cols-2 gap-3 mt-3">
+                          {currentCompany.service_type === 'retained' && (
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">Retainer</label>
+                              <select
+                                value={paymentTermsValues.retainer}
+                                onChange={(e) => setPaymentTermsValues(prev => ({ ...prev, retainer: e.target.value }))}
+                                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg"
+                              >
+                                <option value="">Default</option>
+                                <option value="7">7 days</option>
+                                <option value="14">14 days</option>
+                                <option value="21">21 days</option>
+                                <option value="30">30 days</option>
+                                <option value="45">45 days</option>
+                                <option value="60">60 days</option>
+                                <option value="90">90 days</option>
+                              </select>
+                            </div>
+                          )}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Placement</label>
+                            <select
+                              value={paymentTermsValues.placement}
+                              onChange={(e) => setPaymentTermsValues(prev => ({ ...prev, placement: e.target.value }))}
+                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg"
+                            >
+                              <option value="">Default</option>
+                              <option value="7">7 days</option>
+                              <option value="14">14 days</option>
+                              <option value="21">21 days</option>
+                              <option value="30">30 days</option>
+                              <option value="45">45 days</option>
+                              <option value="60">60 days</option>
+                              <option value="90">90 days</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Termination</label>
+                            <select
+                              value={paymentTermsValues.termination}
+                              onChange={(e) => setPaymentTermsValues(prev => ({ ...prev, termination: e.target.value }))}
+                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg"
+                            >
+                              <option value="">Default</option>
+                              <option value="7">7 days</option>
+                              <option value="14">14 days</option>
+                              <option value="21">21 days</option>
+                              <option value="30">30 days</option>
+                              <option value="45">45 days</option>
+                              <option value="60">60 days</option>
+                              <option value="90">90 days</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Service Change</label>
+                            <select
+                              value={paymentTermsValues.service_type_change}
+                              onChange={(e) => setPaymentTermsValues(prev => ({ ...prev, service_type_change: e.target.value }))}
+                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg"
+                            >
+                              <option value="">Default</option>
+                              <option value="7">7 days</option>
+                              <option value="14">14 days</option>
+                              <option value="21">21 days</option>
+                              <option value="30">30 days</option>
+                              <option value="45">45 days</option>
+                              <option value="60">60 days</option>
+                              <option value="90">90 days</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Adjustment</label>
+                            <select
+                              value={paymentTermsValues.adjustment}
+                              onChange={(e) => setPaymentTermsValues(prev => ({ ...prev, adjustment: e.target.value }))}
+                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg"
+                            >
+                              <option value="">Default</option>
+                              <option value="7">7 days</option>
+                              <option value="14">14 days</option>
+                              <option value="21">21 days</option>
+                              <option value="30">30 days</option>
+                              <option value="45">45 days</option>
+                              <option value="60">60 days</option>
+                              <option value="90">90 days</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Other</label>
+                            <select
+                              value={paymentTermsValues.other}
+                              onChange={(e) => setPaymentTermsValues(prev => ({ ...prev, other: e.target.value }))}
+                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg"
+                            >
+                              <option value="">Default</option>
+                              <option value="7">7 days</option>
+                              <option value="14">14 days</option>
+                              <option value="21">21 days</option>
+                              <option value="30">30 days</option>
+                              <option value="45">45 days</option>
+                              <option value="60">60 days</option>
+                              <option value="90">90 days</option>
+                            </select>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2 mt-3">
+                          {currentCompany.service_type === 'retained' && (
+                            <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
+                              <span className="text-xs text-gray-600">Retainer</span>
+                              <span className="text-xs font-medium text-gray-900">
+                                {subscription.custom_payment_terms?.retainer
+                                  ? `${subscription.custom_payment_terms.retainer} days`
+                                  : <span className="text-gray-400">Default</span>
+                                }
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
+                            <span className="text-xs text-gray-600">Placement</span>
+                            <span className="text-xs font-medium text-gray-900">
+                              {subscription.custom_payment_terms?.placement
+                                ? `${subscription.custom_payment_terms.placement} days`
+                                : <span className="text-gray-400">Default</span>
+                              }
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
+                            <span className="text-xs text-gray-600">Termination</span>
+                            <span className="text-xs font-medium text-gray-900">
+                              {subscription.custom_payment_terms?.termination
+                                ? `${subscription.custom_payment_terms.termination} days`
+                                : <span className="text-gray-400">Default</span>
+                              }
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
+                            <span className="text-xs text-gray-600">Service Change</span>
+                            <span className="text-xs font-medium text-gray-900">
+                              {subscription.custom_payment_terms?.service_type_change
+                                ? `${subscription.custom_payment_terms.service_type_change} days`
+                                : <span className="text-gray-400">Default</span>
+                              }
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
+                            <span className="text-xs text-gray-600">Adjustment</span>
+                            <span className="text-xs font-medium text-gray-900">
+                              {subscription.custom_payment_terms?.adjustment
+                                ? `${subscription.custom_payment_terms.adjustment} days`
+                                : <span className="text-gray-400">Default</span>
+                              }
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
+                            <span className="text-xs text-gray-600">Other</span>
+                            <span className="text-xs font-medium text-gray-900">
+                              {subscription.custom_payment_terms?.other
+                                ? `${subscription.custom_payment_terms.other} days`
+                                : <span className="text-gray-400">Default</span>
+                              }
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </>
               )}

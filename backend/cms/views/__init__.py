@@ -95,6 +95,11 @@ from .pricing import (
     pricing_feature_detail,
     reorder_pricing_features,
 )
+from .billing import (
+    get_public_payment_terms,
+    get_billing_config,
+    update_billing_config,
+)
 
 __all__ = [
     # Pages
@@ -187,4 +192,8 @@ __all__ = [
     'list_pricing_features',
     'pricing_feature_detail',
     'reorder_pricing_features',
+    # Billing
+    'get_public_payment_terms',
+    'get_billing_config',
+    'update_billing_config',
 ]

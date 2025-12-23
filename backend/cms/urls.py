@@ -86,6 +86,10 @@ urlpatterns = [
     path('admin/pricing/features/<uuid:feature_id>/', views.pricing_feature_detail, name='cms-admin-pricing-feature-detail'),
     path('admin/pricing/features/reorder/', views.reorder_pricing_features, name='cms-admin-pricing-features-reorder'),
 
+    # Billing Configuration (Admin)
+    path('admin/billing/config/', views.get_billing_config, name='cms-admin-billing-config'),
+    path('admin/billing/config/update/', views.update_billing_config, name='cms-admin-billing-config-update'),
+
     # ==========================================================================
     # Public Endpoints
     # ==========================================================================
@@ -139,4 +143,7 @@ urlpatterns = [
     # Pricing (Public)
     path('pricing/config/', views.get_public_pricing_config, name='cms-public-pricing-config'),
     path('pricing/features/', views.list_public_pricing_features, name='cms-public-pricing-features'),
+
+    # Billing (Public)
+    path('billing/payment-terms/', views.get_public_payment_terms, name='cms-public-payment-terms'),
 ]

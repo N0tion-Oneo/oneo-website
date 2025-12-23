@@ -103,6 +103,16 @@ class Subscription(TimestampedModel):
         validators=[MinValueValidator(1), MaxValueValidator(28)],
         help_text='Day of month for auto-generating retainer invoices (1-28)',
     )
+    payment_terms_days = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text='Custom payment terms override in days (applies to all invoice types). If null, uses CMS defaults per invoice type.',
+    )
+    custom_payment_terms = models.JSONField(
+        null=True,
+        blank=True,
+        help_text='Custom payment terms per invoice type. Keys: retainer, placement, termination, service_type_change, adjustment, other. Values in days.',
+    )
 
     # Status
     status = models.CharField(
@@ -467,6 +477,54 @@ class InvoiceType(models.TextChoices):
 DEFAULT_PAYMENT_TERMS_DAYS = 14
 
 
+def get_payment_terms_for_invoice(invoice_type: str, subscription=None) -> int:
+    """
+    Determine payment terms for an invoice.
+
+    Priority:
+    1. Subscription custom_payment_terms per invoice type (JSON field)
+    2. Subscription payment_terms_days (single override for all types)
+    3. CMS default for invoice type
+
+    Args:
+        invoice_type: One of 'retainer', 'placement', 'termination',
+                     'service_type_change', 'adjustment', 'other'
+        subscription: Optional Subscription instance for override lookup
+
+    Returns:
+        Payment terms in days
+    """
+    if subscription:
+        # Check per-invoice-type custom terms first
+        if subscription.custom_payment_terms:
+            # Map invoice type to JSON key
+            key_map = {
+                'retainer': 'retainer',
+                'placement': 'placement',
+                'termination': 'termination',
+                'service_type_change': 'service_type_change',
+                'adjustment': 'adjustment',
+                'other': 'other',
+            }
+            key = key_map.get(invoice_type, invoice_type)
+            custom_terms = subscription.custom_payment_terms.get(key)
+            if custom_terms is not None:
+                return int(custom_terms)
+
+        # Check single override for all types
+        if subscription.payment_terms_days is not None:
+            return subscription.payment_terms_days
+
+    # Fall back to CMS defaults per invoice type
+    try:
+        from cms.models import BillingConfig
+        config = BillingConfig.get_config()
+        return config.get_payment_terms_for_invoice_type(invoice_type)
+    except Exception:
+        # Fallback to constant if CMS not available
+        return DEFAULT_PAYMENT_TERMS_DAYS
+
+
 class Invoice(TimestampedModel):
     """
     Invoice for subscription billing or placement fees.
@@ -709,9 +767,12 @@ class Invoice(TimestampedModel):
         """Set default due date if not provided."""
         from datetime import timedelta
 
-        # Auto-set due_date to 14 days from invoice_date if not provided
+        # Auto-set due_date based on invoice type and subscription payment terms
         if not self.due_date and self.invoice_date:
-            self.due_date = self.invoice_date + timedelta(days=DEFAULT_PAYMENT_TERMS_DAYS)
+            # Map invoice_type to the key used by the helper
+            invoice_type_key = self.invoice_type if self.invoice_type else 'other'
+            payment_terms = get_payment_terms_for_invoice(invoice_type_key, self.subscription)
+            self.due_date = self.invoice_date + timedelta(days=payment_terms)
 
         super().save(*args, **kwargs)
 
@@ -879,6 +940,7 @@ class SubscriptionActivityType(models.TextChoices):
 
     # Pricing
     PRICING_CHANGED = 'pricing_changed', 'Pricing Changed'
+    PAYMENT_TERMS_CHANGED = 'payment_terms_changed', 'Payment Terms Changed'
 
     # Features
     FEATURE_OVERRIDE_ADDED = 'feature_override_added', 'Feature Override Added'

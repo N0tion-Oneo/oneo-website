@@ -390,6 +390,7 @@ export type {
   AlertSeverity,
   AlertType,
   ActivityType,
+  CustomPaymentTerms,
   Subscription,
   SubscriptionListItem,
   CompanyPricing,

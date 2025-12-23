@@ -21,6 +21,9 @@ from .models import (
     CompanyPricing,
     SubscriptionActivityLog,
     SubscriptionActivityType,
+    Subscription,
+    SubscriptionServiceType,
+    get_payment_terms_for_invoice,
 )
 
 
@@ -174,14 +177,22 @@ def auto_generate_placement_invoice(sender, instance, **kwargs):
 
             description = f'Replacement placement fee for {candidate_name} - {instance.job.title}'
 
+            # Get subscription for payment terms
+            subscription = Subscription.objects.filter(
+                company=company,
+                service_type__in=[SubscriptionServiceType.RETAINED, SubscriptionServiceType.HEADHUNTING]
+            ).first()
+            payment_terms = get_payment_terms_for_invoice('placement', subscription)
+
             invoice = Invoice.objects.create(
                 company=company,
+                subscription=subscription,
                 placement=instance,
                 invoice_number=Invoice.generate_invoice_number(),
                 invoice_type=InvoiceType.PLACEMENT,
                 billing_mode=BillingMode.IN_SYSTEM,
                 invoice_date=date.today(),
-                due_date=date.today() + timedelta(days=30),
+                due_date=date.today() + timedelta(days=payment_terms),
                 subtotal=amount_owed,
                 vat_rate=Decimal('0.15'),
                 vat_amount=amount_owed * Decimal('0.15'),
@@ -248,15 +259,23 @@ def auto_generate_placement_invoice(sender, instance, **kwargs):
     else:
         description = f'Placement fee for {candidate_name} - {instance.job.title}'
 
+    # Get subscription for payment terms
+    subscription = Subscription.objects.filter(
+        company=company,
+        service_type__in=[SubscriptionServiceType.RETAINED, SubscriptionServiceType.HEADHUNTING]
+    ).first()
+    payment_terms = get_payment_terms_for_invoice('placement', subscription)
+
     # Create invoice
     invoice = Invoice.objects.create(
         company=company,
+        subscription=subscription,
         placement=instance,
         invoice_number=Invoice.generate_invoice_number(),
         invoice_type=InvoiceType.PLACEMENT,
         billing_mode=BillingMode.IN_SYSTEM,
         invoice_date=date.today(),
-        due_date=date.today() + timedelta(days=30),
+        due_date=date.today() + timedelta(days=payment_terms),
         subtotal=placement_fee,
         vat_rate=Decimal('0.15'),
         vat_amount=placement_fee * Decimal('0.15'),
