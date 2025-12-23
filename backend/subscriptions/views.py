@@ -677,6 +677,40 @@ def create_company_subscription(request, company_id):
     if serializer.is_valid():
         subscription = serializer.save()
 
+        # Handle custom pricing if provided
+        custom_pricing = request.data.get('custom_pricing')
+        if custom_pricing and isinstance(custom_pricing, dict):
+            from decimal import Decimal
+            pricing, created = CompanyPricing.objects.get_or_create(company=company)
+
+            pricing_changed = False
+            if custom_pricing.get('monthly_retainer') is not None:
+                pricing.monthly_retainer = Decimal(str(custom_pricing['monthly_retainer']))
+                pricing_changed = True
+            if custom_pricing.get('placement_fee') is not None:
+                pricing.placement_fee = Decimal(str(custom_pricing['placement_fee']))
+                pricing_changed = True
+            if custom_pricing.get('csuite_placement_fee') is not None:
+                pricing.csuite_placement_fee = Decimal(str(custom_pricing['csuite_placement_fee']))
+                pricing_changed = True
+
+            if pricing_changed:
+                pricing.updated_by = request.user
+                pricing.save()
+
+                log_activity(
+                    company=company,
+                    activity_type=SubscriptionActivityType.PRICING_CHANGED,
+                    performed_by=request.user,
+                    subscription=subscription,
+                    metadata={
+                        'monthly_retainer': str(pricing.monthly_retainer) if pricing.monthly_retainer else None,
+                        'placement_fee': str(pricing.placement_fee) if pricing.placement_fee else None,
+                        'csuite_placement_fee': str(pricing.csuite_placement_fee) if pricing.csuite_placement_fee else None,
+                        'set_during_creation': True,
+                    },
+                )
+
         log_activity(
             company=company,
             activity_type=SubscriptionActivityType.SUBSCRIPTION_CREATED,

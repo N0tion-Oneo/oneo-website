@@ -512,6 +512,12 @@ export function useCompanySubscription(companyId: string): UseCompanySubscriptio
 // Subscription Mutation Hooks
 // =============================================================================
 
+interface CustomPricingInput {
+  monthly_retainer?: number
+  placement_fee?: number
+  csuite_placement_fee?: number
+}
+
 interface CreateSubscriptionInput {
   company: string
   service_type: SubscriptionServiceType
@@ -520,6 +526,7 @@ interface CreateSubscriptionInput {
   billing_day_of_month?: number
   auto_renew?: boolean
   internal_notes?: string
+  custom_pricing?: CustomPricingInput
 }
 
 interface UseCreateSubscriptionReturn {

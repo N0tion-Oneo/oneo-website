@@ -23,6 +23,8 @@ import {
   Calendar,
   ToggleLeft,
   ToggleRight,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react'
 import {
   useCompanySubscription,
@@ -70,6 +72,7 @@ import {
   QuickStats,
 } from '@/components/subscriptions'
 import { ReplacementReviewCard } from '@/components/replacements'
+import { cmsPricing, type CMSPricingConfig } from '@/services/cms'
 import InvoiceDetailDrawer from './InvoiceDetailDrawer'
 
 // =====================================================
@@ -151,12 +154,32 @@ function CreateSubscriptionModal({
   const [autoRenew, setAutoRenew] = useState(true)
   const [internalNotes, setInternalNotes] = useState('')
 
+  // Custom pricing state
+  const [showPricing, setShowPricing] = useState(false)
+  const [pricingConfig, setPricingConfig] = useState<CMSPricingConfig | null>(null)
+  const [customRetainer, setCustomRetainer] = useState('')
+  const [customPlacementFee, setCustomPlacementFee] = useState('')
+  const [customCsuiteFee, setCustomCsuiteFee] = useState('')
+
+  // Fetch default pricing config
+  useEffect(() => {
+    cmsPricing.getConfigPublic().then(setPricingConfig).catch(console.error)
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!startDate) return
     const endDate = new Date(startDate)
     endDate.setFullYear(endDate.getFullYear() + 1)
     const endDateStr = endDate.toISOString().split('T')[0] ?? ''
+
+    // Build custom pricing object if any values are set
+    const hasCustomPricing = customRetainer || customPlacementFee || customCsuiteFee
+    const customPricing = hasCustomPricing ? {
+      monthly_retainer: customRetainer ? parseFloat(customRetainer) : undefined,
+      placement_fee: customPlacementFee ? parseFloat(customPlacementFee) / 100 : undefined,
+      csuite_placement_fee: customCsuiteFee ? parseFloat(customCsuiteFee) / 100 : undefined,
+    } : undefined
 
     try {
       await createSubscription({
@@ -167,6 +190,7 @@ function CreateSubscriptionModal({
         billing_day_of_month: parseInt(billingDay, 10),
         auto_renew: autoRenew,
         internal_notes: internalNotes || undefined,
+        custom_pricing: customPricing,
       })
       onCreated()
       onClose()
@@ -177,6 +201,15 @@ function CreateSubscriptionModal({
 
   const serviceTypeLabel = company.service_type === 'headhunting' ? 'Headhunting' : 'Retained'
   const isHeadhunting = company.service_type === 'headhunting'
+
+  // Default pricing based on service type
+  const defaultRetainer = pricingConfig?.retained_monthly_retainer || '20000'
+  const defaultPlacementFee = isHeadhunting
+    ? (parseFloat(pricingConfig?.headhunting_placement_fee || '0.20') * 100).toFixed(0)
+    : (parseFloat(pricingConfig?.retained_placement_fee || '0.10') * 100).toFixed(0)
+  const defaultCsuiteFee = isHeadhunting
+    ? (parseFloat(pricingConfig?.headhunting_csuite_placement_fee || '0.25') * 100).toFixed(0)
+    : (parseFloat(pricingConfig?.retained_csuite_placement_fee || '0.15') * 100).toFixed(0)
 
   return (
     <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50">
@@ -252,6 +285,84 @@ function CreateSubscriptionModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm"
             />
             <p className="text-xs text-gray-500 mt-1">Internal use only - not visible to client</p>
+          </div>
+
+          {/* Custom Pricing Section */}
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowPricing(!showPricing)}
+              className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <span className="text-sm font-medium text-gray-700">Custom Pricing (Optional)</span>
+              {showPricing ? (
+                <ChevronDown className="w-4 h-4 text-gray-500" />
+              ) : (
+                <ChevronRight className="w-4 h-4 text-gray-500" />
+              )}
+            </button>
+
+            {showPricing && (
+              <div className="p-4 space-y-4 border-t border-gray-200 bg-white">
+                <p className="text-xs text-gray-500">
+                  Leave fields empty to use standard pricing. Custom values override defaults for this contract.
+                </p>
+
+                {/* Monthly Retainer - Only for Retained */}
+                {!isHeadhunting && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Monthly Retainer (ZAR)
+                    </label>
+                    <input
+                      type="number"
+                      value={customRetainer}
+                      onChange={(e) => setCustomRetainer(e.target.value)}
+                      placeholder={`Default: R${parseInt(defaultRetainer).toLocaleString()}`}
+                      min="0"
+                      step="1000"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm"
+                    />
+                  </div>
+                )}
+
+                {/* Placement Fee */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Placement Fee (%)
+                  </label>
+                  <input
+                    type="number"
+                    value={customPlacementFee}
+                    onChange={(e) => setCustomPlacementFee(e.target.value)}
+                    placeholder={`Default: ${defaultPlacementFee}%`}
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Fee charged on regular placements (% of annual salary)</p>
+                </div>
+
+                {/* C-Suite Fee */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    C-Suite Placement Fee (%)
+                  </label>
+                  <input
+                    type="number"
+                    value={customCsuiteFee}
+                    onChange={(e) => setCustomCsuiteFee(e.target.value)}
+                    placeholder={`Default: ${defaultCsuiteFee}%`}
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Fee charged on executive-level placements</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-4">
