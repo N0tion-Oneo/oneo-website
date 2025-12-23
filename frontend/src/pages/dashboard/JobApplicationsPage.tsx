@@ -604,6 +604,7 @@ export default function JobApplicationsPage() {
         }}
         isProcessing={isProcessing}
         showReplacementOption={showReplacementOption}
+        isAdmin={isAdminOrRecruiter}
       />
 
       {/* Reject Modal */}

@@ -220,7 +220,7 @@ export default function ReplacementRequestModal({
                     <Clock className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-[14px] font-medium text-green-800">
-                        Eligible for Free Replacement
+                        Eligible for Replacement
                       </p>
                       <p className="text-[13px] text-green-700 mt-1">
                         {eligibility.days_remaining} days remaining in the {eligibility.replacement_period_days}-day replacement period
@@ -296,9 +296,12 @@ export default function ReplacementRequestModal({
                 {/* Notice */}
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2">
                   <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-[12px] text-blue-700">
-                    Your request will be reviewed by our team. Once approved, the job will be reopened and we will begin sourcing replacement candidates at no additional cost.
-                  </p>
+                  <div className="text-[12px] text-blue-700">
+                    <p>Your request will be reviewed by our team. Once approved, the job will be reopened and we will begin sourcing replacement candidates.</p>
+                    <p className="mt-1.5 text-blue-600">
+                      <strong>Pricing:</strong> Approved requests may be credited (original fee applied to replacement, only difference charged if higher) or discounted (percentage off the new placement fee).
+                    </p>
+                  </div>
                 </div>
 
                 {/* Actions */}

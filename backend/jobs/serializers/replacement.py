@@ -15,6 +15,10 @@ class ReplacementRequestListSerializer(serializers.ModelSerializer):
     reviewed_by_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     reason_category_display = serializers.CharField(source='get_reason_category_display', read_only=True)
+    # Include original offer details for pricing context in review
+    original_offer_details = serializers.SerializerMethodField()
+    original_start_date = serializers.SerializerMethodField()
+    original_invoiced_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = ReplacementRequest
@@ -41,6 +45,9 @@ class ReplacementRequestListSerializer(serializers.ModelSerializer):
             'reviewed_at',
             'review_notes',
             'created_at',
+            'original_offer_details',
+            'original_start_date',
+            'original_invoiced_amount',
         ]
         read_only_fields = fields
 
@@ -57,22 +64,53 @@ class ReplacementRequestListSerializer(serializers.ModelSerializer):
             return obj.reviewed_by.get_full_name() or obj.reviewed_by.email
         return None
 
+    def get_original_offer_details(self, obj):
+        """Get the original offer details from the application.
 
-class ReplacementRequestDetailSerializer(ReplacementRequestListSerializer):
-    """Detailed serializer for a single replacement request."""
-    original_offer_details = serializers.JSONField(source='application.final_offer_details', read_only=True)
-    original_start_date = serializers.SerializerMethodField()
-
-    class Meta(ReplacementRequestListSerializer.Meta):
-        fields = ReplacementRequestListSerializer.Meta.fields + [
-            'original_offer_details',
-            'original_start_date',
-        ]
+        Merges offer_details with final_offer_details to ensure all fields
+        are available (handles legacy data where final_offer_details may be incomplete).
+        """
+        base = obj.application.offer_details or {}
+        final = obj.application.final_offer_details or {}
+        # Merge: start with base, overlay with final (final takes precedence for non-empty values)
+        merged = {**base}
+        for key, value in final.items():
+            if value is not None and value != '' and value != []:
+                merged[key] = value
+        return merged if merged else None
 
     def get_original_start_date(self, obj):
         """Get the start date from offer details."""
-        offer = obj.application.final_offer_details or obj.application.offer_details or {}
-        return offer.get('start_date')
+        # Check final_offer_details first, then offer_details
+        final = obj.application.final_offer_details or {}
+        start_date = final.get('start_date')
+        if not start_date:
+            offer = obj.application.offer_details or {}
+            start_date = offer.get('start_date')
+        return start_date
+
+    def get_original_invoiced_amount(self, obj):
+        """Get the invoiced amount (ex VAT) for the original placement."""
+        from subscriptions.models import Invoice, InvoiceType, InvoiceStatus
+        # Find the placement invoice for the original application
+        invoice = Invoice.objects.filter(
+            placement=obj.application,
+            invoice_type=InvoiceType.PLACEMENT,
+        ).exclude(
+            status=InvoiceStatus.CANCELLED
+        ).first()
+        if invoice:
+            return float(invoice.subtotal)
+        return None
+
+
+class ReplacementRequestDetailSerializer(ReplacementRequestListSerializer):
+    """Detailed serializer for a single replacement request.
+
+    Inherits all fields from ReplacementRequestListSerializer including
+    original_offer_details and original_start_date.
+    """
+    pass
 
 
 class ReplacementRequestCreateSerializer(serializers.ModelSerializer):
@@ -114,13 +152,13 @@ class ReplacementApproveSerializer(serializers.Serializer):
     """Serializer for approving a replacement request."""
     approval_type = serializers.ChoiceField(
         choices=['free', 'discounted'],
-        help_text="Type of approval: 'free' for 100% discount, 'discounted' for partial discount"
+        help_text="Type of approval: 'free' to credit original fee, 'discounted' for percentage off new fee"
     )
     discount_percentage = serializers.IntegerField(
         required=False,
         min_value=1,
-        max_value=99,
-        help_text="Discount percentage (required if approval_type is 'discounted')"
+        max_value=100,
+        help_text="For 'free': credit percentage (1-100, default 100). For 'discounted': discount percentage (1-99)"
     )
     review_notes = serializers.CharField(
         required=False,
@@ -129,10 +167,23 @@ class ReplacementApproveSerializer(serializers.Serializer):
     )
 
     def validate(self, data):
-        if data['approval_type'] == 'discounted' and not data.get('discount_percentage'):
-            raise serializers.ValidationError({
-                'discount_percentage': 'Discount percentage is required for discounted approvals.'
-            })
+        approval_type = data['approval_type']
+        percentage = data.get('discount_percentage')
+
+        if approval_type == 'discounted':
+            if not percentage:
+                raise serializers.ValidationError({
+                    'discount_percentage': 'Discount percentage is required for discounted approvals.'
+                })
+            if percentage >= 100:
+                raise serializers.ValidationError({
+                    'discount_percentage': 'Discount percentage must be less than 100. Use "free" for 100% credit.'
+                })
+
+        # For 'free', default to 100% if not provided
+        if approval_type == 'free' and not percentage:
+            data['discount_percentage'] = 100
+
         return data
 
 

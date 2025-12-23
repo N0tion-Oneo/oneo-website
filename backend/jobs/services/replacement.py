@@ -200,7 +200,8 @@ def approve_replacement_request(replacement_request, approval_type, reviewed_by,
         replacement_request: ReplacementRequest instance
         approval_type: 'free' or 'discounted'
         reviewed_by: User approving the request
-        discount_percentage: Required if approval_type is 'discounted'
+        discount_percentage: For 'free': credit percentage (1-100, default 100).
+                            For 'discounted': discount percentage (1-99, required).
         notes: Review notes
 
     Returns:
@@ -213,7 +214,8 @@ def approve_replacement_request(replacement_request, approval_type, reviewed_by,
         raise ValueError('Only pending requests can be approved.')
 
     if approval_type == 'free':
-        replacement_request.approve_free(reviewed_by, notes)
+        credit_percentage = discount_percentage if discount_percentage else 100
+        replacement_request.approve_free(reviewed_by, credit_percentage, notes)
     elif approval_type == 'discounted':
         if not discount_percentage:
             raise ValueError('Discount percentage is required for discounted approvals.')

@@ -23,6 +23,7 @@ import CompanyFilterPanel, {
 } from '@/components/companies/CompanyFilterPanel'
 import CompanyBulkActions from '@/components/companies/CompanyBulkActions'
 import CompanyKanbanBoard from '@/components/companies/CompanyKanbanBoard'
+import CompanyDetailDrawer from '@/components/companies/CompanyDetailDrawer'
 import {
   Building2,
   Eye,
@@ -102,6 +103,7 @@ export default function AdminCompaniesPage() {
   const [openActionsMenu, setOpenActionsMenu] = useState<string | null>(null)
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('table')
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null)
 
   // Convert TanStack sorting to API ordering param
   const ordering = useMemo(() => {
@@ -709,7 +711,8 @@ export default function AdminCompaniesPage() {
                     {table.getRowModel().rows.map(row => (
                       <tr
                         key={row.id}
-                        className="hover:bg-gray-50"
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => setSelectedCompanyId(row.original.id)}
                       >
                         {row.getVisibleCells().map(cell => {
                           const colId = cell.column.id
@@ -775,6 +778,15 @@ export default function AdminCompaniesPage() {
           )}
         </div>
       </div>
+
+      {/* Company Detail Drawer */}
+      {selectedCompanyId && (
+        <CompanyDetailDrawer
+          companyId={selectedCompanyId}
+          onClose={() => setSelectedCompanyId(null)}
+          onRefresh={refetch}
+        />
+      )}
     </div>
   )
 }

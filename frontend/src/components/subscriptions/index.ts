@@ -1,4 +1,5 @@
 export { default as InvoiceDetailDrawer } from './InvoiceDetailDrawer'
+export { default as SubscriptionDrawer } from './SubscriptionDrawer'
 export { ServiceTypeBadge } from './ServiceTypeBadge'
 export { NoServiceType } from './NoServiceType'
 export { ServiceTypeHeader } from './ServiceTypeHeader'

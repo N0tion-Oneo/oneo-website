@@ -2531,6 +2531,7 @@ export interface ReplacementRequest {
   created_at: string
   original_offer_details?: Record<string, unknown>
   original_start_date?: string | null
+  original_invoiced_amount?: number | null
 }
 
 export interface ReplacementEligibility {

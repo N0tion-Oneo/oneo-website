@@ -137,7 +137,7 @@ export default function JobDrawer({
       {/* Drawer - 50% width */}
       <div className="fixed inset-y-0 right-0 w-1/2 min-w-[500px] bg-white shadow-xl z-[201] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
           {/* Top row: Title, status, close */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

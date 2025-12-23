@@ -142,8 +142,8 @@ def auto_generate_placement_invoice(sender, instance, **kwargs):
     candidate_name = instance.candidate.user.get_full_name() or instance.candidate.user.email
     fee_percentage = (fee_rate * 100).quantize(Decimal('0.1'))
 
-    # Handle free replacement - only charge difference if replacement costs more
-    if is_free_replacement and original_application:
+    # Handle free replacement - credit percentage of original fee toward new placement
+    if is_free_replacement and original_application and replacement_request:
         original_fee, original_ctc, _ = calculate_placement_fee(original_application, pricing)
 
         if original_fee is None:
@@ -151,23 +151,28 @@ def auto_generate_placement_invoice(sender, instance, **kwargs):
             logger.warning(f"Could not calculate original placement fee for replacement: {instance.id}")
             is_free_replacement = False
         else:
-            difference = new_placement_fee - original_fee
+            # Get credit percentage from replacement request (defaults to 100 if not set)
+            credit_percentage = Decimal(str(replacement_request.discount_percentage or 100))
+            credit_amount = original_fee * (credit_percentage / Decimal('100'))
 
-            if difference <= 0:
-                # Replacement costs same or less - fully covered, no invoice needed
+            # Calculate what's owed after credit
+            amount_owed = new_placement_fee - credit_amount
+
+            if amount_owed <= 0:
+                # Credit covers the entire new placement fee - no invoice needed
                 logger.info(
-                    f"Free replacement fully covered: original={original_fee}, new={new_placement_fee}, "
-                    f"application={instance.id}"
+                    f"Free replacement fully covered: original={original_fee}, credit={credit_amount} "
+                    f"({credit_percentage}%), new={new_placement_fee}, application={instance.id}"
                 )
                 return
 
-            # Replacement costs more - invoice only the difference
+            # Credit doesn't fully cover - invoice the remaining amount
             logger.info(
-                f"Free replacement with difference: original={original_fee}, new={new_placement_fee}, "
-                f"difference={difference}, application={instance.id}"
+                f"Free replacement with remaining balance: original={original_fee}, credit={credit_amount} "
+                f"({credit_percentage}%), new={new_placement_fee}, owed={amount_owed}, application={instance.id}"
             )
 
-            description = f'Replacement placement fee difference for {candidate_name} - {instance.job.title}'
+            description = f'Replacement placement fee for {candidate_name} - {instance.job.title}'
 
             invoice = Invoice.objects.create(
                 company=company,
@@ -177,10 +182,10 @@ def auto_generate_placement_invoice(sender, instance, **kwargs):
                 billing_mode=BillingMode.IN_SYSTEM,
                 invoice_date=date.today(),
                 due_date=date.today() + timedelta(days=30),
-                subtotal=difference,
+                subtotal=amount_owed,
                 vat_rate=Decimal('0.15'),
-                vat_amount=difference * Decimal('0.15'),
-                total_amount=difference * Decimal('1.15'),
+                vat_amount=amount_owed * Decimal('0.15'),
+                total_amount=amount_owed * Decimal('1.15'),
                 status=InvoiceStatus.DRAFT,
                 description=description,
             )
@@ -194,12 +199,13 @@ def auto_generate_placement_invoice(sender, instance, **kwargs):
                 amount=new_placement_fee,
                 order=1,
             )
+            credit_description = f'Less: Original Fee Credit ({credit_percentage}% of {original_fee:,.0f})'
             InvoiceLineItem.objects.create(
                 invoice=invoice,
-                description=f'Less: Original Placement Fee Covered ({fee_percentage}% of {original_ctc:,.0f})',
+                description=credit_description,
                 quantity=Decimal('1'),
-                unit_price=-original_fee,
-                amount=-original_fee,
+                unit_price=-credit_amount,
+                amount=-credit_amount,
                 order=2,
             )
 
@@ -217,8 +223,10 @@ def auto_generate_placement_invoice(sender, instance, **kwargs):
                     'is_replacement': True,
                     'is_free_replacement': True,
                     'original_fee': float(original_fee),
+                    'credit_percentage': float(credit_percentage),
+                    'credit_amount': float(credit_amount),
                     'new_fee': float(new_placement_fee),
-                    'difference': float(difference),
+                    'amount_owed': float(amount_owed),
                     'replacement_request_id': str(replacement_request.id) if replacement_request else None,
                 },
             )

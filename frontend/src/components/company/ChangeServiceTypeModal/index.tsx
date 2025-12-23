@@ -252,7 +252,7 @@ export function ChangeServiceTypeModal({
   const canConfirm = termsAgreed && termsDocument && !isChanging && !isUpdating && !isBlockedByLockout
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/50" onClick={onClose}>
       <div
         className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}

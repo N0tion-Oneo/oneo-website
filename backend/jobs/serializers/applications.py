@@ -159,6 +159,9 @@ class EmbeddedReplacementRequestSerializer(serializers.ModelSerializer):
     reason_category_display = serializers.CharField(source='get_reason_category_display', read_only=True)
     requested_by_name = serializers.SerializerMethodField()
     reviewed_by_name = serializers.SerializerMethodField()
+    original_offer_details = serializers.SerializerMethodField()
+    original_start_date = serializers.SerializerMethodField()
+    original_invoiced_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = ReplacementRequest
@@ -175,6 +178,9 @@ class EmbeddedReplacementRequestSerializer(serializers.ModelSerializer):
             'reviewed_by_name',
             'reviewed_at',
             'review_notes',
+            'original_offer_details',
+            'original_start_date',
+            'original_invoiced_amount',
         ]
         read_only_fields = fields
 
@@ -186,6 +192,38 @@ class EmbeddedReplacementRequestSerializer(serializers.ModelSerializer):
     def get_reviewed_by_name(self, obj):
         if obj.reviewed_by:
             return obj.reviewed_by.get_full_name() or obj.reviewed_by.email
+        return None
+
+    def get_original_offer_details(self, obj):
+        """Get the original offer details from the application."""
+        base = obj.application.offer_details or {}
+        final = obj.application.final_offer_details or {}
+        merged = {**base}
+        for key, value in final.items():
+            if value is not None and value != '' and value != []:
+                merged[key] = value
+        return merged if merged else None
+
+    def get_original_start_date(self, obj):
+        """Get the start date from offer details."""
+        final = obj.application.final_offer_details or {}
+        start_date = final.get('start_date')
+        if not start_date:
+            offer = obj.application.offer_details or {}
+            start_date = offer.get('start_date')
+        return start_date
+
+    def get_original_invoiced_amount(self, obj):
+        """Get the invoiced amount (ex VAT) for the original placement."""
+        from subscriptions.models import Invoice, InvoiceType, InvoiceStatus
+        invoice = Invoice.objects.filter(
+            placement=obj.application,
+            invoice_type=InvoiceType.PLACEMENT,
+        ).exclude(
+            status=InvoiceStatus.CANCELLED
+        ).first()
+        if invoice:
+            return float(invoice.subtotal)
         return None
 
 

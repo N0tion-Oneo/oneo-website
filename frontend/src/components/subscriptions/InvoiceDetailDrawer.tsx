@@ -107,8 +107,8 @@ function RecordPaymentModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-[60] bg-black/50" onClick={onClose} />
-      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[210] bg-black/50" onClick={onClose} />
+      <div className="fixed inset-0 z-[211] flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Record Payment</h3>
@@ -238,8 +238,8 @@ export default function InvoiceDetailDrawer({
   if (isLoading || !invoice) {
     return (
       <>
-        <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
-        <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-xl bg-white shadow-xl flex items-center justify-center">
+        <div className="fixed inset-0 z-[200] bg-black/30" onClick={onClose} />
+        <div className="fixed right-0 top-0 bottom-0 z-[201] w-full max-w-2xl bg-white shadow-xl flex items-center justify-center">
           <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-gray-900 rounded-full" />
         </div>
       </>
@@ -248,8 +248,8 @@ export default function InvoiceDetailDrawer({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
-      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-xl bg-white shadow-xl overflow-hidden flex flex-col">
+      <div className="fixed inset-0 z-[200] bg-black/30" onClick={onClose} />
+      <div className="fixed right-0 top-0 bottom-0 z-[201] w-full max-w-2xl bg-white shadow-xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -260,7 +260,7 @@ export default function InvoiceDetailDrawer({
                 <span className="text-sm text-gray-500">{invoice.company_name}</span>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -506,45 +506,39 @@ export default function InvoiceDetailDrawer({
           )}
         </div>
 
-        {/* Footer Actions */}
-        <div className="border-t border-gray-200 bg-gray-50 px-6 py-4">
-          <div className="flex gap-3">
-            {isAdmin && invoice.status === 'draft' && (
-              <button
-                onClick={handleSend}
-                disabled={isSending}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-                {isSending ? 'Sending...' : 'Send Invoice'}
-              </button>
-            )}
-            {isAdmin && (invoice.status === 'sent' || invoice.status === 'overdue' || invoice.status === 'partially_paid') && (
-              <button
-                onClick={() => setShowPaymentModal(true)}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
-              >
-                <DollarSign className="w-4 h-4" />
-                Record Payment
-              </button>
-            )}
-            {isAdmin && invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
+        {/* Footer Actions - only show when there are actions available */}
+        {isAdmin && invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
+          <div className="border-t border-gray-200 bg-gray-50 px-6 py-4">
+            <div className="flex gap-3">
+              {invoice.status === 'draft' && (
+                <button
+                  onClick={handleSend}
+                  disabled={isSending}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  <Send className="w-4 h-4" />
+                  {isSending ? 'Sending...' : 'Send Invoice'}
+                </button>
+              )}
+              {(invoice.status === 'sent' || invoice.status === 'overdue' || invoice.status === 'partially_paid') && (
+                <button
+                  onClick={() => setShowPaymentModal(true)}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+                >
+                  <DollarSign className="w-4 h-4" />
+                  Record Payment
+                </button>
+              )}
               <button
                 onClick={handleCancel}
                 disabled={isCancelling}
                 className="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-lg hover:bg-red-200 disabled:opacity-50"
               >
-                {isCancelling ? 'Cancelling...' : 'Cancel'}
+                {isCancelling ? 'Cancelling...' : 'Cancel Invoice'}
               </button>
-            )}
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-            >
-              Close
-            </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Record Payment Modal */}

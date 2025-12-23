@@ -1176,6 +1176,7 @@ export default function AdminApplicationsPage() {
         onMoveToStage={handleDrawerMoveToStage}
         isProcessing={isProcessing}
         showReplacementOption={showReplacementOption}
+        isAdmin={isAdminOrRecruiter}
       />
 
       {/* Reject Modal */}

@@ -150,10 +150,16 @@ class ReplacementRequest(models.Model):
         """Check if this is a discounted replacement."""
         return self.status == ReplacementStatus.APPROVED_DISCOUNTED
 
-    def approve_free(self, reviewed_by, notes=''):
-        """Approve the request as a free replacement."""
+    def approve_free(self, reviewed_by, credit_percentage=100, notes=''):
+        """Approve the request as a free replacement with credit.
+
+        Args:
+            reviewed_by: The user approving the request
+            credit_percentage: Percentage of original fee to credit (1-100, default 100)
+            notes: Optional review notes
+        """
         self.status = ReplacementStatus.APPROVED_FREE
-        self.discount_percentage = 100  # 100% discount = free
+        self.discount_percentage = credit_percentage  # Credit percentage of original fee
         self.reviewed_by = reviewed_by
         self.reviewed_at = timezone.now()
         self.review_notes = notes

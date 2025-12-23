@@ -163,7 +163,7 @@ export default function NotificationsDrawer({
       {/* Drawer */}
       <div className={`fixed inset-y-0 ${sidebarOffset} ${drawerWidth} bg-white shadow-xl z-[201] flex flex-col border-r border-gray-200`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 h-14 border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 h-14 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center gap-3">
             <Bell className="w-5 h-5 text-gray-600" />
             <h2 className="text-lg font-semibold text-gray-900">Notifications</h2>
@@ -185,7 +185,7 @@ export default function NotificationsDrawer({
             )}
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
             >
               <X className="w-5 h-5" />
             </button>

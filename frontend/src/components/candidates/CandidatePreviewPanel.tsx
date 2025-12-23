@@ -171,7 +171,7 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh, m
       {/* Panel */}
       <div className="fixed right-0 top-0 h-full w-1/2 bg-white shadow-xl z-[201] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 bg-white">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <h2 className="text-[16px] font-semibold text-gray-900">Candidate Details</h2>
@@ -243,12 +243,6 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh, m
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-3 border-t border-gray-200 bg-white">
-          <p className="text-[11px] text-gray-500 text-center">
-            Press <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Esc</kbd> to close
-          </p>
-        </div>
       </div>
 
       {/* Suggestions Panel - Admin only */}

@@ -70,13 +70,13 @@ const currencyOptions = [
 ]
 
 const steps = [
-  { id: 1, title: 'Basic Info' },
+  { id: 1, title: 'Basic' },
   { id: 2, title: 'Description' },
   { id: 3, title: 'Requirements' },
   { id: 4, title: 'Compensation' },
-  { id: 5, title: 'Interview Pipeline' },
-  { id: 6, title: 'Application Questions' },
-  { id: 7, title: 'Shortlist Screening' },
+  { id: 5, title: 'Pipeline' },
+  { id: 6, title: 'Questions' },
+  { id: 7, title: 'Screening' },
 ]
 
 const defaultInterviewStages: InterviewStage[] = [

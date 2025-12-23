@@ -51,6 +51,7 @@ export {
   useJobs,
   useJob,
   useCompanyJobs,
+  useAllJobs,
   useJobDetail,
   useCreateJob,
   useUpdateJob,

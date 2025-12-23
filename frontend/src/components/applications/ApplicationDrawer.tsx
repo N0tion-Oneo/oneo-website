@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, User, Clock, Gift, Ban, CheckCircle, AlertCircle, ChevronDown, FileText, ExternalLink, Paperclip, Calendar, Maximize2, RefreshCw } from 'lucide-react'
-import { useApplication, useRecordApplicationView, useStageInstances, useCancelStage, useCompleteStage } from '@/hooks'
+import { useApplication, useRecordApplicationView, useStageInstances, useCancelStage, useCompleteStage, useReplacementActions } from '@/hooks'
 import { CandidateProfileCard } from '@/components/candidates'
-import { ReplacementRequestModal, ReplacementStatusBadge } from '@/components/replacements'
+import { ReplacementRequestModal, ReplacementReviewCard } from '@/components/replacements'
 import ActivityTimeline from './ActivityTimeline'
 import FullPipelineTimeline from './FullPipelineTimeline'
 import ScheduleInterviewModal from './ScheduleInterviewModal'
@@ -26,8 +26,10 @@ interface ApplicationDrawerProps {
   onMoveToStage?: (applicationId: string, stageOrder: number) => void
   onResetToApplied?: (applicationId: string) => void
   isProcessing?: boolean
-  // Replacement support (for client users)
+  // Replacement support
   showReplacementOption?: boolean
+  /** Whether the current user is an admin/recruiter (can review replacement requests) */
+  isAdmin?: boolean
 }
 
 type TabType = 'profile' | 'answers' | 'stages' | 'activity' | 'offer' | 'reject' | 'replacement'
@@ -90,6 +92,7 @@ export default function ApplicationDrawer({
   onResetToApplied,
   isProcessing = false,
   showReplacementOption = false,
+  isAdmin = false,
 }: ApplicationDrawerProps) {
   const [activeTab, setActiveTab] = useState<TabType>('profile')
   const [actionError, setActionError] = useState<string | null>(null)
@@ -123,6 +126,9 @@ export default function ApplicationDrawer({
 
   // Replacement modal state
   const [replacementModalOpen, setReplacementModalOpen] = useState(false)
+
+  // Replacement actions for admin review
+  const { isApproving, isRejecting, approveRequest, rejectRequest } = useReplacementActions()
 
   // Stage action hooks
   const { cancel: cancelStage } = useCancelStage()
@@ -294,7 +300,7 @@ export default function ApplicationDrawer({
       {/* Drawer - 50% width */}
       <div className="fixed inset-y-0 right-0 w-1/2 min-w-[640px] bg-white shadow-xl z-[201] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
           <div>
             <h2 className="text-[16px] font-semibold text-gray-900">
               {isLoading ? 'Loading...' : application?.candidate?.full_name || 'Application'}
@@ -592,6 +598,17 @@ export default function ApplicationDrawer({
                 <ReplacementTab
                   application={application}
                   onRequestReplacement={() => setReplacementModalOpen(true)}
+                  isAdmin={isAdmin}
+                  onApprove={async (requestId, type, discount) => {
+                    await approveRequest(requestId, { approval_type: type, discount_percentage: discount })
+                    refetch()
+                  }}
+                  onReject={async (requestId, notes) => {
+                    await rejectRequest(requestId, { review_notes: notes })
+                    refetch()
+                  }}
+                  isApproving={isApproving}
+                  isRejecting={isRejecting}
                 />
               )}
             </>
@@ -1245,9 +1262,19 @@ function getQuestionTypeLabel(type: QuestionType): string {
 function ReplacementTab({
   application,
   onRequestReplacement,
+  isAdmin = false,
+  onApprove,
+  onReject,
+  isApproving = false,
+  isRejecting = false,
 }: {
   application: Application
   onRequestReplacement: () => void
+  isAdmin?: boolean
+  onApprove?: (requestId: string, type: 'free' | 'discounted', discount?: number) => Promise<void>
+  onReject?: (requestId: string, notes?: string) => Promise<void>
+  isApproving?: boolean
+  isRejecting?: boolean
 }) {
   const existingRequest = application.replacement_request
   const isReplacement = application.is_replacement
@@ -1278,55 +1305,34 @@ function ReplacementTab({
     )
   }
 
-  // If there's an existing replacement request, show its status
+  // If there's an existing replacement request, show its status using the shared component
   if (existingRequest) {
+    const isPending = existingRequest.status === 'pending'
+    const canReview = isAdmin && isPending && onApprove && onReject
+
     return (
       <div className="space-y-6">
         <div>
-          <h4 className="text-[14px] font-medium text-gray-900 mb-1">Replacement Request</h4>
-          <p className="text-[13px] text-gray-500">Status of your replacement request</p>
+          <h4 className="text-[14px] font-medium text-gray-900 mb-1">
+            {canReview ? 'Review Replacement Request' : 'Replacement Request'}
+          </h4>
+          <p className="text-[13px] text-gray-500">
+            {canReview ? 'Approve or reject this replacement request' : 'Status of the replacement request'}
+          </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</p>
-              <ReplacementStatusBadge
-                status={existingRequest.status}
-                discountPercentage={existingRequest.discount_percentage}
-                size="md"
-              />
-            </div>
-          </div>
-
-          <div className="p-4">
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Reason</p>
-            <p className="text-[14px] text-gray-900 font-medium">
-              {existingRequest.reason_category_display || existingRequest.reason_category}
-            </p>
-            {existingRequest.reason_details && (
-              <p className="text-[13px] text-gray-600 mt-1">{existingRequest.reason_details}</p>
-            )}
-          </div>
-
-          <div className="p-4">
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Submitted</p>
-            <p className="text-[14px] text-gray-900">
-              {new Date(existingRequest.requested_at || existingRequest.created_at).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </p>
-          </div>
-
-          {existingRequest.review_notes && (
-            <div className="p-4">
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Review Notes</p>
-              <p className="text-[14px] text-gray-700">{existingRequest.review_notes}</p>
-            </div>
-          )}
-        </div>
+        <ReplacementReviewCard
+          request={existingRequest}
+          canReview={canReview}
+          onApprove={canReview ? async (type, discount) => {
+            await onApprove!(existingRequest.id, type, discount)
+          } : undefined}
+          onReject={canReview ? async (notes) => {
+            await onReject!(existingRequest.id, notes)
+          } : undefined}
+          isApproving={isApproving}
+          isRejecting={isRejecting}
+        />
       </div>
     )
   }
@@ -1337,13 +1343,16 @@ function ReplacementTab({
       <div>
         <h4 className="text-[14px] font-medium text-gray-900 mb-1">Request Replacement</h4>
         <p className="text-[13px] text-gray-500">
-          If this placement didn't work out, you may be eligible for a free replacement
+          If this placement didn't work out, you may be eligible for a replacement
         </p>
       </div>
 
       <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-        <p className="text-[13px] text-gray-700 mb-4">
-          Our free replacement guarantee allows you to request a replacement candidate at no additional cost if the placement doesn't work out within the replacement period.
+        <p className="text-[13px] text-gray-700 mb-3">
+          Our replacement guarantee allows you to request a replacement candidate if the placement doesn't work out within the replacement period.
+        </p>
+        <p className="text-[12px] text-gray-500 mb-4">
+          <strong>Pricing:</strong> Approved requests may be credited (original fee applied to replacement) or discounted (percentage off the new placement fee).
         </p>
         <button
           onClick={onRequestReplacement}
