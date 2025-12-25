@@ -14,6 +14,7 @@ import {
   useHiringMetrics,
   useMyCompany,
 } from '@/hooks'
+import { useOnboarding } from '@/hooks/useOnboarding'
 import SchedulingCard from '@/components/booking/SchedulingCard'
 import {
   SectionHeader,
@@ -25,6 +26,7 @@ import {
   RecentActivitySection,
 } from './shared'
 import { DashboardFeedWidget } from '@/components/feed'
+import { OnboardingWizard } from '@/components/onboarding'
 
 // =============================================================================
 // Profile Completion Banner
@@ -311,6 +313,14 @@ function AssignedRecruiterSection() {
 
 export default function ClientDashboard() {
   const { user } = useAuth()
+  const { status: onboardingStatus, isLoading: onboardingLoading, refetch: refetchOnboarding } = useOnboarding()
+
+  // Show onboarding wizard if not complete
+  const showOnboarding = !onboardingLoading && onboardingStatus && !onboardingStatus.is_complete
+
+  if (showOnboarding) {
+    return <OnboardingWizard onComplete={refetchOnboarding} />
+  }
 
   return (
     <div className="space-y-6">

@@ -1,42 +1,7 @@
-"""Form submissions (contact form, newsletter)."""
+"""Form submissions (newsletter only - contact form now uses Lead model)."""
 import uuid
 from django.db import models
 from .base import TimestampedModel
-
-
-class ContactSubmission(TimestampedModel):
-    """
-    Contact form submission.
-
-    Stores messages from the public contact form.
-    Admin can mark as read/replied and add notes.
-    """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    # Contact info
-    name = models.CharField(max_length=200)
-    email = models.EmailField()
-    phone = models.CharField(max_length=50, blank=True)
-    company = models.CharField(max_length=200, blank=True)
-
-    # Message
-    subject = models.CharField(max_length=200, blank=True)
-    message = models.TextField()
-
-    # Tracking
-    source_page = models.CharField(max_length=200, blank=True, help_text="Page where form was submitted")
-
-    # Admin status
-    is_read = models.BooleanField(default=False)
-    is_replied = models.BooleanField(default=False)
-    notes = models.TextField(blank=True, help_text="Internal notes")
-
-    class Meta:
-        db_table = 'cms_contact_submissions'
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.name} - {self.subject or 'No subject'}"
 
 
 class NewsletterSubscriber(TimestampedModel):

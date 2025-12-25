@@ -383,4 +383,94 @@ export const getOnboardingHistory = async (
   return response.data;
 };
 
+// ============================================================================
+// Client Onboarding Wizard API
+// ============================================================================
+
+export interface OnboardingContractOffer {
+  service_type: string;
+  monthly_retainer: string | null;
+  placement_fee: string | null;
+  csuite_placement_fee: string | null;
+}
+
+export interface OnboardingInviter {
+  id: number;
+  name: string;
+  email: string;
+  booking_slug: string | null;
+}
+
+export interface OnboardingStatus {
+  is_complete: boolean;
+  current_step: string | null;
+  steps_completed: Record<string, boolean>;
+  company_id: string | null;
+  has_contract_offer: boolean;
+  contract_offer: OnboardingContractOffer | null;
+  inviter: OnboardingInviter | null;
+}
+
+export interface OnboardingProfileStepData {
+  logo?: File;
+  tagline?: string;
+  description?: string;
+  industry_id?: number | null;
+  company_size?: string;
+}
+
+export interface OnboardingBillingStepData {
+  legal_name?: string;
+  vat_number?: string;
+  registration_number?: string;
+  billing_address?: string;
+  billing_city?: string;
+  billing_country_id?: number | null;
+  billing_postal_code?: string;
+  billing_contact_name?: string;
+  billing_contact_email?: string;
+  billing_contact_phone?: string;
+}
+
+export interface OnboardingContractStepData {
+  company_name: string;
+  service_type: 'headhunting' | 'retained';
+  terms_accepted: boolean;
+  terms_document_slug: string;
+  terms_document_title?: string;
+  terms_document_version?: string;
+}
+
+export const getOnboardingStatus = async (): Promise<OnboardingStatus> => {
+  const response = await api.get('/companies/onboarding/status/');
+  return response.data;
+};
+
+export const completeOnboardingStep = async (
+  step: string,
+  data: OnboardingProfileStepData | OnboardingBillingStepData | OnboardingContractStepData | Record<string, unknown>
+): Promise<OnboardingStatus> => {
+  // For profile step with logo, use FormData
+  if (step === 'profile' && 'logo' in data && data.logo instanceof File) {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value as string | Blob);
+      }
+    });
+    const response = await api.post(`/companies/onboarding/step/${step}/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
+
+  const response = await api.post(`/companies/onboarding/step/${step}/`, data);
+  return response.data;
+};
+
+export const skipOnboardingStep = async (step: string): Promise<OnboardingStatus> => {
+  const response = await api.post(`/companies/onboarding/skip/${step}/`);
+  return response.data;
+};
+
 export default api;

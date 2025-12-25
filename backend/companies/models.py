@@ -197,6 +197,16 @@ class Company(models.Model):
         limit_choices_to={'entity_type': 'company'},
         related_name='companies',
     )
+    onboarding_completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When the client completed their onboarding wizard'
+    )
+    onboarding_steps_completed = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Tracks completion of onboarding steps: {"profile": true, "billing": true, ...}'
+    )
 
     # Access permissions
     can_view_all_candidates = models.BooleanField(
@@ -449,3 +459,228 @@ class TermsAcceptance(models.Model):
 
     def __str__(self):
         return f"{self.company.name} - {self.document_slug} ({self.context})"
+
+
+class LeadSource(models.TextChoices):
+    """How the lead was acquired."""
+    REFERRAL = 'referral', 'Referral'
+    WEBSITE = 'website', 'Website'
+    LINKEDIN = 'linkedin', 'LinkedIn'
+    COLD_OUTREACH = 'cold_outreach', 'Cold Outreach'
+    EVENT = 'event', 'Event/Conference'
+    INBOUND = 'inbound', 'Inbound Inquiry'
+    OTHER = 'other', 'Other'
+
+
+class Lead(models.Model):
+    """
+    Prospecting lead - a person at a company we're trying to convert to a client.
+
+    Leads progress through early pipeline stages (Lead → Qualified → Sales Meeting Booked).
+    When an invitation is sent, the lead is linked to a ClientInvitation.
+    When the lead signs up, they become a Client user and create a Company.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Contact information
+    name = models.CharField(max_length=255, help_text='Contact name')
+    email = models.EmailField(help_text='Contact email')
+    phone = models.CharField(max_length=30, blank=True)
+    job_title = models.CharField(max_length=100, blank=True)
+
+    # Company information (text - company may not exist in system yet)
+    company_name = models.CharField(max_length=255, help_text='Company they work at')
+    company_website = models.URLField(blank=True)
+    company_size = models.CharField(
+        max_length=20,
+        choices=CompanySize.choices,
+        blank=True,
+    )
+    industry = models.ForeignKey(
+        'candidates.Industry',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='leads',
+    )
+
+    # Pipeline tracking
+    onboarding_stage = models.ForeignKey(
+        'core.OnboardingStage',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='leads',
+        limit_choices_to={'entity_type': 'lead'},
+    )
+
+    # Source and notes
+    source = models.CharField(
+        max_length=20,
+        choices=LeadSource.choices,
+        default=LeadSource.OTHER,
+    )
+    source_detail = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text='Additional source details (e.g., referrer name, event name)',
+    )
+    source_page = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text='Page URL where inbound lead submitted contact form',
+    )
+    subject = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text='Subject/reason for contact (for inbound leads)',
+    )
+    notes = models.TextField(blank=True)
+
+    # Admin workflow (for inbound leads)
+    is_read = models.BooleanField(default=False)
+    is_replied = models.BooleanField(default=False)
+
+    # Assignment - multiple recruiters can work on a lead
+    assigned_to = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name='assigned_leads',
+        help_text='Recruiters/admins managing this lead',
+    )
+
+    # Conversion tracking
+    converted_to_company = models.ForeignKey(
+        'Company',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='source_lead',
+        help_text='Company created when lead converted',
+    )
+    converted_to_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='source_lead',
+        help_text='User created when lead signed up',
+    )
+    converted_at = models.DateTimeField(null=True, blank=True)
+
+    # Metadata
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='leads_created',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'leads'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} at {self.company_name}"
+
+    @property
+    def is_converted(self):
+        """Whether this lead has been converted to a client."""
+        return self.converted_at is not None
+
+
+class LeadActivityType(models.TextChoices):
+    """Types of activities that can be logged for a lead."""
+    NOTE_ADDED = 'note_added', 'Note Added'
+    STAGE_CHANGED = 'stage_changed', 'Stage Changed'
+    MEETING_SCHEDULED = 'meeting_scheduled', 'Meeting Scheduled'
+    MEETING_COMPLETED = 'meeting_completed', 'Meeting Completed'
+    MEETING_CANCELLED = 'meeting_cancelled', 'Meeting Cancelled'
+    EMAIL_SENT = 'email_sent', 'Email Sent'
+    CALL_LOGGED = 'call_logged', 'Call Logged'
+    INVITATION_SENT = 'invitation_sent', 'Invitation Sent'
+    CONVERTED = 'converted', 'Converted to Client'
+    ASSIGNED = 'assigned', 'Assigned'
+    CREATED = 'created', 'Lead Created'
+
+
+class LeadActivity(models.Model):
+    """
+    Activity log for leads - tracks all interactions and state changes.
+    Similar to ApplicationActivityLog but for the lead/sales pipeline.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Core relation
+    lead = models.ForeignKey(
+        Lead,
+        on_delete=models.CASCADE,
+        related_name='activities',
+    )
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lead_activities',
+        help_text='User who performed this action',
+    )
+
+    # Activity details
+    activity_type = models.CharField(
+        max_length=30,
+        choices=LeadActivityType.choices,
+    )
+
+    # For notes
+    content = models.TextField(
+        blank=True,
+        help_text='Note content or activity description',
+    )
+
+    # State tracking (for stage changes)
+    previous_stage = models.ForeignKey(
+        'core.OnboardingStage',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+',
+    )
+    new_stage = models.ForeignKey(
+        'core.OnboardingStage',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+',
+    )
+
+    # Additional metadata (meeting details, email subject, etc.)
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Additional context: meeting_id, email_subject, etc.',
+    )
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'lead_activities'
+        ordering = ['-created_at']
+        verbose_name_plural = 'Lead activities'
+        indexes = [
+            models.Index(fields=['lead', '-created_at']),
+            models.Index(fields=['activity_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.get_activity_type_display()} - {self.lead.name}"
+
+    @property
+    def performer_name(self):
+        """Return the name of the user who performed the action."""
+        if self.performed_by:
+            return self.performed_by.full_name or self.performed_by.email
+        return 'System'

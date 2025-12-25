@@ -213,10 +213,10 @@ export default function CMSContactSubmissionsPage() {
               <div className="max-w-2xl space-y-6">
                 {/* Meta Info */}
                 <div className="flex flex-wrap gap-4 text-sm">
-                  {selectedSubmission.company && (
+                  {selectedSubmission.company_name && selectedSubmission.company_name !== 'Not provided' && (
                     <div>
                       <span className="text-gray-500">Company:</span>{' '}
-                      <span className="text-gray-900">{selectedSubmission.company}</span>
+                      <span className="text-gray-900">{selectedSubmission.company_name}</span>
                     </div>
                   )}
                   {selectedSubmission.phone && (
@@ -247,21 +247,11 @@ export default function CMSContactSubmissionsPage() {
                   </div>
                 )}
 
-                {/* Message */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">Message</h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-gray-900 whitespace-pre-wrap">
-                      {selectedSubmission.message}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Notes */}
+                {/* Message (stored in notes field for inbound leads) */}
                 {selectedSubmission.notes && (
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Internal Notes</h3>
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Message</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
                       <p className="text-gray-900 whitespace-pre-wrap">
                         {selectedSubmission.notes}
                       </p>

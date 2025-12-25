@@ -357,7 +357,10 @@ interface UsePublicBookingPageReturn {
   error: string | null
 }
 
-export function usePublicBookingPage(bookingSlug: string): UsePublicBookingPageReturn {
+export function usePublicBookingPage(
+  bookingSlug: string,
+  options?: { onboarding?: 'client' | 'candidate' }
+): UsePublicBookingPageReturn {
   const [pageData, setPageData] = useState<RecruiterPublicBookingPage | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -369,7 +372,8 @@ export function usePublicBookingPage(bookingSlug: string): UsePublicBookingPageR
       try {
         setIsLoading(true)
         setError(null)
-        const response = await api.get(`/scheduling/book/${bookingSlug}/`)
+        const params = options?.onboarding ? { onboarding: options.onboarding } : undefined
+        const response = await api.get(`/scheduling/book/${bookingSlug}/`, { params })
         setPageData(response.data)
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to load booking page'
@@ -380,7 +384,7 @@ export function usePublicBookingPage(bookingSlug: string): UsePublicBookingPageR
     }
 
     fetchData()
-  }, [bookingSlug])
+  }, [bookingSlug, options?.onboarding])
 
   return { pageData, isLoading, error }
 }

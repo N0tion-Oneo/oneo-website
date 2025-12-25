@@ -125,7 +125,7 @@ export interface DateRange {
  * Onboarding Analytics Types
  */
 
-export type OnboardingEntityType = 'company' | 'candidate'
+export type OnboardingEntityType = 'lead' | 'company' | 'candidate'
 
 export interface OnboardingStageDistribution {
   stage_id: number | null

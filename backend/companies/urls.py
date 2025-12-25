@@ -8,6 +8,20 @@ urlpatterns = [
     # Create company (must come before slug pattern)
     path('create/', views.create_company, name='create-company'),
 
+    # Lead management (admin/recruiter only)
+    path('leads/', views.list_leads, name='list-leads'),
+    path('leads/create/', views.create_lead, name='create-lead'),
+    path('leads/<uuid:lead_id>/', views.get_lead, name='get-lead'),
+    path('leads/<uuid:lead_id>/update/', views.update_lead, name='update-lead'),
+    path('leads/<uuid:lead_id>/delete/', views.delete_lead, name='delete-lead'),
+    path('leads/<uuid:lead_id>/stage/', views.update_lead_stage, name='update-lead-stage'),
+    path('leads/<uuid:lead_id>/activities/', views.lead_activities, name='lead-activities'),
+
+    # Client onboarding wizard endpoints
+    path('onboarding/status/', views.get_onboarding_status, name='onboarding-status'),
+    path('onboarding/step/<str:step>/', views.complete_onboarding_step, name='complete-onboarding-step'),
+    path('onboarding/skip/<str:step>/', views.skip_onboarding_step, name='skip-onboarding-step'),
+
     # My company endpoints
     path('my/', views.get_my_company, name='get-my-company'),
     path('my/update/', views.update_my_company, name='update-my-company'),

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import {
   Calendar,
@@ -102,14 +102,31 @@ export default function RecruiterBookingPage() {
 
 // List of meeting types for a recruiter
 function RecruiterBookingList({ bookingSlug }: { bookingSlug: string }) {
-  const { pageData, isLoading, error } = usePublicBookingPage(bookingSlug)
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isEmbed = searchParams.get('embed') === 'true'
+  const onboardingType = searchParams.get('onboarding') as 'client' | 'candidate' | null
+  const { pageData, isLoading, error } = usePublicBookingPage(
+    bookingSlug,
+    onboardingType ? { onboarding: onboardingType } : undefined
+  )
+  const [redirecting, setRedirecting] = useState(false)
 
-  if (isLoading) {
+  // In embed mode with onboarding, auto-redirect to the first (filtered) meeting type
+  useEffect(() => {
+    const firstMeetingType = pageData?.meeting_types[0]
+    if (!isLoading && !error && firstMeetingType && isEmbed && onboardingType && !redirecting) {
+      setRedirecting(true)
+      navigate(`/meet/${bookingSlug}/${firstMeetingType.slug}?embed=true`, { replace: true })
+    }
+  }, [isLoading, error, pageData, isEmbed, onboardingType, bookingSlug, navigate, redirecting])
+
+  if (isLoading || (isEmbed && onboardingType && pageData?.meeting_types.length)) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={isEmbed ? 'flex items-center justify-center py-12' : 'min-h-screen bg-gray-50 flex items-center justify-center'}>
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">Loading...</p>
+          <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto mb-3" />
+          <p className="text-sm text-gray-500">{isEmbed ? 'Loading calendar...' : 'Loading...'}</p>
         </div>
       </div>
     )
@@ -125,6 +142,21 @@ function RecruiterBookingList({ bookingSlug }: { bookingSlug: string }) {
           <h1 className="text-xl font-semibold text-gray-900 mb-2">Page Not Found</h1>
           <p className="text-gray-500">
             This booking page doesn't exist or is no longer available.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // In embed/onboarding mode with no meeting types configured
+  if (isEmbed && onboardingType && pageData.meeting_types.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12 px-4">
+        <div className="text-center max-w-sm">
+          <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-base font-medium text-gray-900 mb-2">No booking calendar available</h2>
+          <p className="text-sm text-gray-500">
+            No meeting type has been configured for onboarding. Please contact your account manager directly.
           </p>
         </div>
       </div>
@@ -191,6 +223,8 @@ function RecruiterBookingForm({
   bookingSlug: string
   meetingTypeSlug: string
 }) {
+  const [searchParams] = useSearchParams()
+  const isEmbed = searchParams.get('embed') === 'true'
   const { user, isAuthenticated } = useAuth()
   const { availability, isLoading, error } = usePublicAvailability(bookingSlug, meetingTypeSlug)
   const { createBooking, isCreating, error: createError } = useCreatePublicBooking(
@@ -200,11 +234,12 @@ function RecruiterBookingForm({
 
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
   const [step, setStep] = useState<'slots' | 'form' | 'confirm' | 'success'>('slots')
+  // Pre-fill form from query params (for lead scheduling)
   const [formData, setFormData] = useState({
-    attendee_name: '',
-    attendee_email: '',
-    attendee_phone: '',
-    attendee_company: '',
+    attendee_name: searchParams.get('name') || '',
+    attendee_email: searchParams.get('email') || '',
+    attendee_phone: searchParams.get('phone') || '',
+    attendee_company: searchParams.get('company') || '',
   })
   const [bookingResult, setBookingResult] = useState<{
     redirect_url: string | null
@@ -351,16 +386,18 @@ function RecruiterBookingForm({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4">
-      <div className="max-w-3xl mx-auto">
-        {/* Back link */}
-        <Link
-          to={`/meet/${bookingSlug}`}
-          className="inline-flex items-center gap-2 mb-6 text-[14px] text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to meeting types
-        </Link>
+    <div className={`${isEmbed ? 'bg-white' : 'min-h-screen bg-gray-50 py-8 sm:py-12'} px-4`}>
+      <div className={`${isEmbed ? '' : 'max-w-3xl'} mx-auto`}>
+        {/* Back link - hidden in embed mode */}
+        {!isEmbed && (
+          <Link
+            to={`/meet/${bookingSlug}`}
+            className="inline-flex items-center gap-2 mb-6 text-[14px] text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to meeting types
+          </Link>
+        )}
 
         {/* Meeting Type Header */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
@@ -411,6 +448,7 @@ function RecruiterBookingForm({
               onSelect={setSelectedSlot}
               duration={meeting_type.duration_minutes}
               timezone={availability.timezone}
+              forceColumns={isEmbed}
             />
 
             <div className="mt-6">
@@ -503,8 +541,8 @@ function RecruiterBookingForm({
                 />
               </div>
 
-              {/* Only show company field for sales meetings */}
-              {meeting_type.category === 'sales' && (
+              {/* Only show company field for leads meetings */}
+              {meeting_type.category === 'leads' && (
                 <div>
                   <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
                     Company

@@ -1,4 +1,4 @@
-"""Views for ContactSubmission and NewsletterSubscriber models."""
+"""Views for Contact (via Lead model) and NewsletterSubscriber models."""
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -6,11 +6,16 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from users.models import UserRole
-from ..models import ContactSubmission, NewsletterSubscriber
+from companies.models import Lead, LeadSource
+from companies.serializers import (
+    LeadListSerializer,
+    LeadDetailSerializer,
+    ContactFormSerializer,
+    LeadContactUpdateSerializer,
+)
+from core.models import OnboardingStage
+from ..models import NewsletterSubscriber
 from ..serializers import (
-    ContactSubmissionSerializer,
-    ContactSubmissionCreateSerializer,
-    ContactSubmissionUpdateSerializer,
     NewsletterSubscriberSerializer,
     NewsletterSubscribeSerializer,
 )
@@ -21,11 +26,11 @@ def is_staff_user(user):
 
 
 # =============================================================================
-# Contact Submission Admin Endpoints
+# Contact Submission Admin Endpoints (Now using Lead model with source='inbound')
 # =============================================================================
 
 @extend_schema(
-    responses={200: ContactSubmissionSerializer(many=True)},
+    responses={200: LeadListSerializer(many=True)},
     tags=['CMS - Contact (Admin)'],
     parameters=[
         OpenApiParameter(name='is_read', description='Filter by read status', required=False, type=bool),
@@ -35,69 +40,76 @@ def is_staff_user(user):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_contact_submissions(request):
-    """List all contact submissions (admin/staff only)."""
+    """List all contact submissions / inbound leads (admin/staff only)."""
     if not is_staff_user(request.user):
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
-    submissions = ContactSubmission.objects.all()
+    # Filter to only show inbound leads (from contact form)
+    leads = Lead.objects.filter(source=LeadSource.INBOUND).select_related(
+        'onboarding_stage', 'assigned_to', 'industry'
+    ).order_by('-created_at')
 
     is_read = request.query_params.get('is_read')
     if is_read is not None:
-        submissions = submissions.filter(is_read=is_read.lower() == 'true')
+        leads = leads.filter(is_read=is_read.lower() == 'true')
 
     is_replied = request.query_params.get('is_replied')
     if is_replied is not None:
-        submissions = submissions.filter(is_replied=is_replied.lower() == 'true')
+        leads = leads.filter(is_replied=is_replied.lower() == 'true')
 
-    serializer = ContactSubmissionSerializer(submissions, many=True)
+    serializer = LeadListSerializer(leads, many=True)
     return Response(serializer.data)
 
 
 @extend_schema(
-    responses={200: ContactSubmissionSerializer},
+    responses={200: LeadDetailSerializer},
     tags=['CMS - Contact (Admin)'],
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_contact_submission(request, submission_id):
-    """Get contact submission by ID (admin/staff only)."""
+    """Get contact submission / inbound lead by ID (admin/staff only)."""
     if not is_staff_user(request.user):
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
     try:
-        submission = ContactSubmission.objects.get(id=submission_id)
-    except ContactSubmission.DoesNotExist:
+        lead = Lead.objects.select_related(
+            'onboarding_stage', 'assigned_to', 'industry',
+            'created_by', 'converted_to_company', 'converted_to_user'
+        ).prefetch_related('invitations').get(id=submission_id)
+    except Lead.DoesNotExist:
         return Response({'error': 'Submission not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    if not submission.is_read:
-        submission.is_read = True
-        submission.save()
+    # Auto-mark as read when viewed
+    if not lead.is_read:
+        lead.is_read = True
+        lead.save(update_fields=['is_read'])
 
-    serializer = ContactSubmissionSerializer(submission)
+    serializer = LeadDetailSerializer(lead)
     return Response(serializer.data)
 
 
 @extend_schema(
-    request=ContactSubmissionUpdateSerializer,
-    responses={200: ContactSubmissionSerializer},
+    request=LeadContactUpdateSerializer,
+    responses={200: LeadDetailSerializer},
     tags=['CMS - Contact (Admin)'],
 )
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_contact_submission(request, submission_id):
-    """Update contact submission status (admin/staff only)."""
+    """Update contact submission / inbound lead status (admin/staff only)."""
     if not is_staff_user(request.user):
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
     try:
-        submission = ContactSubmission.objects.get(id=submission_id)
-    except ContactSubmission.DoesNotExist:
+        lead = Lead.objects.get(id=submission_id)
+    except Lead.DoesNotExist:
         return Response({'error': 'Submission not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = ContactSubmissionUpdateSerializer(submission, data=request.data, partial=True)
+    serializer = LeadContactUpdateSerializer(lead, data=request.data, partial=True)
     if serializer.is_valid():
-        submission = serializer.save()
-        return Response(ContactSubmissionSerializer(submission).data)
+        lead = serializer.save()
+        return Response(LeadDetailSerializer(lead).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -108,16 +120,16 @@ def update_contact_submission(request, submission_id):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_contact_submission(request, submission_id):
-    """Delete a contact submission (admin/staff only)."""
+    """Delete a contact submission / inbound lead (admin/staff only)."""
     if not is_staff_user(request.user):
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
     try:
-        submission = ContactSubmission.objects.get(id=submission_id)
-    except ContactSubmission.DoesNotExist:
+        lead = Lead.objects.get(id=submission_id)
+    except Lead.DoesNotExist:
         return Response({'error': 'Submission not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    submission.delete()
+    lead.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -126,17 +138,37 @@ def delete_contact_submission(request, submission_id):
 # =============================================================================
 
 @extend_schema(
-    request=ContactSubmissionCreateSerializer,
+    request=ContactFormSerializer,
     responses={201: dict},
     tags=['CMS - Contact (Public)'],
 )
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def submit_contact_form(request):
-    """Submit contact form (public)."""
-    serializer = ContactSubmissionCreateSerializer(data=request.data)
+    """Submit contact form (public). Creates a Lead with source='inbound'."""
+    serializer = ContactFormSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        data = serializer.validated_data
+
+        # Get the initial onboarding stage for leads
+        initial_stage = OnboardingStage.objects.filter(
+            entity_type='lead',
+            is_active=True
+        ).order_by('order').first()
+
+        # Create a Lead with source='inbound'
+        Lead.objects.create(
+            name=data['name'],
+            email=data['email'],
+            phone=data.get('phone', ''),
+            company_name=data.get('company', '') or 'Not provided',
+            subject=data.get('subject', ''),
+            notes=data['message'],  # Message goes into notes
+            source=LeadSource.INBOUND,
+            source_page=data.get('source_page', ''),
+            onboarding_stage=initial_stage,
+        )
+
         return Response(
             {'message': 'Thank you for your message. We will get back to you soon.'},
             status=status.HTTP_201_CREATED

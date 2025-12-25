@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Company, CompanyUser, CompanySize, FundingStage, CompanyUserRole, Country, City, RemoteWorkPolicy, ServiceType
+from .models import Company, CompanyUser, CompanySize, FundingStage, CompanyUserRole, Country, City, RemoteWorkPolicy, ServiceType, Lead, LeadActivity, LeadActivityType
 from candidates.serializers import IndustrySerializer, TechnologySerializer
 from candidates.models import Industry, Technology
 from core.serializers import OnboardingStageMinimalSerializer
@@ -473,7 +473,7 @@ class CompanyUpdateSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             OnboardingHistory.objects.create(
                 entity_type='company',
-                entity_id=instance.id,
+                entity_id=str(instance.id),
                 from_stage=old_stage,
                 to_stage=new_stage,
                 changed_by=request.user if request else None,
@@ -654,3 +654,381 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
         else:
             validated_data['can_view_all_candidates'] = False
         return super().create(validated_data)
+
+
+# =============================================================================
+# Lead Serializers (Prospecting)
+# =============================================================================
+
+class LeadListSerializer(serializers.ModelSerializer):
+    """Serializer for listing leads."""
+    onboarding_stage = serializers.SerializerMethodField()
+    assigned_to = serializers.SerializerMethodField()
+    industry_name = serializers.CharField(source='industry.name', read_only=True, allow_null=True)
+    is_converted = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Lead
+        fields = [
+            'id',
+            'name',
+            'email',
+            'phone',
+            'job_title',
+            'company_name',
+            'company_website',
+            'company_size',
+            'industry_name',
+            'onboarding_stage',
+            'source',
+            'source_detail',
+            'source_page',
+            'subject',
+            'is_read',
+            'is_replied',
+            'assigned_to',
+            'is_converted',
+            'converted_at',
+            'created_at',
+            'updated_at',
+        ]
+
+    def get_onboarding_stage(self, obj):
+        if obj.onboarding_stage:
+            return {
+                'id': obj.onboarding_stage.id,
+                'name': obj.onboarding_stage.name,
+                'slug': obj.onboarding_stage.slug,
+                'color': obj.onboarding_stage.color,
+                'order': obj.onboarding_stage.order,
+            }
+        return None
+
+    def get_assigned_to(self, obj):
+        """Return list of assigned users (ManyToMany field) - same format as Company."""
+        return [
+            {
+                'id': user.id,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'full_name': user.full_name,
+            }
+            for user in obj.assigned_to.all()
+        ]
+
+
+class LeadDetailSerializer(LeadListSerializer):
+    """Serializer for lead detail view."""
+    created_by = serializers.SerializerMethodField()
+    converted_to_company = serializers.SerializerMethodField()
+    converted_to_user = serializers.SerializerMethodField()
+    invitations = serializers.SerializerMethodField()
+
+    class Meta(LeadListSerializer.Meta):
+        fields = LeadListSerializer.Meta.fields + [
+            'notes',
+            'created_by',
+            'converted_to_company',
+            'converted_to_user',
+            'invitations',
+        ]
+
+    def get_created_by(self, obj):
+        if obj.created_by:
+            return {
+                'id': str(obj.created_by.id),
+                'name': obj.created_by.full_name,
+                'email': obj.created_by.email,
+            }
+        return None
+
+    def get_converted_to_company(self, obj):
+        if obj.converted_to_company:
+            return {
+                'id': str(obj.converted_to_company.id),
+                'name': obj.converted_to_company.name,
+                'slug': obj.converted_to_company.slug,
+            }
+        return None
+
+    def get_converted_to_user(self, obj):
+        if obj.converted_to_user:
+            return {
+                'id': str(obj.converted_to_user.id),
+                'name': obj.converted_to_user.full_name,
+                'email': obj.converted_to_user.email,
+            }
+        return None
+
+    def get_invitations(self, obj):
+        """Return invitations linked to this lead."""
+        invitations = obj.invitations.all()
+        return [{
+            'id': inv.id,
+            'token': str(inv.token),
+            'email': inv.email,
+            'is_valid': inv.is_valid,
+            'is_expired': inv.is_expired,
+            'used_at': inv.used_at.isoformat() if inv.used_at else None,
+            'created_at': inv.created_at.isoformat(),
+            'expires_at': inv.expires_at.isoformat(),
+        } for inv in invitations]
+
+
+class LeadCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating a new lead."""
+    industry_id = serializers.PrimaryKeyRelatedField(
+        queryset=Industry.objects.filter(is_active=True),
+        source='industry',
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    assigned_to_id = serializers.UUIDField(
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = Lead
+        fields = [
+            'name',
+            'email',
+            'phone',
+            'job_title',
+            'company_name',
+            'company_website',
+            'company_size',
+            'industry_id',
+            'source',
+            'source_detail',
+            'notes',
+            'assigned_to_id',
+        ]
+
+    def validate_assigned_to_id(self, value):
+        if value:
+            from users.models import User, UserRole
+            try:
+                user = User.objects.get(id=value)
+                if user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+                    raise serializers.ValidationError("Can only assign to admin or recruiter.")
+            except User.DoesNotExist:
+                raise serializers.ValidationError("User not found.")
+        return value
+
+    def create(self, validated_data):
+        assigned_to_id = validated_data.pop('assigned_to_id', None)
+        lead = super().create(validated_data)
+        if assigned_to_id:
+            from users.models import User
+            user = User.objects.get(id=assigned_to_id)
+            lead.assigned_to.add(user)
+        return lead
+
+
+class LeadUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating a lead."""
+    industry_id = serializers.PrimaryKeyRelatedField(
+        queryset=Industry.objects.filter(is_active=True),
+        source='industry',
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = Lead
+        fields = [
+            'name',
+            'email',
+            'phone',
+            'job_title',
+            'company_name',
+            'company_website',
+            'company_size',
+            'industry_id',
+            'source',
+            'source_detail',
+            'notes',
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add assigned_to_ids field dynamically to match Company pattern
+        from django.contrib.auth import get_user_model
+        from users.models import UserRole
+        User = get_user_model()
+        self.fields['assigned_to_ids'] = serializers.PrimaryKeyRelatedField(
+            queryset=User.objects.filter(
+                role__in=[UserRole.RECRUITER, UserRole.ADMIN],
+                is_active=True,
+            ),
+            many=True,
+            write_only=True,
+            required=False,
+        )
+
+    def update(self, instance, validated_data):
+        assigned_to_ids = validated_data.pop('assigned_to_ids', None)
+        instance = super().update(instance, validated_data)
+        if assigned_to_ids is not None:
+            instance.assigned_to.set(assigned_to_ids)
+        return instance
+
+
+class LeadUpdateStageSerializer(serializers.Serializer):
+    """Serializer for updating a lead's stage."""
+    stage_id = serializers.IntegerField(required=True)
+
+
+class ContactFormSerializer(serializers.Serializer):
+    """
+    Serializer for public contact form submissions.
+    Creates a Lead with source='inbound'.
+    """
+    name = serializers.CharField(max_length=255, required=True)
+    email = serializers.EmailField(required=True)
+    phone = serializers.CharField(max_length=30, required=False, allow_blank=True)
+    company = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    subject = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    message = serializers.CharField(required=True)
+    source_page = serializers.CharField(max_length=255, required=False, allow_blank=True)
+
+
+class LeadContactUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for admin updating lead contact status (is_read, is_replied, notes)."""
+
+    class Meta:
+        model = Lead
+        fields = ['is_read', 'is_replied', 'notes']
+
+
+# =============================================================================
+# Client Onboarding Wizard Serializers
+# =============================================================================
+
+class OnboardingContractOfferSerializer(serializers.Serializer):
+    """Contract offer details from the invitation."""
+    service_type = serializers.CharField()
+    monthly_retainer = serializers.DecimalField(max_digits=12, decimal_places=2, allow_null=True)
+    placement_fee = serializers.DecimalField(max_digits=5, decimal_places=4, allow_null=True)
+    csuite_placement_fee = serializers.DecimalField(max_digits=5, decimal_places=4, allow_null=True)
+
+
+class OnboardingStatusSerializer(serializers.Serializer):
+    """Returns the client's onboarding status."""
+    is_complete = serializers.BooleanField()
+    current_step = serializers.CharField(allow_null=True)
+    steps_completed = serializers.DictField()
+    company_id = serializers.UUIDField(allow_null=True)
+    has_contract_offer = serializers.BooleanField()
+    contract_offer = OnboardingContractOfferSerializer(allow_null=True)
+
+
+class OnboardingProfileStepSerializer(serializers.Serializer):
+    """Profile step data - updates existing company created in contract step."""
+    logo = serializers.ImageField(required=False, allow_null=True)
+    tagline = serializers.CharField(max_length=300, required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True)
+    industry_id = serializers.IntegerField(required=False, allow_null=True)
+    company_size = serializers.ChoiceField(choices=CompanySize.choices, required=False, allow_blank=True)
+
+
+class OnboardingBillingStepSerializer(serializers.Serializer):
+    """Billing step data."""
+    legal_name = serializers.CharField(max_length=300, required=False, allow_blank=True)
+    vat_number = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    registration_number = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    billing_address = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    billing_city = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    billing_country_id = serializers.IntegerField(required=False, allow_null=True)
+    billing_postal_code = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    billing_contact_name = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    billing_contact_email = serializers.EmailField(required=False, allow_blank=True)
+    billing_contact_phone = serializers.CharField(max_length=30, required=False, allow_blank=True)
+
+
+class OnboardingContractStepSerializer(serializers.Serializer):
+    """Contract approval step data - also creates the company."""
+    company_name = serializers.CharField(
+        max_length=200,
+        required=True,
+        help_text='The company name'
+    )
+    service_type = serializers.ChoiceField(
+        choices=ServiceType.choices,
+        required=True,
+        help_text='The service type to use (headhunting or retained)'
+    )
+    terms_accepted = serializers.BooleanField(required=True)
+    terms_document_slug = serializers.CharField(required=True)
+    terms_document_title = serializers.CharField(required=False, allow_blank=True)
+    terms_document_version = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_terms_accepted(self, value):
+        if not value:
+            raise serializers.ValidationError("You must accept the terms and conditions.")
+        return value
+
+
+# =============================================================================
+# Lead Activity Serializers
+# =============================================================================
+
+class LeadActivitySerializer(serializers.ModelSerializer):
+    """Serializer for lead activities."""
+    performer_name = serializers.CharField(read_only=True)
+    activity_type_display = serializers.CharField(source='get_activity_type_display', read_only=True)
+    previous_stage_name = serializers.CharField(source='previous_stage.name', read_only=True, allow_null=True)
+    new_stage_name = serializers.CharField(source='new_stage.name', read_only=True, allow_null=True)
+    previous_stage_color = serializers.CharField(source='previous_stage.color', read_only=True, allow_null=True)
+    new_stage_color = serializers.CharField(source='new_stage.color', read_only=True, allow_null=True)
+
+    class Meta:
+        model = LeadActivity
+        fields = [
+            'id',
+            'lead',
+            'activity_type',
+            'activity_type_display',
+            'content',
+            'previous_stage',
+            'previous_stage_name',
+            'previous_stage_color',
+            'new_stage',
+            'new_stage_name',
+            'new_stage_color',
+            'metadata',
+            'performed_by',
+            'performer_name',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'lead', 'performed_by', 'created_at']
+
+
+class LeadActivityCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating lead activities (notes, calls, etc.)."""
+
+    class Meta:
+        model = LeadActivity
+        fields = [
+            'activity_type',
+            'content',
+            'metadata',
+        ]
+
+    def validate_activity_type(self, value):
+        """Only allow manual activity types."""
+        allowed_types = [
+            LeadActivityType.NOTE_ADDED,
+            LeadActivityType.CALL_LOGGED,
+            LeadActivityType.EMAIL_SENT,
+        ]
+        if value not in allowed_types:
+            raise serializers.ValidationError(
+                f"Activity type must be one of: {', '.join(allowed_types)}"
+            )
+        return value

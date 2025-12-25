@@ -50,6 +50,7 @@ class DashboardSettings(models.Model):
 
 class OnboardingEntityType(models.TextChoices):
     """Entity types that can have onboarding stages."""
+    LEAD = 'lead', 'Lead'
     COMPANY = 'company', 'Company'
     CANDIDATE = 'candidate', 'Candidate'
 
@@ -88,7 +89,7 @@ class OnboardingHistory(models.Model):
         max_length=20,
         choices=OnboardingEntityType.choices,
     )
-    entity_id = models.PositiveIntegerField()  # Company.id or CandidateProfile.id
+    entity_id = models.CharField(max_length=36)  # Company.id (UUID) or CandidateProfile.id (int)
 
     from_stage = models.ForeignKey(
         OnboardingStage,

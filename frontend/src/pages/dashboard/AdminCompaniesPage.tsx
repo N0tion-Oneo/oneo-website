@@ -24,6 +24,7 @@ import CompanyFilterPanel, {
 import CompanyBulkActions from '@/components/companies/CompanyBulkActions'
 import CompanyKanbanBoard from '@/components/companies/CompanyKanbanBoard'
 import CompanyDetailDrawer from '@/components/companies/CompanyDetailDrawer'
+import CreateLeadModal from '@/components/companies/CreateLeadModal'
 import {
   Building2,
   Eye,
@@ -104,6 +105,7 @@ export default function AdminCompaniesPage() {
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null)
+  const [showCreateLeadModal, setShowCreateLeadModal] = useState(false)
 
   // Convert TanStack sorting to API ordering param
   const ordering = useMemo(() => {
@@ -586,6 +588,14 @@ export default function AdminCompaniesPage() {
               </span>
             )}
           </button>
+          {/* Create Lead Button */}
+          <button
+            onClick={() => setShowCreateLeadModal(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Create Lead
+          </button>
         </div>
       </div>
 
@@ -788,6 +798,13 @@ export default function AdminCompaniesPage() {
           onRefresh={refetch}
         />
       )}
+
+      {/* Create Lead Modal */}
+      <CreateLeadModal
+        isOpen={showCreateLeadModal}
+        onClose={() => setShowCreateLeadModal(false)}
+        onSuccess={refetch}
+      />
     </div>
   )
 }

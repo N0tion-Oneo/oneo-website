@@ -29,6 +29,8 @@ interface SlotPickerProps {
   duration: number
   timezone?: string
   onTimezoneChange?: (timezone: string) => void
+  /** Force two-column layout regardless of screen width (for embeds) */
+  forceColumns?: boolean
 }
 
 // Common timezones for the selector
@@ -52,6 +54,7 @@ export default function SlotPicker({
   duration,
   timezone = Intl.DateTimeFormat().resolvedOptions().timeZone,
   onTimezoneChange,
+  forceColumns = false,
 }: SlotPickerProps) {
   // State for current displayed month and selected date
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -157,9 +160,9 @@ export default function SlotPicker({
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
+    <div className={`flex ${forceColumns ? 'flex-row gap-4' : 'flex-col gap-6 lg:flex-row'}`}>
       {/* Left Panel: Calendar */}
-      <div className="lg:w-72 flex-shrink-0">
+      <div className={`flex-shrink-0 ${forceColumns ? 'w-[240px]' : 'lg:w-72'}`}>
         {/* Month Navigation */}
         <div className="flex items-center justify-between mb-4">
           <button
@@ -284,7 +287,7 @@ export default function SlotPicker({
 
             {/* Time Slots List */}
             {slotsForSelectedDate.length > 0 ? (
-              <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                 {slotsForSelectedDate.map((slot) => {
                   const isSlotSelected = selected === slot.start
                   const timeStr = format(parseISO(slot.start), 'h:mm a')

@@ -342,6 +342,10 @@ def public_recruiter_booking_page(request, booking_slug):
     Get recruiter's public booking page info and available meeting types.
     Meeting types shown are those the user has been granted access to (via allowed_users).
     Admins automatically have access to all meeting types.
+
+    Query parameters:
+    - onboarding: If provided ('client' or 'candidate'), filter to meeting types
+      marked for onboarding with the appropriate category (sales/recruitment).
     """
     profile = get_object_or_404(
         RecruiterProfile.objects.select_related('user'),
@@ -355,6 +359,16 @@ def public_recruiter_booking_page(request, booking_slug):
         meeting_types = MeetingType.objects.filter(is_active=True)
     else:
         meeting_types = MeetingType.objects.filter(allowed_users=user, is_active=True)
+
+    # Apply onboarding filter if requested
+    onboarding_type = request.query_params.get('onboarding')
+    if onboarding_type:
+        meeting_types = meeting_types.filter(use_for_onboarding=True)
+        if onboarding_type == 'client':
+            # Accept both 'sales' and 'onboarding' categories for client onboarding
+            meeting_types = meeting_types.filter(category__in=['sales', 'onboarding'])
+        elif onboarding_type == 'candidate':
+            meeting_types = meeting_types.filter(category='recruitment')
 
     return Response({
         'user': {
@@ -432,23 +446,35 @@ def public_meeting_type_availability(request, booking_slug, meeting_type_slug):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-def _handle_booking_assignment_and_stage(booking, meeting_type, organizer, candidate_profile=None, company=None, is_authenticated=False):
+def _handle_booking_assignment_and_stage(booking, meeting_type, organizer, candidate_profile=None, company=None, lead=None, is_authenticated=False):
     """
     Handle auto-assignment of organizer and onboarding stage changes.
     Called after a booking is created.
 
     Args:
+        candidate_profile: For RECRUITMENT meetings
+        company: For ONBOARDING meetings
+        lead: For LEADS meetings
         is_authenticated: Whether the booking was made by an authenticated user.
                          Used to determine which target stage to use.
     """
     from core.models import OnboardingHistory
 
-    entity = candidate_profile or company
-    if not entity:
+    # Determine entity and entity type based on what's provided
+    if lead:
+        entity = lead
+        expected_entity_type = 'lead'
+    elif candidate_profile:
+        entity = candidate_profile
+        expected_entity_type = 'candidate'
+    elif company:
+        entity = company
+        expected_entity_type = 'company'
+    else:
         return
 
-    # 1. Auto-assign the organizer to the candidate/company
-    if organizer not in entity.assigned_to.all():
+    # 1. Auto-assign the organizer to the entity
+    if hasattr(entity, 'assigned_to') and organizer not in entity.assigned_to.all():
         entity.assigned_to.add(organizer)
 
     # 2. Handle onboarding stage change if configured
@@ -462,7 +488,6 @@ def _handle_booking_assignment_and_stage(booking, meeting_type, organizer, candi
         return
 
     # Validate stage entity type matches
-    expected_entity_type = 'candidate' if candidate_profile else 'company'
     if target_stage.entity_type != expected_entity_type:
         return
 
@@ -488,7 +513,7 @@ def _handle_booking_assignment_and_stage(booking, meeting_type, organizer, candi
         # Record in OnboardingHistory
         OnboardingHistory.objects.create(
             entity_type=expected_entity_type,
-            entity_id=entity.id,
+            entity_id=str(entity.id),
             from_stage=old_stage,
             to_stage=target_stage,
             changed_by=None,  # System change
@@ -507,12 +532,16 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
     - Links to existing candidate profile if found
     - Creates CandidateInvitation if no user exists
 
-    For SALES meetings:
+    For ONBOARDING meetings:
     - Links to existing company user if found
     - Creates a pending CLIENT user if no user exists (for later invitation)
 
-    Both types:
-    - Auto-assigns the organizer to the candidate/company record
+    For LEADS meetings:
+    - Creates or finds a Lead record by email
+    - Updates lead's onboarding stage if configured
+
+    All types:
+    - Auto-assigns the organizer to the entity (candidate/company/lead)
     - Changes onboarding stage based on meeting type configuration
     """
     from .services.calendar_service import CalendarService
@@ -557,9 +586,11 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
     invitation_token = None
     candidate_profile = None
     company = None
+    lead = None
 
     is_recruitment = meeting_type.category == MeetingCategory.RECRUITMENT
-    is_sales = meeting_type.category == MeetingCategory.SALES
+    is_leads = meeting_type.category == MeetingCategory.LEADS
+    is_onboarding = meeting_type.category == MeetingCategory.ONBOARDING
 
     # Check if user is already authenticated (serializer links them)
     # or if attendee email matches an existing user
@@ -579,11 +610,24 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
             if candidate_profile:
                 booking.candidate_profile = candidate_profile
 
-        elif is_sales:
+        elif is_onboarding:
             if existing_user.role == UserRole.CLIENT:
                 company_membership = existing_user.company_memberships.first()
                 if company_membership:
                     company = company_membership.company
+
+        elif is_leads:
+            # For leads, try to find an existing lead by email
+            from companies.models import Lead
+            lead = Lead.objects.filter(email__iexact=attendee_email).first()
+            if not lead:
+                # Create a new lead
+                lead = Lead.objects.create(
+                    name=booking.attendee_name,
+                    email=attendee_email,
+                    phone=booking.attendee_phone or '',
+                    company_name=booking.attendee_company or '',
+                )
 
         booking.save(update_fields=['attendee_user', 'candidate_profile'])
 
@@ -664,8 +708,8 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
             except Exception as e:
                 print(f"Failed to send candidate invitation email: {e}")
 
-        elif is_sales:
-            # Create a pending CLIENT user for sales meetings
+        elif is_onboarding:
+            # Create a pending CLIENT user for onboarding meetings
             # This user will be linked when a CompanyInvitation is sent later
             name_parts = booking.attendee_name.split(' ', 1)
             first_name = name_parts[0]
@@ -687,6 +731,18 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
             booking.attendee_user = pending_user
             booking.save(update_fields=['attendee_user'])
 
+        elif is_leads:
+            # For leads meetings, create a Lead record
+            from companies.models import Lead
+            lead = Lead.objects.filter(email__iexact=attendee_email).first()
+            if not lead:
+                lead = Lead.objects.create(
+                    name=booking.attendee_name,
+                    email=attendee_email,
+                    phone=booking.attendee_phone or '',
+                    company_name=booking.attendee_company or '',
+                )
+
     # Handle assignment and stage changes
     # Pass is_authenticated to determine which target stage to use
     is_authenticated = request.user.is_authenticated
@@ -696,6 +752,7 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
         organizer=organizer,
         candidate_profile=candidate_profile,
         company=company,
+        lead=lead,
         is_authenticated=is_authenticated,
     )
 
@@ -747,6 +804,7 @@ def bookings_list(request):
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
     upcoming = request.query_params.get('upcoming')
+    attendee_email = request.query_params.get('attendee_email')
 
     # =========================================================================
     # 1. Get Booking objects
@@ -777,6 +835,8 @@ def bookings_list(request):
             scheduled_at__gte=timezone.now(),
             status=BookingStatus.CONFIRMED
         )
+    if attendee_email:
+        bookings = bookings.filter(attendee_email__iexact=attendee_email)
 
     # Add bookings to results
     booking_data = BookingSerializer(bookings, many=True).data

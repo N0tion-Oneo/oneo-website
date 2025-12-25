@@ -22,6 +22,7 @@ import {
   ApplicationsPage,
   AdminCompaniesPage,
   AdminCompanyEditPage,
+  LeadsPage,
   AdminCandidatesPage,
   AdminCandidateEditPage,
   CandidatesPage,
@@ -213,6 +214,7 @@ function App() {
           {/* Admin/Recruiter routes */}
           <Route path="admin/companies" element={<AdminCompaniesPage />} />
           <Route path="admin/companies/:companyId" element={<AdminCompanyEditPage />} />
+          <Route path="admin/leads" element={<LeadsPage />} />
           <Route path="admin/candidates" element={<AdminCandidatesPage />} />
           <Route path="admin/candidates/:slug" element={<AdminCandidateEditPage />} />
           <Route path="admin/jobs" element={<AdminJobsPage />} />

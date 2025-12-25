@@ -31,9 +31,28 @@ export {
 } from './useCompanies'
 export type { CompanyInvitation, InviteResult } from './useCompanies'
 
+// Lead hooks (prospecting)
+export {
+  useLeads,
+  useLead,
+  useCreateLead,
+  useUpdateLead,
+  useDeleteLead,
+  useUpdateLeadStage,
+} from './useLeads'
+export type {
+  Lead,
+  LeadDetail,
+  LeadOnboardingStage,
+  LeadAssignedTo,
+  CreateLeadInput,
+  UpdateLeadInput,
+  LeadFilters,
+} from './useLeads'
+
 // Client Invitation hooks
 export { useInvitations, useCreateInvitation, useCancelInvitation, useResendInvitation } from './useInvitations'
-export type { ClientInvitation, CreateInvitationResponse } from './useInvitations'
+export type { ClientInvitation, CreateInvitationResponse, CreateInvitationData } from './useInvitations'
 
 // Recruiter Invitation hooks
 export {

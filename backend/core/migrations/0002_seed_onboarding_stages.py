@@ -8,31 +8,42 @@ def seed_onboarding_stages(apps, schema_editor):
     """Seed initial onboarding stages for companies and candidates."""
     OnboardingStage = apps.get_model('core', 'OnboardingStage')
 
-    # Company stages
+    # Company stages - Full pipeline from prospecting to onboarded
+    # Prospecting stages (admin-driven)
+    # Onboarding stages (client-driven via wizard)
+    # Post-wizard stages (admin-driven)
     company_stages = [
-        ('Meeting Booked', '#3B82F6', False),      # Blue
-        ("T&C's Sent", '#8B5CF6', False),          # Purple
-        ("T&C's Signed", '#6366F1', False),        # Indigo
-        ('Profile Completed', '#10B981', False),    # Emerald
-        ('Billing Completed', '#14B8A6', False),    # Teal
-        ('Team Added', '#06B6D4', False),           # Cyan
-        ('Onboarded', '#22C55E', True),             # Green (terminal)
-        ('Not Onboarded', '#EF4444', True),         # Red (terminal)
+        # Prospecting
+        ('Lead', 'lead', '#9CA3AF', False),                           # Gray
+        ('Qualified', 'qualified', '#F59E0B', False),                 # Amber
+        ('Sales Meeting Booked', 'sales-meeting-booked', '#3B82F6', False),  # Blue
+        ('Invitation Sent', 'invitation-sent', '#8B5CF6', False),     # Purple
+        # Onboarding wizard steps
+        ('Onboarding: Contract', 'onboarding-contract', '#6366F1', False),   # Indigo
+        ('Onboarding: Profile', 'onboarding-profile', '#10B981', False),     # Emerald
+        ('Onboarding: Billing', 'onboarding-billing', '#14B8A6', False),     # Teal
+        ('Onboarding: Team', 'onboarding-team', '#06B6D4', False),           # Cyan
+        ('Onboarding: Call Booked', 'onboarding-call-booked', '#0EA5E9', False),  # Sky
+        # Post-wizard
+        ('Onboarding Call', 'onboarding-call', '#A855F7', False),     # Purple
+        ('Onboarded', 'onboarded', '#22C55E', True),                  # Green (terminal)
+        ('Not Onboarded', 'not-onboarded', '#EF4444', True),          # Red (terminal)
     ]
 
     # Candidate stages
     candidate_stages = [
-        ('Meeting Booked', '#3B82F6', False),      # Blue
-        ('Profile Review', '#8B5CF6', False),      # Purple
-        ('Onboarded', '#22C55E', True),            # Green (terminal)
-        ('Not Onboarded', '#EF4444', True),        # Red (terminal)
+        ('Lead', 'lead', '#9CA3AF', False),                    # Gray
+        ('Meeting Booked', 'meeting-booked', '#3B82F6', False),  # Blue
+        ('Profile Review', 'profile-review', '#8B5CF6', False),  # Purple
+        ('Onboarded', 'onboarded', '#22C55E', True),             # Green (terminal)
+        ('Not Onboarded', 'not-onboarded', '#EF4444', True),     # Red (terminal)
     ]
 
     # Create company stages
-    for i, (name, color, is_terminal) in enumerate(company_stages):
+    for i, (name, slug, color, is_terminal) in enumerate(company_stages):
         OnboardingStage.objects.create(
             name=name,
-            slug=slugify(name),
+            slug=slug,
             entity_type='company',
             order=i,
             color=color,
@@ -41,10 +52,10 @@ def seed_onboarding_stages(apps, schema_editor):
         )
 
     # Create candidate stages
-    for i, (name, color, is_terminal) in enumerate(candidate_stages):
+    for i, (name, slug, color, is_terminal) in enumerate(candidate_stages):
         OnboardingStage.objects.create(
             name=name,
-            slug=slugify(name),
+            slug=slug,
             entity_type='candidate',
             order=i,
             color=color,

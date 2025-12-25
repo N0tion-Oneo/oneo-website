@@ -372,7 +372,7 @@ class CandidateProfileUpdateSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             OnboardingHistory.objects.create(
                 entity_type='candidate',
-                entity_id=instance.id,
+                entity_id=str(instance.id),
                 from_stage=old_stage,
                 to_stage=new_stage,
                 changed_by=request.user if request else None,

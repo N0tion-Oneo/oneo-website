@@ -7,6 +7,7 @@ export { default as NewJobPage } from './NewJobPage';
 export { default as EditJobPage } from './EditJobPage';
 export { default as AdminCompaniesPage } from './AdminCompaniesPage';
 export { default as AdminCompanyEditPage } from './AdminCompanyEditPage';
+export { default as LeadsPage } from './LeadsPage';
 export { default as AdminCandidatesPage } from './AdminCandidatesPage';
 export { default as AdminCandidateEditPage } from './AdminCandidateEditPage';
 export { default as AdminApplicationsPage } from './AdminApplicationsPage';

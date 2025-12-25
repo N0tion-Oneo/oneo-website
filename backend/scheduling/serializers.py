@@ -138,6 +138,7 @@ class MeetingTypeSerializer(serializers.ModelSerializer):
             'custom_location',
             'is_active',
             'show_on_dashboard',
+            'use_for_onboarding',
             'requires_approval',
             'max_bookings_per_day',
             'confirmation_message',
@@ -190,6 +191,7 @@ class MeetingTypeCreateUpdateSerializer(serializers.ModelSerializer):
     custom_location = serializers.CharField(required=False, allow_blank=True)
     is_active = serializers.BooleanField(required=False)
     show_on_dashboard = serializers.BooleanField(required=False)
+    use_for_onboarding = serializers.BooleanField(required=False)
     requires_approval = serializers.BooleanField(required=False)
     max_bookings_per_day = serializers.IntegerField(required=False, allow_null=True)
     confirmation_message = serializers.CharField(required=False, allow_blank=True)
@@ -215,6 +217,7 @@ class MeetingTypeCreateUpdateSerializer(serializers.ModelSerializer):
             'custom_location',
             'is_active',
             'show_on_dashboard',
+            'use_for_onboarding',
             'requires_approval',
             'max_bookings_per_day',
             'confirmation_message',
@@ -258,7 +261,13 @@ class MeetingTypeCreateUpdateSerializer(serializers.ModelSerializer):
 
         # Validate that target_onboarding_stage matches meeting category
         category = data.get('category') or (self.instance.category if self.instance else None)
-        expected_entity_type = 'candidate' if category == MeetingCategory.RECRUITMENT else 'company'
+        # Map category to expected entity type
+        category_to_entity = {
+            MeetingCategory.LEADS: 'lead',
+            MeetingCategory.ONBOARDING: 'company',
+            MeetingCategory.RECRUITMENT: 'candidate',
+        }
+        expected_entity_type = category_to_entity.get(category, 'company')
 
         # Validate unauthenticated stage
         target_stage = data.get('target_onboarding_stage')

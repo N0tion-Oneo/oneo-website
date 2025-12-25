@@ -16,12 +16,13 @@ import {
   GripVertical,
   Building2,
   User,
+  Users,
   AlertCircle,
   CheckCircle,
   Flag,
 } from 'lucide-react'
 
-type TabType = 'company' | 'candidate'
+type TabType = 'lead' | 'company' | 'candidate'
 
 // Preset colors for stages
 const PRESET_COLORS = [
@@ -93,7 +94,7 @@ function EditModal({ isOpen, onClose, stage, entityType, onSave, isCreating }: E
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h3 className="text-lg font-semibold">
-            {isCreating ? 'Create' : 'Edit'} {entityType === 'company' ? 'Company' : 'Candidate'} Stage
+            {isCreating ? 'Create' : 'Edit'} {entityType === 'lead' ? 'Lead' : entityType === 'company' ? 'Company' : 'Candidate'} Stage
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
@@ -253,7 +254,12 @@ function DeleteConfirmModal({ isOpen, onClose, stage, onConfirm }: DeleteConfirm
 
 export default function OnboardingStagesSettingsPage() {
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState<TabType>('company')
+  const [activeTab, setActiveTab] = useState<TabType>('lead')
+
+  // Lead stages state
+  const [leadStages, setLeadStages] = useState<OnboardingStage[]>([])
+  const [leadLoading, setLeadLoading] = useState(true)
+  const [leadError, setLeadError] = useState('')
 
   // Company stages state
   const [companyStages, setCompanyStages] = useState<OnboardingStage[]>([])
@@ -282,6 +288,20 @@ export default function OnboardingStagesSettingsPage() {
         <p className="text-gray-500">You don't have permission to view this page.</p>
       </div>
     )
+  }
+
+  // Fetch lead stages
+  const fetchLeadStages = async () => {
+    setLeadLoading(true)
+    setLeadError('')
+    try {
+      const data = await getOnboardingStages({ entity_type: 'lead' })
+      setLeadStages(data)
+    } catch {
+      setLeadError('Failed to load lead stages')
+    } finally {
+      setLeadLoading(false)
+    }
   }
 
   // Fetch company stages
@@ -313,15 +333,16 @@ export default function OnboardingStagesSettingsPage() {
   }
 
   useEffect(() => {
+    fetchLeadStages()
     fetchCompanyStages()
     fetchCandidateStages()
   }, [])
 
-  const stages = activeTab === 'company' ? companyStages : candidateStages
-  const setStages = activeTab === 'company' ? setCompanyStages : setCandidateStages
-  const loading = activeTab === 'company' ? companyLoading : candidateLoading
-  const error = activeTab === 'company' ? companyError : candidateError
-  const fetchStages = activeTab === 'company' ? fetchCompanyStages : fetchCandidateStages
+  const stages = activeTab === 'lead' ? leadStages : activeTab === 'company' ? companyStages : candidateStages
+  const setStages = activeTab === 'lead' ? setLeadStages : activeTab === 'company' ? setCompanyStages : setCandidateStages
+  const loading = activeTab === 'lead' ? leadLoading : activeTab === 'company' ? companyLoading : candidateLoading
+  const error = activeTab === 'lead' ? leadError : activeTab === 'company' ? companyError : candidateError
+  const fetchStages = activeTab === 'lead' ? fetchLeadStages : activeTab === 'company' ? fetchCompanyStages : fetchCandidateStages
 
   // Handle create
   const handleCreate = () => {
@@ -413,12 +434,23 @@ export default function OnboardingStagesSettingsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Onboarding Stages</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Configure the onboarding workflow stages for companies and candidates.
+          Configure the pipeline stages for leads, companies, and candidates.
         </p>
       </div>
 
       {/* Tabs */}
       <div className="flex border-b mb-6">
+        <button
+          onClick={() => setActiveTab('lead')}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'lead'
+              ? 'border-gray-900 text-gray-900'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          Lead Stages
+        </button>
         <button
           onClick={() => setActiveTab('company')}
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${

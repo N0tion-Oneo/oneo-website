@@ -179,7 +179,8 @@ class BookingToken(models.Model):
 
 class MeetingCategory(models.TextChoices):
     """Categories for meeting types."""
-    SALES = 'sales', 'Sales'
+    LEADS = 'leads', 'Leads'
+    ONBOARDING = 'onboarding', 'Onboarding'
     RECRUITMENT = 'recruitment', 'Recruitment'
 
 
@@ -270,6 +271,10 @@ class MeetingType(models.Model):
     show_on_dashboard = models.BooleanField(
         default=False,
         help_text='Show this meeting type on candidate/company dashboards for booking with assigned contacts',
+    )
+    use_for_onboarding = models.BooleanField(
+        default=False,
+        help_text='Use this meeting type in the onboarding wizard (sales for clients, recruitment for candidates)',
     )
     requires_approval = models.BooleanField(
         default=False,

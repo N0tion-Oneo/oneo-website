@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Page, BlogPost, FAQ, FAQCategory,
-    GlossaryTerm, CaseStudy, ContactSubmission, NewsletterSubscriber
+    GlossaryTerm, CaseStudy, NewsletterSubscriber
 )
 
 
@@ -52,14 +52,6 @@ class CaseStudyAdmin(admin.ModelAdmin):
     list_filter = ['status', 'is_featured', 'industry']
     search_fields = ['title', 'client_name', 'excerpt']
     prepopulated_fields = {'slug': ('title',)}
-
-
-@admin.register(ContactSubmission)
-class ContactSubmissionAdmin(admin.ModelAdmin):
-    list_display = ['name', 'email', 'subject', 'is_read', 'is_replied', 'created_at']
-    list_filter = ['is_read', 'is_replied']
-    search_fields = ['name', 'email', 'subject', 'message']
-    readonly_fields = ['created_at']
 
 
 @admin.register(NewsletterSubscriber)

@@ -519,7 +519,7 @@ def list_invitations(request):
 
     invitations = ClientInvitation.objects.filter(
         created_by=request.user
-    ).order_by('-created_at')
+    ).select_related('lead', 'lead__onboarding_stage').order_by('-created_at')
 
     serializer = ClientInvitationListSerializer(invitations, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -542,7 +542,13 @@ def create_client_invitation(request):
     Only Admin or Recruiter users can create invitations.
     Returns a token that can be used for client signup.
     Invitation expires in 7 days.
+
+    If lead_id is provided, the invitation is linked to that lead
+    and the lead's stage is updated to "Invitation Sent".
     """
+    from companies.models import Lead
+    from core.models import OnboardingStage, OnboardingHistory, OnboardingEntityType
+
     # Only Admin or Recruiter can create invitations
     if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
         return Response(
@@ -552,11 +558,55 @@ def create_client_invitation(request):
 
     serializer = CreateClientInvitationSerializer(data=request.data)
     if serializer.is_valid():
+        data = serializer.validated_data
+
+        # Get lead if provided
+        lead = None
+        lead_id = data.get('lead_id')
+        if lead_id:
+            try:
+                lead = Lead.objects.get(id=lead_id)
+            except Lead.DoesNotExist:
+                return Response(
+                    {'error': 'Lead not found'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Create the invitation
         invitation = ClientInvitation.objects.create(
-            email=serializer.validated_data.get('email', ''),
+            email=data.get('email', '') or (lead.email if lead else ''),
             created_by=request.user,
-            expires_at=timezone.now() + timedelta(days=7)
+            expires_at=timezone.now() + timedelta(days=7),
+            lead=lead,
+            offered_service_type=data.get('offered_service_type'),
+            offered_monthly_retainer=data.get('offered_monthly_retainer'),
+            offered_placement_fee=data.get('offered_placement_fee'),
+            offered_csuite_placement_fee=data.get('offered_csuite_placement_fee'),
         )
+
+        # Update lead stage to "Invitation Sent" if linked
+        if lead:
+            try:
+                invitation_stage = OnboardingStage.objects.get(
+                    entity_type=OnboardingEntityType.COMPANY,
+                    slug='invitation-sent',
+                    is_active=True
+                )
+                old_stage = lead.onboarding_stage
+                # Only update if moving forward
+                if not old_stage or old_stage.order < invitation_stage.order:
+                    lead.onboarding_stage = invitation_stage
+                    lead.save(update_fields=['onboarding_stage', 'updated_at'])
+
+                    OnboardingHistory.objects.create(
+                        entity_type=OnboardingEntityType.LEAD,
+                        entity_id=str(lead.id),
+                        from_stage=old_stage,
+                        to_stage=invitation_stage,
+                        changed_by=request.user,
+                    )
+            except OnboardingStage.DoesNotExist:
+                logger.warning("Invitation Sent stage not found")
 
         # Build signup URL
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
@@ -636,13 +686,14 @@ def signup_with_invitation(request, token):
     Sign up as a new CLIENT user using an invitation token.
 
     Creates a new user with CLIENT role.
-    If user's email has a pending company invitation, auto-links them to that company.
+    If the invitation has a linked lead, marks the lead as converted.
+    Also checks for pending company invitations for team member access.
     Returns JWT tokens for immediate authentication.
     """
-    from companies.models import CompanyInvitation, InvitationStatus, CompanyUser
+    from companies.models import CompanyInvitation, InvitationStatus, CompanyUser, CompanyUserRole
 
     try:
-        invitation = ClientInvitation.objects.get(token=token)
+        invitation = ClientInvitation.objects.select_related('lead').get(token=token)
     except ClientInvitation.DoesNotExist:
         return Response(
             {'error': 'Invitation not found'},
@@ -665,13 +716,32 @@ def signup_with_invitation(request, token):
         invitation.used_by = user
         invitation.save()
 
-        # Check for pending company invitations for this email
+        company_data = None
+
+        # Mark lead as converted if linked
+        if invitation.lead:
+            from core.models import OnboardingStage
+            lead = invitation.lead
+            lead.converted_to_user = user
+            lead.converted_at = timezone.now()
+            # Move lead to "Won" stage
+            won_stage = OnboardingStage.objects.filter(
+                entity_type='lead',
+                slug='won',
+                is_active=True
+            ).first()
+            if won_stage:
+                lead.onboarding_stage = won_stage
+                lead.save(update_fields=['converted_to_user', 'converted_at', 'onboarding_stage', 'updated_at'])
+            else:
+                lead.save(update_fields=['converted_to_user', 'converted_at', 'updated_at'])
+
+        # Check for pending company invitations for this email (team member flow)
         company_invitation = CompanyInvitation.objects.filter(
             email__iexact=user.email,
             status=InvitationStatus.PENDING
         ).first()
 
-        company_data = None
         if company_invitation:
             # Create company membership
             CompanyUser.objects.create(

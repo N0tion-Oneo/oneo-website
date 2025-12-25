@@ -6,6 +6,18 @@ import type { RecruiterListItem } from '@/types'
 // Types
 // ============================================================================
 
+export interface ClientInvitationLead {
+  id: string
+  name: string
+  email: string
+  company_name: string
+  onboarding_stage?: {
+    id: number
+    name: string
+    slug: string
+  } | null
+}
+
 export interface ClientInvitation {
   id: number
   token: string
@@ -16,6 +28,8 @@ export interface ClientInvitation {
   is_valid: boolean
   is_expired: boolean
   signup_url: string
+  lead: ClientInvitationLead | null
+  offered_service_type: 'headhunting' | 'retained' | null
 }
 
 export interface CreateInvitationResponse {
@@ -71,8 +85,17 @@ export function useInvitations(): UseInvitationsReturn {
 // Create Invitation Hook
 // ============================================================================
 
+export interface CreateInvitationData {
+  email?: string
+  lead_id?: string
+  offered_service_type?: 'headhunting' | 'retained'
+  offered_monthly_retainer?: number
+  offered_placement_fee?: number
+  offered_csuite_placement_fee?: number
+}
+
 interface UseCreateInvitationReturn {
-  createInvitation: (email?: string) => Promise<CreateInvitationResponse>
+  createInvitation: (data?: CreateInvitationData) => Promise<CreateInvitationResponse>
   isCreating: boolean
   error: string | null
 }
@@ -81,12 +104,17 @@ export function useCreateInvitation(): UseCreateInvitationReturn {
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const createInvitation = useCallback(async (email?: string): Promise<CreateInvitationResponse> => {
+  const createInvitation = useCallback(async (data?: CreateInvitationData): Promise<CreateInvitationResponse> => {
     setIsCreating(true)
     setError(null)
     try {
       const response = await api.post<CreateInvitationResponse>('/auth/invitations/create/', {
-        email: email || '',
+        email: data?.email || '',
+        lead_id: data?.lead_id || null,
+        offered_service_type: data?.offered_service_type || null,
+        offered_monthly_retainer: data?.offered_monthly_retainer || null,
+        offered_placement_fee: data?.offered_placement_fee || null,
+        offered_csuite_placement_fee: data?.offered_csuite_placement_fee || null,
       })
       return response.data
     } catch (err) {

@@ -8,6 +8,7 @@ class ClientInvitation(models.Model):
     """
     Invitation for new users to sign up as CLIENT role.
     Created by Admin/Recruiter, used once by a new user.
+    Can be linked to a Lead for pipeline tracking.
     """
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     email = models.EmailField(blank=True, help_text="Optional - can pre-fill signup form")
@@ -26,6 +27,46 @@ class ClientInvitation(models.Model):
         null=True,
         blank=True,
         related_name='client_invitation_used'
+    )
+
+    # Link to Lead for pipeline tracking
+    lead = models.ForeignKey(
+        'companies.Lead',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='invitations',
+        help_text='Link to prospecting lead - updates lead stage when invitation is created/used'
+    )
+
+    # Contract offer fields (optional - set by admin when creating invitation)
+    offered_service_type = models.CharField(
+        max_length=20,
+        choices=[('headhunting', 'Headhunting'), ('retained', 'Retained')],
+        null=True,
+        blank=True,
+        help_text='Pre-configured service type for the contract offer'
+    )
+    offered_monthly_retainer = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Custom monthly retainer for the contract offer'
+    )
+    offered_placement_fee = models.DecimalField(
+        max_digits=5,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        help_text='Custom placement fee as decimal (e.g., 0.10 = 10%)'
+    )
+    offered_csuite_placement_fee = models.DecimalField(
+        max_digits=5,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        help_text='Custom C-Suite placement fee as decimal (e.g., 0.15 = 15%)'
     )
 
     class Meta:

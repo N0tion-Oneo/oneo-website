@@ -510,6 +510,7 @@ function MeetingTypeModal({
     custom_location: meetingType?.custom_location || '',
     is_active: meetingType?.is_active ?? true,
     show_on_dashboard: meetingType?.show_on_dashboard ?? false,
+    use_for_onboarding: meetingType?.use_for_onboarding ?? false,
     requires_approval: meetingType?.requires_approval || false,
     max_bookings_per_day: meetingType?.max_bookings_per_day || null,
     confirmation_message: meetingType?.confirmation_message || '',
@@ -529,7 +530,12 @@ function MeetingTypeModal({
   const { staffUsers, isLoading: loadingStaff } = useStaffUsers()
 
   // Fetch onboarding stages based on category
-  const entityType = formData.category === 'recruitment' ? 'candidate' : 'company'
+  const categoryToEntityType: Record<string, 'lead' | 'company' | 'candidate'> = {
+    leads: 'lead',
+    onboarding: 'company',
+    recruitment: 'candidate',
+  }
+  const entityType = categoryToEntityType[formData.category] || 'company'
   const { data: onboardingStages = [] } = useQuery({
     queryKey: ['onboarding-stages', entityType],
     queryFn: () => getOnboardingStages({ entity_type: entityType }),
@@ -623,7 +629,8 @@ function MeetingTypeModal({
                     onChange={handleChange}
                     className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                   >
-                    <option value="sales">Sales</option>
+                    <option value="leads">Leads</option>
+                    <option value="onboarding">Onboarding</option>
                     <option value="recruitment">Recruitment</option>
                   </select>
                 </div>
@@ -863,6 +870,21 @@ function MeetingTypeModal({
                         <span className="text-xs text-gray-700">Show on Dashboard</span>
                         <p className="text-[10px] text-gray-500">
                           Display on {formData.category === 'recruitment' ? 'candidate' : 'company'} dashboards
+                        </p>
+                      </div>
+                    </label>
+                    <label className="flex items-start gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="use_for_onboarding"
+                        checked={formData.use_for_onboarding}
+                        onChange={handleChange}
+                        className="w-3.5 h-3.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900 mt-0.5"
+                      />
+                      <div>
+                        <span className="text-xs text-gray-700">Use for Onboarding</span>
+                        <p className="text-[10px] text-gray-500">
+                          Show in {formData.category === 'recruitment' ? 'candidate' : 'client'} onboarding wizard
                         </p>
                       </div>
                     </label>
@@ -1209,7 +1231,8 @@ export default function BookingManagementPage() {
                 className="px-3 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
               >
                 <option value="">All Categories</option>
-                <option value="sales">Sales</option>
+                <option value="leads">Leads</option>
+                <option value="onboarding">Onboarding</option>
                 <option value="recruitment">Recruitment</option>
               </select>
             )}

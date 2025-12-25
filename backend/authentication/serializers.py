@@ -260,12 +260,42 @@ class VerifyEmailSerializer(serializers.Serializer):
 class CreateClientInvitationSerializer(serializers.Serializer):
     """
     Serializer for creating a client invitation.
+    Can optionally link to a Lead for pipeline tracking.
     """
     email = serializers.EmailField(required=False, allow_blank=True)
+    lead_id = serializers.UUIDField(
+        required=False,
+        allow_null=True,
+        help_text='Link to existing lead - updates lead stage to Invitation Sent'
+    )
+    # Contract offer fields
+    offered_service_type = serializers.ChoiceField(
+        choices=[('headhunting', 'Headhunting'), ('retained', 'Retained')],
+        required=False,
+        allow_null=True,
+    )
+    offered_monthly_retainer = serializers.DecimalField(
+        max_digits=12, decimal_places=2, required=False, allow_null=True
+    )
+    offered_placement_fee = serializers.DecimalField(
+        max_digits=5, decimal_places=4, required=False, allow_null=True
+    )
+    offered_csuite_placement_fee = serializers.DecimalField(
+        max_digits=5, decimal_places=4, required=False, allow_null=True
+    )
 
     def validate_email(self, value):
         if value:
             return value.lower()
+        return value
+
+    def validate_lead_id(self, value):
+        if value:
+            from companies.models import Lead
+            try:
+                Lead.objects.get(id=value)
+            except Lead.DoesNotExist:
+                raise serializers.ValidationError("Lead not found.")
         return value
 
 
@@ -287,6 +317,26 @@ class ValidateInvitationSerializer(serializers.Serializer):
     email = serializers.EmailField(allow_blank=True)
 
 
+class ClientInvitationLeadSerializer(serializers.Serializer):
+    """
+    Nested serializer for lead info in invitation list.
+    """
+    id = serializers.UUIDField()
+    name = serializers.CharField()
+    email = serializers.EmailField()
+    company_name = serializers.CharField()
+    onboarding_stage = serializers.SerializerMethodField()
+
+    def get_onboarding_stage(self, obj):
+        if obj.onboarding_stage:
+            return {
+                'id': obj.onboarding_stage.id,
+                'name': obj.onboarding_stage.name,
+                'slug': obj.onboarding_stage.slug,
+            }
+        return None
+
+
 class ClientInvitationListSerializer(serializers.Serializer):
     """
     Serializer for listing client invitations.
@@ -300,11 +350,18 @@ class ClientInvitationListSerializer(serializers.Serializer):
     is_valid = serializers.BooleanField()
     is_expired = serializers.BooleanField()
     signup_url = serializers.SerializerMethodField()
+    lead = serializers.SerializerMethodField()
+    offered_service_type = serializers.CharField(allow_null=True)
 
     def get_signup_url(self, obj):
         from django.conf import settings
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
         return f"{frontend_url}/signup/client/{obj.token}"
+
+    def get_lead(self, obj):
+        if obj.lead:
+            return ClientInvitationLeadSerializer(obj.lead).data
+        return None
 
 
 class ClientSignupSerializer(serializers.ModelSerializer):

@@ -25,6 +25,10 @@ from .serializers import (
     CompanyCreateSerializer,
     CountrySerializer,
     CitySerializer,
+    OnboardingStatusSerializer,
+    OnboardingProfileStepSerializer,
+    OnboardingBillingStepSerializer,
+    OnboardingContractStepSerializer,
 )
 from .permissions import (
     IsCompanyMember,
@@ -731,6 +735,356 @@ def create_company(request):
 
 
 # =============================================================================
+# Lead Management (Admin/Recruiter only)
+# =============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_leads(request):
+    """
+    List all leads with pagination.
+
+    Supports filtering by:
+    - stage: filter by onboarding stage ID
+    - source: filter by lead source
+    - assigned_to: filter by assigned user ID
+    - converted: 'true' or 'false' to filter by conversion status
+    - industry: filter by industry ID
+    - company_size: filter by company size
+    - created_after: filter by created date (YYYY-MM-DD)
+    - created_before: filter by created date (YYYY-MM-DD)
+    - search: search by name, email, or company_name
+    - ordering: sort field (prefix with - for descending)
+    - page: page number (default 1)
+    - page_size: results per page (default 20, max 100)
+    """
+    from .models import Lead
+    from .serializers import LeadListSerializer
+    from django.core.paginator import Paginator, EmptyPage
+
+    # Only Admin or Recruiter can view leads
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can view leads'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    leads = Lead.objects.select_related(
+        'onboarding_stage', 'industry'
+    ).prefetch_related('assigned_to').all()
+
+    # Apply filters
+    stage = request.query_params.get('stage')
+    if stage:
+        leads = leads.filter(onboarding_stage__id=stage)
+
+    source = request.query_params.get('source')
+    if source:
+        leads = leads.filter(source=source)
+
+    assigned_to_filter = request.query_params.get('assigned_to')
+    if assigned_to_filter:
+        leads = leads.filter(assigned_to__id=assigned_to_filter)
+
+    converted = request.query_params.get('converted')
+    if converted == 'true':
+        leads = leads.filter(converted_at__isnull=False)
+    elif converted == 'false':
+        leads = leads.filter(converted_at__isnull=True)
+
+    industry = request.query_params.get('industry')
+    if industry:
+        leads = leads.filter(industry__id=industry)
+
+    company_size = request.query_params.get('company_size')
+    if company_size:
+        leads = leads.filter(company_size=company_size)
+
+    created_after = request.query_params.get('created_after')
+    if created_after:
+        leads = leads.filter(created_at__date__gte=created_after)
+
+    created_before = request.query_params.get('created_before')
+    if created_before:
+        leads = leads.filter(created_at__date__lte=created_before)
+
+    search = request.query_params.get('search')
+    if search:
+        leads = leads.filter(
+            Q(name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(company_name__icontains=search)
+        )
+
+    # Ordering
+    ordering = request.query_params.get('ordering', '-created_at')
+    valid_orderings = ['created_at', '-created_at', 'name', '-name', 'company_name', '-company_name']
+    if ordering in valid_orderings:
+        leads = leads.order_by(ordering)
+    else:
+        leads = leads.order_by('-created_at')
+
+    # Pagination
+    page = int(request.query_params.get('page', 1))
+    page_size = min(int(request.query_params.get('page_size', 20)), 100)
+
+    paginator = Paginator(leads, page_size)
+    try:
+        page_obj = paginator.page(page)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    serializer = LeadListSerializer(page_obj.object_list, many=True)
+    return Response({
+        'results': serializer.data,
+        'count': paginator.count,
+        'page': page_obj.number,
+        'page_size': page_size,
+        'total_pages': paginator.num_pages,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_lead(request):
+    """
+    Create a new prospecting lead.
+
+    Sets the lead's onboarding_stage to "Lead" automatically.
+    """
+    from core.models import OnboardingStage, OnboardingHistory, OnboardingEntityType
+    from .models import Lead
+    from .serializers import LeadCreateSerializer, LeadDetailSerializer
+
+    # Only Admin or Recruiter can create leads
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can create leads'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    serializer = LeadCreateSerializer(data=request.data)
+    if serializer.is_valid():
+        # Get the "Lead" stage from the lead pipeline
+        try:
+            lead_stage = OnboardingStage.objects.get(
+                entity_type=OnboardingEntityType.LEAD,
+                slug='lead',
+                is_active=True
+            )
+        except OnboardingStage.DoesNotExist:
+            return Response(
+                {'error': 'Lead stage not configured. Please check onboarding stages settings.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # Create the lead with Lead stage
+        lead = serializer.save(
+            onboarding_stage=lead_stage,
+            created_by=request.user,
+        )
+
+        # Create history record
+        OnboardingHistory.objects.create(
+            entity_type=OnboardingEntityType.LEAD,
+            entity_id=str(lead.id),
+            from_stage=None,
+            to_stage=lead_stage,
+            changed_by=request.user,
+        )
+
+        return Response(
+            LeadDetailSerializer(lead).data,
+            status=status.HTTP_201_CREATED
+        )
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_lead(request, lead_id):
+    """Get a single lead by ID."""
+    from .models import Lead
+    from .serializers import LeadDetailSerializer
+
+    # Only Admin or Recruiter can view leads
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can view leads'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        lead = Lead.objects.select_related(
+            'onboarding_stage', 'industry',
+            'created_by', 'converted_to_company', 'converted_to_user'
+        ).prefetch_related('assigned_to', 'invitations').get(id=lead_id)
+    except Lead.DoesNotExist:
+        return Response({'error': 'Lead not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = LeadDetailSerializer(lead)
+    return Response(serializer.data)
+
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def update_lead(request, lead_id):
+    """Update a lead."""
+    from .models import Lead
+    from .serializers import LeadUpdateSerializer, LeadDetailSerializer
+
+    # Only Admin or Recruiter can update leads
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can update leads'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        lead = Lead.objects.get(id=lead_id)
+    except Lead.DoesNotExist:
+        return Response({'error': 'Lead not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    partial = request.method == 'PATCH'
+    serializer = LeadUpdateSerializer(lead, data=request.data, partial=partial)
+    if serializer.is_valid():
+        lead = serializer.save()
+        return Response(LeadDetailSerializer(lead).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_lead(request, lead_id):
+    """Delete a lead (only if not converted)."""
+    from .models import Lead
+
+    # Only Admin can delete leads
+    if request.user.role != UserRole.ADMIN:
+        return Response(
+            {'error': 'Only administrators can delete leads'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        lead = Lead.objects.get(id=lead_id)
+    except Lead.DoesNotExist:
+        return Response({'error': 'Lead not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if lead.is_converted:
+        return Response(
+            {'error': 'Cannot delete a converted lead'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    lead.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_lead_stage(request, lead_id):
+    """Update a lead's onboarding stage."""
+    from core.models import OnboardingStage, OnboardingEntityType
+    from .models import Lead, LeadActivity, LeadActivityType
+    from .serializers import LeadUpdateStageSerializer, LeadDetailSerializer
+
+    # Only Admin or Recruiter can update lead stages
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can update lead stages'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        lead = Lead.objects.select_related('onboarding_stage').get(id=lead_id)
+    except Lead.DoesNotExist:
+        return Response({'error': 'Lead not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = LeadUpdateStageSerializer(data=request.data)
+    if serializer.is_valid():
+        stage_id = serializer.validated_data['stage_id']
+
+        try:
+            new_stage = OnboardingStage.objects.get(
+                id=stage_id,
+                entity_type=OnboardingEntityType.LEAD,
+                is_active=True
+            )
+        except OnboardingStage.DoesNotExist:
+            return Response(
+                {'error': 'Invalid stage'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        old_stage = lead.onboarding_stage
+        if old_stage != new_stage:
+            lead.onboarding_stage = new_stage
+            lead.save(update_fields=['onboarding_stage', 'updated_at'])
+
+            # Create activity record for stage change
+            # (LeadActivity handles history for leads since OnboardingHistory uses integer IDs)
+            LeadActivity.objects.create(
+                lead=lead,
+                performed_by=request.user,
+                activity_type=LeadActivityType.STAGE_CHANGED,
+                previous_stage=old_stage,
+                new_stage=new_stage,
+            )
+
+        return Response(LeadDetailSerializer(lead).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def lead_activities(request, lead_id):
+    """
+    List or create activities for a lead.
+
+    GET: List all activities for a lead, ordered by most recent first.
+    POST: Create a new activity (note, call logged, email sent).
+    """
+    from .models import Lead, LeadActivity, LeadActivityType
+    from .serializers import LeadActivitySerializer, LeadActivityCreateSerializer
+
+    # Only Admin or Recruiter can access lead activities
+    if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
+        return Response(
+            {'error': 'Only administrators and recruiters can access lead activities'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        lead = Lead.objects.get(id=lead_id)
+    except Lead.DoesNotExist:
+        return Response({'error': 'Lead not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        activities = LeadActivity.objects.filter(lead=lead).select_related(
+            'performed_by', 'previous_stage', 'new_stage'
+        ).order_by('-created_at')
+
+        serializer = LeadActivitySerializer(activities, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = LeadActivityCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            activity = serializer.save(
+                lead=lead,
+                performed_by=request.user,
+            )
+            return Response(
+                LeadActivitySerializer(activity).data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# =============================================================================
 # Admin/Recruiter Endpoints (access to ALL companies)
 # =============================================================================
 
@@ -1084,3 +1438,532 @@ def shortlist_template_detail(request, template_id):
     elif request.method == 'DELETE':
         template.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# =============================================================================
+# Client Onboarding Wizard Endpoints
+# =============================================================================
+
+ONBOARDING_STEPS = ['contract', 'profile', 'billing', 'team', 'booking']
+REQUIRED_STEPS = ['contract', 'profile', 'billing', 'booking']
+
+# Map wizard steps to onboarding stage slugs
+STEP_TO_STAGE_SLUG = {
+    'contract': 'onboarding-contract',
+    'profile': 'onboarding-profile',
+    'billing': 'onboarding-billing',
+    'team': 'onboarding-team',
+    'booking': 'onboarding-call-booked',
+}
+
+
+def update_company_onboarding_stage(company, stage_slug, user=None):
+    """
+    Update a company's onboarding stage and create history record.
+
+    Args:
+        company: The Company instance to update
+        stage_slug: The slug of the target OnboardingStage
+        user: The user performing the action (for audit)
+    """
+    from core.models import OnboardingStage, OnboardingHistory, OnboardingEntityType
+
+    try:
+        new_stage = OnboardingStage.objects.get(
+            entity_type=OnboardingEntityType.COMPANY,
+            slug=stage_slug,
+            is_active=True
+        )
+    except OnboardingStage.DoesNotExist:
+        # Stage not found - skip update
+        return
+
+    old_stage = company.onboarding_stage
+
+    # Only update if moving forward (higher order) or no current stage
+    if old_stage and old_stage.order >= new_stage.order:
+        return
+
+    # Update the stage
+    company.onboarding_stage = new_stage
+    company.save(update_fields=['onboarding_stage'])
+
+    # Create history record
+    OnboardingHistory.objects.create(
+        entity_type=OnboardingEntityType.COMPANY,
+        entity_id=str(company.id),
+        from_stage=old_stage,
+        to_stage=new_stage,
+        changed_by=user,
+    )
+
+
+def get_onboarding_status_for_user(user):
+    """
+    Build onboarding status for a user.
+    Returns dict with is_complete, current_step, steps_completed, etc.
+    """
+    from authentication.models import ClientInvitation
+
+    # Get user's company
+    company = get_user_company(user)
+
+    # Check if onboarding is already complete
+    if company and company.onboarding_completed_at:
+        # Get inviter info even for completed onboarding
+        invitation = ClientInvitation.objects.select_related(
+            'created_by', 'created_by__recruiter_profile'
+        ).filter(used_by=user).first()
+
+        inviter_info = None
+        if invitation and invitation.created_by:
+            inviter = invitation.created_by
+            booking_slug = None
+            if hasattr(inviter, 'recruiter_profile') and inviter.recruiter_profile:
+                booking_slug = inviter.recruiter_profile.booking_slug
+            inviter_info = {
+                'id': inviter.id,
+                'name': inviter.full_name,
+                'email': inviter.email,
+                'booking_slug': booking_slug,
+            }
+
+        # Fallback: If no inviter or no booking_slug, find an admin with a booking slug
+        if not inviter_info or not inviter_info.get('booking_slug'):
+            from users.models import User, UserRole
+            admin_with_booking = User.objects.filter(
+                role=UserRole.ADMIN,
+                is_active=True,
+                recruiter_profile__booking_slug__isnull=False,
+            ).exclude(
+                recruiter_profile__booking_slug=''
+            ).select_related('recruiter_profile').first()
+
+            if admin_with_booking:
+                inviter_info = {
+                    'id': admin_with_booking.id,
+                    'name': admin_with_booking.full_name,
+                    'email': admin_with_booking.email,
+                    'booking_slug': admin_with_booking.recruiter_profile.booking_slug,
+                }
+
+        return {
+            'is_complete': True,
+            'current_step': None,
+            'steps_completed': company.onboarding_steps_completed or {},
+            'company_id': company.id if company else None,
+            'has_contract_offer': False,
+            'contract_offer': None,
+            'inviter': inviter_info,
+        }
+
+    # Get steps completed
+    steps_completed = {}
+    if company:
+        steps_completed = company.onboarding_steps_completed or {}
+
+    # Determine current step
+    current_step = None
+    for step in ONBOARDING_STEPS:
+        if not steps_completed.get(step):
+            current_step = step
+            break
+
+    # Check for contract offer from invitation
+    contract_offer = None
+    has_contract_offer = False
+
+    # Find the invitation used by this user
+    invitation = ClientInvitation.objects.select_related(
+        'created_by', 'created_by__recruiter_profile'
+    ).filter(used_by=user).first()
+
+    if invitation and invitation.offered_service_type:
+        has_contract_offer = True
+        contract_offer = {
+            'service_type': invitation.offered_service_type,
+            'monthly_retainer': invitation.offered_monthly_retainer,
+            'placement_fee': invitation.offered_placement_fee,
+            'csuite_placement_fee': invitation.offered_csuite_placement_fee,
+        }
+
+    # Get inviter's booking info for the booking step
+    inviter_info = None
+    if invitation and invitation.created_by:
+        inviter = invitation.created_by
+        booking_slug = None
+        if hasattr(inviter, 'recruiter_profile') and inviter.recruiter_profile:
+            booking_slug = inviter.recruiter_profile.booking_slug
+
+        inviter_info = {
+            'id': inviter.id,
+            'name': inviter.full_name,
+            'email': inviter.email,
+            'booking_slug': booking_slug,
+        }
+
+    # Fallback: If no inviter or no booking_slug, find an admin with a booking slug
+    if not inviter_info or not inviter_info.get('booking_slug'):
+        from users.models import User, UserRole
+        admin_with_booking = User.objects.filter(
+            role=UserRole.ADMIN,
+            is_active=True,
+            recruiter_profile__booking_slug__isnull=False,
+        ).exclude(
+            recruiter_profile__booking_slug=''
+        ).select_related('recruiter_profile').first()
+
+        if admin_with_booking:
+            inviter_info = {
+                'id': admin_with_booking.id,
+                'name': admin_with_booking.full_name,
+                'email': admin_with_booking.email,
+                'booking_slug': admin_with_booking.recruiter_profile.booking_slug,
+            }
+
+    # Onboarding is complete when ALL steps are done (including optional ones)
+    # or when explicitly marked complete via onboarding_completed_at
+    all_steps_done = all(steps_completed.get(step) for step in ONBOARDING_STEPS)
+
+    return {
+        'is_complete': all_steps_done,
+        'current_step': current_step,
+        'steps_completed': steps_completed,
+        'company_id': company.id if company else None,
+        'has_contract_offer': has_contract_offer,
+        'contract_offer': contract_offer,
+        'inviter': inviter_info,
+    }
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_onboarding_status(request):
+    """
+    Get the current user's onboarding status.
+    Returns completion state, current step, and contract offer if any.
+    """
+    if request.user.role != UserRole.CLIENT:
+        return Response(
+            {'error': 'Only client users have onboarding'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    status_data = get_onboarding_status_for_user(request.user)
+    return Response(status_data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def complete_onboarding_step(request, step):
+    """
+    Complete an onboarding step with the provided data.
+
+    Steps:
+    - profile: Company name, logo, description, industry
+    - billing: Legal name, VAT, billing address
+    - contract: Service type selection, T&C acceptance
+    - team: Invite team members (optional)
+    - job: Post first job (optional)
+    """
+    from subscriptions.models import Subscription, SubscriptionServiceType, SubscriptionStatus as SubStatus, CompanyPricing
+    from datetime import date
+    from dateutil.relativedelta import relativedelta
+    from authentication.models import ClientInvitation
+    from django.utils import timezone
+
+    if request.user.role != UserRole.CLIENT:
+        return Response(
+            {'error': 'Only client users have onboarding'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if step not in ONBOARDING_STEPS:
+        return Response(
+            {'error': f'Invalid step. Must be one of: {ONBOARDING_STEPS}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    company = get_user_company(request.user)
+
+    # Handle profile step (updates company created in contract step)
+    if step == 'profile':
+        if not company:
+            return Response(
+                {'error': 'Complete the contract step first'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = OnboardingProfileStepSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+
+        # Update existing company with profile data
+        if data.get('tagline'):
+            company.tagline = data['tagline']
+        if data.get('description'):
+            company.description = data['description']
+        if data.get('industry_id'):
+            company.industry_id = data['industry_id']
+        if data.get('company_size'):
+            company.company_size = data['company_size']
+
+        steps = company.onboarding_steps_completed or {}
+        steps['profile'] = True
+        company.onboarding_steps_completed = steps
+        company.save()
+
+        # Update onboarding stage
+        update_company_onboarding_stage(company, STEP_TO_STAGE_SLUG['profile'], request.user)
+
+        # Handle logo separately if provided
+        if 'logo' in request.FILES:
+            company.logo = request.FILES['logo']
+            company.save()
+
+    # Handle billing step
+    elif step == 'billing':
+        if not company:
+            return Response(
+                {'error': 'Complete the contract step first'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = OnboardingBillingStepSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+
+        # Update billing info
+        company.legal_name = data.get('legal_name', company.legal_name)
+        company.vat_number = data.get('vat_number', company.vat_number)
+        company.registration_number = data.get('registration_number', company.registration_number)
+        company.billing_address = data.get('billing_address', company.billing_address)
+        company.billing_city = data.get('billing_city', company.billing_city)
+        if data.get('billing_country_id'):
+            company.billing_country_id = data['billing_country_id']
+        company.billing_postal_code = data.get('billing_postal_code', company.billing_postal_code)
+        company.billing_contact_name = data.get('billing_contact_name', company.billing_contact_name)
+        company.billing_contact_email = data.get('billing_contact_email', company.billing_contact_email)
+        company.billing_contact_phone = data.get('billing_contact_phone', company.billing_contact_phone)
+
+        steps = company.onboarding_steps_completed or {}
+        steps['billing'] = True
+        company.onboarding_steps_completed = steps
+        company.save()
+
+        # Update onboarding stage
+        update_company_onboarding_stage(company, STEP_TO_STAGE_SLUG['billing'], request.user)
+
+    # Handle contract step (creates company if needed)
+    elif step == 'contract':
+        from core.models import OnboardingStage
+
+        serializer = OnboardingContractStepSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        service_type = data['service_type']
+        company_name = data['company_name']
+
+        # Create company if it doesn't exist
+        if not company:
+            # Get "Client SignUp" stage - initial stage when company is created
+            client_signup_stage = OnboardingStage.objects.filter(
+                entity_type='company',
+                slug='client-signup',
+                is_active=True
+            ).first()
+
+            company = Company.objects.create(
+                name=company_name,
+                service_type=service_type,
+                can_view_all_candidates=(service_type == ServiceType.RETAINED),
+                onboarding_steps_completed={'contract': True},
+                onboarding_stage=client_signup_stage,
+            )
+            # Make user a company admin
+            CompanyUser.objects.create(
+                user=request.user,
+                company=company,
+                role=CompanyUserRole.ADMIN,
+            )
+
+            # Link company back to lead if user signed up via lead invitation
+            invitation = ClientInvitation.objects.filter(used_by=request.user).select_related('lead').first()
+            if invitation and invitation.lead:
+                lead = invitation.lead
+                lead.converted_to_company = company
+                lead.save(update_fields=['converted_to_company', 'updated_at'])
+        else:
+            # Update existing company
+            company.name = company_name
+            company.service_type = service_type
+            company.can_view_all_candidates = (service_type == ServiceType.RETAINED)
+
+        # Create subscription
+        subscription_service_type = (
+            SubscriptionServiceType.RETAINED
+            if service_type == ServiceType.RETAINED
+            else SubscriptionServiceType.HEADHUNTING
+        )
+
+        today = date.today()
+        end_date = today + relativedelta(years=1)
+
+        # Check if subscription already exists
+        subscription = Subscription.objects.filter(
+            company=company,
+            service_type=subscription_service_type
+        ).first()
+
+        if not subscription:
+            subscription = Subscription.objects.create(
+                company=company,
+                service_type=subscription_service_type,
+                contract_start_date=today,
+                contract_end_date=end_date,
+                billing_day_of_month=today.day,
+                auto_renew=True,
+                status=SubStatus.ACTIVE,  # Active after T&C acceptance
+            )
+
+            # Create CompanyPricing with offered values if available
+            invitation = ClientInvitation.objects.filter(used_by=request.user).first()
+            pricing_data = {'company': company}
+            if invitation and invitation.offered_service_type:
+                if invitation.offered_monthly_retainer:
+                    pricing_data['monthly_retainer'] = invitation.offered_monthly_retainer
+                if invitation.offered_placement_fee:
+                    pricing_data['placement_fee'] = invitation.offered_placement_fee
+                if invitation.offered_csuite_placement_fee:
+                    pricing_data['csuite_placement_fee'] = invitation.offered_csuite_placement_fee
+
+            CompanyPricing.objects.get_or_create(company=company, defaults=pricing_data)
+
+        # Record terms acceptance
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip_address = x_forwarded_for.split(',')[0].strip()
+        else:
+            ip_address = request.META.get('REMOTE_ADDR')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+        TermsAcceptance.objects.create(
+            company=company,
+            accepted_by=request.user,
+            subscription=subscription,
+            document_slug=data['terms_document_slug'],
+            document_title=data.get('terms_document_title', ''),
+            document_version=data.get('terms_document_version', ''),
+            context=TermsAcceptanceContext.COMPANY_CREATION,
+            service_type=service_type,
+            ip_address=ip_address,
+            user_agent=user_agent[:1000] if user_agent else '',
+        )
+
+        steps = company.onboarding_steps_completed or {}
+        steps['contract'] = True
+        company.onboarding_steps_completed = steps
+        company.save()
+
+        # Update onboarding stage
+        update_company_onboarding_stage(company, STEP_TO_STAGE_SLUG['contract'], request.user)
+
+    # Handle team invite step (optional)
+    elif step == 'team':
+        if not company:
+            return Response(
+                {'error': 'Complete the contract step first'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Team invites are handled separately via the invite endpoint
+        # Just mark step as complete
+        steps = company.onboarding_steps_completed or {}
+        steps['team'] = True
+        company.onboarding_steps_completed = steps
+        company.save()
+
+        # Update onboarding stage
+        update_company_onboarding_stage(company, STEP_TO_STAGE_SLUG['team'], request.user)
+
+    # Handle booking step
+    elif step == 'booking':
+        if not company:
+            return Response(
+                {'error': 'Complete the contract step first'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Booking is done externally via the recruiter's booking page
+        # Just mark step as complete
+        steps = company.onboarding_steps_completed or {}
+        steps['booking'] = True
+        company.onboarding_steps_completed = steps
+        company.save()
+
+        # Update onboarding stage
+        update_company_onboarding_stage(company, STEP_TO_STAGE_SLUG['booking'], request.user)
+
+    # Check if all required steps are complete
+    if company:
+        steps = company.onboarding_steps_completed or {}
+        if all(steps.get(s) for s in REQUIRED_STEPS):
+            company.onboarding_completed_at = timezone.now()
+            company.save()
+
+    # Return updated status
+    status_data = get_onboarding_status_for_user(request.user)
+    return Response(status_data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def skip_onboarding_step(request, step):
+    """
+    Skip an optional onboarding step.
+    Only the team step can be skipped.
+    """
+    from django.utils import timezone
+
+    if request.user.role != UserRole.CLIENT:
+        return Response(
+            {'error': 'Only client users have onboarding'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    optional_steps = ['team']
+    if step not in optional_steps:
+        return Response(
+            {'error': f'Only optional steps can be skipped: {optional_steps}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    company = get_user_company(request.user)
+    if not company:
+        return Response(
+            {'error': 'Complete the contract step first'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    steps = company.onboarding_steps_completed or {}
+    steps[step] = True
+    company.onboarding_steps_completed = steps
+
+    # Check if all required steps are complete
+    if all(steps.get(s) for s in REQUIRED_STEPS):
+        company.onboarding_completed_at = timezone.now()
+
+    company.save()
+
+    # Update onboarding stage
+    if step in STEP_TO_STAGE_SLUG:
+        update_company_onboarding_stage(company, STEP_TO_STAGE_SLUG[step], request.user)
+
+    status_data = get_onboarding_status_for_user(request.user)
+    return Response(status_data)

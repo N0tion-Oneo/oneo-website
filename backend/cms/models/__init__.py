@@ -6,7 +6,7 @@ from .blog import BlogPost
 from .faqs import FAQ, FAQCategory
 from .glossary import GlossaryTerm
 from .case_studies import CaseStudy
-from .submissions import ContactSubmission, NewsletterSubscriber
+from .submissions import NewsletterSubscriber
 from .site_settings import SiteSettings
 from .seo import Redirect, RedirectType, RobotsTxt, MetaTagDefaults, PageSEO
 from .pricing import PricingConfig, PricingFeature, FeatureCategory
@@ -25,7 +25,6 @@ __all__ = [
     'GlossaryTerm',
     'CaseStudy',
     # Submission models
-    'ContactSubmission',
     'NewsletterSubscriber',
     # Settings
     'SiteSettings',

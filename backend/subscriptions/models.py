@@ -28,6 +28,7 @@ class TimestampedModel(models.Model):
 
 
 class SubscriptionStatus(models.TextChoices):
+    PENDING_APPROVAL = 'pending_approval', 'Pending Approval'
     ACTIVE = 'active', 'Active'
     PAUSED = 'paused', 'Paused'
     TERMINATED = 'terminated', 'Terminated'

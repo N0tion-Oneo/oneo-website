@@ -33,9 +33,6 @@ from .case_studies import (
     CaseStudyPublicSerializer,
 )
 from .submissions import (
-    ContactSubmissionSerializer,
-    ContactSubmissionCreateSerializer,
-    ContactSubmissionUpdateSerializer,
     NewsletterSubscriberSerializer,
     NewsletterSubscribeSerializer,
 )
@@ -94,10 +91,7 @@ __all__ = [
     'CaseStudyDetailSerializer',
     'CaseStudyCreateUpdateSerializer',
     'CaseStudyPublicSerializer',
-    # Submissions
-    'ContactSubmissionSerializer',
-    'ContactSubmissionCreateSerializer',
-    'ContactSubmissionUpdateSerializer',
+    # Submissions (newsletter only - contact form uses Lead model)
     'NewsletterSubscriberSerializer',
     'NewsletterSubscribeSerializer',
     # Site Settings

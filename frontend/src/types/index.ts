@@ -2168,12 +2168,14 @@ export interface RecruiterProfileUpdate {
 // ============================================================================
 
 export enum RecruiterMeetingCategory {
-  SALES = 'sales',
+  LEADS = 'leads',
+  ONBOARDING = 'onboarding',
   RECRUITMENT = 'recruitment',
 }
 
 export const RecruiterMeetingCategoryLabels: Record<RecruiterMeetingCategory, string> = {
-  [RecruiterMeetingCategory.SALES]: 'Sales',
+  [RecruiterMeetingCategory.LEADS]: 'Leads',
+  [RecruiterMeetingCategory.ONBOARDING]: 'Onboarding',
   [RecruiterMeetingCategory.RECRUITMENT]: 'Recruitment',
 }
 
@@ -2236,6 +2238,7 @@ export interface RecruiterMeetingType {
   custom_location: string
   is_active: boolean
   show_on_dashboard: boolean
+  use_for_onboarding: boolean
   requires_approval: boolean
   max_bookings_per_day: number | null
   confirmation_message: string
@@ -2274,6 +2277,7 @@ export interface RecruiterMeetingTypeInput {
   custom_location?: string
   is_active?: boolean
   show_on_dashboard?: boolean
+  use_for_onboarding?: boolean
   requires_approval?: boolean
   max_bookings_per_day?: number | null
   confirmation_message?: string
@@ -2418,7 +2422,7 @@ export interface CandidateInvitation {
 // Onboarding Stages
 // ============================================================================
 
-export type OnboardingEntityType = 'company' | 'candidate'
+export type OnboardingEntityType = 'lead' | 'company' | 'candidate'
 
 export interface OnboardingStage {
   id: number

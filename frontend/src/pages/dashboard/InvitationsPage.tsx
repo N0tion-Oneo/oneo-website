@@ -1,16 +1,26 @@
 import { useState } from 'react'
-import { useInvitations, useCreateInvitation, useCancelInvitation, useResendInvitation } from '@/hooks'
-import type { ClientInvitation } from '@/hooks'
-import { Mail, Link2, Copy, Check, Clock, AlertCircle, UserPlus, CheckCircle, Trash2, RefreshCw, X, AlertTriangle } from 'lucide-react'
+import { useInvitations, useCreateInvitation, useCancelInvitation, useResendInvitation, useLeads } from '@/hooks'
+import type { ClientInvitation, CreateInvitationData } from '@/hooks'
+import { Mail, Link2, Copy, Check, Clock, AlertCircle, UserPlus, CheckCircle, Trash2, RefreshCw, X, AlertTriangle, User, ChevronDown, FileText } from 'lucide-react'
 
 export default function InvitationsPage() {
   const { invitations, isLoading, error, refetch } = useInvitations()
   const { createInvitation, isCreating, error: createError } = useCreateInvitation()
   const { cancelInvitation, isCancelling, error: cancelError } = useCancelInvitation()
   const { resendInvitation, isResending, error: resendError } = useResendInvitation()
+  // Get unconverted leads only
+  const { leads, isLoading: isLoadingLeads } = useLeads({ converted: 'false' })
 
   const [email, setEmail] = useState('')
+  const [selectedLeadId, setSelectedLeadId] = useState<string>('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  // Pre-negotiated terms state
+  const [showContractOffer, setShowContractOffer] = useState(false)
+  const [serviceType, setServiceType] = useState<'headhunting' | 'retained' | ''>('')
+  const [monthlyRetainer, setMonthlyRetainer] = useState('')
+  const [placementFee, setPlacementFee] = useState('')
+  const [csuitePlacementFee, setCsuitePlacementFee] = useState('')
   const [newInvitation, setNewInvitation] = useState<{
     signup_url: string
     email: string
@@ -23,9 +33,38 @@ export default function InvitationsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const result = await createInvitation(email || undefined)
+      const data: CreateInvitationData = {}
+      if (email) data.email = email
+      if (selectedLeadId) data.lead_id = selectedLeadId
+
+      // Include contract offer terms if provided
+      if (serviceType) {
+        data.offered_service_type = serviceType
+      }
+      if (monthlyRetainer) {
+        data.offered_monthly_retainer = parseFloat(monthlyRetainer)
+      }
+      if (placementFee) {
+        // Convert percentage to decimal (e.g., 20% -> 0.20)
+        data.offered_placement_fee = parseFloat(placementFee) / 100
+      }
+      if (csuitePlacementFee) {
+        // Convert percentage to decimal (e.g., 25% -> 0.25)
+        data.offered_csuite_placement_fee = parseFloat(csuitePlacementFee) / 100
+      }
+
+      const result = await createInvitation(data)
       setNewInvitation({ signup_url: result.signup_url, email: result.email })
+
+      // Reset form
       setEmail('')
+      setSelectedLeadId('')
+      setShowContractOffer(false)
+      setServiceType('')
+      setMonthlyRetainer('')
+      setPlacementFee('')
+      setCsuitePlacementFee('')
+
       refetch()
     } catch {
       // Error is handled by the hook
@@ -118,24 +157,184 @@ export default function InvitationsPage() {
               Generate a unique signup link for a new client. They'll be able to create their account and company profile.
             </p>
 
-            <form onSubmit={handleCreate} className="mt-4">
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email address (optional)"
-                    className="w-full h-10 px-3 text-[14px] border border-gray-300 rounded-md bg-white focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
-                  />
-                  <p className="text-[12px] text-gray-500 mt-1">
-                    If provided, the email will be pre-filled on the signup form
-                  </p>
+            <form onSubmit={handleCreate} className="mt-4 space-y-4">
+              {/* Lead selector */}
+              <div>
+                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  Link to Lead
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedLeadId}
+                    onChange={(e) => setSelectedLeadId(e.target.value)}
+                    disabled={isLoadingLeads}
+                    className="w-full h-10 px-3 pr-8 text-[14px] border border-gray-300 rounded-md bg-white focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors appearance-none cursor-pointer"
+                  >
+                    <option value="">No lead (skip prospecting stages)</option>
+                    {leads.map((lead) => (
+                      <option key={lead.id} value={lead.id}>
+                        {lead.name} at {lead.company_name} ({lead.onboarding_stage?.name || 'Lead'})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
+                <p className="text-[12px] text-gray-500 mt-1">
+                  Link this invitation to a prospecting lead. The lead's stage will update to "Invitation Sent".
+                </p>
+              </div>
+
+              {/* Email input */}
+              <div>
+                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email address (optional)"
+                  className="w-full h-10 px-3 text-[14px] border border-gray-300 rounded-md bg-white focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+                />
+                <p className="text-[12px] text-gray-500 mt-1">
+                  If provided, the email will be pre-filled on the signup form
+                </p>
+              </div>
+
+              {/* Contract Offer Toggle */}
+              <div className="border-t border-gray-200 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowContractOffer(!showContractOffer)}
+                  className="flex items-center gap-2 text-[14px] font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  Pre-negotiated Contract Terms
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showContractOffer ? 'rotate-180' : ''}`} />
+                </button>
+                <p className="text-[12px] text-gray-500 mt-1">
+                  Optionally include pre-agreed pricing that will be shown during client onboarding
+                </p>
+
+                {showContractOffer && (
+                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-4">
+                    {/* Service Type */}
+                    <div>
+                      <label className="block text-[13px] font-medium text-gray-700 mb-2">
+                        Service Type
+                      </label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="serviceType"
+                            value="headhunting"
+                            checked={serviceType === 'headhunting'}
+                            onChange={(e) => setServiceType(e.target.value as 'headhunting')}
+                            className="w-4 h-4 text-gray-900 border-gray-300 focus:ring-gray-900"
+                          />
+                          <span className="text-[14px] text-gray-700">Headhunting</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="serviceType"
+                            value="retained"
+                            checked={serviceType === 'retained'}
+                            onChange={(e) => setServiceType(e.target.value as 'retained')}
+                            className="w-4 h-4 text-gray-900 border-gray-300 focus:ring-gray-900"
+                          />
+                          <span className="text-[14px] text-gray-700">Retained</span>
+                        </label>
+                        {serviceType && (
+                          <button
+                            type="button"
+                            onClick={() => setServiceType('')}
+                            className="text-[13px] text-gray-500 hover:text-gray-700"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Pricing Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Monthly Retainer - only show for retained */}
+                      {serviceType === 'retained' && (
+                        <div>
+                          <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                            Monthly Retainer
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[14px] text-gray-500">R</span>
+                            <input
+                              type="number"
+                              value={monthlyRetainer}
+                              onChange={(e) => setMonthlyRetainer(e.target.value)}
+                              placeholder="0"
+                              min="0"
+                              step="1"
+                              className="w-full h-10 pl-7 pr-3 text-[14px] border border-gray-300 rounded-md bg-white focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Placement Fee */}
+                      <div>
+                        <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                          Placement Fee
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={placementFee}
+                            onChange={(e) => setPlacementFee(e.target.value)}
+                            placeholder="20"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            className="w-full h-10 px-3 pr-8 text-[14px] border border-gray-300 rounded-md bg-white focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-gray-500">%</span>
+                        </div>
+                      </div>
+
+                      {/* C-Suite Placement Fee */}
+                      <div>
+                        <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                          C-Suite Placement Fee
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={csuitePlacementFee}
+                            onChange={(e) => setCsuitePlacementFee(e.target.value)}
+                            placeholder="25"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            className="w-full h-10 px-3 pr-8 text-[14px] border border-gray-300 rounded-md bg-white focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-gray-500">%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-[12px] text-gray-500">
+                      These terms will be displayed as "Custom Pricing" during the client's onboarding contract step.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Create button */}
+              <div className="flex justify-end pt-2">
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="h-10 px-4 bg-gray-900 text-white text-[14px] font-medium rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="h-10 px-6 bg-gray-900 text-white text-[14px] font-medium rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isCreating ? 'Creating...' : 'Create Invitation'}
                 </button>
@@ -226,7 +425,7 @@ export default function InvitationsPage() {
               <div key={invitation.id} className="px-6 py-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {invitation.email ? (
                         <span className="text-[14px] font-medium text-gray-900">
                           {invitation.email}
@@ -237,7 +436,26 @@ export default function InvitationsPage() {
                         </span>
                       )}
                       {getStatusBadge(invitation)}
+                      {invitation.offered_service_type && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-purple-100 text-purple-700">
+                          <FileText className="w-3 h-3" />
+                          {invitation.offered_service_type === 'retained' ? 'Retained' : 'Headhunting'}
+                        </span>
+                      )}
                     </div>
+                    {invitation.lead && (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <User className="w-3.5 h-3.5 text-gray-400" />
+                        <span className="text-[13px] text-gray-700">
+                          {invitation.lead.name} at {invitation.lead.company_name}
+                        </span>
+                        {invitation.lead.onboarding_stage && (
+                          <span className="text-[11px] text-gray-400">
+                            ({invitation.lead.onboarding_stage.name})
+                          </span>
+                        )}
+                      </div>
+                    )}
                     <div className="flex items-center gap-4 mt-1 text-[12px] text-gray-500">
                       <span>Created: {formatDate(invitation.created_at)}</span>
                       <span>Expires: {formatDate(invitation.expires_at)}</span>

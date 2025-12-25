@@ -387,7 +387,7 @@ export interface CMSCaseStudyListItem {
 }
 
 // ============================================================================
-// Contact Submission
+// Contact Submission (now backed by Lead model with source='inbound')
 // ============================================================================
 
 export interface CMSContactSubmission {
@@ -395,14 +395,35 @@ export interface CMSContactSubmission {
   name: string
   email: string
   phone: string
-  company: string
-  subject: string
-  message: string
+  job_title: string
+  company_name: string
+  company_website: string
+  company_size: string
+  industry_name: string | null
+  onboarding_stage: {
+    id: number
+    name: string
+    slug: string
+    color: string
+    order: number
+  } | null
+  source: string
+  source_detail: string
   source_page: string
+  subject: string
   is_read: boolean
   is_replied: boolean
   notes: string
+  assigned_to: {
+    id: string
+    name: string
+    email: string
+    avatar: string | null
+  } | null
+  is_converted: boolean
+  converted_at: string | null
   created_at: string
+  updated_at: string
 }
 
 export interface CMSContactSubmissionInput {

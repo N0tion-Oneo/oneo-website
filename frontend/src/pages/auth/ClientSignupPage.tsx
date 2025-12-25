@@ -111,7 +111,7 @@ export default function ClientSignupPage() {
         updateUser(response.data.user)
       }
 
-      navigate('/dashboard/company', { replace: true })
+      navigate('/dashboard', { replace: true })
     } catch (error) {
       const axiosError = error as AxiosError<Record<string, string | string[]>>
       if (axiosError.response?.data) {

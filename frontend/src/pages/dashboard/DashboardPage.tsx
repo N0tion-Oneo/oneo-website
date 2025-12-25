@@ -1,14 +1,31 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyProfile, useMyCompany } from '@/hooks';
 import SchedulingCard from '@/components/booking/SchedulingCard';
 import RecruiterDashboard from '@/components/dashboard/RecruiterDashboard';
 import ClientDashboard from '@/components/dashboard/ClientDashboard';
 import { DashboardFeedWidget } from '@/components/feed';
+import { OnboardingWizard } from '@/components/onboarding';
 import { UserRole } from '@/types';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Preview mode for admins: ?preview-onboarding=true
+  const previewOnboarding = searchParams.get('preview-onboarding') === 'true';
+
+  if (previewOnboarding) {
+    return (
+      <OnboardingWizard
+        previewMode
+        onComplete={() => {
+          searchParams.delete('preview-onboarding');
+          setSearchParams(searchParams);
+        }}
+      />
+    );
+  }
 
   // Check if user is admin or recruiter - show RecruiterDashboard
   const isAdminOrRecruiter = user?.role === UserRole.ADMIN || user?.role === UserRole.RECRUITER;

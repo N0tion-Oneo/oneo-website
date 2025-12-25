@@ -1,32 +1,10 @@
-"""Serializers for ContactSubmission and NewsletterSubscriber models."""
+"""Serializers for NewsletterSubscriber model.
+
+Note: Contact form submissions now use the Lead model (companies app).
+See companies.serializers.ContactFormSerializer for the public form.
+"""
 from rest_framework import serializers
-from ..models import ContactSubmission, NewsletterSubscriber
-
-
-class ContactSubmissionSerializer(serializers.ModelSerializer):
-    """Full serializer for contact submissions (admin view)."""
-    class Meta:
-        model = ContactSubmission
-        fields = [
-            'id', 'name', 'email', 'phone', 'company',
-            'subject', 'message', 'source_page',
-            'is_read', 'is_replied', 'notes', 'created_at',
-        ]
-        read_only_fields = ['id', 'created_at']
-
-
-class ContactSubmissionCreateSerializer(serializers.ModelSerializer):
-    """Serializer for creating contact submissions (public form)."""
-    class Meta:
-        model = ContactSubmission
-        fields = ['name', 'email', 'phone', 'company', 'subject', 'message', 'source_page']
-
-
-class ContactSubmissionUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for updating contact submission status (admin)."""
-    class Meta:
-        model = ContactSubmission
-        fields = ['is_read', 'is_replied', 'notes']
+from ..models import NewsletterSubscriber
 
 
 class NewsletterSubscriberSerializer(serializers.ModelSerializer):
