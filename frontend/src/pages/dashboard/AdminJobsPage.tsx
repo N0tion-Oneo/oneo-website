@@ -67,7 +67,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
   })
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
-  const [showFilters, setShowFilters] = useState(true)
+  const [showFilters, setShowFilters] = useState(false)
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [openActionsMenu, setOpenActionsMenu] = useState<string | null>(null)

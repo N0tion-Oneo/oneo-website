@@ -238,49 +238,157 @@ This file tracks all changes made by the AI assistant to the project.
 
 ---
 
-## 2025-12-11 - Git Push: HomePage Updates
+## 2025-12-11 - Git Push: Xero Integration and Subscription Enhancements
 
 **Time**: Current session
-**Description**: Committed and pushed HomePage component updates to GitHub
-**Reason**: User requested to push latest updates to GitHub
+**Description**: Committed and pushed Xero integration, Gmail backend, subscription enhancements, and various updates to GitHub
+**Reason**: User requested to push latest changes to GitHub
 **Affected Files**:
-- `frontend/src/pages/home/HomePage.tsx` - 1 file changed (23 insertions, 21 deletions)
+- 72 files changed (7,078 insertions, 908 deletions)
+**Backend Changes**:
+- `backend/integrations/` - New integrations module with Xero service
+- `backend/config/gmail_backend.py` - Gmail backend configuration
+- `backend/companies/` - Updates to models, serializers, views, and migrations
+- `backend/subscriptions/` - Enhanced subscription models, serializers, views, and migrations
+- `backend/notifications/` - Updated notification service and migrations
+- `backend/jobs/` - Job migrations for seniority and column cleanup
+**Frontend Changes**:
+- `frontend/src/components/settings/XeroIntegration.tsx` - Xero integration component
+- `frontend/src/components/subscription/` - New subscription components (SubscriptionBlockedOverlay)
+- `frontend/src/components/subscriptions/` - Enhanced subscription components (NoServiceType, QuickStats, RetainedContractSection, ServiceTypeBadge, ServiceTypeHeader)
+- `frontend/src/components/notifications/NotificationsDrawer.tsx` - New notifications drawer
+- `frontend/src/contexts/SubscriptionContext.tsx` - Subscription context
+- `frontend/src/hooks/useXeroIntegration.ts` - Xero integration hook
+- `frontend/src/pages/dashboard/settings/IntegrationsPage.tsx` - Integrations settings page
+- `frontend/src/pages/settings/XeroOAuthCallback.tsx` - Xero OAuth callback page
+- Updates to various components and pages across the application
 **Changes**:
 - Staged all changes with `git add -A`
-- Committed changes with message: "Update HomePage component"
-- Pushed commit (20764ee) to origin/main branch
-- Updated HomePage component with latest changes
+- Committed changes with message: "Add Xero integration, Gmail backend, subscription enhancements, and various updates"
+- Pushed commit (e2e951a) to origin/main branch
+- Added Xero integration module with OAuth flow
+- Added Gmail backend configuration
+- Enhanced subscription system with service type support
+- Added notifications drawer component
+- Added various subscription UI components
+- Updated company, job, and notification functionality
 
 ---
+
+## 2025-12-11 - Git Push: Notification Service and Applications Updates
+
+**Time**: Current session
+**Description**: Committed and pushed updates to notification service and applications pages to GitHub
+**Reason**: User requested to push latest changes to GitHub
+**Affected Files**:
+- `AI_CHANGE_LOG.md` - Updated with recent changes
+- `backend/notifications/services/notification_service.py` - Modified
+- `frontend/src/pages/dashboard/AdminApplicationsPage.tsx` - Modified
+- `frontend/src/pages/dashboard/ApplicationsPage.tsx` - Modified
+**Changes**:
+- Staged all changes with `git add -A`
+- Committed changes with message: "Update notification service, applications pages, and change log"
+- Pushed commit (e00eaae) to origin/main branch
+- 4 files changed (91 insertions, 9 deletions)
+- Updated notification service functionality
+- Updated admin and regular applications pages
+
+---
+
+## 2025-12-11 - Git Push: Candidates, CMS Pricing, and Subscriptions Updates
+
+**Time**: Current session
+**Description**: Committed and pushed updates to candidates, CMS pricing, subscriptions utils, and various views to GitHub
+**Reason**: User requested to push latest changes to GitHub
+**Affected Files**:
+- 15 files changed (441 insertions, 46 deletions)
+**Backend Changes**:
+- `backend/candidates/views.py` - Modified
+- `backend/cms/models/pricing.py` - Modified
+- `backend/cms/serializers/pricing.py` - Modified
+- `backend/cms/migrations/0017_add_slug_to_pricingfeature.py` - New migration
+- `backend/companies/views.py` - Modified
+- `backend/feed/views.py` - Modified
+- `backend/subscriptions/utils.py` - New utility file
+**Frontend Changes**:
+- `frontend/src/hooks/useCompanyFeatures.ts` - Modified
+- `frontend/src/pages/candidates/CandidateProfilePage.tsx` - Modified
+- `frontend/src/pages/candidates/CandidatesDirectoryPage.tsx` - Modified
+- `frontend/src/pages/dashboard/AdminCandidatesPage.tsx` - Modified
+- `frontend/src/pages/dashboard/FeedPage.tsx` - Modified
+- `frontend/src/pages/dashboard/cms/CMSPricingPage.tsx` - Modified
+- `frontend/src/services/cms.ts` - Modified
+**Changes**:
+- Staged all changes with `git add -A`
+- Committed changes with message: "Update candidates, CMS pricing, subscriptions utils, and various views"
+- Pushed commit (847e927) to origin/main branch
+- Added slug field to PricingFeature model
+- Added subscriptions utils module
+- Updated candidate views and pages
+- Updated CMS pricing functionality
+- Updated feed and company views
+
+## 2025-12-11 - Backend Server Startup
+
+**Time**: Current session
+**Description**: Started Django backend development server
+**Reason**: User requested to run start-backend.sh script
+**Affected Files**:
+- `scripts/start-backend.sh` - Executed (no changes to file)
+**Changes**:
+- Made startup script executable with chmod +x
+- Ran backend startup script in background mode (Django server on http://localhost:8000)
+- Verified server is running successfully
+- Backend: Django development server (PIDs 72619, 72620)
+
+---
+
+## 2025-12-11 - Git Push: Kanban Board Refactoring
+
+**Time**: Current session
+**Description**: Committed and pushed Kanban board refactoring to extract common component to GitHub
+**Reason**: User requested to push latest changes to GitHub
+**Affected Files**:
+- 8 files changed (574 insertions, 455 deletions)
+**Frontend Changes**:
+- `frontend/src/components/common/KanbanBoard/` - New common Kanban board component directory:
+  - `KanbanBoard.tsx` - Reusable Kanban board component
+  - `KanbanColumn.tsx` - Kanban column component
+  - `types.ts` - TypeScript types for Kanban board
+  - `index.ts` - Export file
+- `frontend/src/components/applications/ApplicationKanbanBoard.tsx` - Refactored to use common component
+- `frontend/src/components/candidates/CandidateKanbanBoard.tsx` - Refactored to use common component
+- `frontend/src/components/companies/CompanyKanbanBoard.tsx` - Refactored to use common component
+- `frontend/src/pages/dashboard/AdminCompaniesPage.tsx` - Modified
+**Changes**:
+- Staged all changes with `git add -A`
+- Committed changes with message: "Refactor Kanban boards: extract common KanbanBoard component and update application, candidate, and company boards"
+- Pushed commit (6bc9571) to origin/main branch
+- Extracted common Kanban board functionality into reusable component
+- Updated all Kanban board implementations to use the common component
+- Improved code reusability and maintainability
+
+## 2025-12-11 - Frontend Server Startup
+
+**Time**: Current session
+**Description**: Started Vite frontend development server
+**Reason**: User requested to run start-frontend.sh script
+**Affected Files**:
+- `scripts/start-frontend.sh` - Executed (no changes to file)
+**Changes**:
+- Made startup script executable with chmod +x
+- Ran frontend startup script in background mode (Vite dev server on http://localhost:5173)
+- Server is now running in the background
 
 ## 2025-12-11 - Frontend Server Restart
 
 **Time**: Current session
-**Description**: Killed all existing Vite processes and restarted frontend development server
-**Reason**: User requested to ensure all Vite servers are killed before starting frontend
+**Description**: Restarted Vite frontend development server
+**Reason**: User requested to run start-frontend.sh script again
 **Affected Files**:
 - `scripts/start-frontend.sh` - Executed (no changes to file)
 **Changes**:
-- Killed 2 processes running on port 5173 (PIDs: 23874, 77061)
-- Killed 2 additional Vite processes (PIDs: 44883, 68023)
-- Verified all Vite processes were terminated
-- Started frontend development server successfully on port 5173
-- Frontend server is now running at http://localhost:5173
-
----
-
-## 2025-12-11 - Backend Server Start
-
-**Time**: Current session
-**Description**: Started Django backend development server
-**Reason**: User requested to start the backend server
-**Affected Files**:
-- `scripts/start-backend.sh` - Executed (no changes to file)
-**Changes**:
-- Verified no backend server was running on port 8000
-- Started Django development server using startup script
-- Backend server is now running on port 8000
-- Server available at http://localhost:8000
-- Admin panel available at http://localhost:8000/admin/
-- API docs available at http://localhost:8000/api/docs/
+- Made startup script executable with chmod +x
+- Ran frontend startup script in background mode (Vite dev server on http://localhost:5173)
+- Server is now running in the background
 

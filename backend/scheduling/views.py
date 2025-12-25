@@ -985,7 +985,7 @@ def bookings_list(request):
             'description': f"Interview for {job.title}" if job else 'Application Interview',
             'scheduled_at': stage.scheduled_at.isoformat() if stage.scheduled_at else None,
             'end_time': end_time.isoformat() if end_time else None,
-            'duration_minutes': stage.duration_minutes or (template.duration_minutes if template else 30),
+            'duration_minutes': stage.duration_minutes or (template.default_duration_minutes if template else 30),
             'timezone': 'Africa/Johannesburg',
             'location_type': 'video' if stage.meeting_link else 'in_person',
             'location_type_display': 'Video Call' if stage.meeting_link else 'In Person',

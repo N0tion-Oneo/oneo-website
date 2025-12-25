@@ -46,8 +46,8 @@ def list_contact_submissions(request):
 
     # Filter to only show inbound leads (from contact form)
     leads = Lead.objects.filter(source=LeadSource.INBOUND).select_related(
-        'onboarding_stage', 'assigned_to', 'industry'
-    ).order_by('-created_at')
+        'onboarding_stage', 'industry'
+    ).prefetch_related('assigned_to').order_by('-created_at')
 
     is_read = request.query_params.get('is_read')
     if is_read is not None:
@@ -74,9 +74,9 @@ def get_contact_submission(request, submission_id):
 
     try:
         lead = Lead.objects.select_related(
-            'onboarding_stage', 'assigned_to', 'industry',
+            'onboarding_stage', 'industry',
             'created_by', 'converted_to_company', 'converted_to_user'
-        ).prefetch_related('invitations').get(id=submission_id)
+        ).prefetch_related('assigned_to', 'invitations').get(id=submission_id)
     except Lead.DoesNotExist:
         return Response({'error': 'Submission not found'}, status=status.HTTP_404_NOT_FOUND)
 
