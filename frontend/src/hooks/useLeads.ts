@@ -78,8 +78,7 @@ export interface LeadDetail extends Lead {
 export interface CreateLeadInput {
   name: string
   email: string
-  phone?: string
-  job_title?: string
+  phone: string
   company_name: string
   company_website?: string
   company_size?: string

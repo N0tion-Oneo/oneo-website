@@ -160,17 +160,15 @@ def submit_contact_form(request):
         Lead.objects.create(
             name=data['name'],
             email=data['email'],
-            phone=data.get('phone', ''),
-            company_name=data.get('company', '') or 'Not provided',
-            subject=data.get('subject', ''),
-            notes=data['message'],  # Message goes into notes
+            phone=data['phone'],
+            company_name=data['company'],
             source=LeadSource.INBOUND,
             source_page=data.get('source_page', ''),
             onboarding_stage=initial_stage,
         )
 
         return Response(
-            {'message': 'Thank you for your message. We will get back to you soon.'},
+            {'message': 'Thank you for reaching out. We will get back to you soon.'},
             status=status.HTTP_201_CREATED
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

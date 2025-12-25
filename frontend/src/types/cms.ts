@@ -429,10 +429,8 @@ export interface CMSContactSubmission {
 export interface CMSContactSubmissionInput {
   name: string
   email: string
-  phone?: string
-  company?: string
-  subject?: string
-  message: string
+  phone: string
+  company: string
   source_page?: string
 }
 

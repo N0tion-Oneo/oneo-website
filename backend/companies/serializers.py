@@ -778,6 +778,7 @@ class LeadDetailSerializer(LeadListSerializer):
 
 class LeadCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating a new lead."""
+    phone = serializers.CharField(max_length=30, required=True)
     industry_id = serializers.PrimaryKeyRelatedField(
         queryset=Industry.objects.filter(is_active=True),
         source='industry',
@@ -797,7 +798,6 @@ class LeadCreateSerializer(serializers.ModelSerializer):
             'name',
             'email',
             'phone',
-            'job_title',
             'company_name',
             'company_website',
             'company_size',
@@ -891,10 +891,8 @@ class ContactFormSerializer(serializers.Serializer):
     """
     name = serializers.CharField(max_length=255, required=True)
     email = serializers.EmailField(required=True)
-    phone = serializers.CharField(max_length=30, required=False, allow_blank=True)
-    company = serializers.CharField(max_length=255, required=False, allow_blank=True)
-    subject = serializers.CharField(max_length=200, required=False, allow_blank=True)
-    message = serializers.CharField(required=True)
+    phone = serializers.CharField(max_length=30, required=True)
+    company = serializers.CharField(max_length=255, required=True)
     source_page = serializers.CharField(max_length=255, required=False, allow_blank=True)
 
 

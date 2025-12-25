@@ -4,6 +4,8 @@ import { useMutation } from '@tanstack/react-query'
 import { cmsContact } from '@/services/cms'
 import { SEO } from '@/components/seo'
 import Navbar from '@/components/layout/Navbar'
+import { LeadForm, emptyLeadFormData, isLeadFormValid } from '@/components/forms'
+import type { LeadFormData } from '@/components/forms'
 import {
   Mail,
   Phone,
@@ -14,50 +16,30 @@ import {
   AlertCircle,
 } from 'lucide-react'
 
-interface ContactFormData {
-  name: string
-  email: string
-  phone: string
-  company: string
-  subject: string
-  message: string
-}
-
-const initialFormData: ContactFormData = {
-  name: '',
-  email: '',
-  phone: '',
-  company: '',
-  subject: '',
-  message: '',
-}
-
 export default function ContactPage() {
-  const [formData, setFormData] = useState<ContactFormData>(initialFormData)
+  const [formData, setFormData] = useState<LeadFormData>(emptyLeadFormData)
   const [submitted, setSubmitted] = useState(false)
 
   const submitMutation = useMutation({
-    mutationFn: (data: ContactFormData) =>
+    mutationFn: (data: LeadFormData) =>
       cmsContact.submit({
-        ...data,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        company: data.company_name,
         source_page: window.location.pathname,
       }),
     onSuccess: () => {
       setSubmitted(true)
-      setFormData(initialFormData)
+      setFormData(emptyLeadFormData)
     },
   })
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    submitMutation.mutate(formData)
+    if (isLeadFormValid(formData)) {
+      submitMutation.mutate(formData)
+    }
   }
 
   if (submitted) {
@@ -70,16 +52,16 @@ export default function ContactPage() {
               <CheckCircle2 className="w-8 h-8 text-green-600" />
             </div>
             <h1 className="text-[28px] font-bold text-gray-900 mb-3">
-              Message Sent!
+              Thanks for reaching out!
             </h1>
             <p className="text-[15px] text-gray-500 mb-8">
-              Thank you for reaching out. We'll get back to you within 24-48 hours.
+              We've received your details and will get back to you within 24-48 hours.
             </p>
             <button
               onClick={() => setSubmitted(false)}
               className="text-[14px] font-medium text-gray-900 hover:text-gray-700"
             >
-              Send another message
+              Submit another inquiry
             </button>
           </div>
         </div>
@@ -181,131 +163,18 @@ export default function ContactPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-[13px] font-medium text-gray-700 mb-2"
-                  >
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 text-[14px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300"
-                    placeholder="John Smith"
-                  />
-                </div>
+              <LeadForm
+                value={formData}
+                onChange={setFormData}
+              />
 
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-[13px] font-medium text-gray-700 mb-2"
-                  >
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 text-[14px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300"
-                    placeholder="john@company.com"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-[13px] font-medium text-gray-700 mb-2"
-                  >
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 text-[14px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300"
-                    placeholder="+27 12 345 6789"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="company"
-                    className="block text-[13px] font-medium text-gray-700 mb-2"
-                  >
-                    Company Name
-                  </label>
-                  <input
-                    type="text"
-                    id="company"
-                    name="company"
-                    value={formData.company}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 text-[14px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300"
-                    placeholder="Your Company"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="subject"
-                  className="block text-[13px] font-medium text-gray-700 mb-2"
-                >
-                  Subject
-                </label>
-                <select
-                  id="subject"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 text-[14px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300"
-                >
-                  <option value="">Select a subject</option>
-                  <option value="General Inquiry">General Inquiry</option>
-                  <option value="Hiring Services">Hiring Services</option>
-                  <option value="Partnership">Partnership</option>
-                  <option value="Support">Support</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block text-[13px] font-medium text-gray-700 mb-2"
-                >
-                  Message *
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  required
-                  rows={6}
-                  className="w-full px-4 py-3 text-[14px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 resize-none"
-                  placeholder="How can we help you?"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pt-2">
                 <p className="text-[12px] text-gray-400">
                   * Required fields
                 </p>
                 <button
                   type="submit"
-                  disabled={submitMutation.isPending}
+                  disabled={submitMutation.isPending || !isLeadFormValid(formData)}
                   className="flex items-center gap-2 px-6 py-3 text-[14px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {submitMutation.isPending ? (
@@ -316,7 +185,7 @@ export default function ContactPage() {
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      Send Message
+                      Get in Touch
                     </>
                   )}
                 </button>
