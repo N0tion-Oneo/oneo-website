@@ -2336,8 +2336,8 @@ export interface RecruiterBooking {
   candidate_info?: RecruiterBookingCandidateInfo | null
   title: string
   description: string
-  scheduled_at: string
-  end_time: string
+  scheduled_at: string | null  // null for unscheduled interviews
+  end_time: string | null  // null for unscheduled interviews
   duration_minutes: number
   timezone: string
   location_type: RecruiterMeetingLocationType

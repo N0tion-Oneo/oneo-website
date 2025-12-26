@@ -128,3 +128,25 @@ export function useSendBookingLink() {
     reset: mutation.reset,
   }
 }
+
+/**
+ * Fetch the sales booking URL for public website CTAs.
+ * Returns the admin's booking page URL with the sales meeting type.
+ */
+export interface SalesBookingUrl {
+  booking_slug: string | null
+  meeting_type_slug: string | null
+  booking_url: string | null
+}
+
+export function useSalesBookingUrl() {
+  return useQuery({
+    queryKey: ['salesBookingUrl'],
+    queryFn: async () => {
+      const response = await api.get<SalesBookingUrl>('/scheduling/sales-booking-url/')
+      return response.data
+    },
+    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
+    retry: false,
+  })
+}

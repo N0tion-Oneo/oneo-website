@@ -316,10 +316,17 @@ export default function ClientDashboard() {
   const { status: onboardingStatus, isLoading: onboardingLoading, refetch: refetchOnboarding } = useOnboarding()
 
   // Show onboarding wizard if not complete
-  const showOnboarding = !onboardingLoading && onboardingStatus && !onboardingStatus.is_complete
+  // Important: Don't hide wizard while loading (during refetch) to prevent flashing to dashboard
+  const isOnboardingIncomplete = onboardingStatus && !onboardingStatus.is_complete
+  const showOnboarding = isOnboardingIncomplete || (onboardingLoading && !onboardingStatus)
 
   if (showOnboarding) {
     return <OnboardingWizard onComplete={refetchOnboarding} />
+  }
+
+  // Still loading and no status yet - show nothing to prevent flash
+  if (onboardingLoading) {
+    return null
   }
 
   return (

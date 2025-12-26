@@ -1,4 +1,4 @@
-import { useState, useEffect, type RefObject } from 'react'
+import { useState, useEffect, useRef, type RefObject } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Loader2, ArrowRight, Building, MapPin, User } from 'lucide-react'
 import api from '@/services/api'
@@ -29,10 +29,10 @@ export function BillingStep({ onSubmit, isSubmitting, previewMode = false, formR
   const [contactName, setContactName] = useState('')
   const [contactEmail, setContactEmail] = useState('')
   const [contactPhone, setContactPhone] = useState('')
-  const [initialized, setInitialized] = useState(false)
+  const hasMountedRef = useRef(false)
 
   // Fetch current company data to pre-populate form
-  const { data: company } = useQuery<Company>({
+  const { data: company, dataUpdatedAt } = useQuery<Company>({
     queryKey: ['my-company'],
     queryFn: async () => {
       const response = await api.get('/companies/my/')
@@ -40,24 +40,28 @@ export function BillingStep({ onSubmit, isSubmitting, previewMode = false, formR
     },
     enabled: !previewMode,
     retry: false,
+    staleTime: 0, // Always check for fresh data
   })
 
-  // Pre-populate form with existing company data
+  // Pre-populate form with existing company data on mount
   useEffect(() => {
-    if (company && !initialized) {
-      if (company.legal_name) setLegalName(company.legal_name)
-      if (company.vat_number) setVatNumber(company.vat_number)
-      if (company.registration_number) setRegistrationNumber(company.registration_number)
-      if (company.billing_address) setBillingAddress(company.billing_address)
-      if (company.billing_city) setBillingCity(company.billing_city)
-      if (company.billing_country?.id) setBillingCountryId(company.billing_country.id)
-      if (company.billing_postal_code) setBillingPostalCode(company.billing_postal_code)
-      if (company.billing_contact_name) setContactName(company.billing_contact_name)
-      if (company.billing_contact_email) setContactEmail(company.billing_contact_email)
-      if (company.billing_contact_phone) setContactPhone(company.billing_contact_phone)
-      setInitialized(true)
+    if (company) {
+      // Only populate on first render to avoid overwriting user input
+      if (!hasMountedRef.current) {
+        setLegalName(company.legal_name || '')
+        setVatNumber(company.vat_number || '')
+        setRegistrationNumber(company.registration_number || '')
+        setBillingAddress(company.billing_address || '')
+        setBillingCity(company.billing_city || '')
+        setBillingCountryId(company.billing_country?.id || null)
+        setBillingPostalCode(company.billing_postal_code || '')
+        setContactName(company.billing_contact_name || '')
+        setContactEmail(company.billing_contact_email || '')
+        setContactPhone(company.billing_contact_phone || '')
+        hasMountedRef.current = true
+      }
     }
-  }, [company, initialized])
+  }, [company, dataUpdatedAt])
 
   // Fetch countries
   const { data: countries = [] } = useQuery<Country[]>({

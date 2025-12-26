@@ -338,16 +338,20 @@ export default function LeadDrawer({
     }
   }, [lead])
 
-  // Fetch bookings for this lead
+  // Fetch bookings for this lead (using direct lead FK)
   useEffect(() => {
-    if (lead?.email) {
+    if (lead?.id) {
       setBookingsLoading(true)
-      api.get(`/scheduling/bookings/`, { params: { attendee_email: lead.email } })
+      api.get(`/scheduling/bookings/`, {
+        params: {
+          lead_id: lead.id
+        }
+      })
         .then((res) => setBookings(res.data))
         .catch(() => setBookings([]))
         .finally(() => setBookingsLoading(false))
     }
-  }, [lead?.email])
+  }, [lead?.id])
 
   const handleStageChange = async (stageId: number) => {
     if (!lead) return

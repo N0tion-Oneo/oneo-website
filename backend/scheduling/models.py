@@ -383,6 +383,14 @@ class Booking(models.Model):
         related_name='bookings',
         help_text='Linked candidate profile if attendee is a candidate',
     )
+    lead = models.ForeignKey(
+        'companies.Lead',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bookings',
+        help_text='Linked lead if attendee is a lead',
+    )
     attendee_name = models.CharField(
         max_length=255,
         help_text='Name of the attendee',

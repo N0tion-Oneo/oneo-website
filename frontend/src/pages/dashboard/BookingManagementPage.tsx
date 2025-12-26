@@ -98,8 +98,14 @@ function BookingCard({
   isClient?: boolean
 }) {
   const [showMenu, setShowMenu] = useState(false)
-  const isPastBooking = isPast(parseISO(booking.scheduled_at))
   const isInterviewBooking = booking.booking_type === 'interview'
+
+  // Guard against unscheduled interviews or missing end_time
+  if (!booking.scheduled_at || !booking.end_time) {
+    return null
+  }
+
+  const isPastBooking = isPast(parseISO(booking.scheduled_at))
   // Allow actions for recruiters on regular bookings, or recruiters/clients on interviews
   const canTakeAction = booking.status === 'confirmed' && (
     (isRecruiter && !isInterviewBooking) ||
@@ -1080,13 +1086,17 @@ export default function BookingManagementPage() {
   const [editingMeetingType, setEditingMeetingType] = useState<RecruiterMeetingType | null>(null)
   const [showNewMeetingType, setShowNewMeetingType] = useState(false)
 
-  // Group bookings by date
-  const bookingsByDate = bookings.reduce((acc, booking) => {
+  // Group bookings by date (filter out unscheduled interviews or missing end_time)
+  const scheduledBookings = bookings.filter(
+    (booking): booking is RecruiterBooking & { scheduled_at: string; end_time: string } =>
+      booking.scheduled_at !== null && booking.end_time !== null
+  )
+  const bookingsByDate = scheduledBookings.reduce((acc, booking) => {
     const dateKey = format(parseISO(booking.scheduled_at), 'yyyy-MM-dd')
     if (!acc[dateKey]) acc[dateKey] = []
     acc[dateKey].push(booking)
     return acc
-  }, {} as Record<string, RecruiterBooking[]>)
+  }, {} as Record<string, typeof scheduledBookings[number][]>)
 
   // Sort dates
   const sortedDates = Object.keys(bookingsByDate).sort()

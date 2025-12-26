@@ -25,6 +25,9 @@ import type {
   RecruiterMeetingLocationType,
 } from '@/types'
 import SlotPicker from '@/components/booking/SlotPicker'
+import LeadsBookingPage from './LeadsBookingPage'
+import OnboardingBookingPage from './OnboardingBookingPage'
+import RecruitmentBookingPage from './RecruitmentBookingPage'
 
 // Location icon based on type
 function getLocationIcon(type: RecruiterMeetingLocationType) {
@@ -97,7 +100,49 @@ export default function RecruiterBookingPage() {
   }
 
   // Show the booking form for specific meeting type
-  return <RecruiterBookingForm bookingSlug={bookingSlug!} meetingTypeSlug={meetingTypeSlug} />
+  // Use wrapper to check category and potentially render LeadsBookingPage
+  return <RecruiterBookingFormWrapper bookingSlug={bookingSlug!} meetingTypeSlug={meetingTypeSlug} />
+}
+
+// Wrapper to check meeting type category and render appropriate page
+function RecruiterBookingFormWrapper({
+  bookingSlug,
+  meetingTypeSlug,
+}: {
+  bookingSlug: string
+  meetingTypeSlug: string
+}) {
+  const { availability, isLoading } = usePublicAvailability(bookingSlug, meetingTypeSlug)
+
+  // Show loading while we check the category
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If it's a leads meeting type, use the full-screen leads booking page
+  if (availability?.meeting_type?.category === 'leads') {
+    return <LeadsBookingPage />
+  }
+
+  // If it's an onboarding meeting type, use the energetic onboarding booking page
+  if (availability?.meeting_type?.category === 'onboarding') {
+    return <OnboardingBookingPage />
+  }
+
+  // If it's a recruitment meeting type, use the professional recruitment booking page
+  if (availability?.meeting_type?.category === 'recruitment') {
+    return <RecruitmentBookingPage />
+  }
+
+  // Otherwise use the regular booking form
+  return <RecruiterBookingForm bookingSlug={bookingSlug} meetingTypeSlug={meetingTypeSlug} />
 }
 
 // List of meeting types for a recruiter
@@ -225,6 +270,7 @@ function RecruiterBookingForm({
 }) {
   const [searchParams] = useSearchParams()
   const isEmbed = searchParams.get('embed') === 'true'
+  const hideNav = searchParams.get('hideNav') === 'true'
   const { user, isAuthenticated } = useAuth()
   const { availability, isLoading, error } = usePublicAvailability(bookingSlug, meetingTypeSlug)
   const { createBooking, isCreating, error: createError } = useCreatePublicBooking(
@@ -388,8 +434,8 @@ function RecruiterBookingForm({
   return (
     <div className={`${isEmbed ? 'bg-white' : 'min-h-screen bg-gray-50 py-8 sm:py-12'} px-4`}>
       <div className={`${isEmbed ? '' : 'max-w-3xl'} mx-auto`}>
-        {/* Back link - hidden in embed mode */}
-        {!isEmbed && (
+        {/* Back link - hidden in embed mode or when hideNav is set */}
+        {!isEmbed && !hideNav && (
           <Link
             to={`/meet/${bookingSlug}`}
             className="inline-flex items-center gap-2 mb-6 text-[14px] text-gray-600 hover:text-gray-900"

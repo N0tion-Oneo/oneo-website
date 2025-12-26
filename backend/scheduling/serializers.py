@@ -369,6 +369,7 @@ class BookingSerializer(serializers.ModelSerializer):
     is_upcoming = serializers.BooleanField(read_only=True)
     is_past = serializers.BooleanField(read_only=True)
     candidate_info = serializers.SerializerMethodField()
+    lead_info = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
@@ -387,6 +388,8 @@ class BookingSerializer(serializers.ModelSerializer):
             'attendee_company',
             'candidate_profile',
             'candidate_info',
+            'lead',
+            'lead_info',
             'title',
             'description',
             'scheduled_at',
@@ -418,6 +421,16 @@ class BookingSerializer(serializers.ModelSerializer):
                 'slug': obj.candidate_profile.slug,
                 'professional_title': obj.candidate_profile.professional_title,
                 'profile_url': f'/candidates/{obj.candidate_profile.slug}',
+            }
+        return None
+
+    def get_lead_info(self, obj):
+        """Get linked lead info if available."""
+        if obj.lead:
+            return {
+                'id': str(obj.lead.id),
+                'name': obj.lead.name,
+                'company_name': obj.lead.company_name,
             }
         return None
 

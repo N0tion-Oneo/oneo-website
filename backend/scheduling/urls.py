@@ -20,6 +20,7 @@ urlpatterns = [
     path('meeting-types/dashboard/<str:category>/', views.dashboard_meeting_type, name='dashboard_meeting_type'),
 
     # Public Booking Pages
+    path('sales-booking-url/', views.get_sales_booking_url, name='get_sales_booking_url'),
     path('book/<slug:booking_slug>/', views.public_recruiter_booking_page, name='public_recruiter_booking_page'),
     path('book/<slug:booking_slug>/<slug:meeting_type_slug>/availability/', views.public_meeting_type_availability, name='public_meeting_type_availability'),
     path('book/<slug:booking_slug>/<slug:meeting_type_slug>/', views.public_create_booking, name='public_create_booking'),

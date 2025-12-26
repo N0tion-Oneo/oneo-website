@@ -337,6 +337,42 @@ def dashboard_meeting_type(request, category):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+def get_sales_booking_url(request):
+    """
+    Get the default sales booking URL for CTAs on the public website.
+    Returns the booking slug of an admin who has a sales meeting type configured.
+    """
+    from users.models import RecruiterProfile, UserRole
+
+    # Find an admin with a booking slug who has sales meeting types
+    admin_profile = RecruiterProfile.objects.filter(
+        user__role=UserRole.ADMIN,
+        user__is_active=True,
+        booking_slug__isnull=False,
+    ).exclude(booking_slug='').select_related('user').first()
+
+    if not admin_profile:
+        return Response({'booking_slug': None, 'booking_url': None})
+
+    # Get the leads meeting type slug (prioritize 'leads' over 'onboarding')
+    sales_meeting = MeetingType.objects.filter(
+        is_active=True,
+        category='leads'
+    ).first()
+
+    booking_url = f"/meet/{admin_profile.booking_slug}"
+    if sales_meeting:
+        booking_url = f"/meet/{admin_profile.booking_slug}/{sales_meeting.slug}?hideNav=true"
+
+    return Response({
+        'booking_slug': admin_profile.booking_slug,
+        'meeting_type_slug': sales_meeting.slug if sales_meeting else None,
+        'booking_url': booking_url,
+    })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def public_recruiter_booking_page(request, booking_slug):
     """
     Get recruiter's public booking page info and available meeting types.
@@ -434,8 +470,15 @@ def public_meeting_type_availability(request, booking_slug, meeting_type_slug):
             duration_minutes=meeting_type.duration_minutes,
         )
 
+        # Build the response with booking page owner info
+        meeting_type_data = MeetingTypePublicSerializer(meeting_type).data
+
+        # Override owner info with the booking page owner (the person whose calendar we're using)
+        meeting_type_data['owner_name'] = user.get_full_name() or user.email
+        meeting_type_data['owner_avatar'] = user.avatar.url if user.avatar else None
+
         return Response({
-            'meeting_type': MeetingTypePublicSerializer(meeting_type).data,
+            'meeting_type': meeting_type_data,
             'available_slots': slots,
             'timezone': connection.timezone,
         })
@@ -628,8 +671,10 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
                     phone=booking.attendee_phone or '',
                     company_name=booking.attendee_company or '',
                 )
+            # Link booking to lead
+            booking.lead = lead
 
-        booking.save(update_fields=['attendee_user', 'candidate_profile'])
+        booking.save(update_fields=['attendee_user', 'candidate_profile', 'lead'])
 
     else:
         # No existing user - handle differently based on meeting type
@@ -732,7 +777,7 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
             booking.save(update_fields=['attendee_user'])
 
         elif is_leads:
-            # For leads meetings, create a Lead record
+            # For leads meetings, create a Lead record and link to booking
             from companies.models import Lead
             lead = Lead.objects.filter(email__iexact=attendee_email).first()
             if not lead:
@@ -742,6 +787,9 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
                     phone=booking.attendee_phone or '',
                     company_name=booking.attendee_company or '',
                 )
+            # Link booking to lead
+            booking.lead = lead
+            booking.save(update_fields=['lead'])
 
     # Handle assignment and stage changes
     # Pass is_authenticated to determine which target stage to use
@@ -805,6 +853,7 @@ def bookings_list(request):
     end_date = request.query_params.get('end_date')
     upcoming = request.query_params.get('upcoming')
     attendee_email = request.query_params.get('attendee_email')
+    lead_id = request.query_params.get('lead_id')
 
     # =========================================================================
     # 1. Get Booking objects
@@ -820,6 +869,9 @@ def bookings_list(request):
         if hasattr(user, 'candidate_profile') and user.candidate_profile:
             q_filter |= Q(candidate_profile=user.candidate_profile)
         bookings = Booking.objects.filter(q_filter)
+
+    # Filter out bookings without scheduled_at
+    bookings = bookings.filter(scheduled_at__isnull=False)
 
     # Apply filters to bookings
     if status_filter:
@@ -837,6 +889,8 @@ def bookings_list(request):
         )
     if attendee_email:
         bookings = bookings.filter(attendee_email__iexact=attendee_email)
+    if lead_id:
+        bookings = bookings.filter(lead_id=lead_id)
 
     # Add bookings to results
     booking_data = BookingSerializer(bookings, many=True).data
@@ -847,6 +901,14 @@ def bookings_list(request):
     # =========================================================================
     # 2. Get ApplicationStageInstance objects (interviews/meetings)
     # =========================================================================
+    # Skip interviews when filtering by category, attendee_email, or lead_id,
+    # since those filters are specific to Booking objects (leads, onboarding, etc.)
+    # and don't apply to application interviews.
+    if category or attendee_email or lead_id:
+        # Only return booking objects when these filters are applied
+        results.sort(key=lambda x: x.get('scheduled_at') or '', reverse=False)
+        return Response(results)
+
     # Only include scheduled stages (those with scheduled_at set)
     if user.role == 'admin':
         # Admins see ALL scheduled stages

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   getOnboardingStatus,
   completeOnboardingStep,
@@ -33,6 +34,7 @@ export interface UseOnboardingReturn {
 // =============================================================================
 
 export function useOnboarding(): UseOnboardingReturn {
+  const queryClient = useQueryClient()
   const [status, setStatus] = useState<OnboardingStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -70,6 +72,8 @@ export function useOnboarding(): UseOnboardingReturn {
         setError(null)
         const updatedStatus = await completeOnboardingStep(step, data)
         setStatus(updatedStatus)
+        // Invalidate company query so step components refetch fresh data when revisited
+        queryClient.invalidateQueries({ queryKey: ['my-company'] })
         return updatedStatus
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to complete step'
@@ -79,7 +83,7 @@ export function useOnboarding(): UseOnboardingReturn {
         setIsSubmitting(false)
       }
     },
-    []
+    [queryClient]
   )
 
   const skipStepFn = useCallback(async (step: OnboardingStep): Promise<OnboardingStatus | null> => {

@@ -176,8 +176,9 @@ export {
   useBookingInfo,
   useBookSlot,
   useSendBookingLink,
+  useSalesBookingUrl,
 } from './useBooking'
-export type { BookingInfo, BookingResult, SendBookingLinkResult } from './useBooking'
+export type { BookingInfo, BookingResult, SendBookingLinkResult, SalesBookingUrl } from './useBooking'
 
 // Branding hooks
 export {

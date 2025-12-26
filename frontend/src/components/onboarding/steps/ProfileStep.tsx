@@ -29,11 +29,11 @@ export function ProfileStep({ onSubmit, isSubmitting, previewMode = false, formR
   const [companySize, setCompanySize] = useState('')
   const [logo, setLogo] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
-  const [initialized, setInitialized] = useState(false)
+  const hasMountedRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Fetch current company data to pre-populate form
-  const { data: company } = useQuery<Company>({
+  const { data: company, dataUpdatedAt } = useQuery<Company>({
     queryKey: ['my-company'],
     queryFn: async () => {
       const response = await api.get('/companies/my/')
@@ -41,19 +41,23 @@ export function ProfileStep({ onSubmit, isSubmitting, previewMode = false, formR
     },
     enabled: !previewMode,
     retry: false,
+    staleTime: 0, // Always check for fresh data
   })
 
-  // Pre-populate form with existing company data
+  // Pre-populate form with existing company data on mount or when data refreshes
   useEffect(() => {
-    if (company && !initialized) {
-      if (company.tagline) setTagline(company.tagline)
-      if (company.description) setDescription(company.description)
-      if (company.industry?.id) setIndustryId(Number(company.industry.id))
-      if (company.company_size) setCompanySize(company.company_size)
-      if (company.logo) setLogoPreview(company.logo)
-      setInitialized(true)
+    if (company) {
+      // Always populate on first render, or when data was just refreshed (after invalidation)
+      if (!hasMountedRef.current) {
+        setTagline(company.tagline || '')
+        setDescription(company.description || '')
+        setIndustryId(company.industry?.id ? Number(company.industry.id) : null)
+        setCompanySize(company.company_size || '')
+        setLogoPreview(company.logo || null)
+        hasMountedRef.current = true
+      }
     }
-  }, [company, initialized])
+  }, [company, dataUpdatedAt])
 
   // Fetch industries
   const { data: industries = [] } = useQuery<Industry[]>({

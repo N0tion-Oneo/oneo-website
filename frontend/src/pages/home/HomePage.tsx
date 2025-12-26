@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Navbar } from '@/components/layout'
 import { SEO } from '@/components/seo'
 import { useSEODefaults } from '@/contexts/SEOContext'
-import { usePublicBranding } from '@/hooks'
+import { usePublicBranding, useSalesBookingUrl } from '@/hooks'
 import { useJobs } from '@/hooks/useJobs'
 import { cmsCaseStudies, cmsBlog, cmsPricing } from '@/services/cms'
 import type { CMSPricingConfig } from '@/services/cms'
@@ -470,6 +470,10 @@ export default function HomePage() {
   const { isAuthenticated } = useAuth()
   const seoDefaults = useSEODefaults()
   const { branding } = usePublicBranding()
+  const { data: salesBooking } = useSalesBookingUrl()
+
+  // Get booking URL or fallback to contact page
+  const bookingUrl = salesBooking?.booking_url || '/contact'
 
   // Scroll position for parallax effects
   const [scrollY, setScrollY] = useState(0)
@@ -582,7 +586,7 @@ export default function HomePage() {
                 </p>
                 <div className="mt-8 flex flex-wrap gap-4">
                   <Link
-                    to="/contact"
+                    to={bookingUrl}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 text-gray-900 text-[14px] font-semibold rounded-lg hover:bg-amber-400 transition-colors"
                   >
                     Book a Consultation
@@ -876,7 +880,7 @@ export default function HomePage() {
                 </div>
                 <div className="mt-6 md:mt-0 flex flex-wrap gap-4">
                   <Link
-                    to="/contact"
+                    to={bookingUrl}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white text-[14px] font-semibold rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     Book a Call

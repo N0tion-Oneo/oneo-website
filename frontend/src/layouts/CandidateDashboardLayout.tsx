@@ -126,6 +126,18 @@ export default function CandidateDashboardLayout() {
   // Admin/Recruiter only navigation
   const adminNav: NavItem[] = isAdminOrRecruiter ? [
     {
+      name: 'Leads',
+      href: '/dashboard/admin/leads',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="12" cy="5" r="3" />
+          <path d="M12 8v4" strokeLinecap="round" />
+          <path d="M12 12l-4 4M12 12l4 4" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    {
       name: 'All Companies',
       href: '/dashboard/admin/companies',
       icon: (
@@ -135,18 +147,6 @@ export default function CandidateDashboardLayout() {
           <path d="M19 21V11l-6-4" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M9 9h1M9 13h1M9 17h1" strokeLinecap="round" />
           <path d="M14 13h1M14 17h1" strokeLinecap="round" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Leads',
-      href: '/dashboard/admin/leads',
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="12" cy="5" r="3" />
-          <path d="M12 8v4" strokeLinecap="round" />
-          <path d="M12 12l-4 4M12 12l4 4" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       ),
     },
