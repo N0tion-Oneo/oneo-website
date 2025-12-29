@@ -67,6 +67,7 @@ urlpatterns = [
     # ==========================================================================
     path('executions/', views.all_rule_executions, name='all-rule-executions'),
     path('executions/<uuid:execution_id>/', views.rule_execution_detail, name='rule-execution-detail'),
+    path('executions/<uuid:execution_id>/replay/', views.replay_rule_execution, name='replay-rule-execution'),
 
     # ==========================================================================
     # Manual/Signal/View Action Triggers

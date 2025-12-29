@@ -13,7 +13,6 @@ by enabling/disabling templates for specific recipient types.
 """
 
 import logging
-from dataclasses import dataclass
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.template import Template, Context
@@ -22,18 +21,7 @@ from django.utils.html import strip_tags
 from datetime import timedelta
 from typing import Optional, Dict, Any, List, Union
 
-
-@dataclass
-class ExternalRecipient:
-    """
-    Represents an external email recipient (not a registered User).
-    Used for sending emails to invitees who haven't signed up yet.
-    """
-    email: str
-    name: str = ''
-
-    def __str__(self):
-        return self.name or self.email
+from core.utils import ExternalRecipient
 
 from notifications.models import (
     Notification,
@@ -2128,251 +2116,24 @@ class NotificationService:
         cls,
         recipient_type: str,
         instance: Any,
+        extra_context: dict = None,
     ) -> List[Any]:
         """
         Resolve recipients for automation-triggered notifications.
 
-        This extends the standard resolve_recipients to work with any model instance,
-        not just Application/Job contexts.
+        Delegates to the shared RecipientResolver utility for consistent
+        recipient resolution across notifications and automations.
 
         Args:
             recipient_type: The type of recipient (e.g., 'company_admin', 'assigned_user', etc.)
             instance: The model instance that triggered the automation
+            extra_context: Additional context (e.g., specific user IDs)
 
         Returns:
-            List of User objects to notify
+            List of User objects or ExternalRecipient objects to notify
         """
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-
-        recipients = []
-
-        # Try to get common related objects
-        company = getattr(instance, 'company', None)
-        job = getattr(instance, 'job', None)
-        application = getattr(instance, 'application', None)
-
-        # If instance IS a job, use it
-        if instance.__class__.__name__ == 'Job':
-            job = instance
-            company = getattr(job, 'company', None)
-
-        # If instance IS a company, use it
-        if instance.__class__.__name__ == 'Company':
-            company = instance
-
-        # If instance IS an application, use it
-        if instance.__class__.__name__ == 'Application':
-            application = instance
-            job = getattr(application, 'job', None)
-            company = getattr(job, 'company', None) if job else None
-
-        # Resolve based on recipient type
-        if recipient_type == 'specific_users':
-            # This should be handled by the caller with explicit user IDs
-            return []
-
-        elif recipient_type == 'assigned_user':
-            assigned_to = getattr(instance, 'assigned_to', None)
-            if assigned_to:
-                if hasattr(assigned_to, 'all'):  # ManyToMany
-                    recipients = list(assigned_to.all())
-                else:
-                    recipients = [assigned_to]
-
-        elif recipient_type == 'assigned_client':
-            # Check instance first, then job
-            assigned_client = getattr(instance, 'assigned_client', None)
-            if not assigned_client and job:
-                assigned_client = getattr(job, 'assigned_client', None)
-            if assigned_client:
-                recipients = [assigned_client]
-
-        elif recipient_type == 'record_owner':
-            owner = getattr(instance, 'created_by', None) or getattr(instance, 'owner', None)
-            if owner:
-                recipients = [owner]
-
-        elif recipient_type == 'company_admin':
-            if company and hasattr(company, 'members'):
-                recipients = [cu.user for cu in company.members.filter(
-                    role__in=[CompanyUserRole.ADMIN, 'admin', 'owner'],
-                    is_active=True
-                ).select_related('user') if cu.user]
-
-        elif recipient_type == 'company_team':
-            if company and hasattr(company, 'members'):
-                recipients = [cu.user for cu in company.members.filter(
-                    is_active=True
-                ).select_related('user') if cu.user]
-
-        elif recipient_type == 'recruiter':
-            if job:
-                recruiters = list(job.assigned_recruiters.all())
-                if recruiters:
-                    recipients = recruiters
-                elif job.created_by:
-                    recipients = [job.created_by]
-
-        elif recipient_type == 'candidate':
-            if application and hasattr(application, 'candidate'):
-                candidate_user = getattr(application.candidate, 'user', None)
-                if candidate_user:
-                    recipients = [candidate_user]
-
-        elif recipient_type == 'all_recruiters':
-            from users.models import RecruiterProfile
-            recipients = list(User.objects.filter(
-                is_active=True,
-                recruiterprofile__isnull=False
-            ).distinct())
-
-        elif recipient_type == 'all_admins':
-            recipients = list(User.objects.filter(is_active=True, is_staff=True))
-
-        elif recipient_type == 'interviewer':
-            # For stage/interview instances - get the assigned interviewer
-            interviewer = getattr(instance, 'interviewer', None)
-            if interviewer:
-                recipients = [interviewer]
-            # Also check for stage_instance if this is a related model
-            stage_instance = getattr(instance, 'stage_instance', None)
-            if stage_instance:
-                interviewer = getattr(stage_instance, 'interviewer', None)
-                if interviewer:
-                    recipients = [interviewer]
-
-        elif recipient_type == 'active_applicants':
-            # For job updates - notify all candidates with active applications
-            # Active statuses: APPLIED, SHORTLISTED, IN_PROGRESS, OFFER_MADE
-            if job:
-                from jobs.models import Application
-                active_statuses = ['applied', 'shortlisted', 'in_progress', 'offer_made']
-                active_apps = Application.objects.filter(
-                    job=job,
-                    status__in=active_statuses
-                ).select_related('candidate__user')
-                recipients = [
-                    app.candidate.user for app in active_apps
-                    if app.candidate and app.candidate.user
-                ]
-
-        elif recipient_type == 'all_assigned_recruiters':
-            # All recruiters assigned to the job (not just primary)
-            if job:
-                recipients = list(job.assigned_recruiters.all())
-
-        elif recipient_type == 'invitation_email':
-            # For invitation models - send to the email field on the instance
-            # Returns ExternalRecipient instead of User
-            email = getattr(instance, 'email', None)
-            if email:
-                name = getattr(instance, 'name', '') or ''
-                recipients = [ExternalRecipient(email=email, name=name)]
-
-        elif recipient_type == 'invitation_creator':
-            # The person who created the invitation (for notifications back to admin)
-            created_by = getattr(instance, 'created_by', None) or getattr(instance, 'invited_by', None)
-            if created_by:
-                recipients = [created_by]
-
-        elif recipient_type == 'booking_organizer':
-            # The organizer of a booking (recruiter who created it)
-            organizer = getattr(instance, 'organizer', None)
-            if organizer:
-                recipients = [organizer]
-
-        elif recipient_type == 'booking_attendee':
-            # The attendee of a booking - could be a registered user or external
-            attendee_user = getattr(instance, 'attendee_user', None)
-            if attendee_user:
-                recipients = [attendee_user]
-            else:
-                # External attendee - send via email
-                attendee_email = getattr(instance, 'attendee_email', None)
-                attendee_name = getattr(instance, 'attendee_name', '') or ''
-                if attendee_email:
-                    recipients = [ExternalRecipient(email=attendee_email, name=attendee_name)]
-
-        elif recipient_type == 'self':
-            # The instance itself is the recipient (for User model)
-            # Used for welcome emails, password notifications, etc.
-            from users.models import User
-            if isinstance(instance, User):
-                recipients = [instance]
-
-        elif recipient_type == 'billing_contact':
-            # For Invoice/Subscription - send to company billing contact
-            # First try to get company from instance
-            invoice_company = getattr(instance, 'company', None)
-            if invoice_company:
-                billing_email = getattr(invoice_company, 'billing_contact_email', None)
-                billing_name = getattr(invoice_company, 'billing_contact_name', '') or ''
-                if billing_email:
-                    recipients = [ExternalRecipient(email=billing_email, name=billing_name)]
-                else:
-                    # Fall back to company admins
-                    # CompanyUserRole is imported at module level
-                    if hasattr(invoice_company, 'members'):
-                        recipients = [cu.user for cu in invoice_company.members.filter(
-                            role__in=[CompanyUserRole.ADMIN, 'admin'],
-                            is_active=True
-                        ).select_related('user') if cu.user]
-
-        elif recipient_type == 'subscription_company':
-            # For Subscription - send to company admins
-            sub_company = getattr(instance, 'company', None)
-            if sub_company:
-                # CompanyUserRole is imported at module level
-                if hasattr(sub_company, 'members'):
-                    recipients = [cu.user for cu in sub_company.members.filter(
-                        role__in=[CompanyUserRole.ADMIN, 'admin'],
-                        is_active=True
-                    ).select_related('user') if cu.user]
-
-        elif recipient_type == 'lead_assignees':
-            # For Lead - send to assigned recruiters
-            lead_assigned = getattr(instance, 'assigned_to', None)
-            if lead_assigned:
-                if hasattr(lead_assigned, 'all'):  # ManyToMany
-                    recipients = list(lead_assigned.all())
-                else:
-                    recipients = [lead_assigned]
-
-        elif recipient_type == 'lead_email':
-            # For Lead - send to the lead's email address (external recipient)
-            lead_email = getattr(instance, 'email', None)
-            lead_name = getattr(instance, 'name', '') or ''
-            if lead_email:
-                recipients = [ExternalRecipient(email=lead_email, name=lead_name)]
-
-        elif recipient_type == 'company_assignees':
-            # For Company - send to assigned recruiters/admins
-            company_assigned = getattr(instance, 'assigned_to', None)
-            if company_assigned:
-                if hasattr(company_assigned, 'all'):  # ManyToMany
-                    recipients = list(company_assigned.all())
-                else:
-                    recipients = [company_assigned]
-
-        elif recipient_type == 'replacement_requester':
-            # For ReplacementRequest - send to the user who requested
-            requested_by = getattr(instance, 'requested_by', None)
-            if requested_by:
-                recipients = [requested_by]
-
-        elif recipient_type == 'job_recruiters':
-            # For ReplacementRequest - send to job's assigned recruiters
-            # Navigate: ReplacementRequest -> application -> job -> assigned_recruiters
-            replacement_app = getattr(instance, 'application', None)
-            if replacement_app:
-                replacement_job = getattr(replacement_app, 'job', None)
-                if replacement_job:
-                    job_recruiters = list(replacement_job.assigned_recruiters.filter(is_active=True))
-                    if job_recruiters:
-                        recipients = job_recruiters
-
-        return recipients
+        from core.utils import RecipientResolver
+        return RecipientResolver.resolve(recipient_type, instance, extra_context)
 
     @classmethod
     def send_automation_notification(

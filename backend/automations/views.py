@@ -1035,6 +1035,123 @@ def rule_execution_detail(request, execution_id):
     return Response(serializer.data)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def replay_rule_execution(request, execution_id):
+    """
+    Replay a failed rule execution.
+
+    Re-runs the same rule with the same trigger data, creating a new execution record.
+    """
+    import traceback
+    from .models import RuleExecution
+    from .tasks import _execute_rule
+
+    new_execution = None
+    rule = None
+    start_time = time.time()
+
+    try:
+        # Fetch original execution
+        try:
+            original_execution = RuleExecution.objects.select_related(
+                'rule', 'rule__trigger_content_type', 'trigger_content_type'
+            ).get(id=execution_id)
+        except RuleExecution.DoesNotExist:
+            return Response({'error': 'Execution not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        rule = original_execution.rule
+        if not rule:
+            return Response({'error': 'Rule no longer exists'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not rule.is_active:
+            return Response({'error': 'Rule is not active'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get the content type - prefer from execution, fall back to rule
+        content_type = original_execution.trigger_content_type or rule.trigger_content_type
+        if not content_type:
+            return Response(
+                {'error': 'Cannot replay: no trigger content type available'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Extract trigger data from original execution
+        trigger_data = original_execution.trigger_data or {}
+        old_values = trigger_data.get('old_values', {})
+        new_values = trigger_data.get('new_values', {})
+
+        # Create new execution record
+        # Store replay info in trigger_data
+        replay_trigger_data = trigger_data.copy()
+        replay_trigger_data['_replay'] = {
+            'replayed_from': str(original_execution.id),
+            'replayed_by': request.user.email,
+        }
+
+        new_execution = RuleExecution.objects.create(
+            rule=rule,
+            trigger_type=original_execution.trigger_type,
+            trigger_content_type=content_type,
+            trigger_object_id=original_execution.trigger_object_id,
+            trigger_data=replay_trigger_data,
+            status=RuleExecution.Status.RUNNING,
+            action_type=rule.action_type,
+            triggered_by=request.user,
+        )
+
+        # Execute the rule
+        result = _execute_rule(
+            rule=rule,
+            content_type=content_type,
+            object_id=original_execution.trigger_object_id or '',
+            old_values=old_values,
+            new_values=new_values,
+            execution=new_execution,
+        )
+
+        # Update execution record
+        new_execution.status = RuleExecution.Status.SUCCESS
+        new_execution.action_result = result
+        new_execution.execution_time_ms = int((time.time() - start_time) * 1000)
+        new_execution.completed_at = timezone.now()
+        new_execution.save()
+
+        # Update rule stats
+        rule.last_triggered_at = timezone.now()
+        rule.total_executions += 1
+        rule.total_success += 1
+        rule.save(update_fields=['last_triggered_at', 'total_executions', 'total_success'])
+
+        return Response({
+            'status': 'success',
+            'execution_id': str(new_execution.id),
+            'result': result,
+        })
+
+    except Exception as e:
+        error_tb = traceback.format_exc()
+
+        # Update execution record with error if it was created
+        if new_execution:
+            new_execution.status = RuleExecution.Status.FAILED
+            new_execution.error_message = f"{str(e)}\n\n{error_tb}"
+            new_execution.execution_time_ms = int((time.time() - start_time) * 1000)
+            new_execution.completed_at = timezone.now()
+            new_execution.save()
+
+            if rule:
+                rule.total_executions += 1
+                rule.total_failed += 1
+                rule.save(update_fields=['total_executions', 'total_failed'])
+
+        return Response({
+            'status': 'failed',
+            'execution_id': str(new_execution.id) if new_execution else None,
+            'error': str(e),
+            'traceback': error_tb,
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 # =============================================================================
 # Manual/Signal/View Action Triggers
 # =============================================================================

@@ -876,6 +876,28 @@ export function useExecutionDetail(executionId: string | null) {
   }
 }
 
+export function useReplayExecution() {
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: async (executionId: string) => {
+      const response = await api.post(`/webhooks/executions/${executionId}/replay/`)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-executions'] })
+      queryClient.invalidateQueries({ queryKey: ['execution-detail'] })
+      queryClient.invalidateQueries({ queryKey: ['automation-rules'] })
+    },
+  })
+
+  return {
+    replay: mutation.mutateAsync,
+    isReplaying: mutation.isPending,
+    error: mutation.error,
+  }
+}
+
 // =============================================================================
 // NOTIFICATION TEMPLATES
 // =============================================================================

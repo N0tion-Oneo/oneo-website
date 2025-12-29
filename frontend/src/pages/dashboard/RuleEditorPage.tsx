@@ -31,6 +31,7 @@ import {
   UpdateRuleData,
   ModelField,
 } from '@/hooks/useAutomations'
+import { AutomationRecipientTypes, AutomationRecipientTypeGroups } from '@/types'
 import TestRulePanel from '@/components/automations/TestRulePanel'
 import ExecutionHistoryPanel from '@/components/automations/ExecutionHistoryPanel'
 
@@ -1052,10 +1053,15 @@ export default function RuleEditorPage() {
                         }}
                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="recruiter">Assigned Recruiter</option>
-                        <option value="company_admin">Company Admin</option>
-                        <option value="candidate">Candidate</option>
-                        <option value="client">Client</option>
+                        {Object.entries(AutomationRecipientTypeGroups).map(([group, types]) => (
+                          <optgroup key={group} label={group}>
+                            {types.map((type) => (
+                              <option key={type} value={type}>
+                                {AutomationRecipientTypes[type as keyof typeof AutomationRecipientTypes]}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
                       </select>
                     </div>
                   </div>

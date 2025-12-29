@@ -14,7 +14,6 @@ import {
   FileText,
   Zap,
   Check,
-  Activity,
   Search,
   X,
   Clock,
@@ -28,6 +27,8 @@ import {
   Key,
   Copy,
   Shield,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import {
   useAutomationRules,
@@ -35,6 +36,7 @@ import {
   useDeleteAutomationRule,
   useAllExecutions,
   useExecutionDetail,
+  useReplayExecution,
   useWebhookEndpoints,
   useToggleWebhookEndpoint,
   useDeleteWebhookEndpoint,
@@ -46,11 +48,28 @@ import {
   WebhookEndpointListItem,
   WebhookReceipt,
 } from '@/hooks/useAutomations'
+import {
+  useNotificationTemplates,
+  useDeleteTemplate,
+  useAdminNotifications,
+  useBulkDeleteNotifications,
+} from '@/hooks/useNotificationsAdmin'
 import RuleDrawer from '@/components/automations/RuleDrawer'
 import WebhookEndpointDrawer from '@/components/automations/WebhookEndpointDrawer'
+import TemplateDrawer from '@/components/automations/TemplateDrawer'
+import SendNotificationDrawer from '@/components/automations/SendNotificationDrawer'
 import { formatDistanceToNow } from 'date-fns'
+import {
+  NotificationChannelLabels,
+  RecipientTypeLabels,
+  NotificationTypeLabels,
+  NotificationType,
+  NotificationChannel,
+  UserRole,
+} from '@/types'
+import { useAuth } from '@/contexts/AuthContext'
 
-type TabType = 'rules' | 'executions' | 'webhooks'
+type TabType = 'rules' | 'templates' | 'notifications' | 'executions' | 'webhooks'
 
 // Action type filter options
 const ACTION_TYPES: { id: ActionType | 'all'; label: string; icon: React.ElementType }[] = [
@@ -122,6 +141,8 @@ const statusIcons: Record<ExecutionStatus, React.ReactNode> = {
 }
 
 export default function AutomationRulesPage() {
+  const { user } = useAuth()
+  const isAdmin = user?.role === UserRole.ADMIN
   const { rules, isLoading, error, refetch } = useAutomationRules()
   const { update } = useUpdateAutomationRule()
   const { deleteRule, isDeleting } = useDeleteAutomationRule()
@@ -136,6 +157,7 @@ export default function AutomationRulesPage() {
   )
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null)
   const { execution: executionDetail, isLoading: isLoadingDetail } = useExecutionDetail(selectedExecutionId)
+  const { replay: replayExecution, isReplaying } = useReplayExecution()
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -151,6 +173,51 @@ export default function AutomationRulesPage() {
   const [deleteWebhookDialogOpen, setDeleteWebhookDialogOpen] = useState(false)
   const [selectedWebhook, setSelectedWebhook] = useState<WebhookEndpointListItem | null>(null)
   const [copiedWebhookUrl, setCopiedWebhookUrl] = useState<string | null>(null)
+
+  // Template state
+  const [templateSearch, setTemplateSearch] = useState('')
+  const [templateActiveFilter, setTemplateActiveFilter] = useState<string>('')
+  const [templateDrawerOpen, setTemplateDrawerOpen] = useState(false)
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
+  const [templateMenuOpen, setTemplateMenuOpen] = useState<string | null>(null)
+  const [deleteTemplateDialogOpen, setDeleteTemplateDialogOpen] = useState(false)
+  const [selectedTemplateForDelete, setSelectedTemplateForDelete] = useState<{ id: string; name: string } | null>(null)
+
+  // Template hooks
+  const { templates, isLoading: isLoadingTemplates, refetch: refetchTemplates } = useNotificationTemplates({
+    search: templateSearch,
+    isActive: templateActiveFilter === '' ? null : templateActiveFilter === 'true',
+  })
+  const { deleteTemplate, isDeleting: isDeletingTemplate } = useDeleteTemplate()
+
+  // Sent notifications state
+  const [notificationSearch, setNotificationSearch] = useState('')
+  const [notificationTypeFilter, setNotificationTypeFilter] = useState<NotificationType | ''>('')
+  const [notificationChannelFilter, setNotificationChannelFilter] = useState<NotificationChannel | ''>('')
+  const [notificationReadFilter, setNotificationReadFilter] = useState<string>('')
+  const [notificationPage, setNotificationPage] = useState(1)
+  const notificationPageSize = 20
+  const [selectedNotificationIds, setSelectedNotificationIds] = useState<Set<string>>(new Set())
+  const [sendNotificationDrawerOpen, setSendNotificationDrawerOpen] = useState(false)
+
+  // Sent notifications hooks
+  const {
+    notifications,
+    count: _notificationCount,
+    numPages: notificationNumPages,
+    hasNext: notificationHasNext,
+    hasPrevious: notificationHasPrevious,
+    isLoading: isLoadingNotifications,
+    refetch: refetchNotifications,
+  } = useAdminNotifications({
+    page: notificationPage,
+    pageSize: notificationPageSize,
+    notificationType: notificationTypeFilter || undefined,
+    channel: notificationChannelFilter || undefined,
+    isRead: notificationReadFilter === '' ? null : notificationReadFilter === 'true',
+    search: notificationSearch,
+  })
+  const { bulkDelete: bulkDeleteNotifications, isDeleting: isDeletingNotifications } = useBulkDeleteNotifications()
 
   // Webhook sub-tab state
   type WebhookSubTab = 'endpoints' | 'history'
@@ -279,6 +346,86 @@ export default function AutomationRulesPage() {
     }
   }
 
+  // Template handlers
+  const handleNewTemplate = () => {
+    setSelectedTemplateId(null)
+    setTemplateDrawerOpen(true)
+  }
+
+  const handleEditTemplate = (templateId: string) => {
+    setSelectedTemplateId(templateId)
+    setTemplateDrawerOpen(true)
+  }
+
+  const handleTemplateDrawerClose = () => {
+    setTemplateDrawerOpen(false)
+    setSelectedTemplateId(null)
+  }
+
+  const handleTemplateDrawerSaved = () => {
+    setTemplateDrawerOpen(false)
+    setSelectedTemplateId(null)
+    refetchTemplates()
+  }
+
+  const handleDeleteTemplate = async () => {
+    if (!selectedTemplateForDelete) return
+
+    try {
+      await deleteTemplate(selectedTemplateForDelete.id)
+      setDeleteTemplateDialogOpen(false)
+      setSelectedTemplateForDelete(null)
+      refetchTemplates()
+    } catch (err) {
+      console.error('Failed to delete template:', err)
+    }
+  }
+
+  // Notification handlers
+  const handleSelectAllNotifications = () => {
+    if (selectedNotificationIds.size === notifications.length) {
+      setSelectedNotificationIds(new Set())
+    } else {
+      setSelectedNotificationIds(new Set(notifications.map((n) => n.id)))
+    }
+  }
+
+  const handleSelectNotification = (id: string) => {
+    const newSet = new Set(selectedNotificationIds)
+    if (newSet.has(id)) {
+      newSet.delete(id)
+    } else {
+      newSet.add(id)
+    }
+    setSelectedNotificationIds(newSet)
+  }
+
+  const handleBulkDeleteNotifications = async () => {
+    if (selectedNotificationIds.size === 0) return
+    if (!confirm(`Delete ${selectedNotificationIds.size} notification(s)?`)) return
+
+    try {
+      await bulkDeleteNotifications(Array.from(selectedNotificationIds))
+      setSelectedNotificationIds(new Set())
+      refetchNotifications()
+    } catch (err) {
+      console.error('Failed to delete notifications:', err)
+    }
+  }
+
+  const formatNotificationDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    const days = Math.floor(hours / 24)
+
+    if (hours < 1) return 'Just now'
+    if (hours < 24) return `${hours}h ago`
+    if (days < 7) return `${days}d ago`
+    return date.toLocaleDateString()
+  }
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Never'
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -299,9 +446,6 @@ export default function AutomationRulesPage() {
   // Stats calculations
   const totalRules = rules.length
   const activeRules = rules.filter(r => r.is_active).length
-  const totalExecutions = rules.reduce((sum, r) => sum + r.total_executions, 0)
-  const totalSuccess = rules.reduce((sum, r) => sum + r.total_success, 0)
-  const successRate = totalExecutions > 0 ? ((totalSuccess / totalExecutions) * 100).toFixed(1) : '0'
 
   if (error) {
     return (
@@ -315,125 +459,91 @@ export default function AutomationRulesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Automation Rules</h1>
-          <p className="text-[13px] text-gray-500 mt-0.5">
-            Configure automations triggered by events
-          </p>
-        </div>
-        <button
-          onClick={handleNewRule}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-800 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New Rule
-        </button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-[12px] text-gray-500 font-medium">Total Rules</p>
-              <p className="text-xl font-semibold text-gray-900">
-                {isLoading ? '—' : totalRules}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <Play className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-[12px] text-gray-500 font-medium">Active</p>
-              <p className="text-xl font-semibold text-gray-900">
-                {isLoading ? '—' : activeRules}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-              <Activity className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-[12px] text-gray-500 font-medium">Executions</p>
-              <p className="text-xl font-semibold text-gray-900">
-                {isLoading ? '—' : totalExecutions.toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-              <Check className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-[12px] text-gray-500 font-medium">Success Rate</p>
-              <p className="text-xl font-semibold text-gray-900">
-                {isLoading ? '—' : `${successRate}%`}
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Automations</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Configure automation rules, notification templates, and webhooks.
+        </p>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-6">
-          <button
-            onClick={() => setActiveTab('rules')}
-            className={`pb-3 text-[13px] font-medium border-b-2 transition-colors ${
-              activeTab === 'rules'
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Rules
-          </button>
-          <button
-            onClick={() => setActiveTab('webhooks')}
-            className={`pb-3 text-[13px] font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
-              activeTab === 'webhooks'
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Link2 className="w-4 h-4" />
-            Incoming Webhooks
-            {endpoints.length > 0 && (
-              <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px]">
-                {endpoints.length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('executions')}
-            className={`pb-3 text-[13px] font-medium border-b-2 transition-colors ${
-              activeTab === 'executions'
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Execution History
-          </button>
-        </nav>
+      <div className="flex border-b mb-6">
+        <button
+          onClick={() => setActiveTab('rules')}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'rules'
+              ? 'border-gray-900 text-gray-900'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Zap className="w-4 h-4" />
+          Rules
+        </button>
+        <button
+          onClick={() => setActiveTab('templates')}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'templates'
+              ? 'border-gray-900 text-gray-900'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          Templates
+        </button>
+        <button
+          onClick={() => setActiveTab('notifications')}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'notifications'
+              ? 'border-gray-900 text-gray-900'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Bell className="w-4 h-4" />
+          Sent
+        </button>
+        <button
+          onClick={() => setActiveTab('webhooks')}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'webhooks'
+              ? 'border-gray-900 text-gray-900'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Link2 className="w-4 h-4" />
+          Webhooks
+        </button>
+        <button
+          onClick={() => setActiveTab('executions')}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'executions'
+              ? 'border-gray-900 text-gray-900'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <History className="w-4 h-4" />
+          History
+        </button>
       </div>
 
       {/* Rules Tab */}
       {activeTab === 'rules' && (
         <>
+          {/* Rules Header */}
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-gray-500">
+              {isLoading ? 'Loading...' : `${activeRules} active of ${totalRules} rules`}
+            </p>
+            <button
+              onClick={handleNewRule}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              New Rule
+            </button>
+          </div>
+
           {/* Action Type Filter */}
           <div className="flex flex-wrap items-center gap-2 mb-4">
             {ACTION_TYPES.map((action) => {
@@ -730,16 +840,423 @@ export default function AutomationRulesPage() {
         </>
       )}
 
+      {/* Templates Tab */}
+      {activeTab === 'templates' && (
+        <>
+          {/* Templates Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={templateSearch}
+                  onChange={(e) => setTemplateSearch(e.target.value)}
+                  placeholder="Search templates..."
+                  className="pl-9 pr-4 py-2 w-64 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                />
+              </div>
+              <select
+                value={templateActiveFilter}
+                onChange={(e) => setTemplateActiveFilter(e.target.value)}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+              >
+                <option value="">All Status</option>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </div>
+            <button
+              onClick={handleNewTemplate}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              New Template
+            </button>
+          </div>
+
+          {/* Templates Table */}
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            {isLoadingTemplates ? (
+              <div className="p-8 flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              </div>
+            ) : templates.length === 0 ? (
+              <div className="p-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                  <FileText className="w-6 h-6 text-gray-400" />
+                </div>
+                <h3 className="text-[14px] font-medium text-gray-900 mb-1">
+                  No templates yet
+                </h3>
+                <p className="text-[13px] text-gray-500 mb-4">
+                  Create reusable notification templates for your automation rules
+                </p>
+                <button
+                  onClick={handleNewTemplate}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-800"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Template
+                </button>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      Template
+                    </th>
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      Recipient
+                    </th>
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      Channel
+                    </th>
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="w-12"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {templates.map((template) => (
+                    <tr
+                      key={template.id}
+                      onClick={() => handleEditTemplate(template.id)}
+                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <div>
+                          <p className="text-[13px] font-medium text-gray-900">
+                            {template.name}
+                          </p>
+                          {template.description && (
+                            <p className="text-[12px] text-gray-500 truncate max-w-xs">
+                              {template.description}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[12px] text-gray-600">
+                          {template.template_type || 'Custom'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[12px] text-gray-600">
+                          {RecipientTypeLabels[template.recipient_type as keyof typeof RecipientTypeLabels] || template.recipient_type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-[11px] font-medium rounded">
+                          {NotificationChannelLabels[template.default_channel as keyof typeof NotificationChannelLabels] || template.default_channel}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                            template.is_active
+                              ? 'bg-green-50 text-green-700'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              template.is_active ? 'bg-green-500' : 'bg-gray-400'
+                            }`}
+                          />
+                          {template.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setTemplateMenuOpen(templateMenuOpen === template.id ? null : template.id)
+                            }}
+                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <MoreVertical className="w-4 h-4 text-gray-500" />
+                          </button>
+                          {templateMenuOpen === template.id && (
+                            <div className="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleEditTemplate(template.id)
+                                  setTemplateMenuOpen(null)
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                                Edit
+                              </button>
+                              <div className="my-1 border-t border-gray-100" />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedTemplateForDelete({ id: template.id, name: template.name })
+                                  setDeleteTemplateDialogOpen(true)
+                                  setTemplateMenuOpen(null)
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-red-600 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Notifications Tab */}
+      {activeTab === 'notifications' && (
+        <>
+          {/* Notifications Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by email or title..."
+                  value={notificationSearch}
+                  onChange={(e) => {
+                    setNotificationSearch(e.target.value)
+                    setNotificationPage(1)
+                  }}
+                  className="pl-9 pr-4 py-2 w-64 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                />
+              </div>
+              <select
+                value={notificationTypeFilter}
+                onChange={(e) => {
+                  setNotificationTypeFilter(e.target.value as NotificationType | '')
+                  setNotificationPage(1)
+                }}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+              >
+                <option value="">All Types</option>
+                {Object.entries(NotificationTypeLabels).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={notificationChannelFilter}
+                onChange={(e) => {
+                  setNotificationChannelFilter(e.target.value as NotificationChannel | '')
+                  setNotificationPage(1)
+                }}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+              >
+                <option value="">All Channels</option>
+                {Object.entries(NotificationChannelLabels).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={notificationReadFilter}
+                onChange={(e) => {
+                  setNotificationReadFilter(e.target.value)
+                  setNotificationPage(1)
+                }}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+              >
+                <option value="">All Status</option>
+                <option value="true">Read</option>
+                <option value="false">Unread</option>
+              </select>
+            </div>
+            <button
+              onClick={() => setSendNotificationDrawerOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors"
+            >
+              <Send className="w-4 h-4" />
+              Send
+            </button>
+          </div>
+
+          {/* Bulk actions */}
+          {isAdmin && selectedNotificationIds.size > 0 && (
+            <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+              <span className="text-[13px] text-gray-600">
+                {selectedNotificationIds.size} selected
+              </span>
+              <button
+                onClick={handleBulkDeleteNotifications}
+                disabled={isDeletingNotifications}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-error hover:bg-error/10 rounded-lg disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Selected
+              </button>
+            </div>
+          )}
+
+          {/* Table */}
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            {isLoadingNotifications ? (
+              <div className="p-8 flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="p-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                  <Bell className="w-6 h-6 text-gray-400" />
+                </div>
+                <h3 className="text-[14px] font-medium text-gray-900 mb-1">No notifications found</h3>
+                <p className="text-[13px] text-gray-500">Try adjusting your filters</p>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    {isAdmin && (
+                      <th className="px-4 py-3 text-left">
+                        <input
+                          type="checkbox"
+                          checked={selectedNotificationIds.size === notifications.length && notifications.length > 0}
+                          onChange={handleSelectAllNotifications}
+                          className="rounded border-gray-300"
+                        />
+                      </th>
+                    )}
+                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      Recipient
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      Title
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      Channel
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      Sent
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {notifications.map((notification) => (
+                    <tr key={notification.id} className="hover:bg-gray-50">
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedNotificationIds.has(notification.id)}
+                            onChange={() => handleSelectNotification(notification.id)}
+                            className="rounded border-gray-300"
+                          />
+                        </td>
+                      )}
+                      <td className="px-4 py-3">
+                        <div className="text-[13px] text-gray-900">{notification.recipient_name}</div>
+                        <div className="text-[12px] text-gray-500">{notification.recipient_email}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[13px] text-gray-700">
+                          {notification.notification_type_display || notification.notification_type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[13px] text-gray-900 line-clamp-1">{notification.title}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[13px] text-gray-600">
+                          {notification.channel_display || notification.channel}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                          <span
+                            className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${
+                              notification.is_read
+                                ? 'bg-gray-100 text-gray-600'
+                                : 'badge-secondary'
+                            }`}
+                          >
+                            {notification.is_read ? 'Read' : 'Unread'}
+                          </span>
+                          {notification.email_sent && (
+                            <span className="inline-flex px-2 py-0.5 text-[11px] font-medium rounded badge-success">
+                              Email Sent
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[13px] text-gray-500">
+                          {formatNotificationDate(notification.sent_at)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {/* Pagination */}
+            {notificationNumPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
+                <span className="text-[13px] text-gray-600">
+                  Page {notificationPage} of {notificationNumPages}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setNotificationPage((p) => p - 1)}
+                    disabled={!notificationHasPrevious}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setNotificationPage((p) => p + 1)}
+                    disabled={!notificationHasNext}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       {/* Webhooks Tab */}
       {activeTab === 'webhooks' && (
-        <div className="space-y-4">
+        <div>
           {/* Header with sub-tabs */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <div className="flex bg-gray-100 rounded-lg p-1">
+              <div className="flex bg-gray-100 rounded-md p-1">
                 <button
                   onClick={() => setWebhookSubTab('endpoints')}
-                  className={`px-3 py-1.5 text-[12px] font-medium rounded-md transition-colors ${
+                  className={`px-3 py-1.5 text-sm font-medium rounded transition-colors ${
                     webhookSubTab === 'endpoints'
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
@@ -749,7 +1266,7 @@ export default function AutomationRulesPage() {
                 </button>
                 <button
                   onClick={() => setWebhookSubTab('history')}
-                  className={`px-3 py-1.5 text-[12px] font-medium rounded-md transition-colors ${
+                  className={`px-3 py-1.5 text-sm font-medium rounded transition-colors ${
                     webhookSubTab === 'history'
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
@@ -758,11 +1275,6 @@ export default function AutomationRulesPage() {
                   History
                 </button>
               </div>
-              <p className="text-[13px] text-gray-500">
-                {webhookSubTab === 'endpoints'
-                  ? 'Create webhook endpoints to receive data from external systems'
-                  : 'View incoming webhook requests and their processing status'}
-              </p>
             </div>
             {webhookSubTab === 'endpoints' && (
               <button
@@ -770,7 +1282,7 @@ export default function AutomationRulesPage() {
                   setSelectedWebhookId(null)
                   setWebhookDrawerOpen(true)
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-800"
+                className="flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800"
               >
                 <Plus className="w-4 h-4" />
                 New Webhook
@@ -779,7 +1291,7 @@ export default function AutomationRulesPage() {
             {webhookSubTab === 'history' && (
               <button
                 onClick={() => refetchReceipts()}
-                className="flex items-center gap-2 px-3 py-2 text-[13px] text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
                 Refresh
@@ -1257,11 +1769,11 @@ export default function AutomationRulesPage() {
           <div className="flex-1">
             {/* Filters */}
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as ExecutionStatus | '')}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 >
                   <option value="">All statuses</option>
                   <option value="success">Success</option>
@@ -1272,7 +1784,7 @@ export default function AutomationRulesPage() {
               </div>
               <button
                 onClick={() => refetchExecutions()}
-                className="flex items-center gap-2 px-3 py-2 text-[13px] text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
                 Refresh
@@ -1489,6 +2001,36 @@ export default function AutomationRulesPage() {
                               {executionDetail.error_message}
                             </pre>
                           </div>
+                        </div>
+                      )}
+
+                      {/* Replay Button - Show for failed executions */}
+                      {executionDetail.status === 'failed' && (
+                        <div>
+                          <button
+                            onClick={async () => {
+                              try {
+                                await replayExecution(executionDetail.id)
+                                refetchExecutions()
+                              } catch (err) {
+                                console.error('Failed to replay execution:', err)
+                              }
+                            }}
+                            disabled={isReplaying}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {isReplaying ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Replaying...
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="w-4 h-4" />
+                                Replay Execution
+                              </>
+                            )}
+                          </button>
                         </div>
                       )}
 
@@ -1762,6 +2304,64 @@ export default function AutomationRulesPage() {
         <div
           className="fixed inset-0 z-40"
           onClick={() => setWebhookMenuOpen(null)}
+        />
+      )}
+
+      {/* Template Drawer */}
+      {templateDrawerOpen && (
+        <TemplateDrawer
+          templateId={selectedTemplateId}
+          onClose={handleTemplateDrawerClose}
+          onSaved={handleTemplateDrawerSaved}
+        />
+      )}
+
+      {/* Send Notification Drawer */}
+      {sendNotificationDrawerOpen && (
+        <SendNotificationDrawer
+          onClose={() => setSendNotificationDrawerOpen(false)}
+          onSent={() => refetchNotifications()}
+        />
+      )}
+
+      {/* Delete Template Confirmation Dialog */}
+      {deleteTemplateDialogOpen && selectedTemplateForDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[300]">
+          <div className="bg-white rounded-lg w-full max-w-sm mx-4 shadow-xl">
+            <div className="px-5 py-4 border-b border-gray-200">
+              <h2 className="text-[15px] font-semibold text-gray-900">Delete Template</h2>
+            </div>
+            <div className="p-5">
+              <p className="text-[13px] text-gray-600">
+                Are you sure you want to delete <span className="font-medium">"{selectedTemplateForDelete.name}"</span>?
+                This action cannot be undone.
+              </p>
+            </div>
+            <div className="px-5 py-4 border-t border-gray-200 flex justify-end gap-2">
+              <button
+                onClick={() => setDeleteTemplateDialogOpen(false)}
+                className="px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteTemplate}
+                disabled={isDeletingTemplate}
+                className="px-4 py-2 bg-red-600 text-white text-[13px] font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
+              >
+                {isDeletingTemplate && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isDeletingTemplate ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Close template menu when clicking outside */}
+      {templateMenuOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setTemplateMenuOpen(null)}
         />
       )}
     </div>

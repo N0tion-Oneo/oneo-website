@@ -41,6 +41,7 @@ import {
   ModelField,
   ScheduleConfig,
 } from '@/hooks/useAutomations'
+import { AutomationRecipientTypes, AutomationRecipientTypeGroups } from '@/types'
 import TestRulePanel from './TestRulePanel'
 import ExecutionHistoryPanel from './ExecutionHistoryPanel'
 
@@ -1226,13 +1227,15 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                                 onChange={(e) => setActionConfig({ ...actionConfig, recipient_type: e.target.value })}
                                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                               >
-                                <option value="assigned_user">Assigned User</option>
-                                <option value="record_owner">Record Owner</option>
-                                <option value="recruiter">Assigned Recruiter</option>
-                                <option value="assigned_client">Assigned Client</option>
-                                <option value="candidate">Candidate</option>
-                                <option value="company_admin">Company Admin</option>
-                                <option value="company_team">Company Team</option>
+                                {Object.entries(AutomationRecipientTypeGroups).map(([group, types]) => (
+                                  <optgroup key={group} label={group}>
+                                    {types.map((type) => (
+                                      <option key={type} value={type}>
+                                        {AutomationRecipientTypes[type as keyof typeof AutomationRecipientTypes]}
+                                      </option>
+                                    ))}
+                                  </optgroup>
+                                ))}
                               </select>
                             </div>
                           </div>
@@ -1260,13 +1263,15 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                                 onChange={(e) => setActionConfig({ ...actionConfig, recipient_type: e.target.value })}
                                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                               >
-                                <option value="assigned_user">Assigned User</option>
-                                <option value="record_owner">Record Owner</option>
-                                <option value="recruiter">Assigned Recruiter</option>
-                                <option value="assigned_client">Assigned Client</option>
-                                <option value="candidate">Candidate</option>
-                                <option value="company_admin">Company Admin</option>
-                                <option value="company_team">Company Team</option>
+                                {Object.entries(AutomationRecipientTypeGroups).map(([group, types]) => (
+                                  <optgroup key={group} label={group}>
+                                    {types.map((type) => (
+                                      <option key={type} value={type}>
+                                        {AutomationRecipientTypes[type as keyof typeof AutomationRecipientTypes]}
+                                      </option>
+                                    ))}
+                                  </optgroup>
+                                ))}
                               </select>
                             </div>
                           </div>
@@ -1579,15 +1584,6 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
 
                     const channel = (actionConfig as { channel?: string }).channel || templateInfo?.default_channel || 'email'
                     const recipientType = (actionConfig as { recipient_type?: string }).recipient_type || templateInfo?.recipient_type || 'assigned_user'
-                    const recipientLabels: Record<string, string> = {
-                      assigned_user: 'Assigned User',
-                      record_owner: 'Record Owner',
-                      recruiter: 'Assigned Recruiter',
-                      assigned_client: 'Assigned Client',
-                      candidate: 'Candidate',
-                      company_admin: 'Company Admin',
-                      company_team: 'Company Team',
-                    }
                     const channelLabels: Record<string, string> = {
                       email: 'Email',
                       in_app: 'In-App',
@@ -1602,7 +1598,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                           </span>
                           <span className="text-[12px] text-gray-500">→</span>
                           <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[11px] font-medium rounded">
-                            {recipientLabels[recipientType] || recipientType}
+                            {AutomationRecipientTypes[recipientType as keyof typeof AutomationRecipientTypes] || recipientType}
                           </span>
                         </div>
                         {isTemplateMode ? (

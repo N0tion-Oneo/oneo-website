@@ -317,23 +317,19 @@ class NotificationTemplate(models.Model):
         """
         Render the template with the given context.
         Returns dict with 'title', 'body', 'email_subject', 'email_body'.
-        Missing variables are replaced with {variable_name} placeholder.
+        Uses shared TemplateRenderer for consistent variable substitution.
         """
-        # Use a SafeDict that returns the key in braces for missing values
-        class SafeDict(dict):
-            def __missing__(self, key):
-                return '{' + key + '}'
+        from core.utils import TemplateRenderer
 
-        safe_context = SafeDict(context) if context else SafeDict()
-
-        title = self.title_template.format_map(safe_context)
-        body = self.body_template.format_map(safe_context)
-        email_subject = (self.email_subject_template or self.title_template).format_map(safe_context)
-        email_body = (self.email_body_template or self.body_template).format_map(safe_context)
+        context = context or {}
 
         return {
-            'title': title,
-            'body': body,
-            'email_subject': email_subject,
-            'email_body': email_body,
+            'title': TemplateRenderer.render(self.title_template, context),
+            'body': TemplateRenderer.render(self.body_template, context),
+            'email_subject': TemplateRenderer.render(
+                self.email_subject_template or self.title_template, context
+            ),
+            'email_body': TemplateRenderer.render(
+                self.email_body_template or self.body_template, context
+            ),
         }

@@ -1011,48 +1011,50 @@ def _execute_rule_notification(
     """
     Execute a notification action for an AutomationRule.
 
-    Uses the existing NotificationService infrastructure for:
+    Uses shared utilities and NotificationService infrastructure for:
+    - Template rendering with {variable} or {{variable}} syntax
+    - Recipient resolution
     - Email sending with branding
     - In-app notifications
-    - Email tracking (sent, errors)
 
     Supports two modes:
     1. Template mode: If rule.notification_template is set, use NotificationTemplate
-       with {variable} syntax
-    2. Inline mode: Use action_config templates with {{variable}} syntax (legacy)
+    2. Inline mode: Use action_config templates
 
     Config format (inline mode):
     {
         "channel": "email" | "in_app" | "both",
         "recipient_type": "assigned_user" | "record_owner" | "company_admin" | etc.,
         "recipient_ids": [1, 2, 3],  # if specific_users
-        "title_template": "New lead: {{name}}",
-        "body_template": "A new lead {{name}} from {{source}} was created.",
-        "action_url": "/dashboard/leads/{{id}}",  # optional
+        "title_template": "New lead: {name}",
+        "body_template": "A new lead {name} from {source} was created.",
+        "action_url": "/dashboard/leads/{id}",  # optional
     }
     """
+    from core.utils import TemplateRenderer, ContextBuilder, RecipientResolver
     from notifications.services.notification_service import NotificationService
 
     config = rule.action_config or {}
+
+    # Build context for template rendering (shared utility)
+    template_context = ContextBuilder.build(instance, extra_context=new_values)
+
+    # Render action URL
     action_url_template = config.get('action_url', '')
-    action_url = _render_payload_template(action_url_template, instance, old_values, new_values) if isinstance(action_url_template, str) else ''
+    action_url = TemplateRenderer.render(action_url_template, template_context) if action_url_template else ''
 
     # Determine if using template mode or inline mode
     if rule.notification_template:
         # =========================================================================
-        # Template Mode - Use NotificationTemplate with {variable} syntax
+        # Template Mode - Use NotificationTemplate
         # =========================================================================
         template = rule.notification_template
-
-        # Build context for template rendering using {variable} syntax
-        template_context = _build_template_context(instance, old_values, new_values)
 
         try:
             rendered = template.render(template_context)
             title = rendered['title']
             body = rendered['body']
         except KeyError as e:
-            # Missing variable in template
             logger.warning(f"Missing template variable {e} for rule {rule.name}")
             title = template.title_template
             body = template.body_template
@@ -1062,28 +1064,24 @@ def _execute_rule_notification(
         recipient_type = config.get('recipient_type') or template.recipient_type
     else:
         # =========================================================================
-        # Inline Mode - Use action_config templates with {{variable}} syntax
+        # Inline Mode - Use action_config templates
         # =========================================================================
         channel = config.get('channel', 'both')
         recipient_type = config.get('recipient_type', 'assigned_user')
         title_template = config.get('title_template', '')
         body_template = config.get('body_template', '')
 
-        # Render templates using {{variable}} syntax
-        title = _render_payload_template(title_template, instance, old_values, new_values) if isinstance(title_template, str) else str(title_template)
-        body = _render_payload_template(body_template, instance, old_values, new_values) if isinstance(body_template, str) else str(body_template)
+        # Render templates using shared TemplateRenderer (supports both {var} and {{var}})
+        title = TemplateRenderer.render(title_template, template_context) if title_template else ''
+        body = TemplateRenderer.render(body_template, template_context) if body_template else ''
 
-    # Resolve recipients using NotificationService
-    if recipient_type == 'specific_users':
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        recipient_ids = config.get('recipient_ids', [])
-        recipients = list(User.objects.filter(id__in=recipient_ids))
-    else:
-        recipients = NotificationService.resolve_automation_recipients(
-            recipient_type=recipient_type,
-            instance=instance,
-        )
+    # Resolve recipients using shared RecipientResolver
+    extra_context = {'user_ids': config.get('recipient_ids', [])} if recipient_type == 'specific_users' else {}
+    recipients = RecipientResolver.resolve(
+        recipient_type=recipient_type,
+        instance=instance,
+        extra_context=extra_context,
+    )
 
     if not recipients:
         logger.warning(f"No recipients found for notification rule {rule.name} (recipient_type={recipient_type})")

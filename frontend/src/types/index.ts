@@ -1797,6 +1797,72 @@ export const RecipientTypeLabels: Record<RecipientType, string> = {
   [RecipientType.ALL]: 'All Users',
 }
 
+// Automation recipient types - used for automation rules to dynamically resolve recipients
+// These are different from RecipientType which describes template audience
+export const AutomationRecipientTypes = {
+  // Record-based
+  assigned_user: 'Assigned User',
+  record_owner: 'Record Owner',
+  assigned_client: 'Assigned Client',
+
+  // Job/Application context
+  recruiter: 'Assigned Recruiter',
+  all_assigned_recruiters: 'All Assigned Recruiters',
+  candidate: 'Candidate',
+  interviewer: 'Interviewer',
+  active_applicants: 'Active Applicants',
+
+  // Company context
+  company_admin: 'Company Admin',
+  company_team: 'Company Team',
+  company_assignees: 'Company Assignees',
+
+  // System-wide
+  all_recruiters: 'All Recruiters',
+  all_admins: 'All Admins',
+
+  // Invitation context
+  invitation_email: 'Invitation Email',
+  invitation_creator: 'Invitation Creator',
+
+  // Booking context
+  booking_organizer: 'Booking Organizer',
+  booking_attendee: 'Booking Attendee',
+
+  // Self (for User model)
+  self: 'Self (User)',
+
+  // Billing
+  billing_contact: 'Billing Contact',
+  subscription_company: 'Subscription Company',
+
+  // Lead context
+  lead_assignees: 'Lead Assignees',
+  lead_email: 'Lead Email',
+
+  // Replacement context
+  replacement_requester: 'Replacement Requester',
+  job_recruiters: 'Job Recruiters',
+
+  // Specific users
+  specific_users: 'Specific Users',
+} as const
+
+export type AutomationRecipientType = keyof typeof AutomationRecipientTypes
+
+// Grouped recipient types for UI dropdowns
+export const AutomationRecipientTypeGroups = {
+  'Record Context': ['assigned_user', 'record_owner', 'assigned_client'],
+  'Job/Application': ['recruiter', 'all_assigned_recruiters', 'candidate', 'interviewer', 'active_applicants'],
+  'Company': ['company_admin', 'company_team', 'company_assignees'],
+  'System-wide': ['all_recruiters', 'all_admins'],
+  'Invitations': ['invitation_email', 'invitation_creator'],
+  'Bookings': ['booking_organizer', 'booking_attendee'],
+  'Leads': ['lead_assignees', 'lead_email'],
+  'Billing': ['billing_contact', 'subscription_company'],
+  'Other': ['self', 'replacement_requester', 'job_recruiters', 'specific_users'],
+} as const
+
 export interface Notification {
   id: string
   recipient: string

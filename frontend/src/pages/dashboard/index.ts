@@ -20,14 +20,7 @@ export { default as OnboardingStagesSettingsPage } from './OnboardingStagesSetti
 export { default as DashboardSettingsPage } from './DashboardSettingsPage';
 export { default as ApplicationsPage } from './ApplicationsPage';
 // JobApplicationsPage is deprecated - use AdminApplicationsPage with ?job= param instead
-
-// Notification Admin pages
-export {
-  NotificationsAdminPage,
-  SendNotificationPage,
-  NotificationTemplatesPage,
-  NotificationTemplateEditPage,
-} from './notifications';
+// Notification pages are now integrated into AutomationRulesPage
 
 // Branding Settings
 export { default as BrandingSettingsPage } from './BrandingSettingsPage';
@@ -52,10 +45,7 @@ export { default as FeedPostDetailPage } from './FeedPostDetailPage';
 // Subscriptions Management
 export { default as SubscriptionsPage } from './SubscriptionsPage';
 
-// Automations & Workflows
-export { default as AutomationsPage } from './AutomationsPage';
-export { default as WorkflowEditorPage } from './WorkflowEditorPage';
-
-// Automation Rules (Form-based, simpler approach)
+// Automations
 export { default as AutomationRulesPage } from './AutomationRulesPage';
 export { default as RuleEditorPage } from './RuleEditorPage';
+export { default as WorkflowEditorPage } from './WorkflowEditorPage';

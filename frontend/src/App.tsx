@@ -34,10 +34,6 @@ import {
   AdminSkillsTechnologiesPage,
   OnboardingStagesSettingsPage,
   DashboardSettingsPage,
-  NotificationsAdminPage,
-  SendNotificationPage,
-  NotificationTemplatesPage,
-  NotificationTemplateEditPage,
   BrandingSettingsPage,
   HomePage,
   CandidatesDirectoryPage,
@@ -59,10 +55,8 @@ import {
   FeedArticleEditorPage,
   FeedPostDetailPage,
   SubscriptionsPage,
-  AutomationsPage,
   WorkflowEditorPage,
   AutomationRulesPage,
-  RuleEditorPage,
   // CMS Dashboard Pages
   CMSOverviewPage,
   CMSPagesListPage,
@@ -203,11 +197,10 @@ function App() {
             <Route path="calendar" element={<CalendarSettingsPage />} />
             <Route path="integrations" element={<IntegrationsPage />} />
             <Route path="invitations" element={<InvitationsPage />} />
-            <Route path="notifications" element={<NotificationsAdminPage />} />
-            <Route path="notifications/send" element={<SendNotificationPage />} />
-            <Route path="notifications/templates" element={<NotificationTemplatesPage />} />
-            <Route path="notifications/templates/new" element={<NotificationTemplateEditPage />} />
-            <Route path="notifications/templates/:templateId" element={<NotificationTemplateEditPage />} />
+            <Route path="automations" element={<AutomationRulesPage />} />
+            {/* Old notification routes redirect to automations */}
+            <Route path="notifications" element={<Navigate to="/dashboard/settings/automations" replace />} />
+            <Route path="notifications/*" element={<Navigate to="/dashboard/settings/automations" replace />} />
             <Route path="skills-technologies" element={<AdminSkillsTechnologiesPage />} />
             <Route path="onboarding-stages" element={<OnboardingStagesSettingsPage />} />
             <Route path="branding" element={<BrandingSettingsPage />} />
@@ -225,11 +218,9 @@ function App() {
           <Route path="admin/jobs/new" element={<AdminNewJobPage />} />
           <Route path="admin/analytics" element={<AnalyticsPage />} />
           <Route path="admin/subscriptions" element={<SubscriptionsPage />} />
-          {/* Automation Rules (New form-based approach) */}
-          <Route path="admin/automations" element={<AutomationRulesPage />} />
-          <Route path="admin/automations/rules/:id" element={<RuleEditorPage />} />
-          {/* Legacy Workflows (React Flow - kept for backwards compatibility) */}
-          <Route path="admin/automations/workflows" element={<AutomationsPage />} />
+          {/* Redirect old automations routes to settings */}
+          <Route path="admin/automations" element={<Navigate to="/dashboard/settings/automations" replace />} />
+          <Route path="admin/automations/*" element={<Navigate to="/dashboard/settings/automations" replace />} />
           <Route path="automations/:id" element={<WorkflowEditorPage />} />
           {/* Redirect old admin/applications URL */}
           <Route path="admin/applications" element={<Navigate to="/dashboard/applications" replace />} />
