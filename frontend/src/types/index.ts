@@ -2540,6 +2540,28 @@ export interface OnboardingHistory {
   created_at: string
 }
 
+export interface StageIntegrationMeetingType {
+  id: number
+  name: string
+  slug: string
+  type: 'unauthenticated' | 'authenticated'
+}
+
+export interface StageIntegration {
+  stage_id: number
+  stage_name: string
+  stage_slug: string
+  entity_type: OnboardingEntityType
+  meeting_types: StageIntegrationMeetingType[]
+  wizard_step: string | null
+  entity_counts: {
+    companies: number
+    leads: number
+    candidates: number
+  }
+  total_integrations: number
+}
+
 // ============================================================================
 // Replacements
 // ============================================================================

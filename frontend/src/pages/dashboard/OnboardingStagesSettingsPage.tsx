@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { UserRole, OnboardingStage, OnboardingEntityType } from '@/types'
+import { UserRole, OnboardingStage } from '@/types'
 import {
   getOnboardingStages,
   createOnboardingStage,
   updateOnboardingStage,
   deleteOnboardingStage,
   reorderOnboardingStages,
+  getStageIntegrations,
 } from '@/services/api'
 import {
   Plus,
@@ -18,9 +19,10 @@ import {
   User,
   Users,
   AlertCircle,
-  CheckCircle,
   Flag,
 } from 'lucide-react'
+import { StageIntegrationBadges, StageIntegrationsDrawer } from '@/components/onboarding'
+import type { StageIntegration } from '@/types'
 
 type TabType = 'lead' | 'company' | 'candidate'
 
@@ -188,14 +190,34 @@ interface DeleteConfirmModalProps {
   isOpen: boolean
   onClose: () => void
   stage: OnboardingStage | null
+  integrationData: StageIntegration | null
   onConfirm: () => Promise<void>
 }
 
-function DeleteConfirmModal({ isOpen, onClose, stage, onConfirm }: DeleteConfirmModalProps) {
+function DeleteConfirmModal({ isOpen, onClose, stage, integrationData, onConfirm }: DeleteConfirmModalProps) {
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
 
   if (!isOpen || !stage) return null
+
+  // Calculate blockers
+  const blockers: string[] = []
+  if (integrationData) {
+    if (integrationData.meeting_types.length > 0) {
+      blockers.push(`${integrationData.meeting_types.length} meeting type(s)`)
+    }
+    if (integrationData.wizard_step) {
+      blockers.push(`wizard step "${integrationData.wizard_step}"`)
+    }
+    const entityCount =
+      integrationData.entity_counts.companies +
+      integrationData.entity_counts.leads +
+      integrationData.entity_counts.candidates
+    if (entityCount > 0) {
+      blockers.push(`${entityCount} entit${entityCount !== 1 ? 'ies' : 'y'}`)
+    }
+  }
+  const canDelete = blockers.length === 0
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -226,26 +248,47 @@ function DeleteConfirmModal({ isOpen, onClose, stage, onConfirm }: DeleteConfirm
               {error}
             </div>
           )}
-          <p className="text-gray-600 mb-6">
-            Are you sure you want to delete <span className="font-semibold">"{stage.name}"</span>?
-            This will deactivate the stage and it will no longer appear in the onboarding workflow.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
-            >
-              {deleting ? 'Deleting...' : 'Delete'}
-            </button>
-          </div>
+          {!canDelete ? (
+            <>
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded text-amber-800 text-sm">
+                <p className="font-medium mb-1">Cannot delete this stage</p>
+                <p>This stage is connected to: {blockers.join(', ')}.</p>
+                <p className="mt-2 text-amber-600">Remove these connections before deleting.</p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                >
+                  Close
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete <span className="font-semibold">"{stage.name}"</span>?
+                This will deactivate the stage and it will no longer appear in the onboarding workflow.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -281,6 +324,26 @@ export default function OnboardingStagesSettingsPage() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
+  // Integration drawer state
+  const [integrationDrawerOpen, setIntegrationDrawerOpen] = useState(false)
+  const [integrationStage, setIntegrationStage] = useState<OnboardingStage | null>(null)
+  const [integrationData, setIntegrationData] = useState<Record<number, StageIntegration>>({})
+
+  // Fetch integration data for all stages
+  const fetchIntegrationData = async (stageList: OnboardingStage[]) => {
+    const data: Record<number, StageIntegration> = {}
+    await Promise.all(
+      stageList.map(async (stage) => {
+        try {
+          data[stage.id] = await getStageIntegrations(stage.id)
+        } catch {
+          // Leave undefined if fetch fails
+        }
+      })
+    )
+    setIntegrationData((prev) => ({ ...prev, ...data }))
+  }
+
   // Permission check
   if (user?.role !== UserRole.ADMIN && user?.role !== UserRole.RECRUITER) {
     return (
@@ -297,6 +360,7 @@ export default function OnboardingStagesSettingsPage() {
     try {
       const data = await getOnboardingStages({ entity_type: 'lead' })
       setLeadStages(data)
+      fetchIntegrationData(data)
     } catch {
       setLeadError('Failed to load lead stages')
     } finally {
@@ -311,6 +375,7 @@ export default function OnboardingStagesSettingsPage() {
     try {
       const data = await getOnboardingStages({ entity_type: 'company' })
       setCompanyStages(data)
+      fetchIntegrationData(data)
     } catch {
       setCompanyError('Failed to load company stages')
     } finally {
@@ -325,6 +390,7 @@ export default function OnboardingStagesSettingsPage() {
     try {
       const data = await getOnboardingStages({ entity_type: 'candidate' })
       setCandidateStages(data)
+      fetchIntegrationData(data)
     } catch {
       setCandidateError('Failed to load candidate stages')
     } finally {
@@ -362,6 +428,12 @@ export default function OnboardingStagesSettingsPage() {
   const handleDelete = (stage: OnboardingStage) => {
     setSelectedStage(stage)
     setDeleteModalOpen(true)
+  }
+
+  // Handle view integrations
+  const handleViewIntegrations = (stage: OnboardingStage) => {
+    setIntegrationStage(stage)
+    setIntegrationDrawerOpen(true)
   }
 
   // Save handler
@@ -541,6 +613,16 @@ export default function OnboardingStagesSettingsPage() {
                         Terminal
                       </span>
                     )}
+                    <StageIntegrationBadges
+                      meetingTypesCount={integrationData[stage.id]?.meeting_types?.length || 0}
+                      wizardStep={integrationData[stage.id]?.wizard_step || null}
+                      entityCount={
+                        (integrationData[stage.id]?.entity_counts?.companies || 0) +
+                        (integrationData[stage.id]?.entity_counts?.leads || 0) +
+                        (integrationData[stage.id]?.entity_counts?.candidates || 0)
+                      }
+                      onClick={() => handleViewIntegrations(stage)}
+                    />
                   </div>
                 </div>
 
@@ -585,8 +667,20 @@ export default function OnboardingStagesSettingsPage() {
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         stage={selectedStage}
+        integrationData={selectedStage ? integrationData[selectedStage.id] || null : null}
         onConfirm={handleConfirmDelete}
       />
+
+      {/* Integration Drawer */}
+      {integrationDrawerOpen && integrationStage && (
+        <StageIntegrationsDrawer
+          stage={integrationStage}
+          onClose={() => {
+            setIntegrationDrawerOpen(false)
+            setIntegrationStage(null)
+          }}
+        />
+      )}
     </div>
   )
 }

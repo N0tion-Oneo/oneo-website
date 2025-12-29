@@ -6,6 +6,7 @@ from core.views_main import (
     delete_onboarding_stage,
     reorder_onboarding_stages,
     get_onboarding_history,
+    get_stage_integrations,
 )
 
 # Export analytics views

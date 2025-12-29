@@ -7,6 +7,7 @@ urlpatterns = [
     path('onboarding-stages/create/', views.create_onboarding_stage, name='create_onboarding_stage'),
     path('onboarding-stages/<int:stage_id>/', views.update_onboarding_stage, name='update_onboarding_stage'),
     path('onboarding-stages/<int:stage_id>/delete/', views.delete_onboarding_stage, name='delete_onboarding_stage'),
+    path('onboarding-stages/<int:stage_id>/integrations/', views.get_stage_integrations, name='get_stage_integrations'),
     path('onboarding-stages/reorder/', views.reorder_onboarding_stages, name='reorder_onboarding_stages'),
 
     # Onboarding history

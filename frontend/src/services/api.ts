@@ -337,7 +337,7 @@ export const updateCandidate = async (
 // Onboarding Stages API
 // ============================================================================
 
-import type { OnboardingStage, OnboardingEntityType, OnboardingStageInput, OnboardingStageUpdateInput, OnboardingHistory } from '@/types';
+import type { OnboardingStage, OnboardingEntityType, OnboardingStageInput, OnboardingStageUpdateInput, OnboardingHistory, StageIntegration } from '@/types';
 
 export const getOnboardingStages = async (params?: {
   entity_type?: OnboardingEntityType;
@@ -380,6 +380,11 @@ export const getOnboardingHistory = async (
   entityId: number
 ): Promise<OnboardingHistory[]> => {
   const response = await api.get(`/onboarding-history/${entityType}/${entityId}/`);
+  return response.data;
+};
+
+export const getStageIntegrations = async (stageId: number): Promise<StageIntegration> => {
+  const response = await api.get(`/onboarding-stages/${stageId}/integrations/`);
   return response.data;
 };
 

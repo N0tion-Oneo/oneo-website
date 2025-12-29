@@ -21,6 +21,19 @@ def is_staff_user(user):
     return user.role in [UserRole.ADMIN, UserRole.RECRUITER]
 
 
+# Wizard step to stage slug mapping (must match companies/views.py)
+STEP_TO_STAGE_SLUG = {
+    'contract': 'onboarding-contract',
+    'profile': 'onboarding-profile',
+    'billing': 'onboarding-billing',
+    'team': 'onboarding-team',
+    'booking': 'onboarding-call-booked',
+}
+
+# Reverse mapping: stage slug to wizard step
+STAGE_SLUG_TO_STEP = {v: k for k, v in STEP_TO_STAGE_SLUG.items()}
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_onboarding_stages(request):
@@ -102,7 +115,7 @@ def update_onboarding_stage(request, stage_id):
 def delete_onboarding_stage(request, stage_id):
     """
     Soft delete an onboarding stage (set is_active=False).
-    Cannot delete if any entities are currently at this stage.
+    Cannot delete if there are any connected integrations.
     """
     if not is_staff_user(request.user):
         return Response(
@@ -111,24 +124,42 @@ def delete_onboarding_stage(request, stage_id):
         )
 
     stage = get_object_or_404(OnboardingStage, id=stage_id)
+    blockers = []
 
-    # Check if any companies or candidates are at this stage
+    # Check for meeting types targeting this stage
+    mt_unauthenticated = stage.meeting_types_unauthenticated.filter(is_active=True).count()
+    mt_authenticated = stage.meeting_types_authenticated.filter(is_active=True).count()
+    total_meeting_types = mt_unauthenticated + mt_authenticated
+    if total_meeting_types > 0:
+        blockers.append(f'{total_meeting_types} meeting type(s)')
+
+    # Check for wizard step mapping
+    wizard_step = STAGE_SLUG_TO_STEP.get(stage.slug)
+    if wizard_step:
+        blockers.append(f'wizard step "{wizard_step}"')
+
+    # Check for entities at this stage
     if stage.entity_type == 'company':
         from companies.models import Company
         count = Company.objects.filter(onboarding_stage=stage).count()
         if count > 0:
-            return Response(
-                {'error': f'Cannot delete stage: {count} company(ies) are currently at this stage.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-    else:
+            blockers.append(f'{count} company(ies)')
+    elif stage.entity_type == 'lead':
+        from companies.models import Lead
+        count = Lead.objects.filter(onboarding_stage=stage).count()
+        if count > 0:
+            blockers.append(f'{count} lead(s)')
+    elif stage.entity_type == 'candidate':
         from candidates.models import CandidateProfile
         count = CandidateProfile.objects.filter(onboarding_stage=stage).count()
         if count > 0:
-            return Response(
-                {'error': f'Cannot delete stage: {count} candidate(s) are currently at this stage.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            blockers.append(f'{count} candidate(s)')
+
+    if blockers:
+        return Response(
+            {'error': f'Cannot delete stage: connected to {", ".join(blockers)}.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     # Soft delete
     stage.is_active = False
@@ -204,3 +235,79 @@ def get_onboarding_history(request, entity_type, entity_id):
 
     serializer = OnboardingHistorySerializer(history, many=True)
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_stage_integrations(request, stage_id):
+    """
+    Get all integration points for a specific onboarding stage.
+
+    Returns:
+    - meeting_types: List of meeting types that advance to this stage
+    - wizard_step: The wizard step mapped to this stage (if any)
+    - entity_counts: Count of entities currently at this stage
+    - total_integrations: Total count for badge display
+    """
+    if not is_staff_user(request.user):
+        return Response(
+            {'error': 'Permission denied'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    stage = get_object_or_404(OnboardingStage, id=stage_id)
+
+    # Get meeting types that advance to this stage
+    meeting_types = []
+
+    # Unauthenticated target
+    for mt in stage.meeting_types_unauthenticated.filter(is_active=True):
+        meeting_types.append({
+            'id': mt.id,
+            'name': mt.name,
+            'slug': mt.slug,
+            'type': 'unauthenticated',
+        })
+
+    # Authenticated target
+    for mt in stage.meeting_types_authenticated.filter(is_active=True):
+        meeting_types.append({
+            'id': mt.id,
+            'name': mt.name,
+            'slug': mt.slug,
+            'type': 'authenticated',
+        })
+
+    # Check if this stage is mapped to a wizard step
+    wizard_step = STAGE_SLUG_TO_STEP.get(stage.slug)
+
+    # Get entity counts based on entity_type
+    entity_counts = {
+        'companies': 0,
+        'leads': 0,
+        'candidates': 0,
+    }
+
+    if stage.entity_type == 'company':
+        from companies.models import Company
+        entity_counts['companies'] = Company.objects.filter(onboarding_stage=stage).count()
+    elif stage.entity_type == 'lead':
+        from companies.models import Lead
+        entity_counts['leads'] = Lead.objects.filter(onboarding_stage=stage).count()
+    elif stage.entity_type == 'candidate':
+        from candidates.models import CandidateProfile
+        entity_counts['candidates'] = CandidateProfile.objects.filter(onboarding_stage=stage).count()
+
+    # Calculate total integrations for badge (only config items, not entity counts)
+    total_integrations = len(meeting_types) + (1 if wizard_step else 0)
+
+    return Response({
+        'stage_id': stage.id,
+        'stage_name': stage.name,
+        'stage_slug': stage.slug,
+        'entity_type': stage.entity_type,
+        'meeting_types': meeting_types,
+        'wizard_step': wizard_step,
+        'entity_counts': entity_counts,
+        'total_integrations': total_integrations,
+    })
