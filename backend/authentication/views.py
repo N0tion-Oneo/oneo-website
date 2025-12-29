@@ -111,11 +111,7 @@ def register(request):
         user = serializer.save()
         tokens = get_tokens_for_user(user)
 
-        # Send welcome notification
-        try:
-            NotificationService.send_welcome_notification(user)
-        except Exception as e:
-            logger.error(f"Failed to send welcome notification: {e}")
+        # Welcome notification handled by automation rule: [Auto] Welcome Email - Candidate
 
         response_data = {
             'message': 'Registration successful',
@@ -362,11 +358,7 @@ def change_password(request):
         request.user.set_password(serializer.validated_data['new_password'])
         request.user.save()
 
-        # Send password changed notification
-        try:
-            NotificationService.notify_password_changed(request.user)
-        except Exception as e:
-            logger.error(f"Failed to send password changed notification: {e}")
+        # Password changed notification handled by automation rule: [Signal] Password Changed
 
         return Response(
             {'message': 'Password changed successfully'},
@@ -612,16 +604,7 @@ def create_client_invitation(request):
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
         signup_url = f"{frontend_url}/signup/client/{invitation.token}"
 
-        # Send invitation email if email was provided
-        if invitation.email:
-            try:
-                NotificationService.notify_client_invite(
-                    email=invitation.email,
-                    invited_by=request.user,
-                    signup_url=signup_url,
-                )
-            except Exception as e:
-                logger.error(f"Failed to send client invitation email: {e}")
+        # Client invite email handled by automation rule: [Auto] Client Invitation Created - Send Invite Email
 
         return Response({
             'token': str(invitation.token),
@@ -761,11 +744,7 @@ def signup_with_invitation(request, token):
                 'role': company_invitation.role,
             }
 
-        # Send welcome notification
-        try:
-            NotificationService.send_welcome_notification(user)
-        except Exception as e:
-            logger.error(f"Failed to send welcome notification: {e}")
+        # Welcome notification handled by automation rule: [Auto] Welcome Email - *
 
         # Generate tokens
         tokens = get_tokens_for_user(user)
@@ -878,16 +857,7 @@ def resend_client_invitation(request, token):
     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
     signup_url = f"{frontend_url}/signup/client/{invitation.token}"
 
-    # Resend invitation email if email was provided
-    if invitation.email:
-        try:
-            NotificationService.notify_client_invite(
-                email=invitation.email,
-                invited_by=request.user,
-                signup_url=signup_url,
-            )
-        except Exception as e:
-            logger.error(f"Failed to resend client invitation email: {e}")
+    # Client invite email handled by automation rule: [Auto] Client Invitation Created - Send Invite Email
 
     return Response({
         'token': str(invitation.token),
@@ -1002,11 +972,7 @@ def signup_with_company_invitation(request, token):
         invitation.accepted_at = timezone.now()
         invitation.save()
 
-        # Send welcome notification
-        try:
-            NotificationService.send_welcome_notification(user)
-        except Exception as e:
-            logger.error(f"Failed to send welcome notification: {e}")
+        # Welcome notification handled by automation rule: [Auto] Welcome Email - *
 
         # Generate tokens
         tokens = get_tokens_for_user(user)
@@ -1099,16 +1065,7 @@ def create_recruiter_invitation(request):
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
         signup_url = f"{frontend_url}/signup/recruiter/{invitation.token}"
 
-        # Send invitation email if email was provided
-        if invitation.email:
-            try:
-                NotificationService.notify_team_invite(
-                    email=invitation.email,
-                    invited_by=request.user,
-                    signup_url=signup_url,
-                )
-            except Exception as e:
-                logger.error(f"Failed to send recruiter invitation email: {e}")
+        # Recruiter invite email handled by automation rule: [Auto] Recruiter Invitation Created - Send Invite Email
 
         return Response({
             'token': str(invitation.token),
@@ -1242,11 +1199,7 @@ def signup_with_recruiter_invitation(request, token):
         invitation.used_by = user
         invitation.save()
 
-        # Send welcome notification
-        try:
-            NotificationService.send_welcome_notification(user)
-        except Exception as e:
-            logger.error(f"Failed to send welcome notification: {e}")
+        # Welcome notification handled by automation rule: [Auto] Welcome Email - *
 
         # Generate tokens
         tokens = get_tokens_for_user(user)
@@ -1388,11 +1341,7 @@ def signup_with_candidate_invitation(request, token):
             if booking_updated:
                 invitation.booking.save(update_fields=['attendee_user', 'candidate_profile'])
 
-        # Send welcome notification
-        try:
-            NotificationService.send_welcome_notification(user)
-        except Exception as e:
-            logger.error(f"Failed to send welcome notification: {e}")
+        # Welcome notification handled by automation rule: [Auto] Welcome Email - *
 
         # Generate tokens
         tokens = get_tokens_for_user(user)
@@ -1496,24 +1445,7 @@ def resend_candidate_invitation(request, token):
     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
     signup_url = f"{frontend_url}/signup/candidate/{invitation.token}"
 
-    # Send notification
-    try:
-        booking = invitation.booking
-        if booking:
-            NotificationService.notify_candidate_booking_invite(
-                email=invitation.email,
-                name=invitation.name,
-                recruiter=booking.organizer,
-                meeting_type_name=booking.meeting_type.name if booking.meeting_type else 'Meeting',
-                scheduled_at=booking.scheduled_at,
-                duration_minutes=booking.duration_minutes,
-                signup_url=signup_url,
-            )
-        else:
-            # No booking associated, send a simpler notification
-            logger.warning(f"Resending invitation {invitation.token} without associated booking")
-    except Exception as e:
-        logger.error(f"Failed to resend candidate invitation email: {e}")
+    # Candidate booking invite handled by automation rule: [Auto] Candidate Booking Invite - Send Email
 
     return Response({
         'message': 'Invitation resent successfully',

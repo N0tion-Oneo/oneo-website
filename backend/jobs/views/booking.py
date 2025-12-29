@@ -230,11 +230,7 @@ def book_slot(request, token):
         }
     )
 
-    # Send booking confirmation notification (self-scheduled)
-    try:
-        NotificationService.notify_booking_confirmed(instance)
-    except Exception as e:
-        logger.warning(f"Failed to send booking confirmation: {e}")
+    # Notification handled by automation rule: [Auto] Booking Confirmed - Notify Attendee/Organizer
 
     return Response({
         'success': True,

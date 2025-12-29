@@ -59,6 +59,10 @@ import {
   FeedArticleEditorPage,
   FeedPostDetailPage,
   SubscriptionsPage,
+  AutomationsPage,
+  WorkflowEditorPage,
+  AutomationRulesPage,
+  RuleEditorPage,
   // CMS Dashboard Pages
   CMSOverviewPage,
   CMSPagesListPage,
@@ -221,6 +225,12 @@ function App() {
           <Route path="admin/jobs/new" element={<AdminNewJobPage />} />
           <Route path="admin/analytics" element={<AnalyticsPage />} />
           <Route path="admin/subscriptions" element={<SubscriptionsPage />} />
+          {/* Automation Rules (New form-based approach) */}
+          <Route path="admin/automations" element={<AutomationRulesPage />} />
+          <Route path="admin/automations/rules/:id" element={<RuleEditorPage />} />
+          {/* Legacy Workflows (React Flow - kept for backwards compatibility) */}
+          <Route path="admin/automations/workflows" element={<AutomationsPage />} />
+          <Route path="automations/:id" element={<WorkflowEditorPage />} />
           {/* Redirect old admin/applications URL */}
           <Route path="admin/applications" element={<Navigate to="/dashboard/applications" replace />} />
           {/* CMS Dashboard routes with CMSLayout */}

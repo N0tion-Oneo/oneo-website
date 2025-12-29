@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'feed',
     'subscriptions',
     'integrations',
+    'automations',
 ]
 
 MIDDLEWARE = [
@@ -381,6 +382,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'integrations.push_pending_invoices',
         'schedule': 60 * 15,  # Every 15 minutes - retry failed invoice syncs
     },
+    'process-scheduled-automation-triggers': {
+        'task': 'automations.process_scheduled_triggers',
+        'schedule': 60 * 5,  # Every 5 minutes - process scheduled automation rules
+    },
 }
 
 # Template directories (for email templates)
@@ -389,3 +394,7 @@ TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
 # OpenAI API (for resume parsing)
 # https://platform.openai.com/api-keys
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+
+# Automation System Encryption Key (for storing webhook secrets)
+# Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+AUTOMATION_ENCRYPTION_KEY = os.getenv('AUTOMATION_ENCRYPTION_KEY', '')

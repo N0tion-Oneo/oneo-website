@@ -7,6 +7,8 @@ from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
+from automations.registry import automatable
+
 
 # =============================================================================
 # Abstract Base Model
@@ -71,6 +73,11 @@ class SubscriptionServiceType(models.TextChoices):
 # =============================================================================
 
 
+@automatable(
+    display_name='Subscription',
+    events=['created', 'updated', 'deleted', 'status_changed'],
+    status_field='status',
+)
 class Subscription(TimestampedModel):
     """
     Subscription/contract for any service type.
@@ -526,6 +533,11 @@ def get_payment_terms_for_invoice(invoice_type: str, subscription=None) -> int:
         return DEFAULT_PAYMENT_TERMS_DAYS
 
 
+@automatable(
+    display_name='Invoice',
+    events=['created', 'updated', 'deleted', 'status_changed'],
+    status_field='status',
+)
 class Invoice(TimestampedModel):
     """
     Invoice for subscription billing or placement fees.

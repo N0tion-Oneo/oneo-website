@@ -46,4 +46,7 @@ urlpatterns = [
 
     # Integrations endpoints (Xero, etc.)
     path('integrations/', include('integrations.urls')),
+
+    # Automations endpoints (webhooks, workflows)
+    path('webhooks/', include('automations.urls')),
 ]

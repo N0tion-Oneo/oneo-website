@@ -49,29 +49,26 @@ except ImportError:
 @shared_task(name="jobs.send_interview_reminders")
 def send_interview_reminders():
     """
-    Send reminder notifications for interviews scheduled tomorrow.
-    Should be scheduled to run daily (e.g., at 9 AM).
+    DEPRECATED: Now handled by automation rules:
+    - [Auto] Interview Reminder - 24h Before (Candidate)
+    - [Auto] Interview Reminder - 24h Before (Interviewer)
     """
-    count = NotificationService.send_interview_reminders()
-    return f"Sent {count} interview reminders"
+    return "Skipped - handled by automation rules"
 
 
 @shared_task(name="jobs.send_assessment_deadline_reminders")
 def send_assessment_deadline_reminders():
     """
-    Send reminder notifications for assessment deadlines tomorrow.
-    Should be scheduled to run daily (e.g., at 9 AM).
+    DEPRECATED: Now handled by automation rule:
+    - [Auto] Assessment Deadline Reminder - 24h Before
     """
-    count = NotificationService.send_assessment_deadline_reminders()
-    return f"Sent {count} assessment deadline reminders"
+    return "Skipped - handled by automation rules"
 
 
 @shared_task(name="jobs.send_booking_reminders")
 def send_booking_reminders():
     """
-    Send reminder notifications for candidates who received a booking link
-    but haven't scheduled their interview yet.
-    Should be scheduled to run daily (e.g., at 9 AM).
+    DEPRECATED: Now handled by automation rule:
+    - [Auto] Booking Reminder - 24h Before (Attendee)
     """
-    count = NotificationService.send_booking_reminders()
-    return f"Sent {count} booking reminders"
+    return "Skipped - handled by automation rules"

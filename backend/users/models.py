@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 from companies.models import Country, City
+from automations.registry import automatable
 
 
 class UserRole(models.TextChoices):
@@ -12,6 +13,11 @@ class UserRole(models.TextChoices):
     ADMIN = 'admin', 'Admin'
 
 
+@automatable(
+    display_name='User',
+    events=['created', 'updated'],
+    status_field='role',
+)
 class User(AbstractUser):
     """
     Custom User model extending AbstractUser with additional fields

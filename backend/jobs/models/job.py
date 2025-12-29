@@ -4,6 +4,8 @@ from django.utils.text import slugify
 from django.utils import timezone
 import uuid
 
+from automations.registry import automatable
+
 
 class JobStatus(models.TextChoices):
     DRAFT = 'draft', 'Draft'
@@ -41,6 +43,11 @@ class Department(models.TextChoices):
     OTHER = 'other', 'Other'
 
 
+@automatable(
+    display_name='Job',
+    events=['created', 'updated', 'deleted', 'status_changed'],
+    status_field='status',
+)
 class Job(models.Model):
     """
     Job posting by a company.

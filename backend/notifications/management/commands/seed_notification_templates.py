@@ -763,6 +763,204 @@ class Command(BaseCommand):
             },
 
             # =================================================================
+            # Lead Pipeline Notifications
+            # =================================================================
+            {
+                'name': 'New Lead Created',
+                'description': 'Sent to assigned recruiters when a new lead is created',
+                'template_type': NotificationType.LEAD_CREATED,
+                'recipient_type': RecipientType.RECRUITER,
+                'is_custom': False,
+                'title_template': 'New Lead: {lead_name}',
+                'body_template': 'A new lead has been created: {lead_name} at {lead_company_name}.',
+                'email_subject_template': 'New Lead - {lead_name}',
+                'email_body_template': self._get_email_template('lead_created'),
+                'default_channel': NotificationChannel.BOTH,
+                'is_active': True,
+            },
+            {
+                'name': 'Lead Stage Changed',
+                'description': 'Sent to assigned recruiters when lead stage changes',
+                'template_type': NotificationType.LEAD_STAGE_CHANGED,
+                'recipient_type': RecipientType.RECRUITER,
+                'is_custom': False,
+                'title_template': 'Lead Stage Updated: {lead_name}',
+                'body_template': '{lead_name} has moved from {from_stage} to {to_stage}.',
+                'email_subject_template': 'Lead Stage Update - {lead_name}',
+                'email_body_template': self._get_email_template('lead_stage_changed'),
+                'default_channel': NotificationChannel.BOTH,
+                'is_active': True,
+            },
+            {
+                'name': 'Lead Converted',
+                'description': 'Sent to the converted lead welcoming them as a client',
+                'template_type': NotificationType.LEAD_CONVERTED,
+                'recipient_type': RecipientType.CLIENT,
+                'is_custom': False,
+                'title_template': 'Welcome to {brand_name}!',
+                'body_template': 'Congratulations! Your account has been created. Welcome to {brand_name}.',
+                'email_subject_template': 'Welcome to {brand_name} - Account Created',
+                'email_body_template': self._get_email_template('lead_converted'),
+                'default_channel': NotificationChannel.BOTH,
+                'is_active': True,
+            },
+            {
+                'name': 'Lead Assigned',
+                'description': 'Sent to newly assigned recruiter when a lead is assigned',
+                'template_type': NotificationType.LEAD_ASSIGNED,
+                'recipient_type': RecipientType.RECRUITER,
+                'is_custom': False,
+                'title_template': 'Lead Assigned: {lead_name}',
+                'body_template': 'You have been assigned to lead {lead_name} at {lead_company_name}.',
+                'email_subject_template': 'Lead Assignment - {lead_name}',
+                'email_body_template': self._get_email_template('lead_assigned'),
+                'default_channel': NotificationChannel.BOTH,
+                'is_active': True,
+            },
+
+            # =================================================================
+            # Company Notifications
+            # =================================================================
+            {
+                'name': 'New Company Created',
+                'description': 'Sent to admins when a new company is created',
+                'template_type': NotificationType.COMPANY_CREATED,
+                'recipient_type': RecipientType.RECRUITER,
+                'is_custom': False,
+                'title_template': 'New Company: {company_name}',
+                'body_template': 'A new company has been registered: {company_name}.',
+                'email_subject_template': 'New Company Registered - {company_name}',
+                'email_body_template': self._get_email_template('company_created'),
+                'default_channel': NotificationChannel.BOTH,
+                'is_active': True,
+            },
+            {
+                'name': 'Company Onboarding Stage Changed',
+                'description': 'Sent to assigned recruiters when company onboarding stage changes',
+                'template_type': NotificationType.COMPANY_STAGE_CHANGED,
+                'recipient_type': RecipientType.RECRUITER,
+                'is_custom': False,
+                'title_template': 'Company Stage Updated: {company_name}',
+                'body_template': '{company_name} has moved from {from_stage} to {to_stage}.',
+                'email_subject_template': 'Company Stage Update - {company_name}',
+                'email_body_template': self._get_email_template('company_stage_changed'),
+                'default_channel': NotificationChannel.BOTH,
+                'is_active': True,
+            },
+
+            # =================================================================
+            # Invoice Notifications
+            # =================================================================
+            {
+                'name': 'Invoice Sent',
+                'description': 'Sent to company billing contact when invoice is issued',
+                'template_type': NotificationType.INVOICE_SENT,
+                'recipient_type': RecipientType.CLIENT,
+                'is_custom': False,
+                'title_template': 'Invoice {invoice_number}',
+                'body_template': 'Your invoice {invoice_number} for {total_amount} has been issued. Due date: {due_date}.',
+                'email_subject_template': 'Invoice {invoice_number} - {brand_name}',
+                'email_body_template': self._get_email_template('invoice_sent'),
+                'default_channel': NotificationChannel.EMAIL,
+                'is_active': True,
+            },
+            {
+                'name': 'Invoice Paid',
+                'description': 'Sent to company when invoice is paid',
+                'template_type': NotificationType.INVOICE_PAID,
+                'recipient_type': RecipientType.CLIENT,
+                'is_custom': False,
+                'title_template': 'Payment Received - Invoice {invoice_number}',
+                'body_template': 'Thank you! Your payment for invoice {invoice_number} has been received.',
+                'email_subject_template': 'Payment Received - Invoice {invoice_number}',
+                'email_body_template': self._get_email_template('invoice_paid'),
+                'default_channel': NotificationChannel.EMAIL,
+                'is_active': True,
+            },
+            {
+                'name': 'Invoice Overdue',
+                'description': 'Sent to company billing contact when invoice is overdue',
+                'template_type': NotificationType.INVOICE_OVERDUE,
+                'recipient_type': RecipientType.CLIENT,
+                'is_custom': False,
+                'title_template': 'Overdue Invoice: {invoice_number}',
+                'body_template': 'Invoice {invoice_number} for {total_amount} is overdue. Please remit payment immediately.',
+                'email_subject_template': 'Overdue Invoice - {invoice_number}',
+                'email_body_template': self._get_email_template('invoice_overdue'),
+                'default_channel': NotificationChannel.EMAIL,
+                'is_active': True,
+            },
+
+            # =================================================================
+            # Subscription Notifications
+            # =================================================================
+            {
+                'name': 'Subscription Activated',
+                'description': 'Sent to company when subscription becomes active',
+                'template_type': NotificationType.SUBSCRIPTION_ACTIVATED,
+                'recipient_type': RecipientType.CLIENT,
+                'is_custom': False,
+                'title_template': 'Subscription Active',
+                'body_template': 'Your {service_type} subscription is now active. Contract period: {contract_start} to {contract_end}.',
+                'email_subject_template': 'Your {service_type} Subscription is Active - {brand_name}',
+                'email_body_template': self._get_email_template('subscription_activated'),
+                'default_channel': NotificationChannel.BOTH,
+                'is_active': True,
+            },
+            {
+                'name': 'Subscription Paused',
+                'description': 'Sent to company when subscription is paused',
+                'template_type': NotificationType.SUBSCRIPTION_PAUSED,
+                'recipient_type': RecipientType.CLIENT,
+                'is_custom': False,
+                'title_template': 'Subscription Paused',
+                'body_template': 'Your {service_type} subscription has been paused. Contact us for more information.',
+                'email_subject_template': 'Subscription Paused - {brand_name}',
+                'email_body_template': self._get_email_template('subscription_paused'),
+                'default_channel': NotificationChannel.BOTH,
+                'is_active': True,
+            },
+            {
+                'name': 'Subscription Terminated',
+                'description': 'Sent to company when subscription is terminated',
+                'template_type': NotificationType.SUBSCRIPTION_TERMINATED,
+                'recipient_type': RecipientType.CLIENT,
+                'is_custom': False,
+                'title_template': 'Subscription Terminated',
+                'body_template': 'Your {service_type} subscription has been terminated, effective {termination_date}.',
+                'email_subject_template': 'Subscription Terminated - {brand_name}',
+                'email_body_template': self._get_email_template('subscription_terminated'),
+                'default_channel': NotificationChannel.BOTH,
+                'is_active': True,
+            },
+            {
+                'name': 'Subscription Renewed',
+                'description': 'Sent to company when subscription is renewed',
+                'template_type': NotificationType.SUBSCRIPTION_RENEWED,
+                'recipient_type': RecipientType.CLIENT,
+                'is_custom': False,
+                'title_template': 'Subscription Renewed',
+                'body_template': 'Your {service_type} subscription has been renewed until {contract_end}.',
+                'email_subject_template': 'Subscription Renewed - {brand_name}',
+                'email_body_template': self._get_email_template('subscription_renewed'),
+                'default_channel': NotificationChannel.BOTH,
+                'is_active': True,
+            },
+            {
+                'name': 'Subscription Expiring',
+                'description': 'Reminder sent before subscription expires',
+                'template_type': NotificationType.SUBSCRIPTION_EXPIRING,
+                'recipient_type': RecipientType.CLIENT,
+                'is_custom': False,
+                'title_template': 'Subscription Expiring Soon',
+                'body_template': 'Your {service_type} subscription will expire on {contract_end}. {days_remaining} days remaining.',
+                'email_subject_template': 'Subscription Expiring in {days_remaining} Days - {brand_name}',
+                'email_body_template': self._get_email_template('subscription_expiring'),
+                'default_channel': NotificationChannel.BOTH,
+                'is_active': True,
+            },
+
+            # =================================================================
             # Admin/Custom Notifications
             # =================================================================
             {
@@ -1282,6 +1480,186 @@ class Command(BaseCommand):
     <a href="{signup_url}" style="background: #007bff; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block;">Accept Invitation</a>
 </div>
 <p style="color: #666; font-size: 14px;">This invitation link will expire in 7 days.</p>
+''',
+            # Lead Pipeline Email Templates
+            'lead_created': '''
+<p>Hi,</p>
+<p>A new lead has been added to the system.</p>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>Name:</strong> {lead_name}</p>
+    <p style="margin: 8px 0 0;"><strong>Company:</strong> {lead_company_name}</p>
+    <p style="margin: 8px 0 0;"><strong>Email:</strong> {lead_email}</p>
+    <p style="margin: 8px 0 0;"><strong>Source:</strong> {lead_source}</p>
+</div>
+<p>Review the lead and start the qualification process.</p>
+''',
+            'lead_stage_changed': '''
+<p>Hi,</p>
+<p>A lead has progressed through the pipeline.</p>
+<div style="background: #d4edda; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #28a745;">
+    <p style="margin: 0; color: #155724;"><strong>Lead:</strong> {lead_name}</p>
+    <p style="margin: 8px 0 0; color: #155724;"><strong>Company:</strong> {lead_company_name}</p>
+</div>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>From:</strong> {from_stage}</p>
+    <p style="margin: 8px 0 0;"><strong>To:</strong> {to_stage}</p>
+</div>
+<p>Review the lead details and take appropriate next steps.</p>
+''',
+            'lead_converted': '''
+<p>Hi {first_name},</p>
+<p>Welcome to {brand_name}! Your account has been created and you're ready to get started.</p>
+<div style="background: #d4edda; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #28a745;">
+    <p style="margin: 0; color: #155724; font-size: 18px;"><strong>Account Activated!</strong></p>
+</div>
+<p>You now have access to:</p>
+<ul>
+    <li>View and manage job postings</li>
+    <li>Track candidates through the hiring process</li>
+    <li>Communicate with your recruitment team</li>
+</ul>
+<p>If you have any questions, your account manager will be happy to help.</p>
+''',
+            'lead_assigned': '''
+<p>Hi,</p>
+<p>You have been assigned to a new lead.</p>
+<div style="background: #e7f3ff; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #007bff;">
+    <p style="margin: 0; color: #004085;"><strong>Lead Assigned to You</strong></p>
+</div>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>Name:</strong> {lead_name}</p>
+    <p style="margin: 8px 0 0;"><strong>Company:</strong> {lead_company_name}</p>
+    <p style="margin: 8px 0 0;"><strong>Email:</strong> {lead_email}</p>
+    <p style="margin: 8px 0 0;"><strong>Stage:</strong> {lead_stage}</p>
+</div>
+<p>Start engaging with this lead to move them through the sales pipeline.</p>
+''',
+            # Company Email Templates
+            'company_created': '''
+<p>Hi,</p>
+<p>A new company has been registered on the platform.</p>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>Company:</strong> {company_name}</p>
+    <p style="margin: 8px 0 0;"><strong>Industry:</strong> {company_industry}</p>
+    <p style="margin: 8px 0 0;"><strong>Size:</strong> {company_size}</p>
+</div>
+<p>Review the company profile and assign an account manager if needed.</p>
+''',
+            'company_stage_changed': '''
+<p>Hi,</p>
+<p>A company's onboarding stage has changed.</p>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>Company:</strong> {company_name}</p>
+    <p style="margin: 8px 0 0;"><strong>From:</strong> {from_stage}</p>
+    <p style="margin: 8px 0 0;"><strong>To:</strong> {to_stage}</p>
+</div>
+<p>Follow up with the client if needed to support their onboarding.</p>
+''',
+            # Invoice Email Templates
+            'invoice_sent': '''
+<p>Hi,</p>
+<p>A new invoice has been issued for your account.</p>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>Invoice Number:</strong> {invoice_number}</p>
+    <p style="margin: 8px 0 0;"><strong>Amount Due:</strong> {total_amount}</p>
+    <p style="margin: 8px 0 0;"><strong>Due Date:</strong> {due_date}</p>
+    <p style="margin: 8px 0 0;"><strong>Description:</strong> {invoice_description}</p>
+</div>
+<p>Please remit payment by the due date to avoid any service interruption.</p>
+<p>If you have any questions about this invoice, please contact our billing team.</p>
+''',
+            'invoice_paid': '''
+<p>Hi,</p>
+<p>Thank you for your payment!</p>
+<div style="background: #d4edda; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #28a745;">
+    <p style="margin: 0; color: #155724; font-size: 18px;"><strong>Payment Received</strong></p>
+</div>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>Invoice Number:</strong> {invoice_number}</p>
+    <p style="margin: 8px 0 0;"><strong>Amount Paid:</strong> {amount_paid}</p>
+    <p style="margin: 8px 0 0;"><strong>Payment Date:</strong> {payment_date}</p>
+</div>
+<p>This email serves as confirmation of your payment. Thank you for your continued business.</p>
+''',
+            'invoice_overdue': '''
+<p>Hi,</p>
+<p>This is a reminder that your invoice is now overdue.</p>
+<div style="background: #f8d7da; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #dc3545;">
+    <p style="margin: 0; color: #721c24; font-size: 16px;"><strong>Payment Overdue</strong></p>
+</div>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>Invoice Number:</strong> {invoice_number}</p>
+    <p style="margin: 8px 0 0;"><strong>Amount Due:</strong> {total_amount}</p>
+    <p style="margin: 8px 0 0;"><strong>Original Due Date:</strong> {due_date}</p>
+    <p style="margin: 8px 0 0;"><strong>Days Overdue:</strong> {days_overdue}</p>
+</div>
+<p>Please remit payment immediately to avoid any disruption to your service.</p>
+<p>If you've already made payment, please disregard this notice. If you have questions or need to arrange a payment plan, please contact our billing team.</p>
+''',
+            # Subscription Email Templates
+            'subscription_activated': '''
+<p>Hi,</p>
+<p>Your subscription has been activated!</p>
+<div style="background: #d4edda; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #28a745;">
+    <p style="margin: 0; color: #155724; font-size: 18px;"><strong>Subscription Active</strong></p>
+</div>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>Service Type:</strong> {service_type}</p>
+    <p style="margin: 8px 0 0;"><strong>Contract Start:</strong> {contract_start}</p>
+    <p style="margin: 8px 0 0;"><strong>Contract End:</strong> {contract_end}</p>
+</div>
+<p>You now have full access to all the features included in your subscription. Welcome aboard!</p>
+''',
+            'subscription_paused': '''
+<p>Hi,</p>
+<p>Your subscription has been paused.</p>
+<div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #ffc107;">
+    <p style="margin: 0; color: #856404; font-size: 16px;"><strong>Subscription Paused</strong></p>
+</div>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>Service Type:</strong> {service_type}</p>
+    <p style="margin: 8px 0 0;"><strong>Paused On:</strong> {paused_date}</p>
+</div>
+<p>While your subscription is paused, some features may be temporarily unavailable.</p>
+<p>If you have questions about this pause or would like to resume your subscription, please contact your account manager.</p>
+''',
+            'subscription_terminated': '''
+<p>Hi,</p>
+<p>Your subscription has been terminated.</p>
+<div style="background: #f8d7da; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #dc3545;">
+    <p style="margin: 0; color: #721c24; font-size: 16px;"><strong>Subscription Terminated</strong></p>
+</div>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>Service Type:</strong> {service_type}</p>
+    <p style="margin: 8px 0 0;"><strong>Effective Date:</strong> {termination_date}</p>
+</div>
+<p>We're sorry to see you go. If you'd like to discuss reactivation options in the future, please don't hesitate to reach out.</p>
+<p>Thank you for being a valued client.</p>
+''',
+            'subscription_renewed': '''
+<p>Hi,</p>
+<p>Great news! Your subscription has been renewed.</p>
+<div style="background: #d4edda; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #28a745;">
+    <p style="margin: 0; color: #155724; font-size: 18px;"><strong>Subscription Renewed</strong></p>
+</div>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>Service Type:</strong> {service_type}</p>
+    <p style="margin: 8px 0 0;"><strong>New Contract End:</strong> {contract_end}</p>
+</div>
+<p>Thank you for your continued partnership. We look forward to serving you for another term.</p>
+''',
+            'subscription_expiring': '''
+<p>Hi,</p>
+<p>Your subscription is expiring soon.</p>
+<div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #ffc107;">
+    <p style="margin: 0; color: #856404; font-size: 16px;"><strong>Subscription Expiring</strong></p>
+</div>
+<div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 0;"><strong>Service Type:</strong> {service_type}</p>
+    <p style="margin: 8px 0 0;"><strong>Expiration Date:</strong> {contract_end}</p>
+    <p style="margin: 8px 0 0;"><strong>Days Remaining:</strong> {days_remaining}</p>
+</div>
+<p>To ensure uninterrupted service, please contact your account manager to discuss renewal options.</p>
 ''',
         }
         return templates.get(template_name, '')

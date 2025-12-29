@@ -224,7 +224,19 @@ export default function CandidateDashboardLayout() {
   ] : []
 
   // Admin-only navigation (not visible to recruiters)
-  const adminOnlyNav: NavItem[] = []
+  const adminOnlyNav: NavItem[] = isAdmin ? [
+    {
+      name: 'Automations',
+      href: '/dashboard/admin/automations',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M2 17l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+  ] : []
 
   // Candidate-specific navigation
   const candidateNav: NavItem[] = !isClient && !isAdminOrRecruiter ? [

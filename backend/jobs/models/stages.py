@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils import timezone
 import uuid
 
+from automations.registry import automatable
 from .job import Job
 from .application import Application
 
@@ -214,6 +215,11 @@ class StageInstanceStatus(models.TextChoices):
     NO_SHOW = 'no_show', 'No Show'
 
 
+@automatable(
+    display_name='Application Stage Instance',
+    events=['created', 'updated', 'deleted', 'status_changed'],
+    status_field='status',
+)
 class ApplicationStageInstance(models.Model):
     """
     Instance of a stage for a specific candidate/application.

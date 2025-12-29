@@ -329,11 +329,7 @@ def job_detail(request, job_id):
         serializer = JobUpdateSerializer(job, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            # Notify active candidates about job update
-            try:
-                NotificationService.notify_job_updated(job)
-            except Exception as e:
-                logger.error(f"Failed to send job update notifications: {e}")
+            # Notification handled by automation rule: [Auto] Job Updated - Notify Active Applicants
             return Response(JobDetailSerializer(job).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -396,11 +392,7 @@ def publish_job(request, job_id):
     job.published_at = timezone.now()
     job.save()
 
-    # Notify company members that job is published
-    try:
-        NotificationService.notify_job_published(job)
-    except Exception as e:
-        logger.warning(f"Failed to send job published notification: {e}")
+    # Notification handled by automation rule: [Auto] Job Published - Notify Client
 
     return Response(JobDetailSerializer(job).data)
 
@@ -443,11 +435,7 @@ def close_job(request, job_id):
     job.status = JobStatus.CLOSED
     job.save()
 
-    # Notify company members and recruiters that job is closed
-    try:
-        NotificationService.notify_job_closed(job)
-    except Exception as e:
-        logger.warning(f"Failed to send job closed notification: {e}")
+    # Notification handled by automation rule: [Auto] Job Closed - Notify Client/Recruiter
 
     return Response(JobDetailSerializer(job).data)
 
@@ -484,11 +472,7 @@ def mark_job_filled(request, job_id):
     job.status = JobStatus.FILLED
     job.save()
 
-    # Notify company members that job is filled
-    try:
-        NotificationService.notify_job_filled(job)
-    except Exception as e:
-        logger.warning(f"Failed to send job filled notification: {e}")
+    # Notification handled by automation rule: [Auto] Job Filled - Notify Client
 
     return Response(JobDetailSerializer(job).data)
 

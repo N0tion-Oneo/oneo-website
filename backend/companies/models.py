@@ -3,6 +3,8 @@ from django.conf import settings
 from django.utils.text import slugify
 import uuid
 
+from automations.registry import automatable
+
 
 class CompanySize(models.TextChoices):
     SIZE_1_10 = '1-10', '1-10 employees'
@@ -73,6 +75,11 @@ class City(models.Model):
         return f"{self.name}, {self.country.name}"
 
 
+@automatable(
+    display_name='Company',
+    events=['created', 'updated', 'deleted', 'stage_changed'],
+    status_field='onboarding_stage',
+)
 class Company(models.Model):
     """
     Company profile for client users.
@@ -327,6 +334,11 @@ class InvitationStatus(models.TextChoices):
     CANCELLED = 'cancelled', 'Cancelled'
 
 
+@automatable(
+    display_name='Company Invitation',
+    events=['created', 'accepted'],
+    status_field='status',
+)
 class CompanyInvitation(models.Model):
     """
     Pending invitations to join a company.
@@ -472,6 +484,11 @@ class LeadSource(models.TextChoices):
     OTHER = 'other', 'Other'
 
 
+@automatable(
+    display_name='Lead',
+    events=['created', 'updated', 'deleted', 'stage_changed', 'converted'],
+    status_field='onboarding_stage',
+)
 class Lead(models.Model):
     """
     Prospecting lead - a person at a company we're trying to convert to a client.

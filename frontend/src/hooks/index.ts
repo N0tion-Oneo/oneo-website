@@ -458,3 +458,28 @@ export {
   useReplacementRequest,
   useReplacementActions,
 } from './useReplacements'
+
+// Automation hooks
+export {
+  useWorkflows,
+  useWorkflow,
+  useCreateWorkflow,
+  useUpdateWorkflow,
+  useDeleteWorkflow,
+  useTestWorkflow,
+  useWorkflowExecutions,
+  useWebhookDeliveries,
+  useAutomatableModels,
+  useModelFields,
+  useWorkflowEditor,
+} from './useAutomations'
+export type {
+  Workflow,
+  WorkflowNode,
+  WorkflowEdge,
+  WorkflowExecution,
+  AutomatableModel,
+  WebhookDelivery,
+  CreateWorkflowData,
+  UpdateWorkflowData,
+} from './useAutomations'

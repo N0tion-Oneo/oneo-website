@@ -13,6 +13,7 @@ by enabling/disabling templates for specific recipient types.
 """
 
 import logging
+from dataclasses import dataclass
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.template import Template, Context
@@ -20,6 +21,19 @@ from django.utils import timezone
 from django.utils.html import strip_tags
 from datetime import timedelta
 from typing import Optional, Dict, Any, List, Union
+
+
+@dataclass
+class ExternalRecipient:
+    """
+    Represents an external email recipient (not a registered User).
+    Used for sending emails to invitees who haven't signed up yet.
+    """
+    email: str
+    name: str = ''
+
+    def __str__(self):
+        return self.name or self.email
 
 from notifications.models import (
     Notification,
@@ -837,7 +851,8 @@ class NotificationService:
         """
         Send a booking link email to the candidate for self-scheduling.
 
-        Recipients are auto-determined from active templates.
+        Routes through automation system if a view_action rule is active,
+        otherwise falls back to direct notification.
         """
         application = stage_instance.application
         template = stage_instance.stage_template
@@ -854,6 +869,18 @@ class NotificationService:
             "job": job,
         }
 
+        # Try automation system first
+        from automations.triggers import trigger_view_action, ViewActionNames
+        triggered = trigger_view_action(
+            ViewActionNames.BOOKING_LINK_SENT,
+            instance=stage_instance,
+            context=context,
+        )
+        if triggered:
+            logger.info(f"Booking link sent notification routed through automation for {application.candidate.email}")
+            return []  # Automation handles it
+
+        # Fallback to direct notification if no automation rules
         return cls.send_notifications(
             notification_type=NotificationType.BOOKING_LINK_SENT,
             context=context,
@@ -1457,7 +1484,23 @@ class NotificationService:
 
     @classmethod
     def notify_password_changed(cls, user) -> Optional[Notification]:
-        """Send notification when user changes their password."""
+        """Send notification when user changes their password.
+
+        Routes through automation system if a signal rule is active,
+        otherwise falls back to direct notification.
+        """
+        # Try automation system first
+        from automations.triggers import trigger_signal_automations, SignalNames
+        triggered = trigger_signal_automations(
+            SignalNames.PASSWORD_CHANGED,
+            instance=user,
+            context={"user_name": user.get_full_name() or user.email}
+        )
+        if triggered:
+            logger.info(f"Password changed notification routed through automation for {user.email}")
+            return None  # Automation handles it
+
+        # Fallback to direct notification if no automation rules
         template = cls.get_template(NotificationType.PASSWORD_CHANGED, RecipientType.ALL)
         if not template:
             logger.warning("No PASSWORD_CHANGED template found")
@@ -1477,7 +1520,26 @@ class NotificationService:
 
     @classmethod
     def notify_email_verification(cls, user, verification_url: str) -> Optional[Notification]:
-        """Send email verification notification."""
+        """Send email verification notification.
+
+        Routes through automation system if a signal rule is active,
+        otherwise falls back to direct notification.
+        """
+        # Try automation system first
+        from automations.triggers import trigger_signal_automations, SignalNames
+        triggered = trigger_signal_automations(
+            SignalNames.EMAIL_VERIFICATION,
+            instance=user,
+            context={
+                "user_name": user.get_full_name() or user.email,
+                "verification_url": verification_url,
+            }
+        )
+        if triggered:
+            logger.info(f"Email verification routed through automation for {user.email}")
+            return None  # Automation handles it
+
+        # Fallback to direct notification if no automation rules
         template = cls.get_template(NotificationType.EMAIL_VERIFICATION, RecipientType.ALL)
         if not template:
             logger.warning("No EMAIL_VERIFICATION template found")
@@ -1498,7 +1560,26 @@ class NotificationService:
 
     @classmethod
     def notify_password_reset(cls, user, reset_url: str) -> Optional[Notification]:
-        """Send password reset notification."""
+        """Send password reset notification.
+
+        Routes through automation system if a signal rule is active,
+        otherwise falls back to direct notification.
+        """
+        # Try automation system first
+        from automations.triggers import trigger_signal_automations, SignalNames
+        triggered = trigger_signal_automations(
+            SignalNames.PASSWORD_RESET,
+            instance=user,
+            context={
+                "user_name": user.get_full_name() or user.email,
+                "reset_url": reset_url,
+            }
+        )
+        if triggered:
+            logger.info(f"Password reset notification routed through automation for {user.email}")
+            return None  # Automation handles it
+
+        # Fallback to direct notification if no automation rules
         template = cls.get_template(NotificationType.PASSWORD_RESET, RecipientType.ALL)
         if not template:
             logger.warning("No PASSWORD_RESET template found")
@@ -2037,3 +2118,371 @@ class NotificationService:
     ) -> List[Notification]:
         """Alias for notify_stage_cancelled."""
         return self.notify_stage_cancelled(stage_instance, reason=reason)
+
+    # =========================================================================
+    # Automation-triggered notifications
+    # =========================================================================
+
+    @classmethod
+    def resolve_automation_recipients(
+        cls,
+        recipient_type: str,
+        instance: Any,
+    ) -> List[Any]:
+        """
+        Resolve recipients for automation-triggered notifications.
+
+        This extends the standard resolve_recipients to work with any model instance,
+        not just Application/Job contexts.
+
+        Args:
+            recipient_type: The type of recipient (e.g., 'company_admin', 'assigned_user', etc.)
+            instance: The model instance that triggered the automation
+
+        Returns:
+            List of User objects to notify
+        """
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        recipients = []
+
+        # Try to get common related objects
+        company = getattr(instance, 'company', None)
+        job = getattr(instance, 'job', None)
+        application = getattr(instance, 'application', None)
+
+        # If instance IS a job, use it
+        if instance.__class__.__name__ == 'Job':
+            job = instance
+            company = getattr(job, 'company', None)
+
+        # If instance IS a company, use it
+        if instance.__class__.__name__ == 'Company':
+            company = instance
+
+        # If instance IS an application, use it
+        if instance.__class__.__name__ == 'Application':
+            application = instance
+            job = getattr(application, 'job', None)
+            company = getattr(job, 'company', None) if job else None
+
+        # Resolve based on recipient type
+        if recipient_type == 'specific_users':
+            # This should be handled by the caller with explicit user IDs
+            return []
+
+        elif recipient_type == 'assigned_user':
+            assigned_to = getattr(instance, 'assigned_to', None)
+            if assigned_to:
+                if hasattr(assigned_to, 'all'):  # ManyToMany
+                    recipients = list(assigned_to.all())
+                else:
+                    recipients = [assigned_to]
+
+        elif recipient_type == 'assigned_client':
+            # Check instance first, then job
+            assigned_client = getattr(instance, 'assigned_client', None)
+            if not assigned_client and job:
+                assigned_client = getattr(job, 'assigned_client', None)
+            if assigned_client:
+                recipients = [assigned_client]
+
+        elif recipient_type == 'record_owner':
+            owner = getattr(instance, 'created_by', None) or getattr(instance, 'owner', None)
+            if owner:
+                recipients = [owner]
+
+        elif recipient_type == 'company_admin':
+            if company and hasattr(company, 'members'):
+                recipients = [cu.user for cu in company.members.filter(
+                    role__in=[CompanyUserRole.ADMIN, 'admin', 'owner'],
+                    is_active=True
+                ).select_related('user') if cu.user]
+
+        elif recipient_type == 'company_team':
+            if company and hasattr(company, 'members'):
+                recipients = [cu.user for cu in company.members.filter(
+                    is_active=True
+                ).select_related('user') if cu.user]
+
+        elif recipient_type == 'recruiter':
+            if job:
+                recruiters = list(job.assigned_recruiters.all())
+                if recruiters:
+                    recipients = recruiters
+                elif job.created_by:
+                    recipients = [job.created_by]
+
+        elif recipient_type == 'candidate':
+            if application and hasattr(application, 'candidate'):
+                candidate_user = getattr(application.candidate, 'user', None)
+                if candidate_user:
+                    recipients = [candidate_user]
+
+        elif recipient_type == 'all_recruiters':
+            from users.models import RecruiterProfile
+            recipients = list(User.objects.filter(
+                is_active=True,
+                recruiterprofile__isnull=False
+            ).distinct())
+
+        elif recipient_type == 'all_admins':
+            recipients = list(User.objects.filter(is_active=True, is_staff=True))
+
+        elif recipient_type == 'interviewer':
+            # For stage/interview instances - get the assigned interviewer
+            interviewer = getattr(instance, 'interviewer', None)
+            if interviewer:
+                recipients = [interviewer]
+            # Also check for stage_instance if this is a related model
+            stage_instance = getattr(instance, 'stage_instance', None)
+            if stage_instance:
+                interviewer = getattr(stage_instance, 'interviewer', None)
+                if interviewer:
+                    recipients = [interviewer]
+
+        elif recipient_type == 'active_applicants':
+            # For job updates - notify all candidates with active applications
+            # Active statuses: APPLIED, SHORTLISTED, IN_PROGRESS, OFFER_MADE
+            if job:
+                from jobs.models import Application
+                active_statuses = ['applied', 'shortlisted', 'in_progress', 'offer_made']
+                active_apps = Application.objects.filter(
+                    job=job,
+                    status__in=active_statuses
+                ).select_related('candidate__user')
+                recipients = [
+                    app.candidate.user for app in active_apps
+                    if app.candidate and app.candidate.user
+                ]
+
+        elif recipient_type == 'all_assigned_recruiters':
+            # All recruiters assigned to the job (not just primary)
+            if job:
+                recipients = list(job.assigned_recruiters.all())
+
+        elif recipient_type == 'invitation_email':
+            # For invitation models - send to the email field on the instance
+            # Returns ExternalRecipient instead of User
+            email = getattr(instance, 'email', None)
+            if email:
+                name = getattr(instance, 'name', '') or ''
+                recipients = [ExternalRecipient(email=email, name=name)]
+
+        elif recipient_type == 'invitation_creator':
+            # The person who created the invitation (for notifications back to admin)
+            created_by = getattr(instance, 'created_by', None) or getattr(instance, 'invited_by', None)
+            if created_by:
+                recipients = [created_by]
+
+        elif recipient_type == 'booking_organizer':
+            # The organizer of a booking (recruiter who created it)
+            organizer = getattr(instance, 'organizer', None)
+            if organizer:
+                recipients = [organizer]
+
+        elif recipient_type == 'booking_attendee':
+            # The attendee of a booking - could be a registered user or external
+            attendee_user = getattr(instance, 'attendee_user', None)
+            if attendee_user:
+                recipients = [attendee_user]
+            else:
+                # External attendee - send via email
+                attendee_email = getattr(instance, 'attendee_email', None)
+                attendee_name = getattr(instance, 'attendee_name', '') or ''
+                if attendee_email:
+                    recipients = [ExternalRecipient(email=attendee_email, name=attendee_name)]
+
+        elif recipient_type == 'self':
+            # The instance itself is the recipient (for User model)
+            # Used for welcome emails, password notifications, etc.
+            from users.models import User
+            if isinstance(instance, User):
+                recipients = [instance]
+
+        elif recipient_type == 'billing_contact':
+            # For Invoice/Subscription - send to company billing contact
+            # First try to get company from instance
+            invoice_company = getattr(instance, 'company', None)
+            if invoice_company:
+                billing_email = getattr(invoice_company, 'billing_contact_email', None)
+                billing_name = getattr(invoice_company, 'billing_contact_name', '') or ''
+                if billing_email:
+                    recipients = [ExternalRecipient(email=billing_email, name=billing_name)]
+                else:
+                    # Fall back to company admins
+                    # CompanyUserRole is imported at module level
+                    if hasattr(invoice_company, 'members'):
+                        recipients = [cu.user for cu in invoice_company.members.filter(
+                            role__in=[CompanyUserRole.ADMIN, 'admin'],
+                            is_active=True
+                        ).select_related('user') if cu.user]
+
+        elif recipient_type == 'subscription_company':
+            # For Subscription - send to company admins
+            sub_company = getattr(instance, 'company', None)
+            if sub_company:
+                # CompanyUserRole is imported at module level
+                if hasattr(sub_company, 'members'):
+                    recipients = [cu.user for cu in sub_company.members.filter(
+                        role__in=[CompanyUserRole.ADMIN, 'admin'],
+                        is_active=True
+                    ).select_related('user') if cu.user]
+
+        elif recipient_type == 'lead_assignees':
+            # For Lead - send to assigned recruiters
+            lead_assigned = getattr(instance, 'assigned_to', None)
+            if lead_assigned:
+                if hasattr(lead_assigned, 'all'):  # ManyToMany
+                    recipients = list(lead_assigned.all())
+                else:
+                    recipients = [lead_assigned]
+
+        elif recipient_type == 'lead_email':
+            # For Lead - send to the lead's email address (external recipient)
+            lead_email = getattr(instance, 'email', None)
+            lead_name = getattr(instance, 'name', '') or ''
+            if lead_email:
+                recipients = [ExternalRecipient(email=lead_email, name=lead_name)]
+
+        elif recipient_type == 'company_assignees':
+            # For Company - send to assigned recruiters/admins
+            company_assigned = getattr(instance, 'assigned_to', None)
+            if company_assigned:
+                if hasattr(company_assigned, 'all'):  # ManyToMany
+                    recipients = list(company_assigned.all())
+                else:
+                    recipients = [company_assigned]
+
+        elif recipient_type == 'replacement_requester':
+            # For ReplacementRequest - send to the user who requested
+            requested_by = getattr(instance, 'requested_by', None)
+            if requested_by:
+                recipients = [requested_by]
+
+        elif recipient_type == 'job_recruiters':
+            # For ReplacementRequest - send to job's assigned recruiters
+            # Navigate: ReplacementRequest -> application -> job -> assigned_recruiters
+            replacement_app = getattr(instance, 'application', None)
+            if replacement_app:
+                replacement_job = getattr(replacement_app, 'job', None)
+                if replacement_job:
+                    job_recruiters = list(replacement_job.assigned_recruiters.filter(is_active=True))
+                    if job_recruiters:
+                        recipients = job_recruiters
+
+        return recipients
+
+    @classmethod
+    def send_automation_notification(
+        cls,
+        recipients: List[Any],
+        title: str,
+        body: str,
+        channel: str = 'both',
+        action_url: str = '',
+        instance: Any = None,
+        automation_rule: Any = None,
+        rule_execution: Any = None,
+    ) -> Dict[str, Any]:
+        """
+        Send notification triggered by an automation rule.
+
+        This is the main entry point for automation-triggered notifications.
+        It uses the existing notification infrastructure (branding, email tracking, etc.)
+
+        Args:
+            recipients: List of User objects or ExternalRecipient objects to notify
+            title: Rendered notification title
+            body: Rendered notification body
+            channel: 'email', 'in_app', or 'both'
+            action_url: Optional URL for the notification action
+            instance: The model instance that triggered the automation (for context)
+            automation_rule: The AutomationRule that triggered this (for logging)
+            rule_execution: The RuleExecution record (for linking notifications)
+
+        Returns:
+            Dict with status and details
+        """
+        if not recipients:
+            return {
+                'status': 'no_recipients',
+                'channel': channel,
+                'notifications_created': 0,
+                'emails_sent': 0,
+            }
+
+        # Truncate title to 200 characters (Notification model limit)
+        if len(title) > 200:
+            title = title[:197] + '...'
+
+        # Separate external recipients (ExternalRecipient) from User objects
+        user_recipients = []
+        external_recipients = []
+
+        for recipient in recipients:
+            if isinstance(recipient, ExternalRecipient):
+                external_recipients.append(recipient)
+            else:
+                user_recipients.append(recipient)
+
+        external_emails = []  # External recipients don't get Notification records
+
+        # Handle User recipients with full notification infrastructure
+        if user_recipients:
+            try:
+                notifications = cls.send_to_users(
+                    recipients=user_recipients,
+                    title=title,
+                    body=body,
+                    channel=channel,
+                    action_url=action_url,
+                    notification_type=NotificationType.CUSTOM,
+                )
+                # Link notifications to the rule execution
+                if rule_execution and notifications:
+                    from notifications.models import Notification
+                    Notification.objects.filter(
+                        id__in=[n.id for n in notifications]
+                    ).update(rule_execution=rule_execution)
+            except Exception as e:
+                logger.error(f"Failed to send automation notification to users: {e}")
+                return {
+                    'status': 'error',
+                    'error': str(e),
+                }
+
+        # Handle external recipients (email only, no Notification record)
+        if external_recipients:
+            for ext_recipient in external_recipients:
+                ext_info = {
+                    'email': ext_recipient.email,
+                    'name': ext_recipient.name,
+                }
+                try:
+                    success = cls._send_email(
+                        to_email=ext_recipient.email,
+                        subject=title,
+                        body=body,
+                        action_url=action_url,
+                    )
+                    ext_info['email_sent'] = success
+                    ext_info['email_error'] = None if success else 'Send failed'
+                    if success:
+                        logger.info(f"Sent automation email to external recipient: {ext_recipient.email}")
+                    else:
+                        logger.warning(f"Failed to send email to {ext_recipient.email}")
+                except Exception as e:
+                    ext_info['email_sent'] = False
+                    ext_info['email_error'] = str(e)
+                    logger.error(f"Error sending email to {ext_recipient.email}: {e}")
+
+                external_emails.append(ext_info)
+
+        # Only store external_emails (no Notification record for them)
+        # User notifications are linked via rule_execution FK
+        result = {}
+        if external_emails:
+            result['external_emails'] = external_emails
+        return result

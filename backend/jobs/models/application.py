@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils import timezone
 import uuid
 
+from automations.registry import automatable
 from .job import Job
 
 
@@ -30,6 +31,11 @@ class ApplicationSource(models.TextChoices):
     RECRUITER = 'recruiter', 'Recruiter'
 
 
+@automatable(
+    display_name='Application',
+    events=['created', 'updated', 'deleted', 'status_changed', 'stage_changed'],
+    status_field='status',
+)
 class Application(models.Model):
     """
     Job application from a candidate.

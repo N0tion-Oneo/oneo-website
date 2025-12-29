@@ -51,3 +51,11 @@ export { default as FeedPostDetailPage } from './FeedPostDetailPage';
 
 // Subscriptions Management
 export { default as SubscriptionsPage } from './SubscriptionsPage';
+
+// Automations & Workflows
+export { default as AutomationsPage } from './AutomationsPage';
+export { default as WorkflowEditorPage } from './WorkflowEditorPage';
+
+// Automation Rules (Form-based, simpler approach)
+export { default as AutomationRulesPage } from './AutomationRulesPage';
+export { default as RuleEditorPage } from './RuleEditorPage';

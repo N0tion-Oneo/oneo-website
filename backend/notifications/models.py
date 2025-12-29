@@ -90,6 +90,32 @@ class NotificationType(models.TextChoices):
     JOB_REOPENED_FOR_REPLACEMENT = 'job_reopened_for_replacement', 'Job Reopened for Replacement'
 
     # =========================================================================
+    # Lead Pipeline
+    # =========================================================================
+    LEAD_CREATED = 'lead_created', 'New Lead'
+    LEAD_STAGE_CHANGED = 'lead_stage_changed', 'Lead Stage Changed'
+    LEAD_CONVERTED = 'lead_converted', 'Lead Converted'
+    LEAD_ASSIGNED = 'lead_assigned', 'Lead Assigned'
+
+    # =========================================================================
+    # Company
+    # =========================================================================
+    COMPANY_CREATED = 'company_created', 'New Company'
+    COMPANY_STAGE_CHANGED = 'company_stage_changed', 'Company Stage Changed'
+
+    # =========================================================================
+    # Invoicing & Subscriptions
+    # =========================================================================
+    INVOICE_SENT = 'invoice_sent', 'Invoice Sent'
+    INVOICE_PAID = 'invoice_paid', 'Invoice Paid'
+    INVOICE_OVERDUE = 'invoice_overdue', 'Invoice Overdue'
+    SUBSCRIPTION_ACTIVATED = 'subscription_activated', 'Subscription Activated'
+    SUBSCRIPTION_PAUSED = 'subscription_paused', 'Subscription Paused'
+    SUBSCRIPTION_TERMINATED = 'subscription_terminated', 'Subscription Terminated'
+    SUBSCRIPTION_RENEWED = 'subscription_renewed', 'Subscription Renewed'
+    SUBSCRIPTION_EXPIRING = 'subscription_expiring', 'Subscription Expiring'
+
+    # =========================================================================
     # Admin/Custom
     # =========================================================================
     ADMIN_BROADCAST = 'admin_broadcast', 'Admin Broadcast'
@@ -150,6 +176,13 @@ class Notification(models.Model):
     stage_instance = models.ForeignKey(
         'jobs.ApplicationStageInstance',
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='notifications',
+    )
+    rule_execution = models.ForeignKey(
+        'automations.RuleExecution',
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='notifications',
@@ -284,11 +317,19 @@ class NotificationTemplate(models.Model):
         """
         Render the template with the given context.
         Returns dict with 'title', 'body', 'email_subject', 'email_body'.
+        Missing variables are replaced with {variable_name} placeholder.
         """
-        title = self.title_template.format(**context) if context else self.title_template
-        body = self.body_template.format(**context) if context else self.body_template
-        email_subject = (self.email_subject_template or self.title_template).format(**context) if context else (self.email_subject_template or self.title_template)
-        email_body = (self.email_body_template or self.body_template).format(**context) if context else (self.email_body_template or self.body_template)
+        # Use a SafeDict that returns the key in braces for missing values
+        class SafeDict(dict):
+            def __missing__(self, key):
+                return '{' + key + '}'
+
+        safe_context = SafeDict(context) if context else SafeDict()
+
+        title = self.title_template.format_map(safe_context)
+        body = self.body_template.format_map(safe_context)
+        email_subject = (self.email_subject_template or self.title_template).format_map(safe_context)
+        email_body = (self.email_body_template or self.body_template).format_map(safe_context)
 
         return {
             'title': title,

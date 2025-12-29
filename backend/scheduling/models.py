@@ -3,6 +3,8 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 
+from automations.registry import automatable
+
 
 class CalendarProvider(models.TextChoices):
     """Supported calendar providers for OAuth integration."""
@@ -347,6 +349,11 @@ class BookingStatus(models.TextChoices):
     NO_SHOW = 'no_show', 'No Show'
 
 
+@automatable(
+    display_name='Booking',
+    events=['created', 'updated', 'deleted', 'status_changed'],
+    status_field='status',
+)
 class Booking(models.Model):
     """
     A scheduled meeting between a recruiter/admin and an external attendee.

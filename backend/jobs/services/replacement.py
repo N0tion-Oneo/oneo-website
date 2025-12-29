@@ -186,8 +186,7 @@ def create_replacement_request(application, reason_category, reason_details, req
         requested_by=requested_by,
     )
 
-    # Send notification to admins
-    _notify_replacement_requested(request)
+    # Notification handled by automation rule: [Auto] Replacement Requested - Notify Admins
 
     return request
 
@@ -223,9 +222,9 @@ def approve_replacement_request(replacement_request, approval_type, reviewed_by,
     else:
         raise ValueError(f'Invalid approval type: {approval_type}')
 
-    # Send notifications
-    _notify_replacement_approved(replacement_request)
-    _notify_job_reopened(replacement_request)
+    # Notifications handled by automation rules:
+    # - [Auto] Replacement Approved - Notify Client
+    # - [Auto] Job Reopened for Replacement - Notify Recruiters
 
     return replacement_request
 
@@ -250,166 +249,6 @@ def reject_replacement_request(replacement_request, reviewed_by, notes=''):
 
     replacement_request.reject(reviewed_by, notes)
 
-    # Send notification to the client who requested
-    _notify_replacement_rejected(replacement_request)
+    # Notification handled by automation rule: [Auto] Replacement Rejected - Notify Client
 
     return replacement_request
-
-
-# =============================================================================
-# Notification Helpers
-# =============================================================================
-
-
-def _notify_replacement_requested(replacement_request):
-    """Notify admins that a new replacement request has been submitted."""
-    import logging
-    from django.contrib.auth import get_user_model
-    from users.models import UserRole
-
-    logger = logging.getLogger(__name__)
-
-    try:
-        from notifications.services.notification_service import NotificationService
-        from notifications.models import NotificationType, RecipientType
-
-        User = get_user_model()
-
-        # Get all admin users
-        admins = User.objects.filter(role=UserRole.ADMIN, is_active=True)
-
-        context = _build_replacement_context(replacement_request)
-
-        for admin in admins:
-            try:
-                NotificationService.send_notification(
-                    recipient=admin,
-                    notification_type=NotificationType.REPLACEMENT_REQUESTED,
-                    context=context,
-                    recipient_type=RecipientType.RECRUITER,
-                    action_url=f"/dashboard/companies/{replacement_request.company.id}?tab=replacements",
-                )
-            except Exception as e:
-                logger.warning(f"Failed to send replacement request notification to {admin.email}: {e}")
-
-    except Exception as e:
-        logger.error(f"Error sending replacement request notifications: {e}")
-
-
-def _notify_replacement_approved(replacement_request):
-    """Notify the client that their replacement request was approved."""
-    import logging
-
-    logger = logging.getLogger(__name__)
-
-    try:
-        from notifications.services.notification_service import NotificationService
-        from notifications.models import NotificationType, RecipientType
-
-        if not replacement_request.requested_by:
-            return
-
-        context = _build_replacement_context(replacement_request)
-
-        try:
-            NotificationService.send_notification(
-                recipient=replacement_request.requested_by,
-                notification_type=NotificationType.REPLACEMENT_APPROVED,
-                context=context,
-                recipient_type=RecipientType.CLIENT,
-                action_url=f"/dashboard/jobs/{replacement_request.job.id}",
-            )
-        except Exception as e:
-            logger.warning(f"Failed to send replacement approved notification: {e}")
-
-    except Exception as e:
-        logger.error(f"Error sending replacement approved notification: {e}")
-
-
-def _notify_replacement_rejected(replacement_request):
-    """Notify the client that their replacement request was rejected."""
-    import logging
-
-    logger = logging.getLogger(__name__)
-
-    try:
-        from notifications.services.notification_service import NotificationService
-        from notifications.models import NotificationType, RecipientType
-
-        if not replacement_request.requested_by:
-            return
-
-        context = _build_replacement_context(replacement_request)
-
-        try:
-            NotificationService.send_notification(
-                recipient=replacement_request.requested_by,
-                notification_type=NotificationType.REPLACEMENT_REJECTED,
-                context=context,
-                recipient_type=RecipientType.CLIENT,
-                action_url=f"/dashboard/jobs/{replacement_request.job.id}",
-            )
-        except Exception as e:
-            logger.warning(f"Failed to send replacement rejected notification: {e}")
-
-    except Exception as e:
-        logger.error(f"Error sending replacement rejected notification: {e}")
-
-
-def _notify_job_reopened(replacement_request):
-    """Notify assigned recruiters that a job has been reopened for replacement."""
-    import logging
-
-    logger = logging.getLogger(__name__)
-
-    try:
-        from notifications.services.notification_service import NotificationService
-        from notifications.models import NotificationType, RecipientType
-
-        job = replacement_request.job
-        recruiters = job.assigned_recruiters.filter(is_active=True)
-
-        if not recruiters.exists():
-            return
-
-        context = _build_replacement_context(replacement_request)
-
-        for recruiter in recruiters:
-            try:
-                NotificationService.send_notification(
-                    recipient=recruiter,
-                    notification_type=NotificationType.JOB_REOPENED_FOR_REPLACEMENT,
-                    context=context,
-                    recipient_type=RecipientType.RECRUITER,
-                    action_url=f"/dashboard/jobs/{job.id}/applications",
-                )
-            except Exception as e:
-                logger.warning(f"Failed to send job reopened notification to {recruiter.email}: {e}")
-
-    except Exception as e:
-        logger.error(f"Error sending job reopened notifications: {e}")
-
-
-def _build_replacement_context(replacement_request):
-    """Build context dict for replacement notification templates."""
-    application = replacement_request.application
-    job = application.job
-    company = job.company
-    candidate = application.candidate
-
-    return {
-        'replacement_request': {
-            'id': str(replacement_request.id),
-            'reason_category': replacement_request.get_reason_category_display(),
-            'reason_details': replacement_request.reason_details,
-            'status': replacement_request.get_status_display(),
-            'discount_percentage': replacement_request.discount_percentage,
-            'review_notes': replacement_request.review_notes,
-        },
-        'candidate_name': candidate.user.get_full_name(),
-        'job_title': job.title,
-        'company_name': company.name,
-        'company_id': str(company.id),
-        'job_id': str(job.id),
-        'requested_by_name': replacement_request.requested_by.get_full_name() if replacement_request.requested_by else 'Unknown',
-    }

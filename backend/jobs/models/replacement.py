@@ -4,6 +4,8 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 
+from automations.registry import automatable
+
 
 class ReplacementStatus(models.TextChoices):
     """Status choices for replacement requests."""
@@ -23,6 +25,11 @@ class ReplacementReasonCategory(models.TextChoices):
     OTHER = 'other', 'Other'
 
 
+@automatable(
+    display_name='Replacement Request',
+    events=['created', 'updated', 'status_changed'],
+    status_field='status',
+)
 class ReplacementRequest(models.Model):
     """
     Request for a free or discounted replacement hire.

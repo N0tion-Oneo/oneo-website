@@ -73,8 +73,7 @@ def apply_to_job(request):
             new_status=ApplicationStatus.APPLIED,
         )
 
-        # Notify recruiter/hiring manager about new application
-        NotificationService.notify_application_received(application)
+        # Notification handled by automation rule: [Auto] Application Received - Notify Recruiter
 
         return Response(
             ApplicationSerializer(application).data,
@@ -225,11 +224,7 @@ def withdraw_application(request, application_id):
     application.job.applications_count = max(0, application.job.applications_count - 1)
     application.job.save(update_fields=['applications_count'])
 
-    # Notify recruiter/company that candidate withdrew
-    try:
-        NotificationService.notify_application_withdrawn(application)
-    except Exception as e:
-        logger.warning(f"Failed to send withdrawal notification: {e}")
+    # Notification handled by automation rule: [Auto] Application Withdrawn - Notify Recruiter
 
     return Response(
         {'message': 'Application withdrawn'},
@@ -337,8 +332,7 @@ def shortlist_application(request, application_id):
         new_status=application.status,
     )
 
-    # Notify candidate they've been shortlisted
-    NotificationService.notify_application_shortlisted(application)
+    # Notification handled by automation rule: [Auto] Application Shortlisted - Notify Candidate
 
     return Response(ApplicationSerializer(application).data)
 
@@ -399,12 +393,7 @@ def reject_application(request, application_id):
             },
         )
 
-        # Notify candidate about rejection
-        NotificationService.notify_application_rejected(
-            application=application,
-            reason=reason,
-            feedback=feedback,
-        )
+        # Notification handled by automation rule: [Auto] Application Rejected - Notify Candidate
 
         return Response(ApplicationSerializer(application).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -478,12 +467,7 @@ def make_offer(request, application_id):
             metadata={'offer_details': offer_details},
         )
 
-        # Notify candidate about the offer (for new offers, not updates)
-        if not is_update:
-            NotificationService.notify_offer_received(
-                application=application,
-                offer_details=offer_details,
-            )
+        # Notification handled by automation rule: [Auto] Offer Received - Notify Candidate
 
         return Response(ApplicationSerializer(application).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -558,20 +542,13 @@ def accept_offer(request, application_id):
             metadata={'final_offer_details': final_details or application.offer_details},
         )
 
-        # Notify recruiter and client about offer acceptance
-        try:
-            NotificationService.notify_offer_accepted(application)
-        except Exception as e:
-            logger.warning(f"Failed to send offer accepted notification: {e}")
+        # Notifications handled by automation rules:
+        # - [Auto] Offer Accepted - Notify Client/Recruiter
+        # - [Auto] Job Filled - Notify Client (if job becomes filled)
 
         # Check if job should be marked as filled
         job = application.job
-        if job.update_fill_status():
-            # Job was just marked as FILLED
-            try:
-                NotificationService.notify_job_filled(job, hired_candidate=application)
-            except Exception as e:
-                logger.warning(f"Failed to send job filled notification: {e}")
+        job.update_fill_status()
 
         return Response(ApplicationSerializer(application).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -630,11 +607,7 @@ def decline_offer(request, application_id):
         metadata={'decline_reason': reason},
     )
 
-    # Notify recruiter and client about offer decline
-    try:
-        NotificationService.notify_offer_declined(application, reason=reason)
-    except Exception as e:
-        logger.warning(f"Failed to send offer declined notification: {e}")
+    # Notification handled by automation rule: [Auto] Offer Declined - Notify Client/Recruiter
 
     return Response(ApplicationSerializer(application).data)
 

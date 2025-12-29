@@ -3,7 +3,13 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 
+from automations.registry import automatable
 
+
+@automatable(
+    display_name='Client Invitation',
+    events=['created', 'accepted'],
+)
 class ClientInvitation(models.Model):
     """
     Invitation for new users to sign up as CLIENT role.
@@ -86,6 +92,10 @@ class ClientInvitation(models.Model):
         return self.used_at is None and not self.is_expired
 
 
+@automatable(
+    display_name='Recruiter Invitation',
+    events=['created', 'accepted'],
+)
 class RecruiterInvitation(models.Model):
     """
     Invitation for new users to sign up as RECRUITER role.
@@ -127,6 +137,10 @@ class RecruiterInvitation(models.Model):
         return self.used_at is None and not self.is_expired
 
 
+@automatable(
+    display_name='Candidate Invitation',
+    events=['created', 'accepted'],
+)
 class CandidateInvitation(models.Model):
     """
     Invitation for new users to sign up as CANDIDATE role.

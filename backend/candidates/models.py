@@ -3,6 +3,8 @@ from django.conf import settings
 from django.utils.text import slugify
 import uuid
 
+from automations.registry import automatable
+
 
 class CandidateActivityType(models.TextChoices):
     """Activity types specific to candidate-level events (not application-specific)."""
@@ -175,6 +177,11 @@ class Technology(models.Model):
         return self.name
 
 
+@automatable(
+    display_name='Candidate',
+    events=['created', 'updated', 'deleted', 'stage_changed'],
+    status_field='onboarding_stage',
+)
 class CandidateProfile(models.Model):
     """
     Extended profile for candidate users with all professional details.

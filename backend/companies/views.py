@@ -406,20 +406,9 @@ def invite_company_user(request):
             expires_at=timezone.now() + timedelta(days=7),
         )
 
-        # Build signup URL and send invitation email
+        # Build signup URL - notification handled by automation rule: [Auto] Company Member Invitation Created
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
         signup_url = f"{frontend_url}/signup/company/{invitation.token}"
-
-        try:
-            NotificationService.notify_company_member_invite(
-                email=email,
-                invited_by=request.user,
-                company_name=company.name,
-                role=role,
-                signup_url=signup_url,
-            )
-        except Exception as e:
-            logger.error(f"Failed to send company member invitation email: {e}")
 
         return Response(
             {'message': 'Invitation sent', 'type': 'invited', 'data': CompanyInvitationSerializer(invitation).data},

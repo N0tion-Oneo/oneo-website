@@ -734,24 +734,7 @@ def public_create_booking(request, booking_slug, meeting_type_slug):
             invitation_created = True
             invitation_token = str(invitation.token)
 
-            # Send invitation email with meeting context
-            try:
-                from notifications.services import NotificationService
-                from django.conf import settings as django_settings
-                frontend_url = getattr(django_settings, 'FRONTEND_URL', 'http://localhost:5173')
-                signup_url = f"{frontend_url}/signup/candidate/{invitation_token}"
-
-                NotificationService.notify_candidate_booking_invite(
-                    email=attendee_email,
-                    name=booking.attendee_name,
-                    recruiter=organizer,
-                    meeting_type_name=meeting_type.name,
-                    scheduled_at=booking.scheduled_at,
-                    duration_minutes=booking.duration_minutes,
-                    signup_url=signup_url,
-                )
-            except Exception as e:
-                print(f"Failed to send candidate invitation email: {e}")
+            # Notification handled by automation rule: [Auto] Candidate Booking Invite - Send Email
 
         elif is_onboarding:
             # Create a pending CLIENT user for onboarding meetings

@@ -531,11 +531,7 @@ def schedule_stage(request, application_id, instance_id):
         )
 
         # Send notification to candidate
-        try:
-            notification_service = NotificationService()
-            notification_service.send_interview_scheduled(instance)
-        except Exception as e:
-            logger.warning(f"Failed to send notification: {e}")
+        # Notification handled by automation rule: [Auto] Stage Scheduled - Notify Candidate/Interviewer
 
         return Response(ApplicationStageInstanceSerializer(instance).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -643,16 +639,7 @@ def reschedule_stage(request, application_id, instance_id):
             }
         )
 
-        # Send rescheduled notification
-        try:
-            notification_service = NotificationService()
-            notification_service.send_interview_rescheduled(
-                instance,
-                old_time=old_time,
-                reason=data.get('reschedule_reason', '')
-            )
-        except Exception as e:
-            logger.warning(f"Failed to send reschedule notification: {e}")
+        # Notification handled by automation rule: [Auto] Stage Rescheduled - Notify Candidate/Interviewer
 
         return Response(ApplicationStageInstanceSerializer(instance).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -718,12 +705,7 @@ def cancel_stage(request, application_id, instance_id):
         except CalendarServiceError as e:
             logger.warning(f"Failed to delete calendar event: {e}")
 
-    # Send cancellation notification
-    try:
-        notification_service = NotificationService()
-        notification_service.send_interview_cancelled(instance)
-    except Exception as e:
-        logger.warning(f"Failed to send cancellation notification: {e}")
+    # Notification handled by automation rule: [Auto] Stage Cancelled - Notify Candidate/Interviewer
 
     return Response(ApplicationStageInstanceSerializer(instance).data)
 
@@ -780,17 +762,9 @@ def complete_stage(request, application_id, instance_id):
             }
         )
 
-        # Send notifications
-        try:
-            NotificationService.notify_stage_completed(instance, result=data.get('recommendation', ''))
-        except Exception as e:
-            logger.warning(f"Failed to send stage completed notification: {e}")
-
-        if data.get('feedback'):
-            try:
-                NotificationService.notify_feedback_received(instance)
-            except Exception as e:
-                logger.warning(f"Failed to send feedback notification: {e}")
+        # Notifications handled by automation rules:
+        # - [Auto] Stage Completed - Notify Client/Recruiter
+        # - [Auto] Stage Feedback Received - Notify Candidate
 
         return Response(ApplicationStageInstanceSerializer(instance).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -979,9 +953,7 @@ def assign_assessment(request, application_id, instance_id):
             }
         )
 
-        # Send notification to candidate
-        if data.get('send_notification', True):
-            NotificationService.notify_assessment_assigned(instance)
+        # Notification handled by automation rule: [Auto] Assessment Assigned - Notify Candidate
 
         return Response(ApplicationStageInstanceSerializer(instance).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -1035,8 +1007,7 @@ def submit_assessment(request, application_id, instance_id):
             metadata={'action': 'assessment_submitted'}
         )
 
-        # Notify recruiter
-        NotificationService.notify_submission_received(instance)
+        # Notification handled by automation rule: [Auto] Assessment Submitted - Notify Recruiter
 
         return Response(ApplicationStageInstanceSerializer(instance).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -1100,15 +1071,7 @@ def move_to_stage_template(request, application_id, template_id):
         stage_name=template.name,
     )
 
-    # Send notification
-    try:
-        NotificationService.notify_application_stage_advanced(
-            application=application,
-            from_stage=previous_stage_instance,
-            to_stage=instance,
-        )
-    except Exception as e:
-        logger.warning(f"Failed to send stage advancement notification: {e}")
+    # Notification handled by automation rule: [Auto] Advanced to * - Notify Candidate
 
     return Response({
         'application': ApplicationSerializer(application).data,
@@ -1186,15 +1149,7 @@ def send_booking_link(request, application_id, instance_id):
     from django.conf import settings
     booking_url = f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')}/book/{booking.token}"
 
-    # Send email with booking link
-    try:
-        notification_service = NotificationService()
-        notification_service.send_booking_link(
-            stage_instance=instance,
-            booking_url=booking_url,
-        )
-    except Exception as e:
-        logger.warning(f"Failed to send booking link email: {e}")
+    # Notification handled by automation rule: [Action] Booking Link Sent
 
     # Log activity
     log_activity(
