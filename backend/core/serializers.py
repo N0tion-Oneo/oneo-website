@@ -1,5 +1,12 @@
 from rest_framework import serializers
-from .models import OnboardingStage, OnboardingHistory, DashboardSettings
+from .models import (
+    OnboardingStage,
+    OnboardingHistory,
+    DashboardSettings,
+    Task,
+    TaskPriority,
+    TaskStatus,
+)
 
 
 class OnboardingStageSerializer(serializers.ModelSerializer):
@@ -141,3 +148,134 @@ class DashboardSettingsSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['updated_at']
+
+
+# ============================================================================
+# Task Serializers
+# ============================================================================
+
+class TaskSerializer(serializers.ModelSerializer):
+    """Full serializer for Task model."""
+    assigned_to_name = serializers.SerializerMethodField()
+    created_by_name = serializers.SerializerMethodField()
+    stage_template_name = serializers.SerializerMethodField()
+    is_overdue = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Task
+        fields = [
+            'id',
+            'entity_type',
+            'entity_id',
+            'stage_template',
+            'stage_template_name',
+            'title',
+            'description',
+            'priority',
+            'status',
+            'due_date',
+            'completed_at',
+            'assigned_to',
+            'assigned_to_name',
+            'created_by',
+            'created_by_name',
+            'is_overdue',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'completed_at', 'created_by', 'created_at', 'updated_at']
+
+    def get_assigned_to_name(self, obj):
+        if obj.assigned_to:
+            return obj.assigned_to.get_full_name() or obj.assigned_to.email
+        return None
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return obj.created_by.get_full_name() or obj.created_by.email
+        return None
+
+    def get_stage_template_name(self, obj):
+        if obj.stage_template:
+            return obj.stage_template.name
+        return None
+
+
+class TaskCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating tasks."""
+
+    class Meta:
+        model = Task
+        fields = [
+            'entity_type',
+            'entity_id',
+            'stage_template',
+            'title',
+            'description',
+            'priority',
+            'due_date',
+            'assigned_to',
+        ]
+
+    def create(self, validated_data):
+        # Set created_by from request user
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class TaskUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating tasks."""
+
+    class Meta:
+        model = Task
+        fields = [
+            'title',
+            'description',
+            'priority',
+            'status',
+            'due_date',
+            'assigned_to',
+            'stage_template',
+        ]
+
+    def update(self, instance, validated_data):
+        # Auto-set completed_at when status changes to completed
+        from django.utils import timezone
+        new_status = validated_data.get('status')
+        if new_status == TaskStatus.COMPLETED and instance.status != TaskStatus.COMPLETED:
+            validated_data['completed_at'] = timezone.now()
+        elif new_status and new_status != TaskStatus.COMPLETED:
+            validated_data['completed_at'] = None
+        return super().update(instance, validated_data)
+
+
+# ============================================================================
+# Timeline Serializers (for aggregate view)
+# ============================================================================
+
+class TimelinePerformerSerializer(serializers.Serializer):
+    """Serializer for the performer of a timeline entry."""
+    id = serializers.CharField()
+    name = serializers.CharField()
+    email = serializers.EmailField()
+
+
+class TimelineEntrySerializer(serializers.Serializer):
+    """
+    Read-only serializer for unified timeline entries.
+    Maps activities from multiple sources to a common format.
+    """
+    id = serializers.CharField()
+    source = serializers.ChoiceField(choices=[
+        'lead_activity',
+        'onboarding_history',
+        'activity_log',
+        'candidate_activity',
+        'booking',
+    ])
+    activity_type = serializers.CharField()
+    title = serializers.CharField()
+    content = serializers.CharField(allow_blank=True)
+    performed_by = TimelinePerformerSerializer(allow_null=True)
+    metadata = serializers.DictField()
+    created_at = serializers.DateTimeField()

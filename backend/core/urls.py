@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from .views import tasks as task_views
+from .views import service_center as service_center_views
 
 urlpatterns = [
     # Onboarding stages CRUD
@@ -40,4 +42,19 @@ urlpatterns = [
     path('client-dashboard/team-activity/', views.client_team_activity, name='client_team_activity'),
     path('client-dashboard/assigned-recruiter/', views.client_assigned_recruiter, name='client_assigned_recruiter'),
     path('client-dashboard/hiring-metrics/', views.client_hiring_metrics, name='client_hiring_metrics'),
+
+    # Tasks API
+    path('tasks/', task_views.task_list_create, name='task_list_create'),
+    path('tasks/<uuid:task_id>/', task_views.task_detail, name='task_detail'),
+    path('tasks/<uuid:task_id>/complete/', task_views.task_complete, name='task_complete'),
+    path('tasks/my-tasks/', task_views.my_tasks, name='my_tasks'),
+    path('tasks/overdue/', task_views.overdue_tasks, name='overdue_tasks'),
+
+    # Timeline API (aggregate)
+    path('timeline/<str:entity_type>/<str:entity_id>/', service_center_views.timeline_list, name='timeline_list'),
+    path('timeline/<str:entity_type>/<str:entity_id>/note/', service_center_views.timeline_add_note, name='timeline_add_note'),
+    path('timeline/<str:entity_type>/<str:entity_id>/call/', service_center_views.timeline_log_call, name='timeline_log_call'),
+
+    # Service Center API
+    path('service-center/<str:entity_type>/<str:entity_id>/', service_center_views.service_center_data, name='service_center_data'),
 ]

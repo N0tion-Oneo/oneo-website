@@ -1,4 +1,14 @@
 import axios, { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import type {
+  Task,
+  TaskCreateInput,
+  TaskUpdateInput,
+  OnboardingEntityType,
+  EntityType,
+  TimelineResponse,
+  TimelineEntry,
+  ServiceCenterData,
+} from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
@@ -337,7 +347,7 @@ export const updateCandidate = async (
 // Onboarding Stages API
 // ============================================================================
 
-import type { OnboardingStage, OnboardingEntityType, OnboardingStageInput, OnboardingStageUpdateInput, OnboardingHistory, StageIntegration } from '@/types';
+import type { OnboardingStage, OnboardingStageInput, OnboardingStageUpdateInput, OnboardingHistory, StageIntegration } from '@/types';
 
 export const getOnboardingStages = async (params?: {
   entity_type?: OnboardingEntityType;
@@ -475,6 +485,115 @@ export const completeOnboardingStep = async (
 
 export const skipOnboardingStep = async (step: string): Promise<OnboardingStatus> => {
   const response = await api.post(`/companies/onboarding/skip/${step}/`);
+  return response.data;
+};
+
+// ============================================================================
+// Tasks API (Service Center)
+// ============================================================================
+
+export interface TaskListParams {
+  entity_type?: EntityType;
+  entity_id?: string;
+  status?: string;
+  assigned_to?: number;
+  priority?: string;
+}
+
+export const getTasks = async (params?: TaskListParams): Promise<Task[]> => {
+  const response = await api.get('/tasks/', { params });
+  return response.data;
+};
+
+export const getTask = async (taskId: string): Promise<Task> => {
+  const response = await api.get(`/tasks/${taskId}/`);
+  return response.data;
+};
+
+export const createTask = async (data: TaskCreateInput): Promise<Task> => {
+  const response = await api.post('/tasks/', data);
+  return response.data;
+};
+
+export const updateTask = async (taskId: string, data: TaskUpdateInput): Promise<Task> => {
+  const response = await api.patch(`/tasks/${taskId}/`, data);
+  return response.data;
+};
+
+export const deleteTask = async (taskId: string): Promise<void> => {
+  await api.delete(`/tasks/${taskId}/`);
+};
+
+export const completeTask = async (taskId: string): Promise<Task> => {
+  const response = await api.post(`/tasks/${taskId}/complete/`);
+  return response.data;
+};
+
+export const getMyTasks = async (includeCompleted = false): Promise<Task[]> => {
+  const response = await api.get('/tasks/my-tasks/', {
+    params: { include_completed: includeCompleted },
+  });
+  return response.data;
+};
+
+export const getOverdueTasks = async (myOnly = false): Promise<Task[]> => {
+  const response = await api.get('/tasks/overdue/', {
+    params: { my_only: myOnly },
+  });
+  return response.data;
+};
+
+// ============================================================================
+// Timeline API (Service Center - Aggregate View)
+// ============================================================================
+
+export interface TimelineListParams {
+  limit?: number;
+  offset?: number;
+  sources?: string;  // Comma-separated list
+  activity_types?: string;  // Comma-separated list
+}
+
+export const getTimeline = async (
+  entityType: EntityType,
+  entityId: string,
+  params?: TimelineListParams
+): Promise<TimelineResponse> => {
+  const response = await api.get(`/timeline/${entityType}/${entityId}/`, { params });
+  return response.data;
+};
+
+export const addTimelineNote = async (
+  entityType: EntityType,
+  entityId: string,
+  content: string
+): Promise<TimelineEntry> => {
+  const response = await api.post(`/timeline/${entityType}/${entityId}/note/`, { content });
+  return response.data;
+};
+
+export const logTimelineCall = async (
+  entityType: EntityType,
+  entityId: string,
+  notes: string,
+  durationMinutes?: number
+): Promise<TimelineEntry> => {
+  const response = await api.post(`/timeline/${entityType}/${entityId}/call/`, {
+    notes,
+    duration_minutes: durationMinutes,
+  });
+  return response.data;
+};
+
+// ============================================================================
+// Service Center API
+// ============================================================================
+
+export const getServiceCenterData = async (
+  entityType: EntityType,
+  entityId: string
+): Promise<ServiceCenterData> => {
+  const response = await api.get(`/service-center/${entityType}/${entityId}/`);
   return response.data;
 };
 

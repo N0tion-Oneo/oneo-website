@@ -1,6 +1,8 @@
 from django.db import models
+from django.conf import settings
 from django.utils.text import slugify
 from django.core.cache import cache
+import uuid
 
 
 class DashboardSettings(models.Model):
@@ -53,6 +55,17 @@ class OnboardingEntityType(models.TextChoices):
     LEAD = 'lead', 'Lead'
     COMPANY = 'company', 'Company'
     CANDIDATE = 'candidate', 'Candidate'
+
+
+class EntityType(models.TextChoices):
+    """
+    All entity types that can be linked to Tasks, Timeline entries, etc.
+    Superset of OnboardingEntityType with additional types.
+    """
+    LEAD = 'lead', 'Lead'
+    COMPANY = 'company', 'Company'
+    CANDIDATE = 'candidate', 'Candidate'
+    APPLICATION = 'application', 'Application'
 
 
 class OnboardingStage(models.Model):
@@ -121,3 +134,101 @@ class OnboardingHistory(models.Model):
     def __str__(self):
         from_name = self.from_stage.name if self.from_stage else 'None'
         return f"{self.entity_type} {self.entity_id}: {from_name} -> {self.to_stage.name}"
+
+
+class TaskPriority(models.TextChoices):
+    """Priority levels for tasks."""
+    LOW = 'low', 'Low'
+    MEDIUM = 'medium', 'Medium'
+    HIGH = 'high', 'High'
+    URGENT = 'urgent', 'Urgent'
+
+
+class TaskStatus(models.TextChoices):
+    """Status options for tasks."""
+    PENDING = 'pending', 'Pending'
+    IN_PROGRESS = 'in_progress', 'In Progress'
+    COMPLETED = 'completed', 'Completed'
+    CANCELLED = 'cancelled', 'Cancelled'
+
+
+class Task(models.Model):
+    """
+    Tasks for managing follow-ups and actions on any entity type.
+    Used in Service Center and Interview Mode for tracking ongoing activities.
+    Supports: Lead, Company, Candidate, Application.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Polymorphic entity link - supports all entity types
+    entity_type = models.CharField(
+        max_length=20,
+        choices=EntityType.choices,
+    )
+    entity_id = models.CharField(max_length=36)  # UUID or int as string
+
+    # Optional: link to specific interview stage for application tasks
+    # e.g., "Prepare for video interview" linked to application + stage
+    stage_template = models.ForeignKey(
+        'jobs.InterviewStageTemplate',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tasks',
+        help_text='Optional: specific interview stage this task relates to',
+    )
+
+    # Task details
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    priority = models.CharField(
+        max_length=10,
+        choices=TaskPriority.choices,
+        default=TaskPriority.MEDIUM,
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=TaskStatus.choices,
+        default=TaskStatus.PENDING,
+    )
+
+    # Dates
+    due_date = models.DateField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    # Ownership
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='assigned_tasks',
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_tasks',
+    )
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'tasks'
+        ordering = ['due_date', '-priority', '-created_at']
+        indexes = [
+            models.Index(fields=['entity_type', 'entity_id']),
+            models.Index(fields=['assigned_to', 'status']),
+            models.Index(fields=['due_date']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.get_entity_type_display()} - {self.entity_id})"
+
+    @property
+    def is_overdue(self):
+        """Check if task is overdue."""
+        from django.utils import timezone
+        if self.due_date and self.status not in [TaskStatus.COMPLETED, TaskStatus.CANCELLED]:
+            return self.due_date < timezone.now().date()
+        return False

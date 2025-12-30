@@ -2490,6 +2490,9 @@ export interface CandidateInvitation {
 
 export type OnboardingEntityType = 'lead' | 'company' | 'candidate'
 
+// EntityType extends OnboardingEntityType with additional types for Tasks, Timeline, etc.
+export type EntityType = OnboardingEntityType | 'application'
+
 export interface OnboardingStage {
   id: number
   name: string
@@ -2560,6 +2563,128 @@ export interface StageIntegration {
     candidates: number
   }
   total_integrations: number
+}
+
+// ============================================================================
+// Tasks (Service Center)
+// ============================================================================
+
+export enum TaskPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent',
+}
+
+export const TaskPriorityLabels: Record<TaskPriority, string> = {
+  [TaskPriority.LOW]: 'Low',
+  [TaskPriority.MEDIUM]: 'Medium',
+  [TaskPriority.HIGH]: 'High',
+  [TaskPriority.URGENT]: 'Urgent',
+}
+
+export enum TaskStatus {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+}
+
+export const TaskStatusLabels: Record<TaskStatus, string> = {
+  [TaskStatus.PENDING]: 'Pending',
+  [TaskStatus.IN_PROGRESS]: 'In Progress',
+  [TaskStatus.COMPLETED]: 'Completed',
+  [TaskStatus.CANCELLED]: 'Cancelled',
+}
+
+export interface Task {
+  id: string
+  entity_type: EntityType
+  entity_id: string
+  stage_template: string | null  // UUID of InterviewStageTemplate
+  stage_template_name: string | null
+  title: string
+  description: string
+  priority: TaskPriority
+  status: TaskStatus
+  due_date: string | null
+  completed_at: string | null
+  assigned_to: number
+  assigned_to_name: string | null
+  created_by: number | null
+  created_by_name: string | null
+  is_overdue: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface TaskCreateInput {
+  entity_type: EntityType
+  entity_id: string
+  stage_template?: string | null  // UUID of InterviewStageTemplate
+  title: string
+  description?: string
+  priority?: TaskPriority
+  due_date?: string | null
+  assigned_to: number
+}
+
+export interface TaskUpdateInput {
+  title?: string
+  description?: string
+  priority?: TaskPriority
+  status?: TaskStatus
+  due_date?: string | null
+  assigned_to?: number
+  stage_template?: string | null
+}
+
+// ============================================================================
+// Timeline (Service Center - Aggregate View)
+// ============================================================================
+
+export type TimelineSource =
+  | 'lead_activity'
+  | 'onboarding_history'
+  | 'activity_log'
+  | 'candidate_activity'
+  | 'booking'
+  | 'stage_feedback'
+  | 'task'
+
+export interface TimelinePerformer {
+  id: string
+  name: string
+  email: string
+}
+
+export interface TimelineEntry {
+  id: string
+  source: TimelineSource
+  activity_type: string
+  title: string
+  content: string
+  performed_by: TimelinePerformer | null
+  metadata: Record<string, unknown>
+  created_at: string
+}
+
+export interface TimelineResponse {
+  results: TimelineEntry[]
+  count: number
+  sources_available: TimelineSource[]
+}
+
+// ============================================================================
+// Service Center
+// ============================================================================
+
+export interface ServiceCenterData {
+  entity: Record<string, unknown>  // Lead | Company | CandidateProfile depending on entity_type
+  tasks: Task[]
+  timeline: TimelineEntry[]
+  upcoming_meetings: RecruiterBooking[]
+  health_score: number | null
 }
 
 // ============================================================================

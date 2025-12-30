@@ -1169,14 +1169,6 @@ export default function AdminApplicationsPage() {
           }
         }}
         onUpdate={refetch}
-        onShortlist={handleDrawerShortlist}
-        onMakeOffer={handleDrawerMakeOffer}
-        onAcceptOffer={handleDrawerAcceptOffer}
-        onReject={handleDrawerReject}
-        onMoveToStage={handleDrawerMoveToStage}
-        isProcessing={isProcessing}
-        showReplacementOption={showReplacementOption}
-        isAdmin={isAdminOrRecruiter}
       />
 
       {/* Reject Modal */}

@@ -42,3 +42,20 @@ from core.views.client_dashboard import (
     client_assigned_recruiter,
     client_hiring_metrics,
 )
+
+# Export task views
+from core.views.tasks import (
+    task_list_create,
+    task_detail,
+    task_complete,
+    my_tasks,
+    overdue_tasks,
+)
+
+# Export service center views
+from core.views.service_center import (
+    timeline_list,
+    timeline_add_note,
+    timeline_log_call,
+    service_center_data,
+)

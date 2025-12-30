@@ -236,6 +236,10 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
     technologies = TechnologySerializer(many=True, read_only=True)
     assigned_to = serializers.SerializerMethodField()
     onboarding_stage = OnboardingStageMinimalSerializer(read_only=True)
+    # Subscription and pricing for service center billing panel
+    subscription = serializers.SerializerMethodField()
+    pricing = serializers.SerializerMethodField()
+    recent_invoices = serializers.SerializerMethodField()
 
     class Meta:
         model = Company
@@ -287,8 +291,114 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             'service_type',
             'created_at',
             'updated_at',
+            # Subscription and pricing for service center
+            'subscription',
+            'pricing',
+            'recent_invoices',
         ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
+
+    def get_recent_invoices(self, obj):
+        """Return recent invoices for the company (last 10)."""
+        from subscriptions.models import Invoice
+        invoices = Invoice.objects.filter(company=obj).order_by('-invoice_date')[:10]
+        return [
+            {
+                'id': str(inv.id),
+                'invoice_number': inv.invoice_number,
+                'invoice_type': inv.invoice_type,
+                'invoice_type_display': inv.get_invoice_type_display(),
+                'invoice_date': inv.invoice_date.isoformat() if inv.invoice_date else None,
+                'due_date': inv.due_date.isoformat() if inv.due_date else None,
+                'total_amount': str(inv.total_amount) if inv.total_amount else None,
+                'amount_paid': str(inv.amount_paid) if inv.amount_paid else '0',
+                'status': inv.status,
+                'status_display': inv.get_status_display(),
+                'is_overdue': inv.is_overdue,
+            }
+            for inv in invoices
+        ]
+
+    def get_subscription(self, obj):
+        """Return active subscription info if exists."""
+        from subscriptions.models import Subscription, SubscriptionServiceType
+        # Get the most recent active or paused subscription for retained/headhunting
+        subscription = Subscription.objects.filter(
+            company=obj,
+            service_type__in=[SubscriptionServiceType.RETAINED, SubscriptionServiceType.HEADHUNTING]
+        ).order_by('-created_at').first()
+
+        if not subscription:
+            return None
+
+        # Get billing mode from most recent invoice, if any
+        from subscriptions.models import Invoice
+        latest_invoice = Invoice.objects.filter(subscription=subscription).order_by('-created_at').first()
+        billing_mode = latest_invoice.billing_mode if latest_invoice else 'in_system'
+
+        return {
+            'id': str(subscription.id),
+            'status': subscription.status,
+            'service_type': subscription.service_type,
+            'contract_start_date': subscription.contract_start_date.isoformat() if subscription.contract_start_date else None,
+            'contract_end_date': subscription.contract_end_date.isoformat() if subscription.contract_end_date else None,
+            'auto_renew': subscription.auto_renew,
+            'billing_mode': billing_mode,
+            'days_until_renewal': subscription.days_until_renewal,
+        }
+
+    def get_pricing(self, obj):
+        """Return company pricing info with effective values (custom or defaults)."""
+        from subscriptions.models import CompanyPricing
+
+        try:
+            pricing = CompanyPricing.objects.get(company=obj)
+            # Use effective values (custom or defaults from PricingConfig)
+            effective_retainer = pricing.get_effective_retainer()
+            effective_placement_fee = pricing.get_effective_placement_fee()
+            effective_csuite_fee = pricing.get_effective_csuite_fee()
+            effective_replacement_period = pricing.get_effective_replacement_period()
+
+            return {
+                'monthly_retainer': str(effective_retainer) if effective_retainer else None,
+                # Convert decimal fees to percentages (0.10 -> 10)
+                'placement_fee': str(round(float(effective_placement_fee) * 100, 1)) if effective_placement_fee else None,
+                'csuite_placement_fee': str(round(float(effective_csuite_fee) * 100, 1)) if effective_csuite_fee else None,
+                'replacement_period_days': effective_replacement_period,
+                # Indicate if values are custom or defaults
+                'is_custom_retainer': pricing.monthly_retainer is not None,
+                'is_custom_placement_fee': pricing.placement_fee is not None,
+                'is_custom_csuite_fee': pricing.csuite_placement_fee is not None,
+            }
+        except CompanyPricing.DoesNotExist:
+            # No custom pricing - return defaults from PricingConfig
+            from cms.models.pricing import PricingConfig
+            try:
+                config = PricingConfig.get_config()
+                service_type = obj.service_type or 'headhunting'
+
+                if service_type == 'retained':
+                    retainer = config.retained_monthly_retainer
+                    placement_fee = config.retained_placement_fee
+                    csuite_fee = config.retained_csuite_placement_fee
+                    replacement_days = config.retained_replacement_period_days
+                else:
+                    retainer = None  # Headhunting doesn't have retainer
+                    placement_fee = config.headhunting_placement_fee
+                    csuite_fee = config.headhunting_csuite_placement_fee
+                    replacement_days = config.headhunting_replacement_period_days
+
+                return {
+                    'monthly_retainer': str(retainer) if retainer else None,
+                    'placement_fee': str(round(float(placement_fee) * 100, 1)) if placement_fee else None,
+                    'csuite_placement_fee': str(round(float(csuite_fee) * 100, 1)) if csuite_fee else None,
+                    'replacement_period_days': replacement_days,
+                    'is_custom_retainer': False,
+                    'is_custom_placement_fee': False,
+                    'is_custom_csuite_fee': False,
+                }
+            except Exception:
+                return None
 
     def get_assigned_to(self, obj):
         from users.models import UserRole

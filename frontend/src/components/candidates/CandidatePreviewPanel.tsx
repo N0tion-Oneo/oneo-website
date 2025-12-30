@@ -1,16 +1,27 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, User, Activity, Briefcase } from 'lucide-react'
+import {
+  User,
+  Briefcase,
+  Activity,
+  CheckSquare,
+  Calendar,
+} from 'lucide-react'
 import { CandidateAdminListItem, ProfileSuggestionFieldType, AssignedUser } from '@/types'
-import { SUGGESTION_FIELD_LABELS } from '@/types'
+import { FocusMode } from '@/components/service'
+import { DrawerWithPanels, type PanelOption } from '@/components/common'
+import { TasksPanel, TimelinePanel, ApplicationsPanel } from '@/components/service/panels'
 import api from '@/services/api'
-import { useAdminSuggestions } from '@/hooks'
+import { useAdminSuggestions, useTasks } from '@/hooks'
 import CandidateProfileCard from './CandidateProfileCard'
 import CandidateActivityTab from './CandidateActivityTab'
-import CandidateApplicationsTab from './CandidateApplicationsTab'
 import AddToJobModal from './AddToJobModal'
 import { SuggestionsPanel } from '@/components/suggestions'
 
-type TabType = 'profile' | 'activity' | 'applications'
+// =============================================================================
+// Types
+// =============================================================================
+
+type PanelType = 'profile' | 'applications' | 'activity' | 'tasks' | 'timeline'
 
 interface SuggestionPanelState {
   isOpen: boolean
@@ -27,9 +38,18 @@ interface CandidatePreviewPanelProps {
   mode?: 'admin' | 'client'
 }
 
-export default function CandidatePreviewPanel({ candidate, onClose, onRefresh, mode = 'admin' }: CandidatePreviewPanelProps) {
+// =============================================================================
+// Main Component
+// =============================================================================
+
+export default function CandidatePreviewPanel({
+  candidate,
+  onClose,
+  onRefresh,
+  mode = 'admin',
+}: CandidatePreviewPanelProps) {
   const isClientMode = mode === 'client'
-  const [activeTab, setActiveTab] = useState<TabType>('profile')
+  const [activePanel, setActivePanel] = useState<PanelType>('profile')
   const viewRecordedRef = useRef<number | null>(null)
   const [showAddToJobModal, setShowAddToJobModal] = useState(false)
   const [applicationsRefreshKey, setApplicationsRefreshKey] = useState(0)
@@ -38,11 +58,13 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh, m
     fieldType: null,
     fieldName: null,
   })
+  const [showServiceMode, setShowServiceMode] = useState(false)
+
+  const candidateId = candidate?.id ? String(candidate.id) : ''
 
   // Suggestions hook - only load for admin mode
   const {
     suggestions,
-    isLoading: suggestionsLoading,
     createSuggestion,
     reopenSuggestion,
     closeSuggestion,
@@ -50,9 +72,16 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh, m
     isUpdating,
   } = useAdminSuggestions(isClientMode ? null : (candidate?.id ?? null))
 
-  // Reset tab and close suggestions panel when candidate changes
+  // Tasks hook - only for admin mode
+  const { tasks, refetch: refetchTasks } = useTasks(
+    !isClientMode && candidateId
+      ? { entity_type: 'candidate', entity_id: candidateId }
+      : undefined
+  )
+
+  // Reset panel and close suggestions panel when candidate changes
   useEffect(() => {
-    setActiveTab('profile')
+    setActivePanel('profile')
     setSuggestionPanel({ isOpen: false, fieldType: null, fieldName: null })
   }, [candidate?.id])
 
@@ -66,34 +95,6 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh, m
       })
     }
   }, [candidate, isClientMode])
-
-  // Handle escape key - close suggestions panel first, then main panel
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      if (suggestionPanel.isOpen) {
-        setSuggestionPanel({ isOpen: false, fieldType: null, fieldName: null })
-      } else {
-        onClose()
-      }
-    }
-  }, [onClose, suggestionPanel.isOpen])
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
-
-  // Prevent body scroll when panel is open
-  useEffect(() => {
-    if (candidate) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [candidate])
 
   // Handle adding a suggestion (opens the suggestions panel)
   const handleAddSuggestion = useCallback(
@@ -130,90 +131,61 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh, m
   }, [])
 
   // Handle assigned_to changes
-  const handleAssignedToChange = useCallback(async (newAssigned: AssignedUser[]) => {
-    if (!candidate) return
-    try {
-      await api.patch(`/candidates/${candidate.slug}/`, {
-        assigned_to_ids: newAssigned.map(u => u.id),
-      })
-      // Trigger parent to refresh data
-      onRefresh?.()
-    } catch (err) {
-      console.error('Failed to update assigned_to:', err)
+  const handleAssignedToChange = useCallback(
+    async (newAssigned: AssignedUser[]) => {
+      if (!candidate) return
+      try {
+        await api.patch(`/candidates/${candidate.slug}/`, {
+          assigned_to_ids: newAssigned.map((u) => u.id),
+        })
+        // Trigger parent to refresh data
+        onRefresh?.()
+      } catch (err) {
+        console.error('Failed to update assigned_to:', err)
+      }
+    },
+    [candidate, onRefresh]
+  )
+
+  // Handle refresh
+  const handleRefresh = () => {
+    onRefresh?.()
+    refetchTasks()
+  }
+
+  // Build available panels
+  const buildAvailablePanels = (): PanelOption[] => {
+    const panels: PanelOption[] = [
+      { type: 'profile', label: 'Candidate Profile', icon: <User className="w-4 h-4" /> },
+      { type: 'applications', label: 'Applications', icon: <Briefcase className="w-4 h-4" /> },
+    ]
+
+    // Admin-only panels
+    if (!isClientMode) {
+      panels.push(
+        { type: 'activity', label: 'Activity Log', icon: <Activity className="w-4 h-4" /> },
+        { type: 'tasks', label: 'Tasks', icon: <CheckSquare className="w-4 h-4" /> },
+        { type: 'timeline', label: 'Timeline', icon: <Calendar className="w-4 h-4" /> }
+      )
     }
-  }, [candidate, onRefresh])
 
-  if (!candidate) return null
+    return panels
+  }
 
-  // Define tabs - Activity tab is admin-only, Applications tab is for both
-  const tabs = isClientMode
-    ? [
-        { id: 'profile' as TabType, label: 'Profile', icon: User },
-        { id: 'applications' as TabType, label: 'Applications', icon: Briefcase },
-      ]
-    : [
-        { id: 'profile' as TabType, label: 'Profile', icon: User },
-        { id: 'applications' as TabType, label: 'Applications', icon: Briefcase },
-        { id: 'activity' as TabType, label: 'Activity', icon: Activity },
-      ]
-
-  // Calculate pending suggestions count
-  const pendingSuggestionsCount = suggestions.filter((s) => s.status === 'pending').length
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/30 z-[200]"
-        onClick={onClose}
-      />
-
-      {/* Panel */}
-      <div className="fixed right-0 top-0 h-full w-1/2 bg-white shadow-xl z-[201] flex flex-col">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-[16px] font-semibold text-gray-900">Candidate Details</h2>
-              {!isClientMode && pendingSuggestionsCount > 0 && (
-                <span className="px-2 py-0.5 text-[11px] font-medium bg-amber-100 text-amber-700 rounded-full">
-                  {pendingSuggestionsCount} pending suggestion{pendingSuggestionsCount !== 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-1">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 text-[13px] font-medium rounded-md transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </div>
+  // Render panel content
+  const renderPanel = (panelType: string) => {
+    if (!candidate) {
+      return (
+        <div className="flex items-center justify-center h-32">
+          <p className="text-[14px] text-gray-500">Candidate not found</p>
         </div>
+      )
+    }
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {activeTab === 'profile' && (
+    switch (panelType) {
+      case 'profile':
+        return (
+          <div className="h-full overflow-y-auto p-4">
             <CandidateProfileCard
               candidate={candidate}
               experiences={candidate.experiences || []}
@@ -229,24 +201,95 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh, m
               onAddSuggestion={isClientMode ? undefined : handleAddSuggestion}
               onAssignedToChange={isClientMode ? undefined : handleAssignedToChange}
             />
-          )}
-          {activeTab === 'applications' && (
-            <CandidateApplicationsTab
-              key={applicationsRefreshKey}
-              candidateId={candidate.id}
-              mode={mode}
-              onAddToJob={isClientMode ? undefined : () => setShowAddToJobModal(true)}
-            />
-          )}
-          {activeTab === 'activity' && (
-            <CandidateActivityTab candidateId={candidate.id} />
-          )}
-        </div>
+          </div>
+        )
 
-      </div>
+      case 'applications':
+        return (
+          <ApplicationsPanel
+            key={applicationsRefreshKey}
+            candidateId={candidate.id}
+            mode={mode}
+            onAddToJob={isClientMode ? undefined : () => setShowAddToJobModal(true)}
+          />
+        )
+
+      case 'activity':
+        return (
+          <div className="h-full overflow-y-auto p-4">
+            <CandidateActivityTab candidateId={candidate.id} />
+          </div>
+        )
+
+      case 'tasks':
+        return (
+          <TasksPanel
+            entityType="candidate"
+            entityId={candidateId}
+            tasks={tasks}
+            onRefresh={refetchTasks}
+          />
+        )
+
+      case 'timeline':
+        return (
+          <TimelinePanel
+            entityType="candidate"
+            entityId={candidateId}
+            onRefresh={handleRefresh}
+          />
+        )
+
+      default:
+        return null
+    }
+  }
+
+  // Calculate pending suggestions count for header badge
+  const pendingSuggestionsCount = suggestions.filter((s) => s.status === 'pending').length
+  const statusBadge =
+    !isClientMode && pendingSuggestionsCount > 0 ? (
+      <span className="px-2 py-0.5 text-[11px] font-medium bg-amber-100 text-amber-700 rounded-full">
+        {pendingSuggestionsCount} pending suggestion{pendingSuggestionsCount !== 1 ? 's' : ''}
+      </span>
+    ) : undefined
+
+  // Service Mode
+  if (showServiceMode && candidate && !isClientMode) {
+    return (
+      <FocusMode
+        mode="entity"
+        entityType="candidate"
+        entityId={String(candidate.id)}
+        entityName={candidate.full_name}
+        onClose={() => {
+          setShowServiceMode(false)
+          handleRefresh()
+        }}
+      />
+    )
+  }
+
+  return (
+    <>
+      <DrawerWithPanels
+        isOpen={!!candidate}
+        onClose={onClose}
+        title={candidate?.full_name || 'Candidate Details'}
+        subtitle={candidate?.headline || undefined}
+        isLoading={false}
+        statusBadge={statusBadge}
+        focusModeLabel="Service Mode"
+        onEnterFocusMode={isClientMode ? undefined : () => setShowServiceMode(true)}
+        availablePanels={buildAvailablePanels()}
+        defaultPanel="profile"
+        activePanel={activePanel}
+        onPanelChange={(panel) => setActivePanel(panel as PanelType)}
+        renderPanel={renderPanel}
+      />
 
       {/* Suggestions Panel - Admin only */}
-      {!isClientMode && (
+      {!isClientMode && candidate && (
         <SuggestionsPanel
           isOpen={suggestionPanel.isOpen}
           onClose={handleCloseSuggestionPanel}
@@ -265,16 +308,16 @@ export default function CandidatePreviewPanel({ candidate, onClose, onRefresh, m
       )}
 
       {/* Add to Job Modal - Admin only */}
-      {!isClientMode && (
+      {!isClientMode && candidate && (
         <AddToJobModal
           isOpen={showAddToJobModal}
           onClose={() => setShowAddToJobModal(false)}
           candidateId={candidate.id}
           candidateName={candidate.full_name}
           onSuccess={() => {
-            // Refresh applications tab and switch to it
+            // Refresh applications panel and switch to it
             setApplicationsRefreshKey((prev) => prev + 1)
-            setActiveTab('applications')
+            setActivePanel('applications')
           }}
         />
       )}

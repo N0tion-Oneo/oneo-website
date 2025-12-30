@@ -14,9 +14,9 @@ import {
 import api from '@/services/api'
 import type { ApplicationListItem, ApplicationStatus } from '@/types'
 
-interface CandidateApplicationsTabProps {
-  candidateId: number
-  mode: 'admin' | 'client'
+interface ApplicationsPanelProps {
+  candidateId: string | number
+  mode?: 'admin' | 'client'
   onAddToJob?: () => void
 }
 
@@ -30,7 +30,7 @@ const statusConfig: Record<ApplicationStatus, { label: string; color: string; ic
   rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700', icon: XCircle },
 }
 
-export default function CandidateApplicationsTab({ candidateId, mode, onAddToJob }: CandidateApplicationsTabProps) {
+export function ApplicationsPanel({ candidateId, mode = 'admin', onAddToJob }: ApplicationsPanelProps) {
   const [applications, setApplications] = useState<ApplicationListItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -62,7 +62,7 @@ export default function CandidateApplicationsTab({ candidateId, mode, onAddToJob
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="h-full flex items-center justify-center py-12">
         <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
       </div>
     )
@@ -70,20 +70,22 @@ export default function CandidateApplicationsTab({ candidateId, mode, onAddToJob
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-sm text-red-600">{error}</p>
-        <button
-          onClick={fetchApplications}
-          className="mt-2 text-sm text-gray-600 hover:text-gray-800 underline"
-        >
-          Try again
-        </button>
+      <div className="h-full overflow-y-auto p-4">
+        <div className="text-center py-8">
+          <p className="text-sm text-red-600">{error}</p>
+          <button
+            onClick={fetchApplications}
+            className="mt-2 text-sm text-gray-600 hover:text-gray-800 underline"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
+    <div className="h-full overflow-y-auto p-4 space-y-4">
       {/* Header with Add button (Admin only) */}
       <div className="flex items-center justify-between">
         <h3 className="text-[13px] font-medium text-gray-900">
@@ -116,7 +118,7 @@ export default function CandidateApplicationsTab({ candidateId, mode, onAddToJob
           )}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1">
           {applications.map((application) => {
             const status = statusConfig[application.status]
             const StatusIcon = status.icon
@@ -124,59 +126,58 @@ export default function CandidateApplicationsTab({ candidateId, mode, onAddToJob
             return (
               <Link
                 key={application.id}
-                to={mode === 'admin'
-                  ? `/dashboard/admin/jobs/${application.job}/applications/${application.id}`
-                  : `/dashboard/jobs/${application.job_slug}/applications/${application.id}`
+                to={
+                  mode === 'admin'
+                    ? `/dashboard/admin/jobs/${application.job}/applications/${application.id}`
+                    : `/dashboard/jobs/${application.job_slug}/applications/${application.id}`
                 }
-                className="block bg-white border border-gray-200 rounded-lg p-3 hover:border-gray-300 hover:shadow-sm transition-all group"
+                className="flex items-center gap-3 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all group"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    {/* Job Title & Company */}
-                    <div className="flex items-center gap-2 mb-1">
-                      {application.company_logo ? (
-                        <img
-                          src={application.company_logo}
-                          alt={application.company_name}
-                          className="w-5 h-5 rounded object-cover"
-                        />
-                      ) : (
-                        <div className="w-5 h-5 bg-gray-200 rounded flex items-center justify-center">
-                          <Building2 className="w-3 h-3 text-gray-400" />
-                        </div>
-                      )}
-                      <span className="text-[13px] font-medium text-gray-900 truncate">
-                        {application.job_title}
-                      </span>
-                    </div>
-
-                    {/* Company Name */}
-                    <p className="text-[12px] text-gray-500 truncate mb-2">
-                      {application.company_name}
-                    </p>
-
-                    {/* Status & Stage */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-full ${status.color}`}>
-                        <StatusIcon className="w-3 h-3" />
-                        {status.label}
-                      </span>
-                      {application.current_stage_name && application.status === 'in_progress' && (
-                        <span className="px-2 py-0.5 text-[11px] font-medium bg-gray-100 text-gray-600 rounded-full">
-                          {application.current_stage_name}
-                        </span>
-                      )}
-                    </div>
+                {/* Company Logo */}
+                {application.company_logo ? (
+                  <img
+                    src={application.company_logo}
+                    alt={application.company_name}
+                    className="w-6 h-6 rounded object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-6 h-6 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-3 h-3 text-gray-400" />
                   </div>
+                )}
 
-                  {/* Right side: Date & Arrow */}
-                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <span className="text-[11px] text-gray-400">
-                      {formatDate(application.applied_at)}
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition-colors" />
-                  </div>
+                {/* Job Title & Company */}
+                <div className="flex-1 min-w-0">
+                  <span className="text-[13px] font-medium text-gray-900 truncate block">
+                    {application.job_title}
+                  </span>
+                  <span className="text-[11px] text-gray-500 truncate block">
+                    {application.company_name}
+                  </span>
                 </div>
+
+                {/* Status */}
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-full flex-shrink-0 ${status.color}`}
+                >
+                  <StatusIcon className="w-3 h-3" />
+                  {status.label}
+                </span>
+
+                {/* Stage (if in progress) */}
+                {application.current_stage_name && application.status === 'in_progress' && (
+                  <span className="px-2 py-0.5 text-[11px] font-medium bg-gray-100 text-gray-600 rounded-full flex-shrink-0 hidden sm:inline-flex">
+                    {application.current_stage_name}
+                  </span>
+                )}
+
+                {/* Date */}
+                <span className="text-[11px] text-gray-400 flex-shrink-0 hidden sm:block">
+                  {formatDate(application.applied_at)}
+                </span>
+
+                {/* Arrow */}
+                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition-colors flex-shrink-0" />
               </Link>
             )
           })}
@@ -185,3 +186,5 @@ export default function CandidateApplicationsTab({ candidateId, mode, onAddToJob
     </div>
   )
 }
+
+export default ApplicationsPanel

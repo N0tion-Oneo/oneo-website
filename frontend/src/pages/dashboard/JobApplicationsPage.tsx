@@ -572,39 +572,6 @@ export default function JobApplicationsPage() {
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
         onUpdate={refetch}
-        onShortlist={handleShortlist}
-        onMoveToStage={handleMoveToStage}
-        onResetToApplied={handleResetToApplied}
-        onMakeOffer={async (id, details) => {
-          setLocalApplications((prev) =>
-            prev.map((app) =>
-              app.id === id ? { ...app, status: ApplicationStatus.OFFER_MADE } : app
-            )
-          )
-          await makeOffer(id, { offer_details: details })
-          refetch()
-        }}
-        onAcceptOffer={async (id, details) => {
-          setLocalApplications((prev) =>
-            prev.map((app) =>
-              app.id === id ? { ...app, status: ApplicationStatus.OFFER_ACCEPTED } : app
-            )
-          )
-          await acceptOffer(id, { final_offer_details: details })
-          refetch()
-        }}
-        onReject={async (id, reason, feedback) => {
-          setLocalApplications((prev) =>
-            prev.map((app) =>
-              app.id === id ? { ...app, status: ApplicationStatus.REJECTED, rejection_reason: reason } : app
-            )
-          )
-          await reject(id, { rejection_reason: reason, rejection_feedback: feedback })
-          refetch()
-        }}
-        isProcessing={isProcessing}
-        showReplacementOption={showReplacementOption}
-        isAdmin={isAdminOrRecruiter}
       />
 
       {/* Reject Modal */}

@@ -1,38 +1,51 @@
 import { useState, useEffect, useRef } from 'react'
-import { X, User, Clock, Gift, Ban, CheckCircle, AlertCircle, ChevronDown, FileText, ExternalLink, Paperclip, Calendar, Maximize2, RefreshCw } from 'lucide-react'
-import { useApplication, useRecordApplicationView, useStageInstances, useCancelStage, useCompleteStage, useReplacementActions } from '@/hooks'
+import {
+  User,
+  Clock,
+  ChevronDown,
+  FileText,
+  GitBranch,
+  Zap,
+  Briefcase,
+  CheckSquare,
+  Calendar,
+} from 'lucide-react'
+import {
+  useApplication,
+  useRecordApplicationView,
+  useTasks,
+} from '@/hooks'
+import { DrawerWithPanels, type PanelOption } from '@/components/common'
 import { CandidateProfileCard } from '@/components/candidates'
-import { ReplacementRequestModal, ReplacementReviewCard } from '@/components/replacements'
 import ActivityTimeline from './ActivityTimeline'
-import FullPipelineTimeline from './FullPipelineTimeline'
-import ScheduleInterviewModal from './ScheduleInterviewModal'
-import AssignAssessmentModal from './AssignAssessmentModal'
-import InterviewModeView from './InterviewModeView'
-import OfferForm, { getEmptyOfferDetails } from './OfferForm'
-import { ApplicationStatus, RejectionReason, RejectionReasonLabels, QuestionType, StageTypeConfig } from '@/types'
-import api from '@/services/api'
-import type { Application, InterviewStage, OfferDetails, ApplicationAnswer, ApplicationStageInstance } from '@/types'
+import { FocusMode } from '@/components/service'
+import {
+  AnswersPanel,
+  TasksPanel,
+  TimelinePanel,
+  PipelinePanel,
+  JobDetailPanel,
+  ActionsPanel,
+} from '@/components/service/panels'
+import { ApplicationStatus } from '@/types'
+import type { Application } from '@/types'
+
+// =============================================================================
+// Types
+// =============================================================================
 
 interface ApplicationDrawerProps {
   applicationId: string | null
   isOpen: boolean
   onClose: () => void
   onUpdate?: () => void
-  // Action handlers
-  onShortlist?: (applicationId: string) => void
-  onMakeOffer?: (applicationId: string, offerDetails: OfferDetails) => Promise<void>
-  onAcceptOffer?: (applicationId: string, finalOfferDetails: OfferDetails) => Promise<void>
-  onReject?: (applicationId: string, reason: RejectionReason, feedback: string) => Promise<void>
-  onMoveToStage?: (applicationId: string, stageOrder: number) => void
-  onResetToApplied?: (applicationId: string) => void
-  isProcessing?: boolean
-  // Replacement support
-  showReplacementOption?: boolean
-  /** Whether the current user is an admin/recruiter (can review replacement requests) */
-  isAdmin?: boolean
 }
 
-type TabType = 'profile' | 'answers' | 'stages' | 'activity' | 'offer' | 'reject' | 'replacement'
+type PanelType = 'profile' | 'answers' | 'pipeline' | 'activity' | 'job' | 'actions' | 'tasks' | 'timeline'
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -57,7 +70,6 @@ const getStatusColor = (status: ApplicationStatus) => {
   return colors[status] || 'bg-gray-100 text-gray-700'
 }
 
-// Get the Kanban column name that matches exactly
 const getKanbanColumnName = (application: Application): string => {
   switch (application.status) {
     case ApplicationStatus.APPLIED:
@@ -79,101 +91,28 @@ const getKanbanColumnName = (application: Application): string => {
   }
 }
 
+// =============================================================================
+// Main Component
+// =============================================================================
+
 export default function ApplicationDrawer({
   applicationId,
   isOpen,
   onClose,
   onUpdate,
-  onShortlist,
-  onMakeOffer,
-  onAcceptOffer,
-  onReject,
-  onMoveToStage,
-  onResetToApplied,
-  isProcessing = false,
-  showReplacementOption = false,
-  isAdmin = false,
 }: ApplicationDrawerProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('profile')
-  const [actionError, setActionError] = useState<string | null>(null)
-  const [isStageDropdownOpen, setIsStageDropdownOpen] = useState(false)
+  const [activePanel, setActivePanel] = useState<PanelType>('profile')
   const [isInterviewMode, setIsInterviewMode] = useState(false)
+  const [isStageDropdownOpen, setIsStageDropdownOpen] = useState(false)
   const stageDropdownRef = useRef<HTMLDivElement>(null)
-
-  // Offer form state
-  const [offerDetails, setOfferDetails] = useState<OfferDetails>(getEmptyOfferDetails())
-
-  // Accept offer form state
-  const [finalOfferDetails, setFinalOfferDetails] = useState<OfferDetails>({})
-
-  // Reject form state
-  const [rejectionReason, setRejectionReason] = useState<RejectionReason | ''>('')
-  const [rejectionFeedback, setRejectionFeedback] = useState('')
 
   const { application, isLoading, refetch } = useApplication(applicationId || '')
 
-  // Fetch stage instances for the typed stage timeline
-  const { instances: stageInstances, isLoading: isLoadingStages, refetch: refetchStages } = useStageInstances(applicationId || '')
-
-  // Scheduling modal state
-  const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
-  const [selectedStageInstance, setSelectedStageInstance] = useState<ApplicationStageInstance | null>(null)
-  const [scheduleMode, setScheduleMode] = useState<'schedule' | 'reschedule'>('schedule')
-
-  // Assessment modal state
-  const [assessmentModalOpen, setAssessmentModalOpen] = useState(false)
-  const [assessmentStageInstance, setAssessmentStageInstance] = useState<ApplicationStageInstance | null>(null)
-
-  // Replacement modal state
-  const [replacementModalOpen, setReplacementModalOpen] = useState(false)
-
-  // Replacement actions for admin review
-  const { isApproving, isRejecting, approveRequest, rejectRequest } = useReplacementActions()
-
-  // Stage action hooks
-  const { cancel: cancelStage } = useCancelStage()
-  const { complete: completeStage } = useCompleteStage()
-
-  // Scheduling handlers
-  const handleOpenScheduleModal = (instance: ApplicationStageInstance, mode: 'schedule' | 'reschedule' = 'schedule') => {
-    setSelectedStageInstance(instance)
-    setScheduleMode(mode)
-    setScheduleModalOpen(true)
-  }
-
-  const handleScheduleSuccess = (_updatedInstance: ApplicationStageInstance) => {
-    setScheduleModalOpen(false)
-    refetchStages()
-    refetch()
-    onUpdate?.()
-  }
-
-  const handleCancelStage = async (instance: ApplicationStageInstance) => {
-    if (!applicationId) return
-    if (!confirm('Are you sure you want to cancel this interview?')) return
-
-    try {
-      await cancelStage(applicationId, instance.id, 'Cancelled by recruiter')
-      refetchStages()
-      refetch()
-      onUpdate?.()
-    } catch (error) {
-      console.error('Failed to cancel:', error)
-    }
-  }
-
-  const handleCompleteStage = async (instance: ApplicationStageInstance) => {
-    if (!applicationId) return
-
-    try {
-      await completeStage(applicationId, instance.id, {})
-      refetchStages()
-      refetch()
-      onUpdate?.()
-    } catch (error) {
-      console.error('Failed to complete:', error)
-    }
-  }
+  // Fetch tasks for candidate
+  const candidateId = application?.candidate?.id ? String(application.candidate.id) : ''
+  const { tasks, refetch: refetchTasks } = useTasks(
+    candidateId ? { entity_type: 'candidate', entity_id: candidateId } : undefined
+  )
 
   // Record application view (debounced)
   useRecordApplicationView(isOpen ? applicationId : null)
@@ -181,8 +120,7 @@ export default function ApplicationDrawer({
   useEffect(() => {
     if (isOpen && applicationId) {
       refetch()
-      setActiveTab('profile')
-      setActionError(null)
+      setActivePanel('profile')
       setIsStageDropdownOpen(false)
     }
   }, [isOpen, applicationId, refetch])
@@ -198,1170 +136,200 @@ export default function ApplicationDrawer({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleMakeOffer = async () => {
-    if (!applicationId || !onMakeOffer) return
-    setActionError(null)
-    try {
-      await onMakeOffer(applicationId, offerDetails)
-      setOfferDetails(getEmptyOfferDetails())
-      setActiveTab('profile')
-      onClose()
-    } catch (err) {
-      setActionError((err as Error).message || 'Failed to make offer')
-    }
+  // Handle refresh and notify parent
+  const handleRefresh = () => {
+    refetch()
+    onUpdate?.()
   }
 
-  const handleAcceptOffer = async () => {
-    if (!applicationId || !onAcceptOffer) return
-    setActionError(null)
-    try {
-      await onAcceptOffer(applicationId, finalOfferDetails)
-      setFinalOfferDetails({})
-      setActiveTab('profile')
-      onClose()
-    } catch (err) {
-      setActionError((err as Error).message || 'Failed to accept offer')
-    }
-  }
+  // Build available panels
+  const buildAvailablePanels = (): PanelOption[] => {
+    const panels: PanelOption[] = [
+      { type: 'profile', label: 'Candidate Profile', icon: <User className="w-4 h-4" /> },
+    ]
 
-  const handleReject = async () => {
-    if (!applicationId || !onReject || !rejectionReason) return
-    setActionError(null)
-    try {
-      await onReject(applicationId, rejectionReason, rejectionFeedback)
-      setRejectionReason('')
-      setRejectionFeedback('')
-      setActiveTab('profile')
-      onClose()
-    } catch (err) {
-      setActionError((err as Error).message || 'Failed to reject application')
-    }
-  }
-
-  if (!isOpen) return null
-
-  // Interview Mode View (full-screen)
-  if (isInterviewMode && applicationId) {
-    return (
-      <InterviewModeView
-        applicationId={applicationId}
-        onClose={() => setIsInterviewMode(false)}
-        onShortlist={onShortlist}
-        onMoveToStage={onMoveToStage}
-      />
-    )
-  }
-
-  // Build tabs based on application status
-  const tabs: { id: TabType; label: string; icon: typeof User }[] = [
-    { id: 'profile', label: 'Candidate', icon: User },
-    { id: 'activity', label: 'Activity', icon: Clock },
-  ]
-
-  // Add answers tab if there are answers
-  if (application && application.answers && application.answers.length > 0) {
-    tabs.splice(1, 0, { id: 'answers', label: 'Answers', icon: FileText })
-  }
-
-  // Always show Pipeline tab (full application journey)
-  // Insert after answers (or after profile if no answers)
-  const insertIndex = tabs.findIndex(t => t.id === 'activity')
-  tabs.splice(insertIndex, 0, { id: 'stages', label: 'Pipeline', icon: Calendar })
-
-  // Add action tabs based on status
-  const hasOffer = application && (application.status === ApplicationStatus.OFFER_MADE || application.status === ApplicationStatus.OFFER_ACCEPTED)
-
-  // Show "Offer" tab - for making, viewing, or editing offers
-  if (application && (onMakeOffer || hasOffer)) {
-    const offerLabel = hasOffer
-      ? (application.status === ApplicationStatus.OFFER_ACCEPTED ? 'Offer (Accepted)' : 'Offer')
-      : 'Make Offer'
-    tabs.push({ id: 'offer', label: offerLabel, icon: Gift })
-  }
-
-  // Show reject tab except for accepted offers
-  if (application && onReject && application.status !== ApplicationStatus.OFFER_ACCEPTED) {
-    tabs.push({ id: 'reject', label: 'Reject', icon: Ban })
-  }
-
-  // Show replacement tab for accepted offers (client view)
-  if (application && showReplacementOption && application.status === ApplicationStatus.OFFER_ACCEPTED) {
-    tabs.push({ id: 'replacement', label: 'Replacement', icon: RefreshCw })
-  }
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/30 z-[200] transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Drawer - 50% width */}
-      <div className="fixed inset-y-0 right-0 w-1/2 min-w-[640px] bg-white shadow-xl z-[201] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <div>
-            <h2 className="text-[16px] font-semibold text-gray-900">
-              {isLoading ? 'Loading...' : application?.candidate?.full_name || 'Application'}
-            </h2>
-            {application && (
-              <p className="text-[13px] text-gray-500 mt-0.5">
-                Applied {formatDate(application.applied_at)}
-              </p>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Stage Selector */}
-            {application && (
-              <div className="relative" ref={stageDropdownRef}>
-                <button
-                  onClick={() => setIsStageDropdownOpen(!isStageDropdownOpen)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium rounded cursor-pointer hover:opacity-80 transition-opacity ${getStatusColor(application.status)}`}
-                >
-                  {getKanbanColumnName(application)}
-                  <ChevronDown className="w-3.5 h-3.5" />
-                </button>
-
-                {/* Dropdown */}
-                {isStageDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
-                    {/* Applied */}
-                    <button
-                      onClick={async () => {
-                        if (applicationId && onResetToApplied) {
-                          onResetToApplied(applicationId)
-                          setIsStageDropdownOpen(false)
-                          onUpdate?.()
-                          setTimeout(() => refetch(), 300)
-                        }
-                      }}
-                      disabled={application.status === ApplicationStatus.APPLIED}
-                      className={`w-full text-left px-3 py-2 text-[12px] hover:bg-gray-50 ${
-                        application.status === ApplicationStatus.APPLIED ? 'bg-gray-50 font-medium' : ''
-                      }`}
-                    >
-                      <span className="inline-block w-2 h-2 rounded-full bg-gray-500 mr-2" />
-                      Applied
-                    </button>
-
-                    {/* Shortlisted */}
-                    <button
-                      onClick={async () => {
-                        if (applicationId && onShortlist) {
-                          onShortlist(applicationId)
-                          setIsStageDropdownOpen(false)
-                          onUpdate?.()
-                          setTimeout(() => refetch(), 300)
-                        }
-                      }}
-                      disabled={application.status === ApplicationStatus.SHORTLISTED}
-                      className={`w-full text-left px-3 py-2 text-[12px] hover:bg-gray-50 ${
-                        application.status === ApplicationStatus.SHORTLISTED ? 'bg-gray-50 font-medium' : ''
-                      }`}
-                    >
-                      <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2" />
-                      Shortlisted
-                    </button>
-
-                    {/* Interview Stages */}
-                    {application.interview_stages?.map((stage: InterviewStage) => (
-                      <button
-                        key={stage.order}
-                        onClick={async () => {
-                          if (applicationId && onMoveToStage) {
-                            setIsStageDropdownOpen(false)
-
-                            // Move to the stage
-                            onMoveToStage(applicationId, stage.order)
-
-                            // Fetch stage instances to get the one we just moved to
-                            try {
-                              const instancesResponse = await api.get<ApplicationStageInstance[]>(
-                                `/jobs/applications/${applicationId}/stages/`
-                              )
-                              const instances = instancesResponse.data
-
-                              // Find the instance for this stage order
-                              const stageInstance = instances.find(
-                                (inst) => inst.stage_template.order === stage.order
-                              )
-
-                              if (stageInstance && stageInstance.status === 'not_started') {
-                                const stageConfig = StageTypeConfig[stageInstance.stage_template.stage_type]
-
-                                if (stageConfig?.requiresScheduling) {
-                                  // Open schedule modal
-                                  handleOpenScheduleModal(stageInstance, 'schedule')
-                                } else if (stageConfig?.isAssessment) {
-                                  // Open assessment modal
-                                  setAssessmentStageInstance(stageInstance)
-                                  setAssessmentModalOpen(true)
-                                }
-                              }
-
-                              refetchStages()
-                              refetch()
-                              onUpdate?.()
-                            } catch (err) {
-                              console.error('Failed to fetch stage instances:', err)
-                              refetchStages()
-                              refetch()
-                              onUpdate?.()
-                            }
-                          }
-                        }}
-                        disabled={
-                          application.status === ApplicationStatus.IN_PROGRESS &&
-                          application.current_stage_order === stage.order
-                        }
-                        className={`w-full text-left px-3 py-2 text-[12px] hover:bg-gray-50 ${
-                          application.status === ApplicationStatus.IN_PROGRESS &&
-                          application.current_stage_order === stage.order
-                            ? 'bg-gray-50 font-medium'
-                            : ''
-                        }`}
-                      >
-                        <span className="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2" />
-                        {stage.name}
-                      </button>
-                    ))}
-
-                    <div className="border-t border-gray-100 my-1" />
-
-                    {/* Offer Made - only show if handler exists */}
-                    {onMakeOffer && (
-                      <button
-                        onClick={() => {
-                          setActiveTab('offer')
-                          setIsStageDropdownOpen(false)
-                        }}
-                        disabled={application.status === ApplicationStatus.OFFER_MADE}
-                        className={`w-full text-left px-3 py-2 text-[12px] hover:bg-gray-50 ${
-                          application.status === ApplicationStatus.OFFER_MADE ? 'bg-gray-50 font-medium' : ''
-                        }`}
-                      >
-                        <span className="inline-block w-2 h-2 rounded-full bg-purple-500 mr-2" />
-                        Offer Made
-                      </button>
-                    )}
-
-                    {/* Rejected */}
-                    {onReject && (
-                      <button
-                        onClick={() => {
-                          setActiveTab('reject')
-                          setIsStageDropdownOpen(false)
-                        }}
-                        disabled={application.status === ApplicationStatus.REJECTED}
-                        className={`w-full text-left px-3 py-2 text-[12px] hover:bg-gray-50 text-red-600 ${
-                          application.status === ApplicationStatus.REJECTED ? 'bg-red-50 font-medium' : ''
-                        }`}
-                      >
-                        <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-2" />
-                        Rejected
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Interview Mode Button */}
-            <button
-              onClick={() => setIsInterviewMode(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-              title="Enter Interview Mode"
-            >
-              <Maximize2 className="w-4 h-4" />
-              Interview Mode
-            </button>
-
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="px-6 py-3 border-b border-gray-200">
-          <div className="flex gap-1">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 text-[13px] font-medium rounded-md transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <p className="text-[14px] text-gray-500">Loading application...</p>
-            </div>
-          ) : application ? (
-            <>
-              {activeTab === 'profile' && (
-                <CandidateProfileCard
-                  candidate={application.candidate}
-                  experiences={application.candidate.experiences || []}
-                  education={application.candidate.education || []}
-                  coveringStatement={application.covering_statement}
-                  variant="compact"
-                  hideViewProfileLink={false}
-                />
-              )}
-              {activeTab === 'answers' && (
-                <AnswersTab answers={application.answers || []} />
-              )}
-              {activeTab === 'stages' && (
-                <div className="space-y-4">
-                  {isLoadingStages ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-                    </div>
-                  ) : (
-                    <FullPipelineTimeline
-                      applicationId={applicationId!}
-                      jobId={application.job?.id || ''}
-                      applicationStatus={application.status}
-                      appliedAt={application.applied_at}
-                      shortlistedAt={application.shortlisted_at}
-                      stageInstances={stageInstances}
-                      currentStageOrder={application.current_stage_order}
-                      offerMadeAt={application.offer_made_at}
-                      offerAcceptedAt={application.offer_accepted_at}
-                      rejectedAt={application.rejected_at}
-                      rejectionReason={application.rejection_reason}
-                      questions={application.questions}
-                      answers={application.answers}
-                      coveringStatement={application.covering_statement}
-                      isRecruiterView={true}
-                      onSchedule={(instance) => handleOpenScheduleModal(instance, 'schedule')}
-                      onReschedule={(instance) => handleOpenScheduleModal(instance, 'reschedule')}
-                      onCancel={handleCancelStage}
-                      onComplete={handleCompleteStage}
-                      onAssignAssessment={(instance) => {
-                        setAssessmentStageInstance(instance)
-                        setAssessmentModalOpen(true)
-                      }}
-                    />
-                  )}
-                </div>
-              )}
-              {activeTab === 'activity' && (
-                <ActivityTimeline applicationId={applicationId!} />
-              )}
-              {activeTab === 'offer' && (
-                <OfferTab
-                  application={application}
-                  offerDetails={offerDetails}
-                  setOfferDetails={setOfferDetails}
-                  onMakeOffer={handleMakeOffer}
-                  onUpdateOffer={handleMakeOffer}
-                  onAcceptOffer={handleAcceptOffer}
-                  isProcessing={isProcessing}
-                  error={actionError}
-                  canMakeOffer={!!onMakeOffer}
-                  canAcceptOffer={!!onAcceptOffer}
-                />
-              )}
-              {activeTab === 'reject' && (
-                <RejectTab
-                  rejectionReason={rejectionReason}
-                  setRejectionReason={setRejectionReason}
-                  rejectionFeedback={rejectionFeedback}
-                  setRejectionFeedback={setRejectionFeedback}
-                  onSubmit={handleReject}
-                  isProcessing={isProcessing}
-                  error={actionError}
-                />
-              )}
-              {activeTab === 'replacement' && (
-                <ReplacementTab
-                  application={application}
-                  onRequestReplacement={() => setReplacementModalOpen(true)}
-                  isAdmin={isAdmin}
-                  onApprove={async (requestId, type, discount) => {
-                    await approveRequest(requestId, { approval_type: type, discount_percentage: discount })
-                    refetch()
-                  }}
-                  onReject={async (requestId, notes) => {
-                    await rejectRequest(requestId, { review_notes: notes })
-                    refetch()
-                  }}
-                  isApproving={isApproving}
-                  isRejecting={isRejecting}
-                />
-              )}
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-32">
-              <p className="text-[14px] text-gray-500">Application not found</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Schedule Interview Modal */}
-      {selectedStageInstance && applicationId && application?.job?.id && (
-        <ScheduleInterviewModal
-          isOpen={scheduleModalOpen}
-          onClose={() => setScheduleModalOpen(false)}
-          instance={selectedStageInstance}
-          applicationId={applicationId}
-          jobId={application.job.id}
-          candidateName={application?.candidate?.full_name || 'Candidate'}
-          mode={scheduleMode}
-          onSuccess={handleScheduleSuccess}
-        />
-      )}
-
-      {/* Assign Assessment Modal */}
-      {assessmentStageInstance && applicationId && (
-        <AssignAssessmentModal
-          isOpen={assessmentModalOpen}
-          onClose={() => setAssessmentModalOpen(false)}
-          instance={assessmentStageInstance}
-          applicationId={applicationId}
-          candidateName={application?.candidate?.full_name || 'Candidate'}
-          onSuccess={() => {
-            setAssessmentModalOpen(false)
-            refetchStages()
-            refetch()
-            onUpdate?.()
-          }}
-        />
-      )}
-
-      {/* Replacement Request Modal */}
-      {applicationId && application && (
-        <ReplacementRequestModal
-          isOpen={replacementModalOpen}
-          onClose={() => setReplacementModalOpen(false)}
-          applicationId={applicationId}
-          candidateName={application?.candidate?.full_name || 'Candidate'}
-          jobTitle={application?.job?.title || 'Position'}
-          onSuccess={() => {
-            setReplacementModalOpen(false)
-            refetch()
-            onUpdate?.()
-          }}
-        />
-      )}
-    </>
-  )
-}
-
-// ============================================================================
-// Offer Tab (Make, View, Edit, Accept)
-// ============================================================================
-
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  ZAR: 'R',
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-}
-
-function OfferTab({
-  application,
-  offerDetails,
-  setOfferDetails,
-  onMakeOffer,
-  onUpdateOffer,
-  onAcceptOffer,
-  isProcessing,
-  error,
-  canMakeOffer,
-  canAcceptOffer,
-}: {
-  application: Application
-  offerDetails: OfferDetails
-  setOfferDetails: (details: OfferDetails) => void
-  onMakeOffer: () => Promise<void>
-  onUpdateOffer: () => Promise<void>
-  onAcceptOffer: () => Promise<void>
-  isProcessing: boolean
-  error: string | null
-  canMakeOffer: boolean
-  canAcceptOffer: boolean
-}) {
-  const [isEditing, setIsEditing] = useState(false)
-  const hasOffer = application.status === ApplicationStatus.OFFER_MADE || application.status === ApplicationStatus.OFFER_ACCEPTED
-  const isAccepted = application.status === ApplicationStatus.OFFER_ACCEPTED
-  const existingOffer = application.offer_details
-  const finalOffer = application.final_offer_details
-
-  // Initialize form with existing offer when entering edit mode
-  const handleStartEdit = () => {
-    if (existingOffer) {
-      setOfferDetails({
-        annual_salary: existingOffer.annual_salary || null,
-        currency: existingOffer.currency || 'ZAR',
-        start_date: existingOffer.start_date || null,
-        notes: existingOffer.notes || '',
-        benefits: existingOffer.benefits || [],
-        equity: existingOffer.equity || null,
+    // Add answers panel if there are answers
+    if (application?.answers && application.answers.length > 0) {
+      panels.push({
+        type: 'answers',
+        label: 'Screening Answers',
+        icon: <FileText className="w-4 h-4" />,
+        count: application.answers.length,
       })
     }
-    setIsEditing(true)
-  }
 
-  const handleCancelEdit = () => {
-    setIsEditing(false)
-    setOfferDetails(getEmptyOfferDetails())
-  }
-
-  const handleSaveEdit = async () => {
-    await onUpdateOffer()
-    setIsEditing(false)
-  }
-
-  const formatDisplayDate = (dateString: string | null | undefined) => {
-    if (!dateString) return 'Not specified'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  }
-
-  const formatSalary = (salary: number | null | undefined, currency: string | undefined) => {
-    if (!salary) return 'Not specified'
-    const symbol = CURRENCY_SYMBOLS[currency || 'ZAR'] || currency || ''
-    return `${symbol}${salary.toLocaleString()}`
-  }
-
-  // Calculate totals for offer display
-  const calcOfferTotals = (offer: OfferDetails | null) => {
-    if (!offer) return { totalBenefits: 0, year1Equity: 0, totalCost: 0 }
-    const benefits = offer.benefits || []
-    const equity = offer.equity
-    const totalBenefits = benefits.reduce((sum, b) => sum + (b.annual_cost || 0), 0)
-    const year1Equity = equity && equity.shares && equity.share_value && equity.vesting_years
-      ? (equity.shares * equity.share_value) / equity.vesting_years
-      : 0
-    const annualSalary = offer.annual_salary || 0
-    return { totalBenefits, year1Equity, totalCost: annualSalary + totalBenefits + year1Equity }
-  }
-
-  // Determine which offer to display
-  const displayOffer = isAccepted && finalOffer?.annual_salary ? finalOffer : existingOffer
-
-  // ============================================================================
-  // MAKE OFFER MODE (no existing offer)
-  // ============================================================================
-  if (!hasOffer) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h4 className="text-[14px] font-medium text-gray-900 mb-1">Make an Offer</h4>
-          <p className="text-[13px] text-gray-500">Enter the offer details for this candidate</p>
-        </div>
-
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        )}
-
-        <OfferForm offerDetails={offerDetails} setOfferDetails={setOfferDetails} />
-
-        <button
-          onClick={onMakeOffer}
-          disabled={isProcessing || !canMakeOffer}
-          className="w-full px-4 py-2.5 text-[14px] font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 disabled:opacity-50"
-        >
-          {isProcessing ? 'Sending Offer...' : 'Make Offer'}
-        </button>
-      </div>
+    panels.push(
+      { type: 'pipeline', label: 'Pipeline & Stages', icon: <GitBranch className="w-4 h-4" /> },
+      { type: 'actions', label: 'Actions', icon: <Zap className="w-4 h-4" /> },
+      { type: 'job', label: 'Job Details', icon: <Briefcase className="w-4 h-4" /> },
+      { type: 'activity', label: 'Activity Log', icon: <Clock className="w-4 h-4" /> },
+      { type: 'tasks', label: 'Tasks', icon: <CheckSquare className="w-4 h-4" /> },
+      { type: 'timeline', label: 'Timeline', icon: <Calendar className="w-4 h-4" /> },
     )
+
+    return panels
   }
 
-  // ============================================================================
-  // EDIT MODE
-  // ============================================================================
-  if (isEditing && !isAccepted) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h4 className="text-[14px] font-medium text-gray-900 mb-1">Edit Offer</h4>
-          <p className="text-[13px] text-gray-500">Update the offer details</p>
+  // Render panel content - using same components as FocusMode
+  const renderPanel = (panelType: string) => {
+    if (!application || !applicationId) {
+      return (
+        <div className="flex items-center justify-center h-32">
+          <p className="text-[14px] text-gray-500">Application not found</p>
         </div>
+      )
+    }
 
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        )}
-
-        <OfferForm offerDetails={offerDetails} setOfferDetails={setOfferDetails} />
-
-        <div className="flex gap-3">
-          <button
-            onClick={handleCancelEdit}
-            disabled={isProcessing}
-            className="flex-1 px-4 py-2.5 text-[14px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSaveEdit}
-            disabled={isProcessing}
-            className="flex-1 px-4 py-2.5 text-[14px] font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 disabled:opacity-50"
-          >
-            {isProcessing ? 'Updating...' : 'Update Offer'}
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // ============================================================================
-  // VIEW MODE (has existing offer)
-  // ============================================================================
-  return (
-    <div className="space-y-6">
-      {/* Status Banner */}
-      <div className={`p-4 rounded-lg ${isAccepted ? 'bg-green-50 border border-green-200' : 'bg-purple-50 border border-purple-200'}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {isAccepted ? (
-              <>
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <div>
-                  <p className="text-[14px] font-medium text-green-800">Offer Accepted</p>
-                  {application.offer_accepted_at && (
-                    <p className="text-[12px] text-green-600">
-                      Accepted on {formatDisplayDate(application.offer_accepted_at)}
-                    </p>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <Gift className="w-5 h-5 text-purple-600" />
-                <div>
-                  <p className="text-[14px] font-medium text-purple-800">Offer Extended</p>
-                  {application.offer_made_at && (
-                    <p className="text-[12px] text-purple-600">
-                      Sent on {formatDisplayDate(application.offer_made_at)}
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-          {!isAccepted && canMakeOffer && (
-            <button
-              onClick={handleStartEdit}
-              className="px-3 py-1.5 text-[12px] font-medium text-purple-700 bg-purple-100 rounded-md hover:bg-purple-200 transition-colors"
-            >
-              Edit Offer
-            </button>
-          )}
-        </div>
-      </div>
-
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
-      )}
-
-      {/* Offer Details */}
-      {(() => {
-        const totals = calcOfferTotals(displayOffer)
-        const benefits = displayOffer?.benefits || []
-        const equity = displayOffer?.equity
-        const currency = displayOffer?.currency || 'ZAR'
-        const currencySymbol = CURRENCY_SYMBOLS[currency] || currency
-
+    switch (panelType) {
+      case 'profile':
         return (
-          <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
-            <div className="p-4">
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Annual Salary</p>
-              <p className="text-[18px] font-semibold text-gray-900">
-                {formatSalary(displayOffer?.annual_salary, displayOffer?.currency)}
-                {displayOffer?.currency && <span className="text-[14px] text-gray-500 ml-1">{displayOffer.currency}</span>}
-              </p>
-            </div>
-
-            <div className="p-4">
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Start Date</p>
-              <p className="text-[14px] text-gray-900">{formatDisplayDate(displayOffer?.start_date)}</p>
-            </div>
-
-            {benefits.length > 0 && (
-              <div className="p-4">
-                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Benefits</p>
-                <div className="space-y-1.5">
-                  {benefits.map((benefit, idx) => (
-                    <div key={idx} className="flex justify-between text-[14px]">
-                      <span className="text-gray-700">{benefit.name}</span>
-                      <span className="text-gray-500">{currencySymbol}{benefit.annual_cost.toLocaleString()}/yr</span>
-                    </div>
-                  ))}
-                  <div className="pt-1.5 border-t border-gray-100 flex justify-between text-[13px] font-medium">
-                    <span className="text-gray-600">Total Benefits</span>
-                    <span className="text-gray-900">{currencySymbol}{totals.totalBenefits.toLocaleString()}/yr</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {equity && equity.shares > 0 && (
-              <div className="p-4">
-                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Equity</p>
-                <div className="grid grid-cols-3 gap-4 text-[13px]">
-                  <div>
-                    <p className="text-gray-500">Shares</p>
-                    <p className="text-gray-900 font-medium">{equity.shares.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Share Value</p>
-                    <p className="text-gray-900 font-medium">{currencySymbol}{equity.share_value.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Vesting</p>
-                    <p className="text-gray-900 font-medium">{equity.vesting_years} years</p>
-                  </div>
-                </div>
-                <div className="mt-3 pt-2 border-t border-gray-100 space-y-1 text-[13px]">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Total Equity Value</span>
-                    <span className="text-gray-700">{currencySymbol}{(equity.shares * equity.share_value).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Year 1 Value</span>
-                    <span className="text-gray-700">{currencySymbol}{totals.year1Equity.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {displayOffer?.notes && (
-              <div className="p-4">
-                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Notes</p>
-                <p className="text-[14px] text-gray-700 whitespace-pre-wrap">{displayOffer.notes}</p>
-              </div>
-            )}
-
-            {/* Total Cost to Company */}
-            {totals.totalCost > 0 && (
-              <div className="p-4 bg-gray-50">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Cost to Company</p>
-                    <p className="text-[11px] text-gray-400">(Year 1, including vested equity)</p>
-                  </div>
-                  <p className="text-[18px] font-semibold text-gray-900">
-                    {currencySymbol}{totals.totalCost.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            )}
+          <div className="h-full overflow-y-auto p-4">
+            <CandidateProfileCard
+              candidate={application.candidate}
+              experiences={application.candidate.experiences || []}
+              education={application.candidate.education || []}
+              coveringStatement={application.covering_statement}
+              variant="compact"
+              hideViewProfileLink={false}
+            />
           </div>
         )
-      })()}
 
-      {/* Show original offer if accepted with different final offer */}
-      {isAccepted && finalOffer?.annual_salary && existingOffer?.annual_salary && finalOffer.annual_salary !== existingOffer.annual_salary && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Original Offer</p>
-          <p className="text-[14px] text-gray-600">
-            {formatSalary(existingOffer.annual_salary, existingOffer.currency)} {existingOffer.currency}
-          </p>
-        </div>
-      )}
-
-      {/* Accept Offer Button */}
-      {!isAccepted && canAcceptOffer && (
-        <div className="pt-2 border-t border-gray-100">
-          <div className="p-3 bg-green-50 border border-green-200 rounded-md mb-4">
-            <p className="text-[13px] text-green-800">
-              Accepting will mark the candidate as hired.
-            </p>
-          </div>
-          <button
-            onClick={onAcceptOffer}
-            disabled={isProcessing}
-            className="w-full px-4 py-2.5 text-[14px] font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50"
-          >
-            {isProcessing ? 'Confirming...' : 'Accept Offer'}
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ============================================================================
-// Reject Tab
-// ============================================================================
-
-function RejectTab({
-  rejectionReason,
-  setRejectionReason,
-  rejectionFeedback,
-  setRejectionFeedback,
-  onSubmit,
-  isProcessing,
-  error,
-}: {
-  rejectionReason: RejectionReason | ''
-  setRejectionReason: (reason: RejectionReason | '') => void
-  rejectionFeedback: string
-  setRejectionFeedback: (feedback: string) => void
-  onSubmit: () => void
-  isProcessing: boolean
-  error: string | null
-}) {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h4 className="text-[14px] font-medium text-gray-900 mb-1">Reject Application</h4>
-        <p className="text-[13px] text-gray-500">Provide a reason for rejecting this application</p>
-      </div>
-
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
-      )}
-
-      <div className="space-y-4">
-        <div>
-          <label className="block text-[13px] font-medium text-gray-700 mb-1">
-            Rejection Reason <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={rejectionReason}
-            onChange={(e) => setRejectionReason(e.target.value as RejectionReason)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-          >
-            <option value="">Select a reason...</option>
-            {Object.entries(RejectionReasonLabels).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-[13px] font-medium text-gray-700 mb-1">
-            Feedback (optional)
-          </label>
-          <textarea
-            value={rejectionFeedback}
-            onChange={(e) => setRejectionFeedback(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
-            placeholder="Additional notes about the rejection..."
+      case 'answers':
+        return (
+          <AnswersPanel
+            answers={application.answers || []}
+            isLoading={false}
           />
-        </div>
-      </div>
+        )
 
-      <button
-        onClick={onSubmit}
-        disabled={isProcessing || !rejectionReason}
-        className="w-full px-4 py-2.5 text-[14px] font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
-      >
-        {isProcessing ? 'Rejecting...' : 'Reject Application'}
-      </button>
-    </div>
-  )
-}
+      case 'pipeline':
+        return (
+          <PipelinePanel
+            applicationId={applicationId}
+            onRefresh={handleRefresh}
+          />
+        )
 
-// ============================================================================
-// Answers Tab
-// ============================================================================
+      case 'activity':
+        return (
+          <div className="h-full overflow-y-auto p-4">
+            <ActivityTimeline applicationId={applicationId} />
+          </div>
+        )
 
-function AnswersTab({ answers }: { answers: ApplicationAnswer[] }) {
-  if (!answers || answers.length === 0) {
+      case 'job':
+        return (
+          <JobDetailPanel
+            job={application.job}
+            isLoading={false}
+          />
+        )
+
+      case 'actions':
+        return (
+          <ActionsPanel
+            applicationId={applicationId}
+            application={application}
+            onRefresh={handleRefresh}
+          />
+        )
+
+      case 'tasks':
+        return (
+          <TasksPanel
+            entityType="candidate"
+            entityId={candidateId}
+            tasks={tasks}
+            onRefresh={refetchTasks}
+          />
+        )
+
+      case 'timeline':
+        return (
+          <TimelinePanel
+            entityType="candidate"
+            entityId={candidateId}
+            onRefresh={handleRefresh}
+          />
+        )
+
+      default:
+        return null
+    }
+  }
+
+  // Stage dropdown component
+  const renderStatusBadge = () => {
+    if (!application) return null
+
     return (
-      <div className="flex items-center justify-center h-32">
-        <p className="text-[14px] text-gray-500">No answers submitted</p>
-      </div>
-    )
-  }
+      <div className="relative" ref={stageDropdownRef}>
+        <button
+          onClick={() => setIsStageDropdownOpen(!isStageDropdownOpen)}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium rounded cursor-pointer hover:opacity-80 transition-opacity ${getStatusColor(application.status)}`}
+        >
+          {getKanbanColumnName(application)}
+          <ChevronDown className="w-3.5 h-3.5" />
+        </button>
 
-  // Sort answers by question order
-  const sortedAnswers = [...answers].sort(
-    (a, b) => (a.question?.order || 0) - (b.question?.order || 0)
-  )
-
-  const renderAnswerValue = (answer: ApplicationAnswer) => {
-    const { question, answer_text, answer_file } = answer
-
-    // Handle file answers
-    if (question.question_type === QuestionType.FILE) {
-      if (answer_file) {
-        return (
-          <a
-            href={answer_file}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[14px] text-blue-600 hover:text-blue-800 hover:underline"
-          >
-            <Paperclip className="w-4 h-4" />
-            View uploaded file
-          </a>
-        )
-      }
-      if (answer_text) {
-        return (
-          <a
-            href={answer_text}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[14px] text-blue-600 hover:text-blue-800 hover:underline"
-          >
-            <Paperclip className="w-4 h-4" />
-            {answer_text}
-          </a>
-        )
-      }
-      return <span className="text-[14px] text-gray-400 italic">No file provided</span>
-    }
-
-    // Handle external links
-    if (question.question_type === QuestionType.EXTERNAL_LINK) {
-      if (answer_text) {
-        return (
-          <a
-            href={answer_text}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[14px] text-blue-600 hover:text-blue-800 hover:underline"
-          >
-            <ExternalLink className="w-4 h-4" />
-            {answer_text}
-          </a>
-        )
-      }
-      return <span className="text-[14px] text-gray-400 italic">No link provided</span>
-    }
-
-    // Handle multi-select (comma-separated values displayed as tags)
-    if (question.question_type === QuestionType.MULTI_SELECT && answer_text) {
-      const values = answer_text.split(',').filter(Boolean)
-      if (values.length === 0) {
-        return <span className="text-[14px] text-gray-400 italic">No selection</span>
-      }
-      return (
-        <div className="flex flex-wrap gap-1.5">
-          {values.map((value, idx) => (
-            <span
-              key={idx}
-              className="inline-flex items-center px-2 py-0.5 text-[12px] font-medium text-gray-700 bg-gray-100 rounded-md"
-            >
-              {value.trim()}
-            </span>
-          ))}
-        </div>
-      )
-    }
-
-    // Handle select (single value)
-    if (question.question_type === QuestionType.SELECT && answer_text) {
-      return (
-        <span className="inline-flex items-center px-2 py-0.5 text-[12px] font-medium text-gray-700 bg-gray-100 rounded-md">
-          {answer_text}
-        </span>
-      )
-    }
-
-    // Handle text/textarea
-    if (answer_text) {
-      return (
-        <p className="text-[14px] text-gray-700 whitespace-pre-wrap">{answer_text}</p>
-      )
-    }
-
-    return <span className="text-[14px] text-gray-400 italic">No answer</span>
-  }
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h4 className="text-[14px] font-medium text-gray-900 mb-1">Application Answers</h4>
-        <p className="text-[13px] text-gray-500">
-          Responses to custom questions for this job
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        {sortedAnswers.map((answer) => (
-          <div
-            key={answer.id}
-            className="bg-gray-50 border border-gray-200 rounded-lg p-4"
-          >
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <p className="text-[13px] font-medium text-gray-900">
-                {answer.question.question_text}
-                {answer.question.is_required && (
-                  <span className="text-red-500 ml-1">*</span>
-                )}
-              </p>
-              <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 bg-white border border-gray-200 rounded">
-                {getQuestionTypeLabel(answer.question.question_type)}
+        {/* Stage Dropdown - Shows current status, opens Interview Mode for stage changes */}
+        {isStageDropdownOpen && (
+          <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
+            <div className="px-3 py-2 text-[11px] text-gray-500 uppercase tracking-wide border-b border-gray-100">
+              Current Status
+            </div>
+            <div className="px-3 py-2">
+              <span className={`inline-flex items-center px-2 py-1 text-[11px] font-medium rounded ${getStatusColor(application.status)}`}>
+                {getKanbanColumnName(application)}
               </span>
             </div>
-            {answer.question.helper_text && (
-              <p className="text-[12px] text-gray-500 mb-2">
-                {answer.question.helper_text}
-              </p>
-            )}
-            <div className="mt-2">{renderAnswerValue(answer)}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// Helper function to get question type label
-function getQuestionTypeLabel(type: QuestionType): string {
-  const labels: Record<QuestionType, string> = {
-    [QuestionType.TEXT]: 'Short Text',
-    [QuestionType.TEXTAREA]: 'Long Text',
-    [QuestionType.SELECT]: 'Single Select',
-    [QuestionType.MULTI_SELECT]: 'Multi Select',
-    [QuestionType.FILE]: 'File Upload',
-    [QuestionType.EXTERNAL_LINK]: 'Link',
-  }
-  return labels[type] || type
-}
-
-// ============================================================================
-// Replacement Tab
-// ============================================================================
-
-function ReplacementTab({
-  application,
-  onRequestReplacement,
-  isAdmin = false,
-  onApprove,
-  onReject,
-  isApproving = false,
-  isRejecting = false,
-}: {
-  application: Application
-  onRequestReplacement: () => void
-  isAdmin?: boolean
-  onApprove?: (requestId: string, type: 'free' | 'discounted', discount?: number) => Promise<void>
-  onReject?: (requestId: string, notes?: string) => Promise<void>
-  isApproving?: boolean
-  isRejecting?: boolean
-}) {
-  const existingRequest = application.replacement_request
-  const isReplacement = application.is_replacement
-
-  // If this application is a replacement hire, show that info
-  if (isReplacement) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h4 className="text-[14px] font-medium text-gray-900 mb-1">Replacement Hire</h4>
-          <p className="text-[13px] text-gray-500">This placement is a replacement hire</p>
-        </div>
-
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-start gap-3">
-            <RefreshCw className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-[14px] font-medium text-blue-800">
-                Replacement Placement
-              </p>
-              <p className="text-[13px] text-blue-700 mt-1">
-                This candidate was hired as a replacement for a previous placement. No replacement guarantee applies to this hire.
-              </p>
+            <div className="border-t border-gray-100 mt-1 pt-1">
+              <button
+                onClick={() => {
+                  setIsStageDropdownOpen(false)
+                  setIsInterviewMode(true)
+                }}
+                className="w-full text-left px-3 py-2 text-[12px] text-gray-700 hover:bg-gray-50"
+              >
+                Open Interview Mode to change stage...
+              </button>
             </div>
           </div>
-        </div>
+        )}
       </div>
     )
   }
 
-  // If there's an existing replacement request, show its status using the shared component
-  if (existingRequest) {
-    const isPending = existingRequest.status === 'pending'
-    const canReview = isAdmin && isPending && onApprove && onReject
-
+  // Interview Mode (FocusMode)
+  if (isInterviewMode && applicationId) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h4 className="text-[14px] font-medium text-gray-900 mb-1">
-            {canReview ? 'Review Replacement Request' : 'Replacement Request'}
-          </h4>
-          <p className="text-[13px] text-gray-500">
-            {canReview ? 'Approve or reject this replacement request' : 'Status of the replacement request'}
-          </p>
-        </div>
-
-        <ReplacementReviewCard
-          request={existingRequest}
-          canReview={canReview}
-          onApprove={canReview ? async (type, discount) => {
-            await onApprove!(existingRequest.id, type, discount)
-          } : undefined}
-          onReject={canReview ? async (notes) => {
-            await onReject!(existingRequest.id, notes)
-          } : undefined}
-          isApproving={isApproving}
-          isRejecting={isRejecting}
-        />
-      </div>
+      <FocusMode
+        mode="application"
+        applicationId={applicationId}
+        onClose={() => {
+          setIsInterviewMode(false)
+          handleRefresh()
+        }}
+      />
     )
   }
 
-  // No existing request - show option to request replacement
   return (
-    <div className="space-y-6">
-      <div>
-        <h4 className="text-[14px] font-medium text-gray-900 mb-1">Request Replacement</h4>
-        <p className="text-[13px] text-gray-500">
-          If this placement didn't work out, you may be eligible for a replacement
-        </p>
-      </div>
-
-      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-        <p className="text-[13px] text-gray-700 mb-3">
-          Our replacement guarantee allows you to request a replacement candidate if the placement doesn't work out within the replacement period.
-        </p>
-        <p className="text-[12px] text-gray-500 mb-4">
-          <strong>Pricing:</strong> Approved requests may be credited (original fee applied to replacement) or discounted (percentage off the new placement fee).
-        </p>
-        <button
-          onClick={onRequestReplacement}
-          className="w-full px-4 py-2.5 text-[14px] font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 flex items-center justify-center gap-2"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Check Eligibility & Request
-        </button>
-      </div>
-    </div>
+    <DrawerWithPanels
+      isOpen={isOpen}
+      onClose={onClose}
+      title={application?.candidate?.full_name || 'Application'}
+      subtitle={application ? `Applied ${formatDate(application.applied_at)}` : undefined}
+      isLoading={isLoading}
+      statusBadge={renderStatusBadge()}
+      focusModeLabel="Interview Mode"
+      onEnterFocusMode={() => setIsInterviewMode(true)}
+      availablePanels={buildAvailablePanels()}
+      defaultPanel="profile"
+      activePanel={activePanel}
+      onPanelChange={(panel) => setActivePanel(panel as PanelType)}
+      renderPanel={renderPanel}
+    />
   )
 }

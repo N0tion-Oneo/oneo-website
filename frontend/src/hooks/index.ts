@@ -483,3 +483,24 @@ export type {
   CreateWorkflowData,
   UpdateWorkflowData,
 } from './useAutomations'
+
+// Task hooks (Service Center)
+export {
+  useTasks,
+  useEntityTasks,
+  useTask,
+  useCreateTask,
+  useUpdateTask,
+  useDeleteTask,
+  useCompleteTask,
+  useMyTasks,
+  useOverdueTasks,
+} from './useTasks'
+
+// Timeline hooks (Service Center - Aggregate View)
+export {
+  useTimeline,
+  useAddTimelineNote,
+  useLogTimelineCall,
+  useServiceCenter,
+} from './useTimeline'

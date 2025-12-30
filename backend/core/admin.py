@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import OnboardingStage, OnboardingHistory
+from .models import OnboardingStage, OnboardingHistory, Task
 
 
 @admin.register(OnboardingStage)
@@ -18,3 +18,30 @@ class OnboardingHistoryAdmin(admin.ModelAdmin):
     search_fields = ['entity_id']
     ordering = ['-created_at']
     readonly_fields = ['created_at']
+
+
+@admin.register(Task)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ['title', 'entity_type', 'entity_id', 'priority', 'status', 'due_date', 'assigned_to', 'created_at']
+    list_filter = ['entity_type', 'priority', 'status', 'due_date']
+    search_fields = ['title', 'description', 'entity_id']
+    ordering = ['due_date', '-priority', '-created_at']
+    readonly_fields = ['id', 'created_at', 'updated_at', 'completed_at']
+    raw_id_fields = ['assigned_to', 'created_by']
+    date_hierarchy = 'created_at'
+
+    fieldsets = (
+        ('Entity', {
+            'fields': ('entity_type', 'entity_id')
+        }),
+        ('Task Details', {
+            'fields': ('title', 'description', 'priority', 'status', 'due_date')
+        }),
+        ('Assignment', {
+            'fields': ('assigned_to', 'created_by')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at', 'completed_at'),
+            'classes': ('collapse',)
+        }),
+    )
