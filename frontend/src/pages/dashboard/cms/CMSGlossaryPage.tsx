@@ -71,10 +71,10 @@ export default function CMSGlossaryPage() {
   // Access check
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to manage glossary terms.
         </p>
       </div>
@@ -86,14 +86,14 @@ export default function CMSGlossaryPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">Glossary</h1>
-          <p className="text-[13px] text-gray-500 mt-0.5">
+          <h1 className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">Glossary</h1>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
             Manage recruitment and HR terminology definitions
           </p>
         </div>
         <Link
           to="/dashboard/cms/glossary/new"
-          className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
         >
           <Plus className="w-4 h-4" />
           New Term
@@ -110,7 +110,7 @@ export default function CMSGlossaryPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search terms..."
-            className="w-full pl-10 pr-4 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+            className="w-full pl-10 pr-4 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
           />
         </div>
 
@@ -119,8 +119,8 @@ export default function CMSGlossaryPage() {
           onClick={() => setShowInactive(!showInactive)}
           className={`flex items-center gap-1.5 px-3 py-2 text-[13px] border rounded-md transition-colors ${
             showInactive
-              ? 'border-gray-300 bg-gray-100 text-gray-900'
-              : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+              ? 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+              : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
           }`}
         >
           {showInactive ? (
@@ -135,7 +135,7 @@ export default function CMSGlossaryPage() {
       {/* Loading State */}
       {isLoading && (
         <div className="text-center py-12">
-          <p className="text-[14px] text-gray-500">Loading terms...</p>
+          <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading terms...</p>
         </div>
       )}
 
@@ -148,10 +148,10 @@ export default function CMSGlossaryPage() {
 
       {/* Empty State */}
       {!isLoading && !error && filteredTerms.length === 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-          <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-[15px] text-gray-700 mb-1">No glossary terms found</p>
-          <p className="text-[13px] text-gray-500 mb-4">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+          <BookOpen className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No glossary terms found</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
             {search || showInactive
               ? 'Try adjusting your filters'
               : 'Create your first glossary term'}
@@ -159,7 +159,7 @@ export default function CMSGlossaryPage() {
           {!search && !showInactive && (
             <Link
               to="/dashboard/cms/glossary/new"
-              className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800"
+              className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
             >
               <Plus className="w-4 h-4" />
               Create Term
@@ -173,38 +173,38 @@ export default function CMSGlossaryPage() {
         <div className="space-y-6">
           {sortedLetters.map((letter) => (
             <div key={letter}>
-              <h2 className="text-[14px] font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+              <h2 className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
                 {letter}
               </h2>
               <div className="space-y-2">
                 {groupedTerms[letter].map((term) => (
                   <div
                     key={term.id}
-                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+                    className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-sm dark:hover:shadow-gray-900/40 transition-shadow"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <Link
                             to={`/dashboard/cms/glossary/${term.id}`}
-                            className="text-[14px] font-medium text-gray-900 hover:text-gray-600"
+                            className="text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:text-gray-600 dark:hover:text-gray-300"
                           >
                             {term.title}
                           </Link>
                           {!term.is_active && (
-                            <span className="inline-flex px-2 py-0.5 text-[11px] font-medium rounded bg-gray-100 text-gray-600">
+                            <span className="inline-flex px-2 py-0.5 text-[11px] font-medium rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
                               Inactive
                             </span>
                           )}
                         </div>
-                        <p className="text-[12px] text-gray-500 line-clamp-2">
+                        <p className="text-[12px] text-gray-500 dark:text-gray-400 line-clamp-2">
                           {term.definition_plain || 'No definition'}
                         </p>
                       </div>
                       <div className="flex items-center gap-1">
                         <Link
                           to={`/dashboard/cms/glossary/${term.id}`}
-                          className="flex items-center gap-1 px-2.5 py-1.5 text-[12px] text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-[12px] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                           Edit
@@ -212,7 +212,7 @@ export default function CMSGlossaryPage() {
                         <Link
                           to={`/glossary/${term.slug}`}
                           target="_blank"
-                          className="flex items-center gap-1 px-2.5 py-1.5 text-[12px] text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-[12px] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           View
@@ -220,7 +220,7 @@ export default function CMSGlossaryPage() {
                         <button
                           onClick={() => handleDelete(term)}
                           disabled={deleteMutation.isPending}
-                          className="flex items-center gap-1 px-2.5 py-1.5 text-[12px] text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-[12px] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

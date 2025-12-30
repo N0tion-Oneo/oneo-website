@@ -142,7 +142,7 @@ export default function HeadhuntingPage() {
   const placementFee = pricingConfig ? formatPercent(pricingConfig.headhunting_placement_fee) : ''
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <SEO />
       <Navbar />
 
@@ -187,33 +187,33 @@ export default function HeadhuntingPage() {
       <div className="max-w-5xl mx-auto px-6 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
               Beyond Traditional Recruitment
             </h2>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
               Headhunting is the art of identifying exceptional talent and persuading them to
               consider new opportunities. Unlike traditional recruitment that waits for candidates
               to apply, headhunting is proactive and targeted.
             </p>
-            <p className="text-gray-600 mb-8 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
               Our headhunters are skilled relationship builders who understand how to engage
               professionals, present compelling opportunities, and navigate the complexities
               of talent acquisition.
             </p>
             <div className="flex flex-wrap gap-3">
-              <div className="flex items-center gap-2 text-[13px] text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
+              <div className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full">
                 <CheckCircle2 className="w-4 h-4 text-purple-500" />
                 Proactive Sourcing
               </div>
-              <div className="flex items-center gap-2 text-[13px] text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
+              <div className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full">
                 <CheckCircle2 className="w-4 h-4 text-purple-500" />
                 Confidential Approaches
               </div>
-              <div className="flex items-center gap-2 text-[13px] text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
+              <div className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full">
                 <CheckCircle2 className="w-4 h-4 text-purple-500" />
                 Passive Candidates
               </div>
-              <div className="flex items-center gap-2 text-[13px] text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
+              <div className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full">
                 <CheckCircle2 className="w-4 h-4 text-purple-500" />
                 Pay on Success
               </div>
@@ -221,9 +221,9 @@ export default function HeadhuntingPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             {stats.map((stat) => (
-              <div key={stat.value} className="bg-purple-50 rounded-xl p-6">
-                <div className="text-[40px] font-bold text-purple-600 mb-1">{stat.value}</div>
-                <p className="text-[13px] text-gray-600">{stat.label}</p>
+              <div key={stat.value} className="bg-purple-50 dark:bg-purple-900/30 rounded-xl p-6">
+                <div className="text-[40px] font-bold text-purple-600 dark:text-purple-400 mb-1">{stat.value}</div>
+                <p className="text-[13px] text-gray-600 dark:text-gray-400">{stat.label}</p>
               </div>
             ))}
             <div className="bg-purple-600 rounded-xl p-6 text-white">
@@ -235,13 +235,13 @@ export default function HeadhuntingPage() {
       </div>
 
       {/* Benefits Section */}
-      <div className="bg-gray-50 border-y border-gray-100">
+      <div className="bg-gray-50 dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               The Headhunting Advantage
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Why leading companies trust us to find their most important hires.
             </p>
           </div>
@@ -250,16 +250,16 @@ export default function HeadhuntingPage() {
             {benefits.map((benefit) => (
               <div
                 key={benefit.title}
-                className="flex gap-4 p-6 bg-white rounded-xl border border-gray-200"
+                className="flex gap-4 p-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700"
               >
-                <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <benefit.icon className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <benefit.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-[17px] font-semibold text-gray-900 mb-2">
+                  <h3 className="text-[17px] font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     {benefit.title}
                   </h3>
-                  <p className="text-[14px] text-gray-600 leading-relaxed">
+                  <p className="text-[14px] text-gray-600 dark:text-gray-400 leading-relaxed">
                     {benefit.description}
                   </p>
                 </div>
@@ -272,16 +272,16 @@ export default function HeadhuntingPage() {
       {/* Pricing Section */}
       <div id="pricing" className="max-w-5xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Simple, Success-Based Pricing
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             No upfront costs, no retainers. You only pay when we successfully place a candidate.
           </p>
         </div>
 
         <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             {/* Pricing Header */}
             <div className="bg-purple-600 text-white p-8 text-center">
               <p className="text-purple-100 text-sm mb-2">Placement Fee</p>
@@ -292,55 +292,55 @@ export default function HeadhuntingPage() {
             {/* Pricing Details */}
             <div className="p-8">
               <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <div className="text-center p-4 bg-gray-50 rounded-xl">
-                  <CreditCard className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-                  <p className="text-[14px] font-medium text-gray-900">Pay on Success</p>
-                  <p className="text-[12px] text-gray-500">Fee due on candidate acceptance</p>
+                <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                  <CreditCard className="w-6 h-6 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Pay on Success</p>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400">Fee due on candidate acceptance</p>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-xl">
-                  <Target className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-                  <p className="text-[14px] font-medium text-gray-900">No Exclusivity</p>
-                  <p className="text-[12px] text-gray-500">We work at risk alongside you</p>
+                <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                  <Target className="w-6 h-6 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">No Exclusivity</p>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400">We work at risk alongside you</p>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-xl">
-                  <Clock className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-                  <p className="text-[14px] font-medium text-gray-900">4-Month Cover</p>
-                  <p className="text-[12px] text-gray-500">Replacement at 5% if needed</p>
+                <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                  <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">4-Month Cover</p>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400">Replacement at 5% if needed</p>
                 </div>
               </div>
 
-              <div className="border-t border-gray-100 pt-6 mb-6">
-                <h4 className="text-[14px] font-medium text-gray-900 mb-3">Fee Includes</h4>
+              <div className="border-t border-gray-100 dark:border-gray-700 pt-6 mb-6">
+                <h4 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-3">Fee Includes</h4>
                 <div className="grid sm:grid-cols-2 gap-2">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                    <span className="text-[13px] text-gray-600">Target identification & mapping</span>
+                    <span className="text-[13px] text-gray-600 dark:text-gray-400">Target identification & mapping</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                    <span className="text-[13px] text-gray-600">Direct candidate approach</span>
+                    <span className="text-[13px] text-gray-600 dark:text-gray-400">Direct candidate approach</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                    <span className="text-[13px] text-gray-600">Screening & assessment</span>
+                    <span className="text-[13px] text-gray-600 dark:text-gray-400">Screening & assessment</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                    <span className="text-[13px] text-gray-600">Interview coordination</span>
+                    <span className="text-[13px] text-gray-600 dark:text-gray-400">Interview coordination</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                    <span className="text-[13px] text-gray-600">Offer negotiation support</span>
+                    <span className="text-[13px] text-gray-600 dark:text-gray-400">Offer negotiation support</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                    <span className="text-[13px] text-gray-600">Reference checks</span>
+                    <span className="text-[13px] text-gray-600 dark:text-gray-400">Reference checks</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-purple-50 rounded-lg p-4 mb-6">
-                <p className="text-[13px] text-gray-700">
+              <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 mb-6">
+                <p className="text-[13px] text-gray-700 dark:text-gray-300">
                   <strong>Replacement Policy:</strong> If a placed candidate leaves within 4 months,
                   we'll find a replacement for just 5% of the package (instead of the full {placementFee || '20%'} fee).
                 </p>
@@ -358,13 +358,13 @@ export default function HeadhuntingPage() {
       </div>
 
       {/* Our Approach */}
-      <div id="approach" className="bg-gray-50 border-y border-gray-100">
+      <div id="approach" className="bg-gray-50 dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Our Approach
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               A methodical process refined over years of successful searches.
             </p>
           </div>
@@ -373,16 +373,16 @@ export default function HeadhuntingPage() {
             {approach.map((item) => (
               <div
                 key={item.step}
-                className="flex gap-6 items-start p-6 bg-white border border-gray-200 rounded-xl hover:border-purple-200 transition-colors"
+                className="flex gap-6 items-start p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-purple-200 dark:hover:border-purple-700 transition-colors"
               >
                 <div className="w-14 h-14 bg-purple-600 text-white rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0">
                   {item.step}
                 </div>
                 <div>
-                  <h3 className="text-[17px] font-semibold text-gray-900 mb-2">
+                  <h3 className="text-[17px] font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     {item.title}
                   </h3>
-                  <p className="text-[14px] text-gray-600">
+                  <p className="text-[14px] text-gray-600 dark:text-gray-400">
                     {item.description}
                   </p>
                 </div>
@@ -436,83 +436,83 @@ export default function HeadhuntingPage() {
       <div className="max-w-5xl mx-auto px-6 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
               Why Choose Us?
             </h2>
             <div className="space-y-6">
               <div className="flex gap-4">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Search className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Search className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-semibold text-gray-900 mb-1">
+                  <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 mb-1">
                     Deep Market Knowledge
                   </h3>
-                  <p className="text-[13px] text-gray-600">
+                  <p className="text-[13px] text-gray-600 dark:text-gray-400">
                     Our headhunters have extensive networks and understand the talent landscape in their sectors.
                   </p>
                 </div>
               </div>
               <div className="flex gap-4">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <MessageSquare className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-semibold text-gray-900 mb-1">
+                  <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 mb-1">
                     Relationship-First Approach
                   </h3>
-                  <p className="text-[13px] text-gray-600">
+                  <p className="text-[13px] text-gray-600 dark:text-gray-400">
                     We build long-term relationships with candidates, not transactional interactions.
                   </p>
                 </div>
               </div>
               <div className="flex gap-4">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <UserCheck className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <UserCheck className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-semibold text-gray-900 mb-1">
+                  <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 mb-1">
                     Thorough Assessment
                   </h3>
-                  <p className="text-[13px] text-gray-600">
+                  <p className="text-[13px] text-gray-600 dark:text-gray-400">
                     Beyond skills — we assess cultural fit, motivation, and long-term potential.
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 rounded-2xl p-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-8">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
               Our Commitment
             </h3>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span className="text-[14px] text-gray-600">
+                <span className="text-[14px] text-gray-600 dark:text-gray-400">
                   Transparent communication throughout the search
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span className="text-[14px] text-gray-600">
+                <span className="text-[14px] text-gray-600 dark:text-gray-400">
                   Regular progress updates and market insights
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span className="text-[14px] text-gray-600">
+                <span className="text-[14px] text-gray-600 dark:text-gray-400">
                   Comprehensive candidate assessments
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span className="text-[14px] text-gray-600">
+                <span className="text-[14px] text-gray-600 dark:text-gray-400">
                   4-month replacement cover at reduced rate
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                <span className="text-[14px] text-gray-600">
+                <span className="text-[14px] text-gray-600 dark:text-gray-400">
                   No payment until successful placement
                 </span>
               </li>
@@ -522,27 +522,27 @@ export default function HeadhuntingPage() {
       </div>
 
       {/* CTA Section */}
-      <div className="border-t border-gray-100">
+      <div className="border-t border-gray-100 dark:border-gray-800">
         <div className="max-w-5xl mx-auto px-6 py-20">
-          <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl p-8 md:p-12 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+          <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-8 md:p-12 text-center">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Ready to Find Hidden Talent?
             </h2>
-            <p className="text-gray-600 max-w-xl mx-auto mb-8">
+            <p className="text-gray-600 dark:text-gray-400 max-w-xl mx-auto mb-8">
               Let's discuss your hiring needs and how our headhunting
               expertise can bring you candidates you won't find elsewhere.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
               >
                 Start Your Search
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/retained-recruitment"
-                className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-white transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors"
               >
                 Explore Retained Recruitment
               </Link>
@@ -552,7 +552,7 @@ export default function HeadhuntingPage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 py-8">
+      <footer className="border-t border-gray-100 dark:border-gray-800 py-8">
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-[13px] text-gray-400 text-center">
             © {new Date().getFullYear()} {seoDefaults.companyName || 'All rights reserved'}.{seoDefaults.companyName ? ' All rights reserved.' : ''}

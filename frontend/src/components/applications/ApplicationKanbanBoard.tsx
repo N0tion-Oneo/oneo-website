@@ -347,7 +347,7 @@ function ApplicationCard({
     <div
       {...dragHandleProps}
       onClick={handleCardClick}
-      className={`bg-white border border-gray-200 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
+      className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md p-3 shadow-sm dark:shadow-gray-900/20 hover:shadow-md transition-shadow cursor-pointer ${
         isDragEnabled ? 'active:cursor-grabbing' : ''
       }`}
     >
@@ -363,7 +363,7 @@ function ApplicationCard({
               .slice(0, 2)}
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] font-medium text-gray-900 hover:text-gray-700 truncate">
+            <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300 truncate">
               {application.candidate_name}
             </p>
           </div>
@@ -377,7 +377,7 @@ function ApplicationCard({
                   e.stopPropagation()
                   setShowActions(!showActions)
                 }}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 rounded"
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>
@@ -387,7 +387,7 @@ function ApplicationCard({
                     className="fixed inset-0 z-10"
                     onClick={() => setShowActions(false)}
                   />
-                  <div className="absolute right-0 top-6 z-20 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[140px]">
+                  <div className="absolute right-0 top-6 z-20 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 min-w-[140px]">
                     {isScheduled && onReschedule && (
                       <button
                         onClick={(e) => {
@@ -395,7 +395,7 @@ function ApplicationCard({
                           setShowActions(false)
                           onReschedule(application)
                         }}
-                        className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"
                       >
                         <Calendar className="w-3 h-3" />
                         Reschedule
@@ -453,21 +453,21 @@ function ApplicationCard({
 
       {/* Card Body - Basic Info */}
       <div className="space-y-1.5 mb-2">
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
           <Mail className="w-3 h-3 flex-shrink-0" />
           <span className="truncate">{application.candidate_email}</span>
         </div>
 
         {/* Job Info */}
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-600">
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-600 dark:text-gray-400">
           <Building2 className="w-3 h-3 flex-shrink-0" />
           <span className="truncate font-medium">{application.job_title}</span>
         </div>
-        <div className="text-[10px] text-gray-500 pl-4.5 truncate">
+        <div className="text-[10px] text-gray-500 dark:text-gray-400 pl-4.5 truncate">
           {application.company_name}
         </div>
 
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
           <Calendar className="w-3 h-3 flex-shrink-0" />
           <span>Applied {formatDate(application.applied_at)}</span>
         </div>
@@ -482,7 +482,7 @@ function ApplicationCard({
       {/* Stage Badge (when in status view for IN_PROGRESS) */}
       {showStageBadge && application.current_stage_name && (
         <div className="mb-2">
-          <span className="inline-flex px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-600 rounded">
+          <span className="inline-flex px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded">
             {application.current_stage_name}
           </span>
         </div>
@@ -490,7 +490,7 @@ function ApplicationCard({
 
       {/* Stage Section */}
       {stageInstance && (
-        <div className="pt-2 border-t border-gray-100 space-y-2">
+        <div className="pt-2 border-t border-gray-100 dark:border-gray-800 space-y-2">
           {/* Scheduled Interview */}
           {isScheduled && stageInstance.scheduled_at && (
             <div className="space-y-1.5">
@@ -501,7 +501,7 @@ function ApplicationCard({
                 </span>
               </div>
               {stageInstance.interviewer_name && (
-                <div className="text-[11px] text-gray-500">
+                <div className="text-[11px] text-gray-500 dark:text-gray-400">
                   with {stageInstance.interviewer_name}
                 </div>
               )}
@@ -519,7 +519,7 @@ function ApplicationCard({
                 </a>
               )}
               {stageInstance.location && !stageInstance.meeting_link && (
-                <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                <div className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400">
                   <MapPin className="w-3 h-3" />
                   {stageInstance.location}
                 </div>
@@ -537,7 +537,7 @@ function ApplicationCard({
                 </span>
               </div>
               {stageInstance.feedback?.score && (
-                <div className="text-[11px] text-gray-600">
+                <div className="text-[11px] text-gray-600 dark:text-gray-400">
                   Score: {stageInstance.feedback.score}/10
                 </div>
               )}
@@ -547,8 +547,8 @@ function ApplicationCard({
           {/* Cancelled Stage */}
           {isCancelled && (
             <div className="flex items-center gap-1.5">
-              <X className="w-3 h-3 text-gray-400" />
-              <span className="text-[11px] font-medium text-gray-500">
+              <X className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+              <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
                 Cancelled
               </span>
             </div>
@@ -643,7 +643,7 @@ function ApplicationCard({
                 e.stopPropagation()
                 onSchedule(application)
               }}
-              className="w-full py-1.5 px-2 text-[11px] font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors flex items-center justify-center gap-1"
+              className="w-full py-1.5 px-2 text-[11px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors flex items-center justify-center gap-1"
             >
               <Send className="w-3 h-3" />
               Schedule Interview
@@ -668,19 +668,19 @@ function ApplicationCard({
 
       {/* Assigned Recruiters */}
       {application.assigned_recruiters && application.assigned_recruiters.length > 0 && (
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100 mt-2">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 mt-2">
           <div className="flex -space-x-1">
             {application.assigned_recruiters.slice(0, 3).map((recruiter) => (
               <div
                 key={recruiter.id}
                 title={recruiter.full_name}
-                className="w-5 h-5 rounded-full border border-white bg-gray-200 flex items-center justify-center text-[8px] font-medium text-gray-600"
+                className="w-5 h-5 rounded-full border border-white dark:border-gray-900 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[8px] font-medium text-gray-600 dark:text-gray-400"
               >
                 {recruiter.first_name?.[0]}{recruiter.last_name?.[0]}
               </div>
             ))}
             {application.assigned_recruiters.length > 3 && (
-              <div className="w-5 h-5 rounded-full border border-white bg-gray-300 flex items-center justify-center text-[8px] font-medium text-gray-600">
+              <div className="w-5 h-5 rounded-full border border-white dark:border-gray-900 bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-[8px] font-medium text-gray-600 dark:text-gray-400">
                 +{application.assigned_recruiters.length - 3}
               </div>
             )}

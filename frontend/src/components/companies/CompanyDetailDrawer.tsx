@@ -60,7 +60,7 @@ function getServiceTypeBadge(serviceType: string | null) {
     case 'retained':
       return { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Retained', icon: Handshake }
     default:
-      return { bg: 'bg-gray-100', text: 'text-gray-400', label: 'Not Set', icon: null }
+      return { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-400 dark:text-gray-500', label: 'Not Set', icon: null }
   }
 }
 
@@ -144,7 +144,7 @@ export default function CompanyDetailDrawer({
     if (!company) {
       return (
         <div className="flex items-center justify-center h-32">
-          <p className="text-[14px] text-gray-500">Company not found</p>
+          <p className="text-[14px] text-gray-500 dark:text-gray-400">Company not found</p>
         </div>
       )
     }
@@ -157,7 +157,7 @@ export default function CompanyDetailDrawer({
             <div className="flex flex-wrap gap-2">
               <Link
                 to={`/dashboard/admin/companies/${company.id}`}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200"
               >
                 <Edit className="w-4 h-4" />
                 Edit Company
@@ -166,7 +166,7 @@ export default function CompanyDetailDrawer({
                 <Link
                   to={`/companies/${company.slug}`}
                   target="_blank"
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200"
                 >
                   <ExternalLink className="w-4 h-4" />
                   View Public Profile
@@ -174,7 +174,7 @@ export default function CompanyDetailDrawer({
               )}
               <Link
                 to={`/dashboard/admin/jobs/new?company=${company.id}`}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800"
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800"
               >
                 <Plus className="w-4 h-4" />
                 Create Job
@@ -183,7 +183,7 @@ export default function CompanyDetailDrawer({
 
             {/* Assigned To */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">Assigned To</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Assigned To</h3>
               <AssignedSelect
                 selected={company.assigned_to || []}
                 onChange={handleAssignedChange}
@@ -193,36 +193,36 @@ export default function CompanyDetailDrawer({
 
             {/* Basic Info */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Company Info</h3>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Company Info</h3>
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
                 {company.tagline && (
                   <div>
-                    <p className="text-xs text-gray-500">Tagline</p>
-                    <p className="text-sm text-gray-900">{company.tagline}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Tagline</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">{company.tagline}</p>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-gray-500">Industry</p>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Industry</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">
                       {company.industry?.name || 'Not specified'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Company Size</p>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Company Size</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">
                       {getCompanySizeLabel(company.company_size)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Founded</p>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Founded</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">
                       {company.founded_year || 'Not specified'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Remote Policy</p>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Remote Policy</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">
                       {getRemotePolicyLabel(company.remote_work_policy)}
                     </p>
                   </div>
@@ -232,16 +232,16 @@ export default function CompanyDetailDrawer({
 
             {/* Location */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Location</h3>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Location</h3>
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                  <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-gray-900 dark:text-gray-100">
                       {company.headquarters_location || 'Not specified'}
                     </p>
                     {company.locations && company.locations.length > 0 && (
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         +{company.locations.length} other location
                         {company.locations.length !== 1 ? 's' : ''}
                       </p>
@@ -253,18 +253,18 @@ export default function CompanyDetailDrawer({
 
             {/* Links */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Links</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Links</h3>
               <div className="space-y-2">
                 {company.website_url && (
                   <a
                     href={company.website_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
-                    <Globe className="w-4 h-4 text-gray-400" />
+                    <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                     {company.website_url}
-                    <ExternalLink className="w-3 h-3 ml-auto text-gray-400" />
+                    <ExternalLink className="w-3 h-3 ml-auto text-gray-400 dark:text-gray-500" />
                   </a>
                 )}
                 {company.linkedin_url && (
@@ -272,23 +272,23 @@ export default function CompanyDetailDrawer({
                     href={company.linkedin_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
-                    <Linkedin className="w-4 h-4 text-gray-400" />
+                    <Linkedin className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                     LinkedIn Profile
-                    <ExternalLink className="w-3 h-3 ml-auto text-gray-400" />
+                    <ExternalLink className="w-3 h-3 ml-auto text-gray-400 dark:text-gray-500" />
                   </a>
                 )}
                 {!company.website_url && !company.linkedin_url && (
-                  <p className="text-sm text-gray-500">No links added</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No links added</p>
                 )}
               </div>
             </div>
 
             {/* Dates */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Timeline</h3>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Timeline</h3>
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                 <Calendar className="w-4 h-4" />
                 Created {formatDate(company.created_at)}
               </div>
@@ -315,35 +315,35 @@ export default function CompanyDetailDrawer({
                   <CreditCard className="w-5 h-5 text-purple-600" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium text-gray-900">Manage Subscription</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Manage Subscription</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     View invoices, pricing, and subscription details
                   </p>
                 </div>
               </div>
-              <ExternalLink className="w-4 h-4 text-gray-400" />
+              <ExternalLink className="w-4 h-4 text-gray-400 dark:text-gray-500" />
             </button>
 
             {/* Legal Info */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Legal Information</h3>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Legal Information</h3>
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-gray-500">Legal Name</p>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Legal Name</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">
                       {company.legal_name || 'Not specified'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Registration Number</p>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Registration Number</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">
                       {company.registration_number || 'Not specified'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">VAT Number</p>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">VAT Number</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">
                       {company.vat_number || 'Not specified'}
                     </p>
                   </div>
@@ -353,43 +353,43 @@ export default function CompanyDetailDrawer({
 
             {/* Billing Address */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Billing Address</h3>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Billing Address</h3>
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 {company.billing_address ? (
                   <div className="space-y-1">
-                    <p className="text-sm text-gray-900">{company.billing_address}</p>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-gray-900 dark:text-gray-100">{company.billing_address}</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">
                       {[company.billing_city, company.billing_postal_code]
                         .filter(Boolean)
                         .join(', ')}
                     </p>
                     {company.billing_country && (
-                      <p className="text-sm text-gray-900">{company.billing_country.name}</p>
+                      <p className="text-sm text-gray-900 dark:text-gray-100">{company.billing_country.name}</p>
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">No billing address specified</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No billing address specified</p>
                 )}
               </div>
             </div>
 
             {/* Billing Contact */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Billing Contact</h3>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Billing Contact</h3>
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 {company.billing_contact_name ||
                 company.billing_contact_email ||
                 company.billing_contact_phone ? (
                   <div className="space-y-2">
                     {company.billing_contact_name && (
                       <div>
-                        <p className="text-xs text-gray-500">Name</p>
-                        <p className="text-sm text-gray-900">{company.billing_contact_name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Name</p>
+                        <p className="text-sm text-gray-900 dark:text-gray-100">{company.billing_contact_name}</p>
                       </div>
                     )}
                     {company.billing_contact_email && (
                       <div>
-                        <p className="text-xs text-gray-500">Email</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
                         <a
                           href={`mailto:${company.billing_contact_email}`}
                           className="text-sm text-blue-600 hover:underline"
@@ -400,7 +400,7 @@ export default function CompanyDetailDrawer({
                     )}
                     {company.billing_contact_phone && (
                       <div>
-                        <p className="text-xs text-gray-500">Phone</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Phone</p>
                         <a
                           href={`tel:${company.billing_contact_phone}`}
                           className="text-sm text-blue-600 hover:underline"
@@ -411,7 +411,7 @@ export default function CompanyDetailDrawer({
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">No billing contact specified</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No billing contact specified</p>
                 )}
               </div>
             </div>
@@ -451,7 +451,7 @@ export default function CompanyDetailDrawer({
         {serviceTypeBadge?.label}
       </span>
       <span
-        className={`px-2 py-0.5 text-[11px] font-medium rounded ${company.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
+        className={`px-2 py-0.5 text-[11px] font-medium rounded ${company.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}
       >
         {company.is_published ? 'Published' : 'Draft'}
       </span>
@@ -462,8 +462,8 @@ export default function CompanyDetailDrawer({
   const headerExtra = company?.logo ? (
     <img src={company.logo} alt={company.name} className="w-8 h-8 rounded-lg object-cover" />
   ) : (
-    <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
-      <Building2 className="w-4 h-4 text-gray-500" />
+    <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+      <Building2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
     </div>
   )
 

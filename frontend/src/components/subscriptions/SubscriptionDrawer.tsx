@@ -108,8 +108,8 @@ function SubscriptionStatusBadge({ status }: { status: SubscriptionStatus | 'non
     active: { bg: 'bg-green-100', text: 'text-green-700', icon: <CheckCircle className="w-3.5 h-3.5" />, label: 'Active' },
     paused: { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: <PauseCircle className="w-3.5 h-3.5" />, label: 'Paused' },
     terminated: { bg: 'bg-red-100', text: 'text-red-700', icon: <XCircle className="w-3.5 h-3.5" />, label: 'Terminated' },
-    expired: { bg: 'bg-gray-100', text: 'text-gray-600', icon: <Clock className="w-3.5 h-3.5" />, label: 'Expired' },
-    none: { bg: 'bg-gray-50', text: 'text-gray-400', icon: <CreditCard className="w-3.5 h-3.5" />, label: 'No Subscription' },
+    expired: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', icon: <Clock className="w-3.5 h-3.5" />, label: 'Expired' },
+    none: { bg: 'bg-gray-50 dark:bg-gray-800', text: 'text-gray-400 dark:text-gray-500', icon: <CreditCard className="w-3.5 h-3.5" />, label: 'No Subscription' },
   }
   const config = configs[status]
   return (
@@ -122,12 +122,12 @@ function SubscriptionStatusBadge({ status }: { status: SubscriptionStatus | 'non
 
 function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
   const configs: Record<InvoiceStatus, { bg: string; text: string; label: string }> = {
-    draft: { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Draft' },
+    draft: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', label: 'Draft' },
     sent: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Sent' },
     paid: { bg: 'bg-green-100', text: 'text-green-700', label: 'Paid' },
     partially_paid: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Partial' },
     overdue: { bg: 'bg-red-100', text: 'text-red-700', label: 'Overdue' },
-    cancelled: { bg: 'bg-gray-100', text: 'text-gray-500', label: 'Cancelled' },
+    cancelled: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-500 dark:text-gray-400', label: 'Cancelled' },
   }
   const config = configs[status]
   return (
@@ -273,14 +273,14 @@ function CreateSubscriptionModal({
 
   return (
     <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50 p-4">
-      <div className={`bg-white rounded-lg shadow-xl w-full ${getModalWidth()} max-h-[90vh] flex flex-col transition-all duration-200`}>
+      <div className={`bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/40 w-full ${getModalWidth()} max-h-[90vh] flex flex-col transition-all duration-200`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div>
-            <h3 className="text-base font-semibold text-gray-900">Create {serviceTypeLabel} Contract</h3>
-            <p className="text-xs text-gray-500 mt-0.5">{company.name}</p>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Create {serviceTypeLabel} Contract</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{company.name}</p>
           </div>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded">
+          <button onClick={onClose} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -297,37 +297,37 @@ function CreateSubscriptionModal({
             <div className={`grid gap-5 ${getColumnCount() === 3 ? 'grid-cols-3' : getColumnCount() === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
               {/* Column 1: Contract Details */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                  <CreditCard className="w-4 h-4 text-gray-400" />
-                  <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Contract Details</h4>
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                  <CreditCard className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                  <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Contract Details</h4>
                 </div>
 
                 {/* Start Date */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     required
-                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                   />
-                  <p className="text-[10px] text-gray-400 mt-0.5">1 year term</p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">1 year term</p>
                 </div>
 
                 {/* Billing Day */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Billing Day</label>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Billing Day</label>
                   <select
                     value={billingDay}
                     onChange={(e) => setBillingDay(e.target.value)}
-                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                   >
                     {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
                       <option key={day} value={day}>{day}</option>
                     ))}
                   </select>
-                  <p className="text-[10px] text-gray-400 mt-0.5">Day of month for invoices</p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">Day of month for invoices</p>
                 </div>
 
                 {/* Auto-renew */}
@@ -336,22 +336,22 @@ function CreateSubscriptionModal({
                     type="checkbox"
                     checked={autoRenew}
                     onChange={(e) => setAutoRenew(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-900"
                   />
-                  <span className="text-sm text-gray-700">Auto-renew annually</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Auto-renew annually</span>
                 </label>
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Notes <span className="text-gray-400 font-normal">(internal)</span>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Notes <span className="text-gray-400 dark:text-gray-500 font-normal">(internal)</span>
                   </label>
                   <textarea
                     value={internalNotes}
                     onChange={(e) => setInternalNotes(e.target.value)}
                     rows={2}
                     placeholder="Special terms..."
-                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
                   />
                 </div>
 
@@ -363,7 +363,7 @@ function CreateSubscriptionModal({
                     className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
                       showPricing
                         ? 'bg-gray-900 text-white border-gray-900'
-                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                        : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }`}
                   >
                     <span className="flex items-center gap-2">
@@ -378,7 +378,7 @@ function CreateSubscriptionModal({
                     className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
                       showPaymentTerms
                         ? 'bg-gray-900 text-white border-gray-900'
-                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                        : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }`}
                   >
                     <span className="flex items-center gap-2">
@@ -393,19 +393,19 @@ function CreateSubscriptionModal({
               {/* Column 2: Custom Pricing (when expanded) */}
               {showPricing && (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                    <DollarSign className="w-4 h-4 text-gray-400" />
-                    <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Custom Pricing</h4>
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                    <DollarSign className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                    <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Custom Pricing</h4>
                   </div>
 
-                  <p className="text-[10px] text-gray-500">Override default rates for this company</p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Override default rates for this company</p>
 
                   {/* Monthly Retainer - Only for Retained */}
                   {!isHeadhunting && (
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Monthly Retainer</label>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Monthly Retainer</label>
                       <div className="relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-gray-400">R</span>
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-500">R</span>
                         <input
                           type="number"
                           value={customRetainer}
@@ -413,16 +413,16 @@ function CreateSubscriptionModal({
                           placeholder={parseInt(defaultRetainer).toLocaleString()}
                           min="0"
                           step="1000"
-                          className="w-full pl-7 pr-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                          className="w-full pl-7 pr-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                         />
                       </div>
-                      <p className="text-[10px] text-gray-400 mt-0.5">Default: R{parseInt(defaultRetainer).toLocaleString()}</p>
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">Default: R{parseInt(defaultRetainer).toLocaleString()}</p>
                     </div>
                   )}
 
                   {/* Placement Fee */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Placement Fee</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Placement Fee</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -432,16 +432,16 @@ function CreateSubscriptionModal({
                         min="0"
                         max="100"
                         step="0.5"
-                        className="w-full pr-7 px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        className="w-full pr-7 px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                       />
-                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-gray-400">%</span>
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-500">%</span>
                     </div>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Default: {defaultPlacementFee}%</p>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">Default: {defaultPlacementFee}%</p>
                   </div>
 
                   {/* C-Suite Fee */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">C-Suite Placement Fee</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">C-Suite Placement Fee</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -451,15 +451,15 @@ function CreateSubscriptionModal({
                         min="0"
                         max="100"
                         step="0.5"
-                        className="w-full pr-7 px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        className="w-full pr-7 px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                       />
-                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-gray-400">%</span>
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-500">%</span>
                     </div>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Default: {defaultCsuiteFee}%</p>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">Default: {defaultCsuiteFee}%</p>
                   </div>
 
-                  <div className="pt-2 border-t border-gray-100">
-                    <p className="text-[10px] text-gray-400 italic">Empty fields use CMS defaults</p>
+                  <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500 italic">Empty fields use CMS defaults</p>
                   </div>
                 </div>
               )}
@@ -467,20 +467,20 @@ function CreateSubscriptionModal({
               {/* Column 3: Custom Payment Terms (when expanded) */}
               {showPaymentTerms && (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Payment Terms</h4>
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                    <Clock className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                    <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Payment Terms</h4>
                   </div>
 
-                  <p className="text-[10px] text-gray-500">Set custom terms per invoice type</p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Set custom terms per invoice type</p>
 
                   {invoiceTypes.filter(t => t.show).map((type) => (
                     <div key={type.key}>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">{type.label}</label>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{type.label}</label>
                       <select
                         value={customPaymentTerms[type.key as keyof typeof customPaymentTerms] || ''}
                         onChange={(e) => setCustomPaymentTerms(prev => ({ ...prev, [type.key]: e.target.value }))}
-                        className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                       >
                         {paymentTermOptions.map(opt => (
                           <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -489,8 +489,8 @@ function CreateSubscriptionModal({
                     </div>
                   ))}
 
-                  <div className="pt-2 border-t border-gray-100">
-                    <p className="text-[10px] text-gray-400 italic">"Default" uses CMS settings</p>
+                  <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500 italic">"Default" uses CMS settings</p>
                   </div>
                 </div>
               )}
@@ -499,11 +499,11 @@ function CreateSubscriptionModal({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 px-5 py-4 border-t border-gray-200 flex-shrink-0 bg-gray-50">
+        <div className="flex gap-3 px-5 py-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 bg-gray-50 dark:bg-gray-800">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             Cancel
           </button>
@@ -548,27 +548,27 @@ function PauseSubscriptionModal({
 
   return (
     <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/40 w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Pause Subscription</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pause Subscription</h3>
+          <button onClick={onClose} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Pause subscription for <strong>{companyName}</strong>. The subscription can be resumed later.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reason (optional)</label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={3}
               placeholder="Enter reason for pausing..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
@@ -576,7 +576,7 @@ function PauseSubscriptionModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 dark:bg-gray-600"
             >
               Cancel
             </button>
@@ -650,29 +650,29 @@ function AdjustContractModal({
 
   return (
     <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/40 w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Adjust Contract</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Adjust Contract</h3>
+          <button onClick={onClose} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Adjust the contract end date for <strong>{companyName}</strong>.
         </p>
 
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-gray-500">Current End Date</p>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Current End Date</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {formatDate(subscription.contract_end_date)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Days Remaining</p>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Days Remaining</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {subscription.days_until_renewal} days
               </p>
             </div>
@@ -681,7 +681,7 @@ function AdjustContractModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Quick Adjust</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick Adjust</label>
             <div className="flex flex-wrap gap-2">
               {quickAdjustments.map((adj) => (
                 <button
@@ -701,13 +701,13 @@ function AdjustContractModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">New End Date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New End Date</label>
             <input
               type="date"
               value={newEndDate}
               onChange={(e) => setNewEndDate(e.target.value)}
               min={today.toISOString().split('T')[0]}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
@@ -740,7 +740,7 @@ function AdjustContractModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 dark:bg-gray-600"
             >
               Cancel
             </button>
@@ -801,10 +801,10 @@ function TerminateSubscriptionModal({
 
   return (
     <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/40 w-full max-w-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-red-600">Terminate Subscription</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -817,10 +817,10 @@ function TerminateSubscriptionModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Termination Type</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Termination Type</label>
             <div className="space-y-2">
-              <label className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
-                terminationType === 'without_cause' ? 'border-red-300 bg-red-50' : 'border-gray-200'
+              <label className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                terminationType === 'without_cause' ? 'border-red-300 bg-red-50' : 'border-gray-200 dark:border-gray-700'
               }`}>
                 <input
                   type="radio"
@@ -831,14 +831,14 @@ function TerminateSubscriptionModal({
                   className="mt-0.5"
                 />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">Without Cause</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Without Cause</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {isRetained ? 'Standard termination, early termination fee applies' : 'Standard termination, no termination fee applies'}
                   </p>
                 </div>
               </label>
-              <label className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
-                terminationType === 'for_cause' ? 'border-gray-400 bg-gray-50' : 'border-gray-200'
+              <label className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                terminationType === 'for_cause' ? 'border-gray-400 bg-gray-50 dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700'
               }`}>
                 <input
                   type="radio"
@@ -849,8 +849,8 @@ function TerminateSubscriptionModal({
                   className="mt-0.5"
                 />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">For Cause</p>
-                  <p className="text-xs text-gray-500">Breach of contract, no termination fee</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">For Cause</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Breach of contract, no termination fee</p>
                 </div>
               </label>
             </div>
@@ -890,14 +890,14 @@ function TerminateSubscriptionModal({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               required
               placeholder="Enter termination notes..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
@@ -905,7 +905,7 @@ function TerminateSubscriptionModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 dark:bg-gray-600"
             >
               Cancel
             </button>
@@ -956,21 +956,21 @@ function RecordPaymentModal({
 
   return (
     <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/40 w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Record Payment</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Record Payment</h3>
+          <button onClick={onClose} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Recording payment for invoice <strong>{invoice.invoice_number}</strong>
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Amount (ZAR)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount (ZAR)</label>
             <input
               type="number"
               value={amount}
@@ -978,28 +978,28 @@ function RecordPaymentModal({
               required
               step="0.01"
               max={invoice.balance_due}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
-            <p className="text-xs text-gray-500 mt-1">Balance due: {formatCurrency(invoice.balance_due)}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Balance due: {formatCurrency(invoice.balance_due)}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Date</label>
             <input
               type="date"
               value={paymentDate}
               onChange={(e) => setPaymentDate(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Method</label>
             <select
               value={paymentMethod}
               onChange={(e) => setPaymentMethod(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
             >
               <option value="bank_transfer">Bank Transfer</option>
               <option value="credit_card">Credit Card</option>
@@ -1011,13 +1011,13 @@ function RecordPaymentModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Reference Number</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reference Number</label>
             <input
               type="text"
               value={reference}
               onChange={(e) => setReference(e.target.value)}
               placeholder="e.g., Bank reference"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
@@ -1025,7 +1025,7 @@ function RecordPaymentModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 dark:bg-gray-600"
             >
               Cancel
             </button>
@@ -1209,16 +1209,16 @@ function CreateInvoiceModal({
 
   return (
     <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Create Invoice</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/40 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Create Invoice</h3>
+          <button onClick={onClose} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             Creating invoice for <strong>{company.name}</strong>
             <span className="ml-2">
               <ServiceTypeBadge type={company.service_type} />
@@ -1233,7 +1233,7 @@ function CreateInvoiceModal({
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Invoice Type</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Invoice Type</label>
               <div className="grid grid-cols-2 gap-2">
                 {availableTypes.map((type) => (
                   <button
@@ -1243,7 +1243,7 @@ function CreateInvoiceModal({
                     className={`px-4 py-2 text-sm font-medium rounded-lg border ${
                       invoiceType === type.value
                         ? 'bg-gray-900 text-white border-gray-900'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
                     }`}
                   >
                     {type.label}
@@ -1254,9 +1254,9 @@ function CreateInvoiceModal({
 
             {invoiceType === 'placement' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Placement</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Placement</label>
                 {placementsLoading ? (
-                  <div className="animate-pulse h-10 bg-gray-100 rounded-lg" />
+                  <div className="animate-pulse h-10 bg-gray-100 dark:bg-gray-700 rounded-lg" />
                 ) : availablePlacements.length === 0 ? (
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-700">
                     No placements available. All accepted offers already have invoices or there are no accepted offers.
@@ -1266,7 +1266,7 @@ function CreateInvoiceModal({
                     <select
                       value={selectedPlacementId}
                       onChange={(e) => handlePlacementChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                       required
                     >
                       <option value="">Select a placement...</option>
@@ -1296,21 +1296,21 @@ function CreateInvoiceModal({
             {invoiceType === 'retainer' && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Billing Period Start</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Billing Period Start</label>
                   <input
                     type="date"
                     value={billingPeriodStart}
                     onChange={(e) => setBillingPeriodStart(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Billing Period End</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Billing Period End</label>
                   <input
                     type="date"
                     value={billingPeriodEnd}
                     onChange={(e) => setBillingPeriodEnd(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                   />
                 </div>
               </div>
@@ -1318,41 +1318,41 @@ function CreateInvoiceModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Date</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Invoice Date</label>
                 <input
                   type="date"
                   value={invoiceDate}
                   onChange={(e) => setInvoiceDate(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
                 <input
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
                 placeholder="Invoice description..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-700">Line Items</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Line Items</label>
                 <button
                   type="button"
                   onClick={addLineItem}
@@ -1370,7 +1370,7 @@ function CreateInvoiceModal({
                         value={item.description}
                         onChange={(e) => updateLineItem(index, 'description', e.target.value)}
                         placeholder="Description"
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                       />
                     </div>
                     <div className="w-20">
@@ -1381,7 +1381,7 @@ function CreateInvoiceModal({
                         placeholder="Qty"
                         step="1"
                         min="1"
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                       />
                     </div>
                     <div className="w-32">
@@ -1391,14 +1391,14 @@ function CreateInvoiceModal({
                         onChange={(e) => updateLineItem(index, 'unit_price', e.target.value)}
                         placeholder="Amount"
                         step="0.01"
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={() => removeLineItem(index)}
                       disabled={lineItems.length === 1}
-                      className="p-2 text-gray-400 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -1407,18 +1407,18 @@ function CreateInvoiceModal({
               </div>
             </div>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium text-gray-900">{formatCurrency(subtotal)}</span>
+                <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm mt-2">
-                <span className="text-gray-600">VAT (15%)</span>
-                <span className="font-medium text-gray-900">{formatCurrency(subtotal * 0.15)}</span>
+                <span className="text-gray-600 dark:text-gray-400">VAT (15%)</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(subtotal * 0.15)}</span>
               </div>
-              <div className="flex justify-between text-base mt-3 pt-3 border-t border-gray-200">
-                <span className="font-semibold text-gray-900">Total</span>
-                <span className="font-bold text-gray-900">{formatCurrency(subtotal * 1.15)}</span>
+              <div className="flex justify-between text-base mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <span className="font-semibold text-gray-900 dark:text-gray-100">Total</span>
+                <span className="font-bold text-gray-900 dark:text-gray-100">{formatCurrency(subtotal * 1.15)}</span>
               </div>
             </div>
 
@@ -1426,7 +1426,7 @@ function CreateInvoiceModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 dark:bg-gray-600"
               >
                 Cancel
               </button>
@@ -1642,16 +1642,16 @@ export default function SubscriptionDrawer({
   return (
     <>
       <div className="fixed inset-0 z-[200] bg-black/30" onClick={onClose} />
-      <div className="fixed right-0 top-0 bottom-0 z-[201] w-full max-w-2xl bg-white shadow-xl overflow-hidden flex flex-col">
+      <div className="fixed right-0 top-0 bottom-0 z-[201] w-full max-w-2xl bg-white dark:bg-gray-900 shadow-xl dark:shadow-gray-900/40 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+        <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-gray-500" />
+              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">{currentCompany.name}</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{currentCompany.name}</h2>
                 <div className="flex items-center gap-2 mt-0.5">
                   <ServiceTypeBadge type={currentCompany.service_type} />
                   {hasSubscription && subscription && (
@@ -1660,7 +1660,7 @@ export default function SubscriptionDrawer({
                 </div>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md">
+            <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -1674,7 +1674,7 @@ export default function SubscriptionDrawer({
                 className={`flex items-center gap-2 px-4 py-2 text-[13px] font-medium rounded-md transition-colors whitespace-nowrap ${
                   activeSection === section.id
                     ? 'bg-gray-900 text-white'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
                 }`}
               >
                 <section.icon className="w-4 h-4" />
@@ -1691,8 +1691,8 @@ export default function SubscriptionDrawer({
             <div className="space-y-4">
               {subLoading ? (
                 <div className="animate-pulse space-y-4">
-                  <div className="h-32 bg-gray-100 rounded-lg" />
-                  <div className="h-24 bg-gray-100 rounded-lg" />
+                  <div className="h-32 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+                  <div className="h-24 bg-gray-100 dark:bg-gray-700 rounded-lg" />
                 </div>
               ) : !currentCompany.service_type ? (
                 <NoServiceType
@@ -1770,20 +1770,20 @@ export default function SubscriptionDrawer({
               {!hasSubscription ? (
                 <div className="text-center py-12">
                   <DollarSign className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <h3 className="text-sm font-medium text-gray-900 mb-1">No Active Contract</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">No Active Contract</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Pricing configuration requires an active subscription contract.
                   </p>
                 </div>
               ) : pricingLoading ? (
                 <div className="animate-pulse space-y-3">
-                  <div className="h-16 bg-gray-100 rounded-lg" />
-                  <div className="h-16 bg-gray-100 rounded-lg" />
+                  <div className="h-16 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+                  <div className="h-16 bg-gray-100 dark:bg-gray-700 rounded-lg" />
                 </div>
               ) : (
                 <>
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-900">Custom Pricing</h3>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Custom Pricing</h3>
                     {!editingPricing ? (
                       <button
                         onClick={() => {
@@ -1793,7 +1793,7 @@ export default function SubscriptionDrawer({
                           setReplacementPeriodValue(pricing?.is_custom_replacement_period ? pricing.replacement_period_days.toString() : '')
                           setEditingPricing(true)
                         }}
-                        className="text-sm text-gray-600 hover:text-gray-900"
+                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                       >
                         Edit
                       </button>
@@ -1801,7 +1801,7 @@ export default function SubscriptionDrawer({
                       <div className="flex gap-2">
                         <button
                           onClick={() => setEditingPricing(false)}
-                          className="text-sm text-gray-500 hover:text-gray-700"
+                          className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 dark:text-gray-300"
                         >
                           Cancel
                         </button>
@@ -1817,10 +1817,10 @@ export default function SubscriptionDrawer({
                   </div>
 
                   {editingPricing ? (
-                    <div className="space-y-4 bg-gray-50 rounded-lg p-4">
+                    <div className="space-y-4 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                       {currentCompany.service_type === 'retained' && (
                         <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                             Monthly Retainer (ZAR)
                           </label>
                           <input
@@ -1828,12 +1828,12 @@ export default function SubscriptionDrawer({
                             value={retainerValue}
                             onChange={(e) => setRetainerValue(e.target.value)}
                             placeholder={pricing ? `Default: ${formatCurrency(20000)}` : '20,000'}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
                           />
                         </div>
                       )}
                       <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                           Placement Fee (%)
                         </label>
                         <input
@@ -1842,11 +1842,11 @@ export default function SubscriptionDrawer({
                           onChange={(e) => setPlacementValue(e.target.value)}
                           placeholder="Default based on service type"
                           step="0.1"
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                           C-Suite Placement Fee (%)
                         </label>
                         <input
@@ -1855,11 +1855,11 @@ export default function SubscriptionDrawer({
                           onChange={(e) => setCsuiteValue(e.target.value)}
                           placeholder="Default based on service type"
                           step="0.1"
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                           Free Replacement Period (days)
                         </label>
                         <input
@@ -1869,16 +1869,16 @@ export default function SubscriptionDrawer({
                           placeholder={pricing ? `Default: ${pricing.replacement_period_days} days` : 'Default based on service type'}
                           step="1"
                           min="0"
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
                         />
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {currentCompany.service_type === 'retained' && (
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <span className="text-sm text-gray-600">Monthly Retainer</span>
-                          <span className="text-sm font-medium text-gray-900">
+                        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">Monthly Retainer</span>
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {pricing ? formatCurrency(pricing.monthly_retainer) : '-'}
                             {pricing?.is_custom_retainer && (
                               <span className="ml-1 text-xs text-blue-600">(custom)</span>
@@ -1886,27 +1886,27 @@ export default function SubscriptionDrawer({
                           </span>
                         </div>
                       )}
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm text-gray-600">Placement Fee</span>
-                        <span className="text-sm font-medium text-gray-900">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Placement Fee</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {pricing ? `${(parseFloat(pricing.placement_fee) * 100).toFixed(1)}%` : '-'}
                           {pricing?.is_custom_placement && (
                             <span className="ml-1 text-xs text-blue-600">(custom)</span>
                           )}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm text-gray-600">C-Suite Placement Fee</span>
-                        <span className="text-sm font-medium text-gray-900">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">C-Suite Placement Fee</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {pricing ? `${(parseFloat(pricing.csuite_placement_fee) * 100).toFixed(1)}%` : '-'}
                           {pricing?.is_custom_csuite && (
                             <span className="ml-1 text-xs text-blue-600">(custom)</span>
                           )}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm text-gray-600">Free Replacement Period</span>
-                        <span className="text-sm font-medium text-gray-900">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Free Replacement Period</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {pricing ? `${pricing.replacement_period_days} days` : '-'}
                           {pricing?.is_custom_replacement_period && (
                             <span className="ml-1 text-xs text-blue-600">(custom)</span>
@@ -1919,12 +1919,12 @@ export default function SubscriptionDrawer({
                   {/* Payment Terms Section */}
                   {subscription && (
                     <>
-                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-                        <h3 className="text-sm font-semibold text-gray-900">Payment Terms</h3>
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Payment Terms</h3>
                         {!editingPaymentTerms ? (
                           <button
                             onClick={initPaymentTermsEdit}
-                            className="text-sm text-gray-600 hover:text-gray-900"
+                            className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                           >
                             Edit
                           </button>
@@ -1932,7 +1932,7 @@ export default function SubscriptionDrawer({
                           <div className="flex gap-2">
                             <button
                               onClick={() => setEditingPaymentTerms(false)}
-                              className="text-sm text-gray-500 hover:text-gray-700"
+                              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 dark:text-gray-300"
                             >
                               Cancel
                             </button>
@@ -1947,7 +1947,7 @@ export default function SubscriptionDrawer({
                         )}
                       </div>
 
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         Custom payment terms per invoice type. Leave empty to use CMS defaults.
                       </p>
 
@@ -1955,11 +1955,11 @@ export default function SubscriptionDrawer({
                         <div className="grid grid-cols-2 gap-3 mt-3">
                           {currentCompany.service_type === 'retained' && (
                             <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Retainer</label>
+                              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Retainer</label>
                               <select
                                 value={paymentTermsValues.retainer}
                                 onChange={(e) => setPaymentTermsValues(prev => ({ ...prev, retainer: e.target.value }))}
-                                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg"
+                                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
                               >
                                 <option value="">Default</option>
                                 <option value="7">7 days</option>
@@ -1973,11 +1973,11 @@ export default function SubscriptionDrawer({
                             </div>
                           )}
                           <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Placement</label>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Placement</label>
                             <select
                               value={paymentTermsValues.placement}
                               onChange={(e) => setPaymentTermsValues(prev => ({ ...prev, placement: e.target.value }))}
-                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg"
+                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
                             >
                               <option value="">Default</option>
                               <option value="7">7 days</option>
@@ -1990,11 +1990,11 @@ export default function SubscriptionDrawer({
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Termination</label>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Termination</label>
                             <select
                               value={paymentTermsValues.termination}
                               onChange={(e) => setPaymentTermsValues(prev => ({ ...prev, termination: e.target.value }))}
-                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg"
+                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
                             >
                               <option value="">Default</option>
                               <option value="7">7 days</option>
@@ -2007,11 +2007,11 @@ export default function SubscriptionDrawer({
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Service Change</label>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Service Change</label>
                             <select
                               value={paymentTermsValues.service_type_change}
                               onChange={(e) => setPaymentTermsValues(prev => ({ ...prev, service_type_change: e.target.value }))}
-                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg"
+                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
                             >
                               <option value="">Default</option>
                               <option value="7">7 days</option>
@@ -2024,11 +2024,11 @@ export default function SubscriptionDrawer({
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Adjustment</label>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Adjustment</label>
                             <select
                               value={paymentTermsValues.adjustment}
                               onChange={(e) => setPaymentTermsValues(prev => ({ ...prev, adjustment: e.target.value }))}
-                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg"
+                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
                             >
                               <option value="">Default</option>
                               <option value="7">7 days</option>
@@ -2041,11 +2041,11 @@ export default function SubscriptionDrawer({
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Other</label>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Other</label>
                             <select
                               value={paymentTermsValues.other}
                               onChange={(e) => setPaymentTermsValues(prev => ({ ...prev, other: e.target.value }))}
-                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg"
+                              className="w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
                             >
                               <option value="">Default</option>
                               <option value="7">7 days</option>
@@ -2061,58 +2061,58 @@ export default function SubscriptionDrawer({
                       ) : (
                         <div className="grid grid-cols-2 gap-2 mt-3">
                           {currentCompany.service_type === 'retained' && (
-                            <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
-                              <span className="text-xs text-gray-600">Retainer</span>
-                              <span className="text-xs font-medium text-gray-900">
+                            <div className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                              <span className="text-xs text-gray-600 dark:text-gray-400">Retainer</span>
+                              <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                                 {subscription.custom_payment_terms?.retainer
                                   ? `${subscription.custom_payment_terms.retainer} days`
-                                  : <span className="text-gray-400">Default</span>
+                                  : <span className="text-gray-400 dark:text-gray-500">Default</span>
                                 }
                               </span>
                             </div>
                           )}
-                          <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
-                            <span className="text-xs text-gray-600">Placement</span>
-                            <span className="text-xs font-medium text-gray-900">
+                          <div className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Placement</span>
+                            <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                               {subscription.custom_payment_terms?.placement
                                 ? `${subscription.custom_payment_terms.placement} days`
-                                : <span className="text-gray-400">Default</span>
+                                : <span className="text-gray-400 dark:text-gray-500">Default</span>
                               }
                             </span>
                           </div>
-                          <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
-                            <span className="text-xs text-gray-600">Termination</span>
-                            <span className="text-xs font-medium text-gray-900">
+                          <div className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Termination</span>
+                            <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                               {subscription.custom_payment_terms?.termination
                                 ? `${subscription.custom_payment_terms.termination} days`
-                                : <span className="text-gray-400">Default</span>
+                                : <span className="text-gray-400 dark:text-gray-500">Default</span>
                               }
                             </span>
                           </div>
-                          <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
-                            <span className="text-xs text-gray-600">Service Change</span>
-                            <span className="text-xs font-medium text-gray-900">
+                          <div className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Service Change</span>
+                            <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                               {subscription.custom_payment_terms?.service_type_change
                                 ? `${subscription.custom_payment_terms.service_type_change} days`
-                                : <span className="text-gray-400">Default</span>
+                                : <span className="text-gray-400 dark:text-gray-500">Default</span>
                               }
                             </span>
                           </div>
-                          <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
-                            <span className="text-xs text-gray-600">Adjustment</span>
-                            <span className="text-xs font-medium text-gray-900">
+                          <div className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Adjustment</span>
+                            <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                               {subscription.custom_payment_terms?.adjustment
                                 ? `${subscription.custom_payment_terms.adjustment} days`
-                                : <span className="text-gray-400">Default</span>
+                                : <span className="text-gray-400 dark:text-gray-500">Default</span>
                               }
                             </span>
                           </div>
-                          <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
-                            <span className="text-xs text-gray-600">Other</span>
-                            <span className="text-xs font-medium text-gray-900">
+                          <div className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">Other</span>
+                            <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                               {subscription.custom_payment_terms?.other
                                 ? `${subscription.custom_payment_terms.other} days`
-                                : <span className="text-gray-400">Default</span>
+                                : <span className="text-gray-400 dark:text-gray-500">Default</span>
                               }
                             </span>
                           </div>
@@ -2131,22 +2131,22 @@ export default function SubscriptionDrawer({
               {!hasSubscription ? (
                 <div className="text-center py-12">
                   <Settings className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <h3 className="text-sm font-medium text-gray-900 mb-1">No Active Contract</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">No Active Contract</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Feature configuration requires an active subscription contract.
                   </p>
                 </div>
               ) : featuresLoading ? (
                 <div className="animate-pulse space-y-2">
                   {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-14 bg-gray-100 rounded-lg" />
+                    <div key={i} className="h-14 bg-gray-100 dark:bg-gray-700 rounded-lg" />
                   ))}
                 </div>
               ) : features.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-8">No features available</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">No features available</p>
               ) : (
                 <>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     Toggle features to override the default settings for this company's service type.
                   </p>
                   {Object.entries(
@@ -2158,18 +2158,18 @@ export default function SubscriptionDrawer({
                     }, {} as Record<string, FeatureWithOverride[]>)
                   ).map(([category, catFeatures]) => (
                     <div key={category}>
-                      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">{category}</h4>
+                      <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">{category}</h4>
                       <div className="space-y-2">
                         {catFeatures.map((feature) => (
                           <div
                             key={feature.id}
                             className={`flex items-center justify-between p-3 rounded-lg ${
-                              feature.is_overridden ? 'bg-blue-50 border border-blue-100' : 'bg-gray-50'
+                              feature.is_overridden ? 'bg-blue-50 border border-blue-100' : 'bg-gray-50 dark:bg-gray-800'
                             }`}
                           >
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{feature.name}</p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{feature.name}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
                                 {feature.is_overridden ? (
                                   <span className="text-blue-600">Overridden</span>
                                 ) : (
@@ -2184,7 +2184,7 @@ export default function SubscriptionDrawer({
                               {feature.effective_enabled ? (
                                 <ToggleRight className="w-8 h-8 text-green-600" />
                               ) : (
-                                <ToggleLeft className="w-8 h-8 text-gray-400" />
+                                <ToggleLeft className="w-8 h-8 text-gray-400 dark:text-gray-500" />
                               )}
                             </button>
                           </div>
@@ -2201,7 +2201,7 @@ export default function SubscriptionDrawer({
           {activeSection === 'invoices' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-900">Invoices</h3>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Invoices</h3>
                 <button
                   onClick={() => setShowCreateInvoiceModal(true)}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800"
@@ -2214,29 +2214,29 @@ export default function SubscriptionDrawer({
               {invoicesLoading ? (
                 <div className="animate-pulse space-y-2">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-20 bg-gray-100 rounded-lg" />
+                    <div key={i} className="h-20 bg-gray-100 dark:bg-gray-700 rounded-lg" />
                   ))}
                 </div>
               ) : invoices.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-8">No invoices yet</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">No invoices yet</p>
               ) : (
                 <div className="space-y-2">
                   {invoices.map((invoice) => (
                     <div
                       key={invoice.id}
                       onClick={() => setViewingInvoiceId(invoice.id)}
-                      className="bg-gray-50 border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                      className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{invoice.invoice_number}</p>
-                          <p className="text-xs text-gray-500">{formatDate(invoice.invoice_date)}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.invoice_number}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(invoice.invoice_date)}</p>
                         </div>
                         <InvoiceStatusBadge status={invoice.status} />
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-lg font-semibold text-gray-900">{formatCurrency(invoice.total_amount)}</p>
+                          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(invoice.total_amount)}</p>
                           {parseFloat(invoice.balance_due) > 0 && parseFloat(invoice.balance_due) < parseFloat(invoice.total_amount) && (
                             <p className="text-xs text-red-600">Balance: {formatCurrency(invoice.balance_due)}</p>
                           )}
@@ -2287,9 +2287,9 @@ export default function SubscriptionDrawer({
           {activeSection === 'replacements' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-900">Replacement Requests</h3>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Replacement Requests</h3>
                 {replacementRequests.length > 0 && (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     {replacementRequests.filter(r => r.status === 'pending').length} pending
                   </span>
                 )}
@@ -2297,14 +2297,14 @@ export default function SubscriptionDrawer({
               {replacementsLoading ? (
                 <div className="animate-pulse space-y-2">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-20 bg-gray-100 rounded-lg" />
+                    <div key={i} className="h-20 bg-gray-100 dark:bg-gray-700 rounded-lg" />
                   ))}
                 </div>
               ) : replacementRequests.length === 0 ? (
                 <div className="text-center py-8">
                   <RefreshCw className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">No replacement requests</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No replacement requests</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                     Replacement requests from this company will appear here
                   </p>
                 </div>
@@ -2335,23 +2335,23 @@ export default function SubscriptionDrawer({
           {/* Activity Section */}
           {activeSection === 'activity' && (
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900">Activity Log</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Activity Log</h3>
               {activitiesLoading ? (
                 <div className="animate-pulse space-y-2">
                   {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-12 bg-gray-100 rounded-lg" />
+                    <div key={i} className="h-12 bg-gray-100 dark:bg-gray-700 rounded-lg" />
                   ))}
                 </div>
               ) : activities.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-8">No activity yet</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">No activity yet</p>
               ) : (
                 <div className="space-y-3">
                   {activities.map((activity: SubscriptionActivity) => (
-                    <div key={activity.id} className="flex gap-3 py-2 border-b border-gray-100 last:border-0">
+                    <div key={activity.id} className="flex gap-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
                       <div className="w-2 h-2 mt-1.5 rounded-full bg-gray-300 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">{activity.activity_type_display}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm text-gray-900 dark:text-gray-100">{activity.activity_type_display}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {activity.performed_by_name || 'System'} &middot; {formatDate(activity.created_at)}
                         </p>
                       </div>

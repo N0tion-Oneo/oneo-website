@@ -175,7 +175,7 @@ export default function RetainedRecruitmentPage() {
   const standardFee = pricingConfig ? formatPercent(pricingConfig.headhunting_placement_fee) : ''
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <SEO />
       <Navbar />
 
@@ -220,16 +220,16 @@ export default function RetainedRecruitmentPage() {
       <div className="max-w-5xl mx-auto px-6 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
               What is Retained Recruitment?
             </h2>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
               Retained recruitment is a partnership model where you commit to a monthly retainer
               in exchange for significantly reduced placement fees and premium service levels.
               Unlike traditional contingency recruitment where you pay per placement, our retained
               model rewards ongoing partnerships with better rates and priority service.
             </p>
-            <p className="text-gray-600 mb-8 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
               This model is ideal for companies with consistent hiring needs who want predictable
               costs, dedicated support, and access to our full talent platform.
             </p>
@@ -237,54 +237,54 @@ export default function RetainedRecruitmentPage() {
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-[14px] font-medium text-gray-900">50% Fee Reduction</p>
-                  <p className="text-[12px] text-gray-500">From 20% down to 10% on placements</p>
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">50% Fee Reduction</p>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400">From 20% down to 10% on placements</p>
                 </div>
               </div>
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-[14px] font-medium text-gray-900">Unlimited Searches</p>
-                  <p className="text-[12px] text-gray-500">No limit on concurrent roles</p>
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Unlimited Searches</p>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400">No limit on concurrent roles</p>
                 </div>
               </div>
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-[14px] font-medium text-gray-900">SLA Guarantees</p>
-                  <p className="text-[12px] text-gray-500">Committed delivery timelines</p>
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">SLA Guarantees</p>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400">Committed delivery timelines</p>
                 </div>
               </div>
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-[14px] font-medium text-gray-900">Platform Access</p>
-                  <p className="text-[12px] text-gray-500">Full Oneo Talent Platform</p>
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Platform Access</p>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400">Full Oneo Talent Platform</p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="bg-emerald-50 rounded-2xl p-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">
+          <div className="bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl p-8">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
               Retained vs Contingency
             </h3>
             <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 border border-emerald-100">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-emerald-100 dark:border-emerald-800">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-                  <span className="text-[14px] font-medium text-gray-900">Retained Partnership</span>
+                  <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Retained Partnership</span>
                 </div>
-                <p className="text-[13px] text-gray-600">
+                <p className="text-[13px] text-gray-600 dark:text-gray-400">
                   Monthly commitment unlocks reduced fees ({placementFee || '–'}), unlimited searches,
                   SLA guarantees, and full platform access. Ideal for ongoing hiring needs.
                 </p>
               </div>
-              <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-2 h-2 bg-gray-400 rounded-full" />
-                  <span className="text-[14px] font-medium text-gray-900">Contingency (Standard)</span>
+                  <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Contingency (Standard)</span>
                 </div>
-                <p className="text-[13px] text-gray-600">
+                <p className="text-[13px] text-gray-600 dark:text-gray-400">
                   Pay-per-placement at {standardFee || '–'} with no upfront commitment.
                   Best for occasional hires or testing our service.
                 </p>
@@ -295,13 +295,13 @@ export default function RetainedRecruitmentPage() {
       </div>
 
       {/* Key Benefits */}
-      <div className="bg-gray-50 border-y border-gray-100">
+      <div className="bg-gray-50 dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               The Retained Advantage
             </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             A simple monthly commitment unlocks significant savings and premium service levels.
           </p>
         </div>
@@ -310,16 +310,16 @@ export default function RetainedRecruitmentPage() {
           {benefits.map((benefit) => (
             <div
               key={benefit.title}
-              className="flex gap-4 p-6 rounded-xl border border-gray-200 hover:border-emerald-200 hover:shadow-sm transition-all"
+              className="flex gap-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-sm dark:shadow-gray-900/40 transition-all"
             >
-              <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                <benefit.icon className="w-6 h-6 text-emerald-600" />
+              <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                <benefit.icon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <h3 className="text-[17px] font-semibold text-gray-900 mb-2">
+                <h3 className="text-[17px] font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   {benefit.title}
                 </h3>
-                <p className="text-[14px] text-gray-600 leading-relaxed">
+                <p className="text-[14px] text-gray-600 dark:text-gray-400 leading-relaxed">
                   {benefit.description}
                 </p>
               </div>
@@ -330,27 +330,27 @@ export default function RetainedRecruitmentPage() {
       </div>
 
       {/* Process Section */}
-      <div id="process" className="bg-gray-50 border-y border-gray-100">
+      <div id="process" className="bg-gray-50 dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Our Process
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               A structured, thorough approach to finding exceptional talent.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {process.map((item) => (
-              <div key={item.step} className="relative p-6 bg-white border border-gray-200 rounded-xl">
-                <div className="text-[32px] font-bold text-emerald-100 mb-2">
+              <div key={item.step} className="relative p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl">
+                <div className="text-[32px] font-bold text-emerald-100 dark:text-emerald-900 mb-2">
                   {item.step}
                 </div>
-                <h3 className="text-[15px] font-semibold text-gray-900 mb-2">
+                <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   {item.title}
                 </h3>
-                <p className="text-[13px] text-gray-600">
+                <p className="text-[13px] text-gray-600 dark:text-gray-400">
                   {item.description}
                 </p>
               </div>
@@ -360,19 +360,19 @@ export default function RetainedRecruitmentPage() {
       </div>
 
       {/* Pricing Section */}
-      <div id="pricing" className="bg-white">
+      <div id="pricing" className="bg-white dark:bg-gray-900">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               One annual commitment, paid monthly, unlocks premium benefits for your entire organization.
             </p>
           </div>
 
           <div className="max-w-3xl mx-auto">
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               {/* Pricing Header */}
               <div className="bg-emerald-600 text-white p-8 text-center">
                 <p className="text-emerald-100 text-sm mb-2">Annual Commitment</p>
@@ -385,17 +385,17 @@ export default function RetainedRecruitmentPage() {
               {/* Pricing Details */}
               <div className="p-8">
                 <div className="mb-8">
-                  <p className="text-[12px] text-gray-500 uppercase tracking-wide mb-3 text-center">Placement Fees</p>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 text-center">Placement Fees</p>
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-gray-50 rounded-xl">
-                      <div className="text-3xl font-bold text-emerald-600 mb-1">{placementFee || '–'}</div>
-                      <p className="text-[14px] font-medium text-gray-900">Regular Employees</p>
-                      <p className="text-[12px] text-gray-500">Reduced from {standardFee || '–'}</p>
+                    <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                      <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">{placementFee || '–'}</div>
+                      <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Regular Employees</p>
+                      <p className="text-[12px] text-gray-500 dark:text-gray-400">Reduced from {standardFee || '–'}</p>
                     </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-xl">
-                      <div className="text-3xl font-bold text-emerald-600 mb-1">{csuitePlacementFee || '–'}</div>
-                      <p className="text-[14px] font-medium text-gray-900">C-Suite Executives</p>
-                      <p className="text-[12px] text-gray-500">Executive-level placements</p>
+                    <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                      <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">{csuitePlacementFee || '–'}</div>
+                      <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">C-Suite Executives</p>
+                      <p className="text-[12px] text-gray-500 dark:text-gray-400">Executive-level placements</p>
                     </div>
                   </div>
                 </div>
@@ -403,27 +403,27 @@ export default function RetainedRecruitmentPage() {
                 <div className="space-y-3 mb-8">
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                    <span className="text-[14px] text-gray-700">Unlimited concurrent searches</span>
+                    <span className="text-[14px] text-gray-700 dark:text-gray-300">Unlimited concurrent searches</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                    <span className="text-[14px] text-gray-700">SLA-backed delivery (10-day shortlist guarantee)</span>
+                    <span className="text-[14px] text-gray-700 dark:text-gray-300">SLA-backed delivery (10-day shortlist guarantee)</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                    <span className="text-[14px] text-gray-700">3-month free replacement guarantee</span>
+                    <span className="text-[14px] text-gray-700 dark:text-gray-300">3-month free replacement guarantee</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                    <span className="text-[14px] text-gray-700">Full Oneo Talent Platform access</span>
+                    <span className="text-[14px] text-gray-700 dark:text-gray-300">Full Oneo Talent Platform access</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                    <span className="text-[14px] text-gray-700">Dedicated account management</span>
+                    <span className="text-[14px] text-gray-700 dark:text-gray-300">Dedicated account management</span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-center gap-2 text-[13px] text-gray-500 mb-6">
+                <div className="flex items-center justify-center gap-2 text-[13px] text-gray-500 dark:text-gray-400 mb-6">
                   <Calendar className="w-4 h-4" />
                   <span>12-month minimum commitment</span>
                 </div>
@@ -443,23 +443,23 @@ export default function RetainedRecruitmentPage() {
       {/* SLA Commitments */}
       <div className="max-w-5xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Service Level Commitments
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             We back our service with concrete commitments, not just promises.
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
           {slaCommitments.map((sla) => (
-            <div key={sla.label} className="text-center p-6 border border-gray-200 rounded-xl">
-              <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <sla.icon className="w-6 h-6 text-emerald-600" />
+            <div key={sla.label} className="text-center p-6 border border-gray-200 dark:border-gray-700 rounded-xl">
+              <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <sla.icon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">{sla.metric}</div>
-              <div className="text-[14px] font-medium text-emerald-600 mb-2">{sla.label}</div>
-              <p className="text-[13px] text-gray-500">{sla.description}</p>
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">{sla.metric}</div>
+              <div className="text-[14px] font-medium text-emerald-600 dark:text-emerald-400 mb-2">{sla.label}</div>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">{sla.description}</p>
             </div>
           ))}
         </div>
@@ -494,22 +494,22 @@ export default function RetainedRecruitmentPage() {
       {/* Ideal For */}
       <div className="max-w-5xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Ideal For
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Retained partnerships work best for organizations with ongoing hiring needs.
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
           {idealFor.map((item) => (
-            <div key={item.title} className="p-6 border border-gray-200 rounded-xl hover:border-emerald-200 transition-colors">
-              <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-4">
-                <item.icon className="w-6 h-6 text-emerald-600" />
+            <div key={item.title} className="p-6 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-emerald-200 dark:hover:border-emerald-700 transition-colors">
+              <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center mb-4">
+                <item.icon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <h3 className="text-[17px] font-semibold text-gray-900 mb-2">{item.title}</h3>
-              <p className="text-[14px] text-gray-600">
+              <h3 className="text-[17px] font-semibold text-gray-900 dark:text-gray-100 mb-2">{item.title}</h3>
+              <p className="text-[14px] text-gray-600 dark:text-gray-400">
                 {item.description}
               </p>
             </div>
@@ -518,10 +518,10 @@ export default function RetainedRecruitmentPage() {
       </div>
 
       {/* Comparison */}
-      <div className="bg-gray-50 border-y border-gray-100">
+      <div className="bg-gray-50 dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Retained vs Standard Recruitment
             </h2>
           </div>
@@ -529,47 +529,47 @@ export default function RetainedRecruitmentPage() {
           <div className="max-w-3xl mx-auto overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-4 px-4 text-[13px] font-medium text-gray-500">Feature</th>
-                  <th className="text-left py-4 px-4 text-[13px] font-medium text-emerald-600">Retained</th>
-                  <th className="text-left py-4 px-4 text-[13px] font-medium text-gray-500">Standard</th>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="text-left py-4 px-4 text-[13px] font-medium text-gray-500 dark:text-gray-400">Feature</th>
+                  <th className="text-left py-4 px-4 text-[13px] font-medium text-emerald-600 dark:text-emerald-400">Retained</th>
+                  <th className="text-left py-4 px-4 text-[13px] font-medium text-gray-500 dark:text-gray-400">Standard</th>
                 </tr>
               </thead>
               <tbody className="text-[14px]">
-                <tr className="border-b border-gray-100">
-                  <td className="py-4 px-4 text-gray-600">Placement Fee (Regular)</td>
-                  <td className="py-4 px-4 font-medium text-gray-900">{placementFee || '–'}</td>
-                  <td className="py-4 px-4 text-gray-500">{standardFee || '–'}</td>
+                <tr className="border-b border-gray-100 dark:border-gray-700">
+                  <td className="py-4 px-4 text-gray-600 dark:text-gray-400">Placement Fee (Regular)</td>
+                  <td className="py-4 px-4 font-medium text-gray-900 dark:text-gray-100">{placementFee || '–'}</td>
+                  <td className="py-4 px-4 text-gray-500 dark:text-gray-400">{standardFee || '–'}</td>
                 </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="py-4 px-4 text-gray-600">Placement Fee (C-Suite)</td>
-                  <td className="py-4 px-4 font-medium text-gray-900">{csuitePlacementFee || '–'}</td>
-                  <td className="py-4 px-4 text-gray-500">{standardFee || '–'}</td>
+                <tr className="border-b border-gray-100 dark:border-gray-700">
+                  <td className="py-4 px-4 text-gray-600 dark:text-gray-400">Placement Fee (C-Suite)</td>
+                  <td className="py-4 px-4 font-medium text-gray-900 dark:text-gray-100">{csuitePlacementFee || '–'}</td>
+                  <td className="py-4 px-4 text-gray-500 dark:text-gray-400">{standardFee || '–'}</td>
                 </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="py-4 px-4 text-gray-600">Shortlist SLA</td>
-                  <td className="py-4 px-4 font-medium text-gray-900">10 business days</td>
-                  <td className="py-4 px-4 text-gray-500">Best effort</td>
+                <tr className="border-b border-gray-100 dark:border-gray-700">
+                  <td className="py-4 px-4 text-gray-600 dark:text-gray-400">Shortlist SLA</td>
+                  <td className="py-4 px-4 font-medium text-gray-900 dark:text-gray-100">10 business days</td>
+                  <td className="py-4 px-4 text-gray-500 dark:text-gray-400">Best effort</td>
                 </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="py-4 px-4 text-gray-600">Replacement Guarantee</td>
-                  <td className="py-4 px-4 font-medium text-gray-900">3 months (free)</td>
-                  <td className="py-4 px-4 text-gray-500">30 days</td>
+                <tr className="border-b border-gray-100 dark:border-gray-700">
+                  <td className="py-4 px-4 text-gray-600 dark:text-gray-400">Replacement Guarantee</td>
+                  <td className="py-4 px-4 font-medium text-gray-900 dark:text-gray-100">3 months (free)</td>
+                  <td className="py-4 px-4 text-gray-500 dark:text-gray-400">30 days</td>
                 </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="py-4 px-4 text-gray-600">Platform Access</td>
-                  <td className="py-4 px-4 font-medium text-gray-900">Full access</td>
-                  <td className="py-4 px-4 text-gray-500">Limited</td>
+                <tr className="border-b border-gray-100 dark:border-gray-700">
+                  <td className="py-4 px-4 text-gray-600 dark:text-gray-400">Platform Access</td>
+                  <td className="py-4 px-4 font-medium text-gray-900 dark:text-gray-100">Full access</td>
+                  <td className="py-4 px-4 text-gray-500 dark:text-gray-400">Limited</td>
                 </tr>
-                <tr className="border-b border-gray-100">
-                  <td className="py-4 px-4 text-gray-600">Concurrent Searches</td>
-                  <td className="py-4 px-4 font-medium text-gray-900">Unlimited</td>
-                  <td className="py-4 px-4 text-gray-500">Per-role basis</td>
+                <tr className="border-b border-gray-100 dark:border-gray-700">
+                  <td className="py-4 px-4 text-gray-600 dark:text-gray-400">Concurrent Searches</td>
+                  <td className="py-4 px-4 font-medium text-gray-900 dark:text-gray-100">Unlimited</td>
+                  <td className="py-4 px-4 text-gray-500 dark:text-gray-400">Per-role basis</td>
                 </tr>
                 <tr>
-                  <td className="py-4 px-4 text-gray-600">Account Management</td>
-                  <td className="py-4 px-4 font-medium text-gray-900">Dedicated</td>
-                  <td className="py-4 px-4 text-gray-500">Shared</td>
+                  <td className="py-4 px-4 text-gray-600 dark:text-gray-400">Account Management</td>
+                  <td className="py-4 px-4 font-medium text-gray-900 dark:text-gray-100">Dedicated</td>
+                  <td className="py-4 px-4 text-gray-500 dark:text-gray-400">Shared</td>
                 </tr>
               </tbody>
             </table>
@@ -579,25 +579,25 @@ export default function RetainedRecruitmentPage() {
 
       {/* CTA Section */}
       <div className="max-w-5xl mx-auto px-6 py-20">
-        <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-2xl p-8 md:p-12 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+        <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-2xl p-8 md:p-12 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Ready to Partner With Us?
           </h2>
-          <p className="text-gray-600 max-w-xl mx-auto mb-8">
+          <p className="text-gray-600 dark:text-gray-400 max-w-xl mx-auto mb-8">
             Let's discuss how a retained partnership can transform your hiring
             while cutting your recruitment costs in half.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               to="/contact"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
             >
               Start a Conversation
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               to="/pricing"
-              className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-white transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors"
             >
               <Target className="w-4 h-4" />
               Pricing Calculator
@@ -607,7 +607,7 @@ export default function RetainedRecruitmentPage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 py-8">
+      <footer className="border-t border-gray-100 dark:border-gray-800 py-8">
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-[13px] text-gray-400 text-center">
             © {new Date().getFullYear()} {seoDefaults.companyName || 'All rights reserved'}.{seoDefaults.companyName ? ' All rights reserved.' : ''}

@@ -54,9 +54,9 @@ export function BillingPanel({ entity }: BillingPanelProps) {
     return (
       <div className="h-full overflow-y-auto p-4">
         <div className="text-center py-8">
-          <CreditCard className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">No billing information available</p>
-          <p className="text-gray-400 text-xs mt-1">
+          <CreditCard className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-500 dark:text-gray-400 text-sm">No billing information available</p>
+          <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
             Subscription and pricing details will appear here
           </p>
         </div>
@@ -68,32 +68,32 @@ export function BillingPanel({ entity }: BillingPanelProps) {
     <div className="h-full overflow-y-auto p-4 space-y-4">
       {/* Subscription/Contract Section */}
       {hasSubscription && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-3">
-            <CreditCard className="w-4 h-4 text-gray-500" />
-            <h3 className="font-medium text-sm text-gray-900">Contract</h3>
+            <CreditCard className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100">Contract</h3>
           </div>
 
           <div className="space-y-3">
             {subscription?.service_type && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Service Type</span>
-                <span className="text-sm font-medium text-gray-900 capitalize">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Service Type</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100 capitalize">
                   {subscription.service_type}
                 </span>
               </div>
             )}
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Status</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Status</span>
               <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${
                 subscription?.status === 'active'
-                  ? 'bg-green-100 text-green-700'
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                   : subscription?.status === 'paused'
-                  ? 'bg-yellow-100 text-yellow-700'
+                  ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
                   : subscription?.status === 'terminated' || subscription?.status === 'expired'
-                  ? 'bg-red-100 text-red-700'
-                  : 'bg-gray-100 text-gray-600'
+                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
               }`}>
                 {subscription?.status === 'active' ? (
                   <CheckCircle className="w-3 h-3" />
@@ -106,9 +106,9 @@ export function BillingPanel({ entity }: BillingPanelProps) {
 
             {subscription?.contract_start_date && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Start Date</span>
-                <span className="text-sm text-gray-900 flex items-center gap-1">
-                  <Calendar className="w-3 h-3 text-gray-400" />
+                <span className="text-sm text-gray-600 dark:text-gray-400">Start Date</span>
+                <span className="text-sm text-gray-900 dark:text-gray-100 flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                   {new Date(subscription.contract_start_date).toLocaleDateString()}
                 </span>
               </div>
@@ -116,9 +116,9 @@ export function BillingPanel({ entity }: BillingPanelProps) {
 
             {subscription?.contract_end_date && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">End Date</span>
-                <span className="text-sm text-gray-900 flex items-center gap-1">
-                  <Calendar className="w-3 h-3 text-gray-400" />
+                <span className="text-sm text-gray-600 dark:text-gray-400">End Date</span>
+                <span className="text-sm text-gray-900 dark:text-gray-100 flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                   {new Date(subscription.contract_end_date).toLocaleDateString()}
                 </span>
               </div>
@@ -126,9 +126,9 @@ export function BillingPanel({ entity }: BillingPanelProps) {
 
             {subscription?.auto_renew !== undefined && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Auto Renew</span>
-                <span className="text-sm text-gray-900 flex items-center gap-1">
-                  <RefreshCw className="w-3 h-3 text-gray-400" />
+                <span className="text-sm text-gray-600 dark:text-gray-400">Auto Renew</span>
+                <span className="text-sm text-gray-900 dark:text-gray-100 flex items-center gap-1">
+                  <RefreshCw className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                   {subscription.auto_renew ? 'Yes' : 'No'}
                 </span>
               </div>
@@ -136,8 +136,8 @@ export function BillingPanel({ entity }: BillingPanelProps) {
 
             {subscription?.days_until_renewal !== undefined && subscription.days_until_renewal > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Renewal In</span>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Renewal In</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {subscription.days_until_renewal} days
                 </span>
               </div>
@@ -148,17 +148,17 @@ export function BillingPanel({ entity }: BillingPanelProps) {
 
       {/* Pricing Section */}
       {(hasPricing || serviceType) && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-3">
-            <DollarSign className="w-4 h-4 text-gray-500" />
-            <h3 className="font-medium text-sm text-gray-900">Pricing</h3>
+            <DollarSign className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100">Pricing</h3>
           </div>
 
           <div className="space-y-3">
             {serviceType && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Service Type</span>
-                <span className="text-sm font-medium text-gray-900 capitalize">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Service Type</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100 capitalize">
                   {serviceType}
                 </span>
               </div>
@@ -166,8 +166,8 @@ export function BillingPanel({ entity }: BillingPanelProps) {
 
             {pricing?.monthly_retainer && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Monthly Retainer</span>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Monthly Retainer</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   R{parseFloat(pricing.monthly_retainer).toLocaleString()}
                 </span>
               </div>
@@ -175,8 +175,8 @@ export function BillingPanel({ entity }: BillingPanelProps) {
 
             {pricing?.placement_fee && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Placement Fee</span>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Placement Fee</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {pricing.placement_fee}%
                 </span>
               </div>
@@ -184,8 +184,8 @@ export function BillingPanel({ entity }: BillingPanelProps) {
 
             {pricing?.csuite_placement_fee && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">C-Suite Placement Fee</span>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm text-gray-600 dark:text-gray-400">C-Suite Placement Fee</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {pricing.csuite_placement_fee}%
                 </span>
               </div>
@@ -193,8 +193,8 @@ export function BillingPanel({ entity }: BillingPanelProps) {
 
             {pricing?.replacement_period_days && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Replacement Period</span>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Replacement Period</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {pricing.replacement_period_days} days
                 </span>
               </div>
@@ -203,7 +203,7 @@ export function BillingPanel({ entity }: BillingPanelProps) {
 
           {/* Show if using default pricing */}
           {pricing && !pricing.is_custom_placement_fee && !pricing.is_custom_retainer && (
-            <p className="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-100">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 pt-2 border-t border-gray-100 dark:border-gray-800">
               Using default pricing rates
             </p>
           )}
@@ -211,10 +211,10 @@ export function BillingPanel({ entity }: BillingPanelProps) {
       )}
 
       {/* Invoices Section */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
         <div className="flex items-center gap-2 mb-3">
-          <FileText className="w-4 h-4 text-gray-500" />
-          <h3 className="font-medium text-sm text-gray-900">Recent Invoices</h3>
+          <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100">Recent Invoices</h3>
         </div>
 
         {hasInvoices ? (
@@ -222,28 +222,28 @@ export function BillingPanel({ entity }: BillingPanelProps) {
             {recentInvoices.map((invoice) => (
               <div
                 key={invoice.id}
-                className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {invoice.invoice_number}
                     </span>
                     <span className={`text-xs px-1.5 py-0.5 rounded ${
                       invoice.status === 'paid'
-                        ? 'bg-green-100 text-green-700'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                         : invoice.status === 'overdue' || invoice.is_overdue
-                        ? 'bg-red-100 text-red-700'
+                        ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                         : invoice.status === 'sent'
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                         : invoice.status === 'partially_paid'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-gray-100 text-gray-600'
+                        ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                     }`}>
                       {invoice.status_display}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                     <span>{invoice.invoice_type_display}</span>
                     {invoice.invoice_date && (
                       <>
@@ -254,11 +254,11 @@ export function BillingPanel({ entity }: BillingPanelProps) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-medium text-gray-900">
+                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     R{invoice.total_amount ? parseFloat(invoice.total_amount).toLocaleString() : '0'}
                   </div>
                   {invoice.status !== 'paid' && parseFloat(invoice.amount_paid) > 0 && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
                       Paid: R{parseFloat(invoice.amount_paid).toLocaleString()}
                     </div>
                   )}
@@ -267,7 +267,7 @@ export function BillingPanel({ entity }: BillingPanelProps) {
             ))}
           </div>
         ) : (
-          <p className="text-xs text-gray-500 text-center py-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
             No invoices found
           </p>
         )}

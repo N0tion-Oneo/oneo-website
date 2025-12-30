@@ -165,10 +165,10 @@ export default function CMSLegalEditorPage() {
   // Access check
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to edit legal documents.
         </p>
       </div>
@@ -187,12 +187,12 @@ export default function CMSLegalEditorPage() {
   // Error state
   if (!isNew && docError) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Document not found</p>
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Document not found</p>
         <Link
           to="/dashboard/cms/legal"
-          className="text-[13px] text-gray-500 hover:text-gray-700 underline"
+          className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline"
         >
           Back to legal documents
         </Link>
@@ -206,22 +206,22 @@ export default function CMSLegalEditorPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 -mx-6 px-6 py-3">
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 -mx-6 px-6 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               to="/dashboard/cms/legal"
-              className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700"
+              className="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
             </Link>
-            <div className="h-4 w-px bg-gray-200" />
-            <h1 className="text-[16px] font-medium text-gray-900">
+            <div className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
+            <h1 className="text-[16px] font-medium text-gray-900 dark:text-gray-100">
               {isNew ? 'New Legal Document' : 'Edit Legal Document'}
             </h1>
             {hasChanges && (
-              <span className="text-[11px] text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+              <span className="text-[11px] text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded">
                 Unsaved changes
               </span>
             )}
@@ -232,7 +232,7 @@ export default function CMSLegalEditorPage() {
             <select
               value={formData.status}
               onChange={(e) => handleChange('status', e.target.value)}
-              className="px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+              className="px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -246,8 +246,8 @@ export default function CMSLegalEditorPage() {
               onClick={() => setShowSettings(!showSettings)}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] border rounded-md transition-colors ${
                 showSettings
-                  ? 'border-gray-300 bg-gray-100 text-gray-700'
-                  : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                  ? 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
               <Settings2 className="w-4 h-4" />
@@ -259,7 +259,7 @@ export default function CMSLegalEditorPage() {
               <Link
                 to={`/${document.slug}`}
                 target="_blank"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] border border-gray-200 text-gray-500 rounded-md hover:bg-gray-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 <Eye className="w-4 h-4" />
                 Preview
@@ -270,7 +270,7 @@ export default function CMSLegalEditorPage() {
             <button
               onClick={handleSubmit}
               disabled={isSaving}
-              className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -293,7 +293,7 @@ export default function CMSLegalEditorPage() {
             placeholder="Document Title (e.g., Terms of Service)"
             value={formData.title}
             onChange={(e) => handleTitleChange(e.target.value)}
-            className="w-full text-[28px] font-semibold text-gray-900 placeholder-gray-300 border-0 focus:outline-none focus:ring-0 mb-4"
+            className="w-full text-[28px] font-semibold text-gray-900 dark:text-gray-100 placeholder-gray-300 dark:placeholder-gray-600 border-0 focus:outline-none focus:ring-0 mb-4 bg-transparent"
           />
 
           {/* Block Editor - key ensures fresh instance for each document */}
@@ -311,18 +311,18 @@ export default function CMSLegalEditorPage() {
         {/* Settings Sidebar */}
         {showSettings && (
           <div className="w-80 flex-shrink-0">
-            <div className="bg-white border border-gray-200 rounded-lg p-4 sticky top-20">
-              <h3 className="text-[14px] font-medium text-gray-900 mb-4">Document Settings</h3>
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sticky top-20">
+              <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-4">Document Settings</h3>
 
               {/* Document Type */}
               <div className="mb-4">
-                <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Document Type
                 </label>
                 <select
                   value={formData.document_type}
                   onChange={(e) => handleChange('document_type', e.target.value)}
-                  className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  className="w-full px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   {DOCUMENT_TYPE_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -334,13 +334,13 @@ export default function CMSLegalEditorPage() {
 
               {/* Service Type Applicability */}
               <div className="mb-4">
-                <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Applies To
                 </label>
                 <select
                   value={formData.service_type}
                   onChange={(e) => handleChange('service_type', e.target.value)}
-                  className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  className="w-full px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   {SERVICE_TYPE_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -355,17 +355,17 @@ export default function CMSLegalEditorPage() {
 
               {/* Slug */}
               <div className="mb-4">
-                <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                   URL Slug
                 </label>
                 <div className="flex items-center">
-                  <span className="text-[12px] text-gray-500 mr-1">/</span>
+                  <span className="text-[12px] text-gray-500 dark:text-gray-400 mr-1">/</span>
                   <input
                     type="text"
                     value={formData.slug}
                     onChange={(e) => handleChange('slug', e.target.value)}
                     placeholder="terms-of-service"
-                    className="flex-1 px-2 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    className="flex-1 px-2 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <p className="text-[10px] text-gray-400 mt-1">
@@ -374,11 +374,11 @@ export default function CMSLegalEditorPage() {
               </div>
 
               {/* Version Tracking */}
-              <div className="border-t border-gray-200 mt-4 pt-4">
-                <h4 className="text-[12px] font-medium text-gray-900 mb-3">Version Tracking</h4>
+              <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4">
+                <h4 className="text-[12px] font-medium text-gray-900 dark:text-gray-100 mb-3">Version Tracking</h4>
 
                 <div className="mb-4">
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Version
                   </label>
                   <input
@@ -386,19 +386,19 @@ export default function CMSLegalEditorPage() {
                     value={formData.version}
                     onChange={(e) => handleChange('version', e.target.value)}
                     placeholder="e.g., 1.0, 2.1"
-                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Effective Date
                   </label>
                   <input
                     type="date"
                     value={formData.effective_date || ''}
                     onChange={(e) => handleChange('effective_date', e.target.value || null)}
-                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                   <p className="text-[10px] text-gray-400 mt-1">
                     When this version becomes effective
@@ -407,11 +407,11 @@ export default function CMSLegalEditorPage() {
               </div>
 
               {/* SEO Section */}
-              <div className="border-t border-gray-200 mt-4 pt-4">
-                <h4 className="text-[12px] font-medium text-gray-900 mb-3">SEO</h4>
+              <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4">
+                <h4 className="text-[12px] font-medium text-gray-900 dark:text-gray-100 mb-3">SEO</h4>
 
                 <div className="mb-4">
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Meta Title
                   </label>
                   <input
@@ -420,7 +420,7 @@ export default function CMSLegalEditorPage() {
                     onChange={(e) => handleChange('meta_title', e.target.value)}
                     placeholder={formData.title || 'Document title'}
                     maxLength={60}
-                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                   <span className="text-[10px] text-gray-400 mt-1">
                     {(formData.meta_title || formData.title).length}/60 · "{seoDefaults.titleSuffix}" added automatically
@@ -428,7 +428,7 @@ export default function CMSLegalEditorPage() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Meta Description
                   </label>
                   <textarea
@@ -437,7 +437,7 @@ export default function CMSLegalEditorPage() {
                     placeholder="Description for search engines"
                     maxLength={160}
                     rows={3}
-                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 resize-none"
+                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                   <span className="text-[10px] text-gray-400 mt-1">
                     {(formData.meta_description || '').length}/160
@@ -447,9 +447,9 @@ export default function CMSLegalEditorPage() {
 
               {/* Document Info (for existing documents) */}
               {!isNew && document && (
-                <div className="border-t border-gray-200 mt-4 pt-4">
-                  <h4 className="text-[12px] font-medium text-gray-900 mb-3">Info</h4>
-                  <div className="space-y-2 text-[11px] text-gray-500">
+                <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4">
+                  <h4 className="text-[12px] font-medium text-gray-900 dark:text-gray-100 mb-3">Info</h4>
+                  <div className="space-y-2 text-[11px] text-gray-500 dark:text-gray-400">
                     <p>
                       Created: {new Date(document.created_at).toLocaleString()}
                       {document.created_by_name && ` by ${document.created_by_name}`}

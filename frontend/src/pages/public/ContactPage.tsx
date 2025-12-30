@@ -44,22 +44,22 @@ export default function ContactPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <Navbar />
         <div className="max-w-xl mx-auto px-6 py-24">
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
             </div>
-            <h1 className="text-[28px] font-bold text-gray-900 mb-3">
+            <h1 className="text-[28px] font-bold text-gray-900 dark:text-gray-100 mb-3">
               Thanks for reaching out!
             </h1>
-            <p className="text-[15px] text-gray-500 mb-8">
+            <p className="text-[15px] text-gray-500 dark:text-gray-400 mb-8">
               We've received your details and will get back to you within 24-48 hours.
             </p>
             <button
               onClick={() => setSubmitted(false)}
-              className="text-[14px] font-medium text-gray-900 hover:text-gray-700"
+              className="text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300"
             >
               Submit another inquiry
             </button>
@@ -70,7 +70,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <SEO />
       <Navbar />
 
@@ -90,24 +90,24 @@ export default function ContactPage() {
           {/* Contact Info */}
           <div className="space-y-8">
             <div>
-              <h2 className="text-[18px] font-semibold text-gray-900 mb-4">
+              <h2 className="text-[18px] font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Get in Touch
               </h2>
-              <p className="text-[14px] text-gray-500 leading-relaxed">
+              <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed">
                 Fill out the form and our team will get back to you within 24-48 hours.
               </p>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Mail className="w-5 h-5 text-gray-600" />
+                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Mail className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </div>
                 <div>
-                  <p className="text-[13px] text-gray-500 mb-1">Email</p>
+                  <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-1">Email</p>
                   <a
                     href="mailto:hello@oneo.com"
-                    className="text-[14px] font-medium text-gray-900 hover:text-gray-700"
+                    className="text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300"
                   >
                     hello@oneo.com
                   </a>
@@ -115,14 +115,14 @@ export default function ContactPage() {
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Phone className="w-5 h-5 text-gray-600" />
+                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Phone className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </div>
                 <div>
-                  <p className="text-[13px] text-gray-500 mb-1">Phone</p>
+                  <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-1">Phone</p>
                   <a
                     href="tel:+27123456789"
-                    className="text-[14px] font-medium text-gray-900 hover:text-gray-700"
+                    className="text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300"
                   >
                     +27 12 345 6789
                   </a>
@@ -130,20 +130,20 @@ export default function ContactPage() {
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-5 h-5 text-gray-600" />
+                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <MapPin className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </div>
                 <div>
-                  <p className="text-[13px] text-gray-500 mb-1">Office</p>
-                  <p className="text-[14px] font-medium text-gray-900">
+                  <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-1">Office</p>
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">
                     Cape Town, South Africa
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-[13px] text-gray-600">
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <p className="text-[13px] text-gray-600 dark:text-gray-400">
                 <span className="font-medium">Business Hours:</span>
                 <br />
                 Monday - Friday: 9:00 AM - 5:00 PM SAST
@@ -155,9 +155,9 @@ export default function ContactPage() {
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit} className="space-y-6">
               {submitMutation.isError && (
-                <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                  <p className="text-[14px] text-red-700">
+                <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+                  <p className="text-[14px] text-red-700 dark:text-red-400">
                     Failed to send message. Please try again or email us directly.
                   </p>
                 </div>
@@ -169,13 +169,13 @@ export default function ContactPage() {
               />
 
               <div className="flex items-center justify-between pt-2">
-                <p className="text-[12px] text-gray-400">
+                <p className="text-[12px] text-gray-400 dark:text-gray-500">
                   * Required fields
                 </p>
                 <button
                   type="submit"
                   disabled={submitMutation.isPending || !isLeadFormValid(formData)}
-                  className="flex items-center gap-2 px-6 py-3 text-[14px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-2 px-6 py-3 text-[14px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {submitMutation.isPending ? (
                     <>

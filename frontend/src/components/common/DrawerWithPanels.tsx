@@ -136,20 +136,20 @@ export default function DrawerWithPanels({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/30 z-[200] transition-opacity"
+        className="fixed inset-0 bg-black/30 dark:bg-black/50 z-[200] transition-opacity"
         onClick={onClose}
       />
 
       {/* Drawer */}
-      <div className={`fixed inset-y-0 right-0 ${widthClass} bg-white shadow-xl z-[201] flex flex-col`}>
+      <div className={`fixed inset-y-0 right-0 ${widthClass} bg-white dark:bg-gray-900 shadow-xl dark:shadow-gray-900/50 z-[201] flex flex-col`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
           <div className="min-w-0 flex-1">
-            <h2 className="text-[16px] font-semibold text-gray-900 truncate">
+            <h2 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100 truncate">
               {isLoading ? 'Loading...' : title}
             </h2>
             {subtitle && (
-              <p className="text-[13px] text-gray-500 mt-0.5 truncate">{subtitle}</p>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">{subtitle}</p>
             )}
           </div>
 
@@ -164,7 +164,7 @@ export default function DrawerWithPanels({
             {onEnterFocusMode && (
               <button
                 onClick={handleEnterFocusMode}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 title={`Enter ${focusModeLabel}`}
               >
                 <Maximize2 className="w-4 h-4" />
@@ -174,7 +174,7 @@ export default function DrawerWithPanels({
 
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
+              className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
             >
               <X className="w-5 h-5" />
             </button>
@@ -183,26 +183,26 @@ export default function DrawerWithPanels({
 
         {/* Quick Actions */}
         {quickActions && (
-          <div className="px-6 py-3 border-b border-gray-100 bg-gray-50/50">
+          <div className="px-6 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
             <div className="flex flex-wrap gap-2">{quickActions}</div>
           </div>
         )}
 
         {/* Panel Selector */}
-        <div className="px-6 py-3 border-b border-gray-200 relative z-10">
+        <div className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 relative z-10">
           <div className="relative inline-block">
             <button
               onClick={() => setIsPanelDropdownOpen(!isPanelDropdownOpen)}
-              className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
               {currentPanelOption?.icon}
               <span>{currentPanelOption?.label || currentPanel}</span>
               {currentPanelOption?.count !== undefined && currentPanelOption.count > 0 && (
-                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-200 text-gray-600 rounded-full">
+                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full">
                   {currentPanelOption.count}
                 </span>
               )}
-              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isPanelDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform ${isPanelDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {/* Panel Dropdown */}
@@ -214,7 +214,7 @@ export default function DrawerWithPanels({
                   style={{ zIndex: 202 }}
                 />
                 <div
-                  className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg py-1 max-h-[400px] overflow-y-auto"
+                  className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 py-1 max-h-[400px] overflow-y-auto"
                   style={{ zIndex: 203 }}
                 >
                   {availablePanels.map((panel) => (
@@ -223,14 +223,14 @@ export default function DrawerWithPanels({
                       onClick={() => handlePanelChange(panel.type)}
                       className={`w-full flex items-center gap-2 px-3 py-2 text-[13px] text-left transition-colors ${
                         panel.type === currentPanel
-                          ? 'bg-gray-100 text-gray-900 font-medium'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       {panel.icon}
                       <span className="flex-1">{panel.label}</span>
                       {panel.count !== undefined && panel.count > 0 && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-200 text-gray-600 rounded-full">
+                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-full">
                           {panel.count}
                         </span>
                       )}
@@ -246,7 +246,7 @@ export default function DrawerWithPanels({
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
             </div>
           ) : (
             renderPanel(currentPanel)

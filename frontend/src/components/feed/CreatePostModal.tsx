@@ -130,33 +130,33 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 transition-opacity"
+        className="fixed inset-0 bg-black/50 dark:bg-black/70 transition-opacity"
         onClick={handleClose}
       />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-lg bg-white rounded-xl shadow-xl">
+        <div className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-xl shadow-xl dark:shadow-gray-900/50">
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h2 className="text-[16px] font-semibold text-gray-900">Create Post</h2>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+            <h2 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100">Create Post</h2>
             <button
               onClick={handleClose}
               disabled={isPending}
-              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Post Type Tabs */}
-          <div className="flex border-b border-gray-100">
+          <div className="flex border-b border-gray-100 dark:border-gray-800">
             <button
               onClick={() => setPostType('update')}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-medium transition-colors ${
                 postType === 'update'
-                  ? 'text-gray-900 border-b-2 border-gray-900'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-gray-900 dark:text-gray-100 border-b-2 border-gray-900 dark:border-gray-100'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
               <MessageSquare className="w-4 h-4" />
@@ -166,8 +166,8 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
               onClick={() => setPostType('article')}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-medium transition-colors ${
                 postType === 'article'
-                  ? 'text-gray-900 border-b-2 border-gray-900'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-gray-900 dark:text-gray-100 border-b-2 border-gray-900 dark:border-gray-100'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
               <FileText className="w-4 h-4" />
@@ -178,7 +178,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
           {/* Company Selector (Staff Only) */}
           {isStaff && (
             <div className="px-5 pt-4 pb-2">
-              <label className="block text-[12px] font-medium text-gray-500 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-500 dark:text-gray-400 mb-1.5">
                 Posting as
               </label>
               <div className="relative">
@@ -186,11 +186,11 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                   type="button"
                   onClick={() => setShowCompanyDropdown(!showCompanyDropdown)}
                   disabled={companiesLoading || isPending}
-                  className="w-full flex items-center justify-between px-3 py-2.5 text-[14px] text-left bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                  className="w-full flex items-center justify-between px-3 py-2.5 text-[14px] text-left bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                 >
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-900">
+                    <span className="text-gray-900 dark:text-gray-100">
                       {companiesLoading
                         ? 'Loading companies...'
                         : selectedCompany?.name || 'Select company'}
@@ -201,7 +201,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
 
                 {/* Dropdown */}
                 {showCompanyDropdown && !companiesLoading && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 max-h-60 overflow-y-auto">
                     {sortedCompanies.map((company) => (
                       <button
                         key={company.id}
@@ -210,8 +210,8 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                           setSelectedCompanyId(company.id)
                           setShowCompanyDropdown(false)
                         }}
-                        className={`w-full flex items-center gap-2 px-3 py-2.5 text-[14px] text-left hover:bg-gray-50 transition-colors ${
-                          selectedCompanyId === company.id ? 'bg-gray-100' : ''
+                        className={`w-full flex items-center gap-2 px-3 py-2.5 text-[14px] text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                          selectedCompanyId === company.id ? 'bg-gray-100 dark:bg-gray-700' : ''
                         }`}
                       >
                         {company.logo ? (
@@ -223,9 +223,9 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                         ) : (
                           <Building2 className="w-5 h-5 text-gray-400" />
                         )}
-                        <span className="text-gray-900">{company.name}</span>
+                        <span className="text-gray-900 dark:text-gray-100">{company.name}</span>
                         {company.is_platform && (
-                          <span className="ml-auto text-[11px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                          <span className="ml-auto text-[11px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">
                             Platform
                           </span>
                         )}
@@ -245,7 +245,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="What's happening at your company?"
-                  className="w-full h-32 px-3 py-2 text-[14px] text-gray-900 placeholder-gray-400 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300"
+                  className="w-full h-32 px-3 py-2 text-[14px] text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 border border-gray-200 dark:border-gray-700 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-gray-100/10 focus:border-gray-300 dark:focus:border-gray-600"
                   maxLength={500}
                   disabled={isPending}
                 />
@@ -285,7 +285,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isPending}
-                    className="flex items-center gap-2 px-3 py-2 text-[13px] text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-3 py-2 text-[13px] text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                   >
                     <Image className="w-4 h-4" />
                     {imagePreview ? 'Change Image' : 'Add Image'}
@@ -294,8 +294,8 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
               </>
             ) : (
               <div className="text-center py-8">
-                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-[14px] text-gray-600 mb-1">
+                <FileText className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <p className="text-[14px] text-gray-600 dark:text-gray-400 mb-1">
                   Create a full article with rich formatting
                 </p>
                 <p className="text-[13px] text-gray-400">
@@ -306,18 +306,18 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-100">
+          <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-100 dark:border-gray-800">
             <button
               onClick={handleClose}
               disabled={isPending}
-              className="px-4 py-2 text-[14px] font-medium text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-[14px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={isPending || (postType === 'update' && !content.trim())}
-              className="flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               {postType === 'article' ? 'Open Editor' : 'Post'}

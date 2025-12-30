@@ -331,13 +331,13 @@ function ViewToggle({
   onChange: (mode: ViewMode) => void
 }) {
   return (
-    <div className="inline-flex items-center gap-1 bg-gray-100 rounded-full p-1">
+    <div className="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-full p-1">
       <button
         onClick={() => onChange('company')}
         className={`px-3 py-1.5 text-[12px] font-medium rounded-full transition-all ${
           mode === 'company'
-            ? 'bg-white text-gray-900 shadow-sm'
-            : 'text-gray-500 hover:text-gray-700'
+            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm dark:shadow-gray-900/40'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
         }`}
       >
         For Companies
@@ -346,8 +346,8 @@ function ViewToggle({
         onClick={() => onChange('candidate')}
         className={`px-3 py-1.5 text-[12px] font-medium rounded-full transition-all ${
           mode === 'candidate'
-            ? 'bg-white text-gray-900 shadow-sm'
-            : 'text-gray-500 hover:text-gray-700'
+            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm dark:shadow-gray-900/40'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
         }`}
       >
         For Candidates
@@ -389,10 +389,10 @@ function JobCard({ job }: { job: {
   return (
     <Link
       to={`/jobs/${job.slug}`}
-      className="block p-5 bg-white border border-gray-200 rounded-xl hover:border-gray-300 hover:shadow-md transition-all group"
+      className="block p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md dark:shadow-gray-900/40 transition-all group"
     >
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
           {job.company_logo ? (
             <img src={job.company_logo} alt={job.company_name} className="w-full h-full object-contain" />
           ) : (
@@ -400,33 +400,33 @@ function JobCard({ job }: { job: {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-[15px] font-semibold text-gray-900 group-hover:text-gray-700 truncate">
+          <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 group-hover:text-gray-700 dark:group-hover:text-gray-300 truncate">
             {job.title}
           </h3>
-          <p className="text-[13px] text-gray-600 mt-0.5">{job.company_name}</p>
+          <p className="text-[13px] text-gray-600 dark:text-gray-400 mt-0.5">{job.company_name}</p>
           <div className="flex flex-wrap items-center gap-2 mt-2">
             {job.location && (
-              <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
+              <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
                 <MapPin className="w-3 h-3" />
                 {job.location}
               </span>
             )}
             {job.work_mode && (
-              <span className="text-[11px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
                 {job.work_mode.charAt(0).toUpperCase() + job.work_mode.slice(1).replace('_', '-')}
               </span>
             )}
             {job.seniority && (
-              <span className="text-[11px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
                 {job.seniority.charAt(0).toUpperCase() + job.seniority.slice(1)}
               </span>
             )}
           </div>
           {salary && (
-            <p className="text-[12px] font-medium text-gray-700 mt-2">{salary}</p>
+            <p className="text-[12px] font-medium text-gray-700 dark:text-gray-300 mt-2">{salary}</p>
           )}
         </div>
-        <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
+        <ChevronRight className="w-5 h-5 text-gray-300 dark:text-gray-600 group-hover:text-gray-500 dark:group-hover:text-gray-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
       </div>
     </Link>
   )
@@ -437,10 +437,10 @@ function BlogCard({ post }: { post: CMSBlogPostListItem }) {
   return (
     <Link
       to={`/blog/${post.slug}`}
-      className="block bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 hover:shadow-md transition-all group"
+      className="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md dark:shadow-gray-900/40 transition-all group"
     >
       {post.featured_image && (
-        <div className="aspect-[16/9] bg-gray-100 overflow-hidden">
+        <div className="aspect-[16/9] bg-gray-100 dark:bg-gray-700 overflow-hidden">
           <img
             src={post.featured_image}
             alt={post.title}
@@ -450,14 +450,14 @@ function BlogCard({ post }: { post: CMSBlogPostListItem }) {
       )}
       <div className="p-5">
         {post.category && (
-          <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
             {post.category}
           </span>
         )}
-        <h3 className="text-[15px] font-semibold text-gray-900 mt-1 line-clamp-2 group-hover:text-gray-700">
+        <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 mt-1 line-clamp-2 group-hover:text-gray-700 dark:group-hover:text-gray-300">
           {post.title}
         </h3>
-        <p className="text-[13px] text-gray-600 mt-2 line-clamp-2">
+        <p className="text-[13px] text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
           {post.excerpt}
         </p>
       </div>
@@ -558,7 +558,7 @@ export default function HomePage() {
   const accentColor = branding?.accent_color || '#FF7B55'
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <SEO />
       <Navbar />
 
@@ -651,7 +651,7 @@ export default function HomePage() {
           </div>
 
           {/* Client Logos */}
-          <div className="border-b border-gray-100">
+          <div className="border-b border-gray-100 dark:border-gray-800">
             <div className="max-w-5xl mx-auto px-6 py-10">
               <p className="text-center text-[12px] font-medium text-gray-400 uppercase tracking-wide mb-6">
                 Trusted by Leading Companies
@@ -660,7 +660,7 @@ export default function HomePage() {
                 {clientLogos.map((logo) => (
                   <div
                     key={logo.name}
-                    className="w-28 h-12 bg-gray-100 rounded-lg flex items-center justify-center"
+                    className="w-28 h-12 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center"
                   >
                     <span className="text-[11px] text-gray-400 font-medium">{logo.name}</span>
                   </div>
@@ -672,8 +672,8 @@ export default function HomePage() {
           {/* Services Section */}
           <div className="max-w-5xl mx-auto px-6 py-20">
             <div className="max-w-2xl mb-12">
-              <h2 className="text-3xl font-bold text-gray-900">Choose Your Model</h2>
-              <p className="mt-3 text-gray-600">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Choose Your Model</h2>
+              <p className="mt-3 text-gray-600 dark:text-gray-400">
                 Four distinct service models to match your hiring needs and budget.
                 Not sure which is right? We'll help you decide.
               </p>
@@ -697,22 +697,22 @@ export default function HomePage() {
                     )}
                   </div>
 
-                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-gray-700">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 group-hover:text-gray-700 dark:group-hover:text-gray-300">
                     {service.title}
                   </h3>
                   <p className={`text-[13px] font-medium ${service.color.accentText} mt-1`}>
                     {service.subtitle}
                   </p>
-                  <p className="text-[14px] text-gray-600 mt-3 leading-relaxed">
+                  <p className="text-[14px] text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">
                     {service.description}
                   </p>
 
                   {/* Stats highlight */}
-                  <div className="mt-4 p-3 bg-white/80 rounded-lg">
-                    <div className="text-[11px] text-gray-500 uppercase tracking-wide">{service.stats.label}</div>
+                  <div className="mt-4 p-3 bg-white/80 dark:bg-gray-800/80 rounded-lg">
+                    <div className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">{service.stats.label}</div>
                     <div className="flex items-baseline gap-2 mt-0.5">
-                      <span className="text-2xl font-bold text-gray-900">{service.stats.value}</span>
-                      <span className="text-[12px] text-gray-500">{service.stats.sub}</span>
+                      <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{service.stats.value}</span>
+                      <span className="text-[12px] text-gray-500 dark:text-gray-400">{service.stats.sub}</span>
                     </div>
                   </div>
 
@@ -720,7 +720,7 @@ export default function HomePage() {
                     {service.highlights.map((highlight) => (
                       <span
                         key={highlight}
-                        className="inline-flex items-center gap-1 text-[11px] text-gray-700 bg-white border border-gray-200 px-2 py-1 rounded-full"
+                        className="inline-flex items-center gap-1 text-[11px] text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-1 rounded-full"
                       >
                         <CheckCircle2 className="w-3 h-3 text-green-500" />
                         {highlight}
@@ -728,7 +728,7 @@ export default function HomePage() {
                     ))}
                   </div>
 
-                  <div className="flex items-center gap-2 mt-5 text-[13px] font-semibold text-gray-900 group-hover:gap-3 transition-all">
+                  <div className="flex items-center gap-2 mt-5 text-[13px] font-semibold text-gray-900 dark:text-gray-100 group-hover:gap-3 transition-all">
                     Learn more <ArrowRight className="w-4 h-4" />
                   </div>
                 </Link>
@@ -737,23 +737,23 @@ export default function HomePage() {
           </div>
 
           {/* How We're Different */}
-          <div className="bg-gray-50 border-y border-gray-100">
+          <div className="bg-gray-50 dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700">
             <div className="max-w-5xl mx-auto px-6 py-20">
               <div className="max-w-2xl mb-12">
-                <h2 className="text-3xl font-bold text-gray-900">Why Companies Choose Us</h2>
-                <p className="mt-3 text-gray-600">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Why Companies Choose Us</h2>
+                <p className="mt-3 text-gray-600 dark:text-gray-400">
                   We're not your typical recruitment agency. Here's what makes us different.
                 </p>
               </div>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {differentiators.map((item) => (
-                  <div key={item.title} className="bg-white p-6 rounded-xl border border-gray-200">
-                    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-4">
-                      <item.icon className="w-6 h-6 text-gray-700" />
+                  <div key={item.title} className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center mb-4">
+                      <item.icon className="w-6 h-6 text-gray-700 dark:text-gray-300" />
                     </div>
-                    <h3 className="text-[16px] font-semibold text-gray-900 mb-2">{item.title}</h3>
-                    <p className="text-[13px] text-gray-600 leading-relaxed">{item.description}</p>
+                    <h3 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100 mb-2">{item.title}</h3>
+                    <p className="text-[13px] text-gray-600 dark:text-gray-400 leading-relaxed">{item.description}</p>
                   </div>
                 ))}
               </div>
@@ -763,8 +763,8 @@ export default function HomePage() {
           {/* Process Section */}
           <div className="max-w-5xl mx-auto px-6 py-20">
             <div className="max-w-2xl mb-12">
-              <h2 className="text-3xl font-bold text-gray-900">How It Works</h2>
-              <p className="mt-3 text-gray-600">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">How It Works</h2>
+              <p className="mt-3 text-gray-600 dark:text-gray-400">
                 A simple, transparent process from first conversation to successful hire.
               </p>
             </div>
@@ -773,14 +773,14 @@ export default function HomePage() {
               {companyProcess.map((item, index) => (
                 <div key={item.step} className="relative">
                   {index < companyProcess.length - 1 && (
-                    <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-[2px] bg-gray-200" />
+                    <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-[2px] bg-gray-200 dark:bg-gray-700" />
                   )}
-                  <div className="relative bg-white p-6 rounded-xl border border-gray-200">
-                    <div className="w-12 h-12 bg-gray-900 text-white rounded-xl flex items-center justify-center text-[15px] font-bold mb-4">
+                  <div className="relative bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div className="w-12 h-12 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl flex items-center justify-center text-[15px] font-bold mb-4">
                       {item.step}
                     </div>
-                    <h3 className="text-[16px] font-semibold text-gray-900 mb-2">{item.title}</h3>
-                    <p className="text-[13px] text-gray-600">{item.description}</p>
+                    <h3 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100 mb-2">{item.title}</h3>
+                    <p className="text-[13px] text-gray-600 dark:text-gray-400">{item.description}</p>
                   </div>
                 </div>
               ))}
@@ -820,34 +820,34 @@ export default function HomePage() {
           {testimonials.length > 0 && (
             <div className="max-w-5xl mx-auto px-6 py-20">
               <div className="max-w-2xl mb-12">
-                <h2 className="text-3xl font-bold text-gray-900">What Our Clients Say</h2>
-                <p className="mt-3 text-gray-600">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">What Our Clients Say</h2>
+                <p className="mt-3 text-gray-600 dark:text-gray-400">
                   Hear from companies who've transformed their hiring with us.
                 </p>
               </div>
 
               <div className="grid md:grid-cols-3 gap-6">
                 {testimonials.map((testimonial, index) => (
-                  <div key={index} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                  <div key={index} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
                     <div className="flex gap-1 mb-4">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
                       ))}
                     </div>
-                    <p className="text-[14px] text-gray-700 leading-relaxed mb-6">
+                    <p className="text-[14px] text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
                       "{testimonial.quote}"
                     </p>
-                    <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+                    <div className="flex items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                       {testimonial.logo ? (
-                        <img src={testimonial.logo} alt={testimonial.company} className="w-10 h-10 rounded-lg object-contain bg-white border border-gray-100" />
+                        <img src={testimonial.logo} alt={testimonial.company} className="w-10 h-10 rounded-lg object-contain bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600" />
                       ) : (
-                        <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
                           <Building2 className="w-5 h-5 text-gray-400" />
                         </div>
                       )}
                       <div>
-                        <p className="text-[13px] font-semibold text-gray-900">{testimonial.author}</p>
-                        <p className="text-[12px] text-gray-500">{testimonial.role}, {testimonial.company}</p>
+                        <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">{testimonial.author}</p>
+                        <p className="text-[12px] text-gray-500 dark:text-gray-400">{testimonial.role}, {testimonial.company}</p>
                       </div>
                     </div>
                   </div>
@@ -857,7 +857,7 @@ export default function HomePage() {
               <div className="text-center mt-8">
                 <Link
                   to="/case-studies"
-                  className="inline-flex items-center gap-2 text-[14px] font-medium text-gray-600 hover:text-gray-900"
+                  className="inline-flex items-center gap-2 text-[14px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                 >
                   View all case studies
                   <ArrowRight className="w-4 h-4" />
@@ -867,28 +867,28 @@ export default function HomePage() {
           )}
 
           {/* CTA Section */}
-          <div className="bg-gradient-to-r from-amber-50 to-amber-100 border-y border-amber-200">
+          <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 border-y border-amber-200 dark:border-amber-800">
             <div className="max-w-5xl mx-auto px-6 py-16">
               <div className="md:flex md:items-center md:justify-between">
                 <div className="max-w-xl">
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
                     Ready to Transform Your Hiring?
                   </h2>
-                  <p className="mt-3 text-gray-600">
+                  <p className="mt-3 text-gray-600 dark:text-gray-400">
                     Book a free consultation. We'll learn about your needs and recommend the right approach.
                   </p>
                 </div>
                 <div className="mt-6 md:mt-0 flex flex-wrap gap-4">
                   <Link
                     to={bookingUrl}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white text-[14px] font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[14px] font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
                   >
                     Book a Call
                     <Calendar className="w-4 h-4" />
                   </Link>
                   <Link
                     to="/pricing"
-                    className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 bg-white text-gray-700 text-[14px] font-medium rounded-lg hover:border-gray-400 transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[14px] font-medium rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                   >
                     View Pricing
                   </Link>
@@ -910,11 +910,11 @@ export default function HomePage() {
               </div>
 
               <div className="max-w-3xl">
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight leading-tight">
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 tracking-tight leading-tight">
                   Find Your Next<br />
                   <span style={{ color: accentColor }}>Career Move</span>
                 </h1>
-                <p className="mt-6 text-lg text-gray-600 max-w-2xl">
+                <p className="mt-6 text-lg text-gray-600 dark:text-gray-400 max-w-2xl">
                   Access exclusive opportunities at leading companies. Join our talent network,
                   get matched with roles that fit your goals, and work with dedicated recruiters
                   who champion your success.
@@ -941,7 +941,7 @@ export default function HomePage() {
                   )}
                   <Link
                     to="/jobs"
-                    className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 text-[14px] font-medium rounded-lg hover:border-gray-400 transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-[14px] font-medium rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                   >
                     View All Jobs
                   </Link>
@@ -949,17 +949,17 @@ export default function HomePage() {
               </div>
 
               {/* Stats Bar */}
-              <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 pt-8 border-t border-gray-200">
+              <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 pt-8 border-t border-gray-200 dark:border-gray-700">
                 {candidateStats.map((stat) => (
                   <div key={stat.label}>
                     <div className="text-3xl md:text-4xl font-bold" style={{ color: accentColor }}>{stat.value}</div>
-                    <div className="text-[13px] text-gray-500 mt-1">{stat.label}</div>
+                    <div className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">{stat.label}</div>
                   </div>
                 ))}
               </div>
 
               {/* Industries in Hero - Scroll Animated */}
-              <div className="mt-12 pt-8 border-t border-gray-200">
+              <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
                 <p className="text-[12px] font-medium text-gray-400 uppercase tracking-wide mb-4">
                   Industries Hiring
                 </p>
@@ -972,7 +972,7 @@ export default function HomePage() {
                     {[...industries.slice(0, 15), ...industries.slice(0, 15)].map((industry, i) => (
                       <span
                         key={`row1-${industry}-${i}`}
-                        className="px-3 py-1.5 bg-gray-100 text-gray-600 text-[12px] font-medium rounded-full whitespace-nowrap mx-1 flex-shrink-0"
+                        className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-[12px] font-medium rounded-full whitespace-nowrap mx-1 flex-shrink-0"
                       >
                         {industry}
                       </span>
@@ -986,7 +986,7 @@ export default function HomePage() {
                     {[...industries.slice(15), ...industries.slice(15)].map((industry, i) => (
                       <span
                         key={`row2-${industry}-${i}`}
-                        className="px-3 py-1.5 bg-gray-100 text-gray-600 text-[12px] font-medium rounded-full whitespace-nowrap mx-1 flex-shrink-0"
+                        className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-[12px] font-medium rounded-full whitespace-nowrap mx-1 flex-shrink-0"
                       >
                         {industry}
                       </span>
@@ -1002,14 +1002,14 @@ export default function HomePage() {
             <div className="max-w-5xl mx-auto px-6 py-20">
               <div className="flex items-end justify-between mb-8">
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">Latest Opportunities</h2>
-                  <p className="mt-2 text-gray-600">
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Latest Opportunities</h2>
+                  <p className="mt-2 text-gray-600 dark:text-gray-400">
                     Fresh roles from companies actively hiring through our network.
                   </p>
                 </div>
                 <Link
                   to="/jobs"
-                  className="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-[13px] font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                  className="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[13px] font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 >
                   View all {jobs.length}+ jobs
                   <ArrowRight className="w-4 h-4" />
@@ -1025,7 +1025,7 @@ export default function HomePage() {
               <div className="text-center mt-8 sm:hidden">
                 <Link
                   to="/jobs"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 text-[13px] font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[13px] font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 >
                   View all jobs
                   <ArrowRight className="w-4 h-4" />
@@ -1035,26 +1035,26 @@ export default function HomePage() {
           )}
 
           {/* Why Join */}
-          <div className="bg-gray-50 border-y border-gray-100">
+          <div className="bg-gray-50 dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700">
             <div className="max-w-5xl mx-auto px-6 py-20">
               <div className="max-w-2xl mb-12">
-                <h2 className="text-3xl font-bold text-gray-900">Why Join Our Network?</h2>
-                <p className="mt-3 text-gray-600">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Why Join Our Network?</h2>
+                <p className="mt-3 text-gray-600 dark:text-gray-400">
                   More than a job board — we're invested in your career success.
                 </p>
               </div>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {candidateBenefits.map((benefit) => (
-                  <div key={benefit.title} className="bg-white p-6 rounded-xl border border-gray-200">
+                  <div key={benefit.title} className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
                     <div
                       className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
                       style={{ backgroundColor: `${accentColor}15` }}
                     >
                       <benefit.icon className="w-6 h-6" style={{ color: accentColor }} />
                     </div>
-                    <h3 className="text-[16px] font-semibold text-gray-900 mb-2">{benefit.title}</h3>
-                    <p className="text-[13px] text-gray-600 leading-relaxed">{benefit.description}</p>
+                    <h3 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100 mb-2">{benefit.title}</h3>
+                    <p className="text-[13px] text-gray-600 dark:text-gray-400 leading-relaxed">{benefit.description}</p>
                   </div>
                 ))}
               </div>
@@ -1064,8 +1064,8 @@ export default function HomePage() {
           {/* How It Works */}
           <div className="max-w-5xl mx-auto px-6 py-20">
             <div className="max-w-2xl mb-12">
-              <h2 className="text-3xl font-bold text-gray-900">How It Works</h2>
-              <p className="mt-3 text-gray-600">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">How It Works</h2>
+              <p className="mt-3 text-gray-600 dark:text-gray-400">
                 Your journey to your next role, simplified.
               </p>
             </div>
@@ -1074,17 +1074,17 @@ export default function HomePage() {
               {candidateProcess.map((item, index) => (
                 <div key={item.step} className="relative">
                   {index < candidateProcess.length - 1 && (
-                    <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-[2px] bg-gray-200" />
+                    <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-[2px] bg-gray-200 dark:bg-gray-700" />
                   )}
-                  <div className="relative bg-white p-6 rounded-xl border border-gray-200">
+                  <div className="relative bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
                     <div
                       className="w-12 h-12 rounded-xl flex items-center justify-center text-[15px] font-bold mb-4 text-white"
                       style={{ backgroundColor: accentColor }}
                     >
                       {item.step}
                     </div>
-                    <h3 className="text-[16px] font-semibold text-gray-900 mb-2">{item.title}</h3>
-                    <p className="text-[13px] text-gray-600">{item.description}</p>
+                    <h3 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100 mb-2">{item.title}</h3>
+                    <p className="text-[13px] text-gray-600 dark:text-gray-400">{item.description}</p>
                   </div>
                 </div>
               ))}
@@ -1130,10 +1130,10 @@ export default function HomePage() {
             <div className="max-w-5xl mx-auto px-6 py-16">
               <div className="md:flex md:items-center md:justify-between">
                 <div className="max-w-xl">
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
                     Ready to Find Your Next Role?
                   </h2>
-                  <p className="mt-3 text-gray-600">
+                  <p className="mt-3 text-gray-600 dark:text-gray-400">
                     Join thousands of professionals who've advanced their careers through our network.
                   </p>
                 </div>
@@ -1159,7 +1159,7 @@ export default function HomePage() {
                   )}
                   <Link
                     to="/jobs"
-                    className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 bg-white text-gray-700 text-[14px] font-medium rounded-lg hover:border-gray-400 transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[14px] font-medium rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                   >
                     Browse All Jobs
                   </Link>
@@ -1175,14 +1175,14 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">From Our Blog</h2>
-              <p className="mt-2 text-gray-600">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">From Our Blog</h2>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
                 Insights, tips, and industry news to help you succeed.
               </p>
             </div>
             <Link
               to="/blog"
-              className="hidden sm:inline-flex items-center gap-2 text-[14px] font-medium text-gray-600 hover:text-gray-900"
+              className="hidden sm:inline-flex items-center gap-2 text-[14px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               View all posts
               <ArrowRight className="w-4 h-4" />
@@ -1198,7 +1198,7 @@ export default function HomePage() {
           <div className="text-center mt-8 sm:hidden">
             <Link
               to="/blog"
-              className="inline-flex items-center gap-2 text-[14px] font-medium text-gray-600 hover:text-gray-900"
+              className="inline-flex items-center gap-2 text-[14px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               View all posts
               <ArrowRight className="w-4 h-4" />
@@ -1208,7 +1208,7 @@ export default function HomePage() {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 py-8">
+      <footer className="border-t border-gray-100 dark:border-gray-800 py-8">
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-[13px] text-gray-400 text-center">
             © {new Date().getFullYear()} {seoDefaults.companyName || 'All rights reserved'}.{seoDefaults.companyName ? ' All rights reserved.' : ''}

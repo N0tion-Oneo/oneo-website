@@ -105,32 +105,32 @@ export default function AssignAssessmentModal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-[300] flex items-center justify-center"
+        className="fixed inset-0 bg-black/50 dark:bg-black/70 z-[300] flex items-center justify-center"
         onClick={onClose}
       >
         {/* Modal */}
         <div
-          className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4"
+          className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/50 w-full max-w-lg mx-4"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                <ClipboardCheck className="w-5 h-5 text-orange-600" />
+              <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
+                <ClipboardCheck className="w-5 h-5 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
-                <h2 className="text-[16px] font-semibold text-gray-900">
+                <h2 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100">
                   Assign Assessment
                 </h2>
-                <p className="text-[13px] text-gray-500">
+                <p className="text-[13px] text-gray-500 dark:text-gray-400">
                   {instance.stage_template.name} for {candidateName}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
             >
               <X className="w-5 h-5" />
             </button>
@@ -139,17 +139,17 @@ export default function AssignAssessmentModal({
           {/* Body */}
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-700">{error}</p>
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
               </div>
             )}
 
             {/* Provider Info */}
             {providerName && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2">
-                <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-blue-700">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md flex items-start gap-2">
+                <Info className="w-5 h-5 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-blue-700 dark:text-blue-400">
                   Assessment provider: <strong>{providerName}</strong>
                 </p>
               </div>
@@ -157,7 +157,7 @@ export default function AssignAssessmentModal({
 
             {/* Deadline */}
             <div>
-              <label className="flex items-center gap-1.5 text-[13px] font-medium text-gray-700 mb-1.5">
+              <label className="flex items-center gap-1.5 text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 <Calendar className="w-4 h-4" />
                 Deadline <span className="text-red-500">*</span>
               </label>
@@ -167,16 +167,16 @@ export default function AssignAssessmentModal({
                 onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
                 required
                 min={formatDateTimeLocal(new Date())}
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
-              <p className="mt-1 text-[12px] text-gray-500">
+              <p className="mt-1 text-[12px] text-gray-500 dark:text-gray-400">
                 Default is {deadlineDays} days from now (based on stage template)
               </p>
             </div>
 
             {/* External URL */}
             <div>
-              <label className="flex items-center gap-1.5 text-[13px] font-medium text-gray-700 mb-1.5">
+              <label className="flex items-center gap-1.5 text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 <ExternalLink className="w-4 h-4" />
                 Assessment URL <span className="text-gray-400 font-normal">(optional)</span>
               </label>
@@ -185,16 +185,16 @@ export default function AssignAssessmentModal({
                 value={formData.external_url}
                 onChange={(e) => setFormData({ ...formData, external_url: e.target.value })}
                 placeholder="https://..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               />
-              <p className="mt-1 text-[12px] text-gray-500">
+              <p className="mt-1 text-[12px] text-gray-500 dark:text-gray-400">
                 Link to the assessment platform (e.g., Codility, HackerRank)
               </p>
             </div>
 
             {/* Instructions */}
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Instructions <span className="text-gray-400 font-normal">(optional)</span>
               </label>
               <textarea
@@ -202,7 +202,7 @@ export default function AssignAssessmentModal({
                 onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
                 placeholder="Enter any specific instructions for the candidate..."
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
 
@@ -212,21 +212,21 @@ export default function AssignAssessmentModal({
                 type="checkbox"
                 checked={formData.send_notification}
                 onChange={(e) => setFormData({ ...formData, send_notification: e.target.checked })}
-                className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+                className="w-4 h-4 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 rounded focus:ring-gray-900 dark:focus:ring-gray-100"
               />
-              <Bell className="w-4 h-4 text-gray-500" />
-              <span className="text-[13px] text-gray-700">
+              <Bell className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <span className="text-[13px] text-gray-700 dark:text-gray-300">
                 Send notification to candidate
               </span>
             </label>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isAssigning}
-                className="px-4 py-2 text-[14px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                className="px-4 py-2 text-[14px] font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 bg-white dark:bg-gray-900"
               >
                 Cancel
               </button>

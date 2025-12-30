@@ -104,11 +104,11 @@ const getFieldIcon = (field: ModelField) => {
 
 // Field type badge color
 const getFieldBadgeColor = (field: ModelField) => {
-  if (field.is_relation) return 'bg-purple-100 text-purple-700'
-  if (field.choices && field.choices.length > 0) return 'bg-blue-100 text-blue-700'
-  if (field.type === 'BooleanField') return 'bg-green-100 text-green-700'
-  if (field.type === 'DateField' || field.type === 'DateTimeField') return 'bg-orange-100 text-orange-700'
-  return 'bg-gray-100 text-gray-700'
+  if (field.is_relation) return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+  if (field.choices && field.choices.length > 0) return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+  if (field.type === 'BooleanField') return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+  if (field.type === 'DateField' || field.type === 'DateTimeField') return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+  return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
 }
 
 // Smart Value Input Component - renders different inputs based on field type
@@ -135,7 +135,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
           className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
             stringValue === 'true'
               ? 'bg-green-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           True
@@ -147,7 +147,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
           className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
             stringValue === 'false'
               ? 'bg-red-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           False
@@ -163,7 +163,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
         value={stringValue}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+        className={`px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
       >
         <option value="">Select value</option>
         {field.choices.map((choice) => (
@@ -183,7 +183,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
         value={stringValue}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+        className={`px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
       />
     )
   }
@@ -196,7 +196,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
         value={stringValue}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+        className={`px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
       />
     )
   }
@@ -211,7 +211,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
         disabled={disabled}
         placeholder={placeholder}
         step={field.type === 'IntegerField' ? '1' : 'any'}
-        className={`px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+        className={`px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
       />
     )
   }
@@ -224,7 +224,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       placeholder={placeholder}
-      className={`px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+      className={`px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
     />
   )
 }
@@ -253,7 +253,7 @@ function VariablePicker({ fields, onSelect, buttonClassName = '' }: VariablePick
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1 px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded ${buttonClassName}`}
+        className={`flex items-center gap-1 px-2 py-1 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded ${buttonClassName}`}
       >
         <Variable className="w-3 h-3" />
         Insert Variable
@@ -264,8 +264,8 @@ function VariablePicker({ fields, onSelect, buttonClassName = '' }: VariablePick
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full left-0 mt-1 w-64 bg-white border rounded-lg shadow-lg z-20 max-h-64 overflow-hidden">
-            <div className="p-2 border-b">
+          <div className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 z-20 max-h-64 overflow-hidden">
+            <div className="p-2 border-b border-gray-200 dark:border-gray-700">
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -273,14 +273,14 @@ function VariablePicker({ fields, onSelect, buttonClassName = '' }: VariablePick
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search fields..."
-                  className="w-full pl-8 pr-3 py-1.5 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                 />
               </div>
             </div>
             <div className="overflow-y-auto max-h-48">
               {filteredFields.length === 0 ? (
-                <div className="p-3 text-sm text-gray-500 text-center">No fields found</div>
+                <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">No fields found</div>
               ) : (
                 filteredFields.map((field) => (
                   <button
@@ -291,7 +291,7 @@ function VariablePicker({ fields, onSelect, buttonClassName = '' }: VariablePick
                       setIsOpen(false)
                       setSearch('')
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
                     <span className={`p-1 rounded ${getFieldBadgeColor(field)}`}>
                       {getFieldIcon(field)}
@@ -341,7 +341,7 @@ function FieldSelector({ fields, value, onChange, placeholder = 'Select field', 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+        className={`px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
       >
         <option value="">{placeholder}</option>
         {fields.map((field) => (
@@ -360,8 +360,8 @@ function FieldSelector({ fields, value, onChange, placeholder = 'Select field', 
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`w-full flex items-center justify-between px-3 py-2 border rounded-lg text-sm text-left ${
-          disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : 'hover:border-gray-400'
+        className={`w-full flex items-center justify-between px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-left bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${
+          disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : 'hover:border-gray-400 dark:hover:border-gray-500'
         }`}
       >
         {selectedField ? (
@@ -379,8 +379,8 @@ function FieldSelector({ fields, value, onChange, placeholder = 'Select field', 
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-20 max-h-64 overflow-hidden">
-            <div className="p-2 border-b">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 z-20 max-h-64 overflow-hidden">
+            <div className="p-2 border-b border-gray-200 dark:border-gray-700">
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -388,14 +388,14 @@ function FieldSelector({ fields, value, onChange, placeholder = 'Select field', 
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search fields..."
-                  className="w-full pl-8 pr-3 py-1.5 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                 />
               </div>
             </div>
             <div className="overflow-y-auto max-h-48">
               {filteredFields.length === 0 ? (
-                <div className="p-3 text-sm text-gray-500 text-center">No fields found</div>
+                <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">No fields found</div>
               ) : (
                 filteredFields.map((field) => (
                   <button
@@ -406,8 +406,8 @@ function FieldSelector({ fields, value, onChange, placeholder = 'Select field', 
                       setIsOpen(false)
                       setSearch('')
                     }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 ${
-                      value === field.name ? 'bg-blue-50' : ''
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+                      value === field.name ? 'bg-blue-50 dark:bg-blue-900/30' : ''
                     }`}
                   >
                     <span className={`p-1 rounded ${getFieldBadgeColor(field)}`}>
@@ -415,10 +415,10 @@ function FieldSelector({ fields, value, onChange, placeholder = 'Select field', 
                     </span>
                     <span className="flex-1">{field.verbose_name}</span>
                     {field.is_relation && (
-                      <span className="text-xs text-purple-600">FK</span>
+                      <span className="text-xs text-purple-600 dark:text-purple-400">FK</span>
                     )}
                     {field.choices && field.choices.length > 0 && (
-                      <span className="text-xs text-blue-600">{field.choices.length} options</span>
+                      <span className="text-xs text-blue-600 dark:text-blue-400">{field.choices.length} options</span>
                     )}
                   </button>
                 ))
@@ -554,7 +554,7 @@ export default function RuleEditorPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
         <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
       </div>
     )
@@ -562,14 +562,14 @@ export default function RuleEditorPage() {
 
   if (!rule) {
     return (
-      <div className="space-y-4 p-6">
-        <div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 p-4 rounded-lg">
+      <div className="space-y-4 p-6 bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-4 rounded-lg">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <span className="text-[13px]">Rule not found</span>
         </div>
         <button
           onClick={() => navigate('/dashboard/admin/automations')}
-          className="flex items-center gap-2 text-[13px] text-gray-600 hover:text-gray-900"
+          className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Automations
@@ -579,17 +579,17 @@ export default function RuleEditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate('/dashboard/admin/automations')}
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <ArrowLeft className="w-4 h-4 text-gray-600" />
+                <ArrowLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
               </button>
               <div>
                 <input
@@ -599,16 +599,16 @@ export default function RuleEditorPage() {
                     setName(e.target.value)
                     handleFieldChange()
                   }}
-                  className="text-[15px] font-semibold bg-transparent border-none focus:outline-none focus:ring-0 p-0 w-full text-gray-900"
+                  className="text-[15px] font-semibold bg-transparent border-none focus:outline-none focus:ring-0 p-0 w-full text-gray-900 dark:text-gray-100"
                   placeholder="Rule name"
                 />
                 {hasUnsavedChanges && (
-                  <span className="text-[11px] text-amber-600 font-medium">Unsaved changes</span>
+                  <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">Unsaved changes</span>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 cursor-pointer px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+              <label className="flex items-center gap-2 cursor-pointer px-2 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <input
                   type="checkbox"
                   checked={isActive}
@@ -616,16 +616,16 @@ export default function RuleEditorPage() {
                     setIsActive(e.target.checked)
                     handleFieldChange()
                   }}
-                  className="w-3.5 h-3.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                  className="w-3.5 h-3.5 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100"
                 />
-                <span className="text-[13px] text-gray-700">
+                <span className="text-[13px] text-gray-700 dark:text-gray-300">
                   {isActive ? 'Active' : 'Inactive'}
                 </span>
               </label>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[13px] font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 transition-colors"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -649,25 +649,25 @@ export default function RuleEditorPage() {
               setDescription(e.target.value)
               handleFieldChange()
             }}
-            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none placeholder:text-gray-400"
+            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent resize-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
             placeholder="Add a description for this rule..."
             rows={2}
           />
         </div>
 
         {/* Trigger Section */}
-        <div className="bg-white rounded-lg border border-gray-200 mb-3">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-3">
           <button
             onClick={() => setExpandedSection(expandedSection === 'trigger' ? null : 'trigger')}
-            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
-                <span className="text-green-600 font-semibold text-[12px]">1</span>
+              <div className="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
+                <span className="text-green-600 dark:text-green-400 font-semibold text-[12px]">1</span>
               </div>
               <div className="text-left">
-                <h3 className="text-[13px] font-semibold text-gray-900">Trigger</h3>
-                <p className="text-[12px] text-gray-500 mt-0.5">
+                <h3 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">Trigger</h3>
+                <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5">
                   {selectedModel
                     ? `When ${selectedModel.display_name} ${triggerLabels[triggerType]?.toLowerCase()}`
                     : 'Configure when this rule should run'}
@@ -681,10 +681,10 @@ export default function RuleEditorPage() {
             />
           </button>
           {expandedSection === 'trigger' && (
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Model
                   </label>
                   <select
@@ -694,7 +694,7 @@ export default function RuleEditorPage() {
                       setTriggerConditions([]) // Reset conditions when model changes
                       handleFieldChange()
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                   >
                     <option value="">Select a model</option>
                     {models.map((model) => (
@@ -705,7 +705,7 @@ export default function RuleEditorPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Event
                   </label>
                   <select
@@ -714,7 +714,7 @@ export default function RuleEditorPage() {
                       setTriggerType(e.target.value as TriggerType)
                       handleFieldChange()
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                   >
                     {Object.entries(triggerLabels).map(([value, label]) => (
                       <option key={value} value={value}>
@@ -729,18 +729,18 @@ export default function RuleEditorPage() {
         </div>
 
         {/* Conditions Section */}
-        <div className="bg-white rounded-lg border border-gray-200 mb-3">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-3">
           <button
             onClick={() => setExpandedSection(expandedSection === 'conditions' ? null : 'conditions')}
-            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                <span className="text-amber-600 font-semibold text-[12px]">2</span>
+              <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                <span className="text-amber-600 dark:text-amber-400 font-semibold text-[12px]">2</span>
               </div>
               <div className="text-left">
-                <h3 className="text-[13px] font-semibold text-gray-900">Conditions</h3>
-                <p className="text-[12px] text-gray-500 mt-0.5">
+                <h3 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">Conditions</h3>
+                <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5">
                   {triggerConditions.length > 0
                     ? `${triggerConditions.length} condition${triggerConditions.length > 1 ? 's' : ''} configured`
                     : 'Optional: Filter when the rule runs'}
@@ -754,9 +754,9 @@ export default function RuleEditorPage() {
             />
           </button>
           {expandedSection === 'conditions' && (
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
               {!triggerModel ? (
-                <p className="text-[13px] text-gray-500">Select a trigger model first</p>
+                <p className="text-[13px] text-gray-500 dark:text-gray-400">Select a trigger model first</p>
               ) : (
                 <>
                   {triggerConditions.map((condition, index) => {
@@ -766,7 +766,7 @@ export default function RuleEditorPage() {
                       !!(conditionField?.choices && conditionField.choices.length > 0)
                     )
                     return (
-                      <div key={index} className="flex items-center gap-2 mb-3 p-3 bg-white rounded-lg border border-gray-200">
+                      <div key={index} className="flex items-center gap-2 mb-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                         <FieldSelector
                           fields={modelFields}
                           value={condition.field}
@@ -782,7 +782,7 @@ export default function RuleEditorPage() {
                               operator: e.target.value as TriggerCondition['operator'],
                             })
                           }
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                         >
                           {Object.entries(operators).map(([value, label]) => (
                             <option key={value} value={value}>
@@ -801,7 +801,7 @@ export default function RuleEditorPage() {
                         )}
                         <button
                           onClick={() => removeCondition(index)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -810,7 +810,7 @@ export default function RuleEditorPage() {
                   })}
                   <button
                     onClick={addCondition}
-                    className="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     Add Condition
@@ -822,18 +822,18 @@ export default function RuleEditorPage() {
         </div>
 
         {/* Action Section */}
-        <div className="bg-white rounded-lg border border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setExpandedSection(expandedSection === 'action' ? null : 'action')}
-            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                <span className="text-blue-600 font-semibold text-[12px]">3</span>
+              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                <span className="text-blue-600 dark:text-blue-400 font-semibold text-[12px]">3</span>
               </div>
               <div className="text-left">
-                <h3 className="text-[13px] font-semibold text-gray-900">Action</h3>
-                <p className="text-[12px] text-gray-500 mt-0.5">
+                <h3 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">Action</h3>
+                <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5">
                   {actionType === 'send_webhook'
                     ? `Send webhook to ${(actionConfig as { url?: string }).url || '(not configured)'}`
                     : actionType === 'send_notification'
@@ -853,10 +853,10 @@ export default function RuleEditorPage() {
             />
           </button>
           {expandedSection === 'action' && (
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
               {/* Action Type Selection */}
               <div className="mb-4">
-                <label className="block text-[12px] font-medium text-gray-700 mb-2">
+                <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Action Type
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -869,14 +869,14 @@ export default function RuleEditorPage() {
                     }}
                     className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
                       actionType === 'send_webhook'
-                        ? 'border-gray-900 bg-gray-50'
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        ? 'border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-gray-700'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-800'
                     }`}
                   >
-                    <Send className="w-4 h-4 text-gray-600" />
+                    <Send className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                     <div className="text-left">
-                      <div className="text-[13px] font-medium text-gray-900">Send Webhook</div>
-                      <div className="text-[11px] text-gray-500">POST to external URL</div>
+                      <div className="text-[13px] font-medium text-gray-900 dark:text-gray-100">Send Webhook</div>
+                      <div className="text-[11px] text-gray-500 dark:text-gray-400">POST to external URL</div>
                     </div>
                   </button>
                   <button
@@ -893,14 +893,14 @@ export default function RuleEditorPage() {
                     }}
                     className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
                       actionType === 'send_notification'
-                        ? 'border-gray-900 bg-gray-50'
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        ? 'border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-gray-700'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-800'
                     }`}
                   >
-                    <Bell className="w-4 h-4 text-gray-600" />
+                    <Bell className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                     <div className="text-left">
-                      <div className="text-[13px] font-medium text-gray-900">Send Notification</div>
-                      <div className="text-[11px] text-gray-500">Email or in-app</div>
+                      <div className="text-[13px] font-medium text-gray-900 dark:text-gray-100">Send Notification</div>
+                      <div className="text-[11px] text-gray-500 dark:text-gray-400">Email or in-app</div>
                     </div>
                   </button>
                   <button
@@ -912,14 +912,14 @@ export default function RuleEditorPage() {
                     }}
                     className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
                       actionType === 'update_field'
-                        ? 'border-gray-900 bg-gray-50'
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        ? 'border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-gray-700'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-800'
                     }`}
                   >
-                    <Pencil className="w-4 h-4 text-gray-600" />
+                    <Pencil className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                     <div className="text-left">
-                      <div className="text-[13px] font-medium text-gray-900">Update Field</div>
-                      <div className="text-[11px] text-gray-500">Modify record data</div>
+                      <div className="text-[13px] font-medium text-gray-900 dark:text-gray-100">Update Field</div>
+                      <div className="text-[11px] text-gray-500 dark:text-gray-400">Modify record data</div>
                     </div>
                   </button>
                   <button
@@ -931,14 +931,14 @@ export default function RuleEditorPage() {
                     }}
                     className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
                       actionType === 'create_activity'
-                        ? 'border-gray-900 bg-gray-50'
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        ? 'border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-gray-700'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-white dark:bg-gray-800'
                     }`}
                   >
-                    <FileText className="w-4 h-4 text-gray-600" />
+                    <FileText className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                     <div className="text-left">
-                      <div className="text-[13px] font-medium text-gray-900">Log Activity</div>
-                      <div className="text-[11px] text-gray-500">Add activity log</div>
+                      <div className="text-[13px] font-medium text-gray-900 dark:text-gray-100">Log Activity</div>
+                      <div className="text-[11px] text-gray-500 dark:text-gray-400">Add activity log</div>
                     </div>
                   </button>
                 </div>
@@ -948,7 +948,7 @@ export default function RuleEditorPage() {
               {actionType === 'send_webhook' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Webhook URL
                     </label>
                     <input
@@ -958,12 +958,12 @@ export default function RuleEditorPage() {
                         setActionConfig({ ...actionConfig, url: e.target.value })
                         handleFieldChange()
                       }}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="https://example.com/webhook"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       HTTP Method
                     </label>
                     <select
@@ -972,7 +972,7 @@ export default function RuleEditorPage() {
                         setActionConfig({ ...actionConfig, method: e.target.value })
                         handleFieldChange()
                       }}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="POST">POST</option>
                       <option value="PUT">PUT</option>
@@ -981,7 +981,7 @@ export default function RuleEditorPage() {
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-sm font-medium text-gray-700">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Payload Template (JSON)
                       </label>
                       <VariablePicker
@@ -1010,11 +1010,11 @@ export default function RuleEditorPage() {
                           // Allow invalid JSON while typing
                         }
                       }}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                       rows={6}
                       placeholder={'{\n  "event": "{{trigger_type}}",\n  "data": "{{object}}"\n}'}
                     />
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Click "Insert Variable" to copy a variable to paste into the JSON
                     </p>
                   </div>
@@ -1025,7 +1025,7 @@ export default function RuleEditorPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Channel
                       </label>
                       <select
@@ -1034,7 +1034,7 @@ export default function RuleEditorPage() {
                           setActionConfig({ ...actionConfig, channel: e.target.value })
                           handleFieldChange()
                         }}
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="email">Email</option>
                         <option value="in_app">In-App</option>
@@ -1042,7 +1042,7 @@ export default function RuleEditorPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Send To
                       </label>
                       <select
@@ -1051,7 +1051,7 @@ export default function RuleEditorPage() {
                           setActionConfig({ ...actionConfig, recipient_type: e.target.value })
                           handleFieldChange()
                         }}
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         {Object.entries(AutomationRecipientTypeGroups).map(([group, types]) => (
                           <optgroup key={group} label={group}>
@@ -1067,7 +1067,7 @@ export default function RuleEditorPage() {
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-sm font-medium text-gray-700">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Notification Title
                       </label>
                       <VariablePicker
@@ -1086,13 +1086,13 @@ export default function RuleEditorPage() {
                         setActionConfig({ ...actionConfig, title_template: e.target.value })
                         handleFieldChange()
                       }}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="New lead: {{name}}"
                     />
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-sm font-medium text-gray-700">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Notification Body
                       </label>
                       <VariablePicker
@@ -1110,11 +1110,11 @@ export default function RuleEditorPage() {
                         setActionConfig({ ...actionConfig, body_template: e.target.value })
                         handleFieldChange()
                       }}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       rows={4}
                       placeholder="A new lead has been created: {{name}} from {{company_name}}"
                     />
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Click "Insert Variable" above to add dynamic values
                     </p>
                   </div>
@@ -1146,7 +1146,7 @@ export default function RuleEditorPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Target Record
                         </label>
                         <select
@@ -1155,7 +1155,7 @@ export default function RuleEditorPage() {
                             setActionConfig({ ...actionConfig, target: e.target.value, related_model: '', relation_field: '', field: '', value: '' })
                             handleFieldChange()
                           }}
-                          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="self">Same record (trigger model)</option>
                           <option value="related" disabled={hasNoRelations}>
@@ -1165,7 +1165,7 @@ export default function RuleEditorPage() {
                       </div>
                       {isRelatedTarget && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Related Record (via FK)
                           </label>
                           <select
@@ -1182,7 +1182,7 @@ export default function RuleEditorPage() {
                               })
                               handleFieldChange()
                             }}
-                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             <option value="">Select related model</option>
                             {availableRelatedModels.map((relation) => (
@@ -1192,7 +1192,7 @@ export default function RuleEditorPage() {
                             ))}
                           </select>
                           {availableRelatedModels.length === 0 && (
-                            <p className="mt-1 text-xs text-amber-600">
+                            <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
                               This model has no foreign key relations to other automatable models
                             </p>
                           )}
@@ -1201,7 +1201,7 @@ export default function RuleEditorPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Field to Update
                         </label>
                         <FieldSelector
@@ -1217,11 +1217,11 @@ export default function RuleEditorPage() {
                           showSearch={targetModelFields.length >= 10}
                         />
                         {isRelatedTarget && !hasRelatedModel && (
-                          <p className="mt-1 text-xs text-amber-600">Select a related model first</p>
+                          <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Select a related model first</p>
                         )}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Value Type
                         </label>
                         <select
@@ -1230,7 +1230,7 @@ export default function RuleEditorPage() {
                             setActionConfig({ ...actionConfig, value_type: e.target.value, value: '' })
                             handleFieldChange()
                           }}
-                          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="static">Static value</option>
                           <option value="template">Template (with variables)</option>
@@ -1240,7 +1240,7 @@ export default function RuleEditorPage() {
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="text-sm font-medium text-gray-700">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           {valueType === 'copy_field' ? 'Source Field' : 'New Value'}
                         </label>
                         {valueType === 'template' && (
@@ -1285,12 +1285,12 @@ export default function RuleEditorPage() {
                             setActionConfig({ ...actionConfig, value: e.target.value })
                             handleFieldChange()
                           }}
-                          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder={valueType === 'template' ? 'Processed by {{assigned_to}}' : 'Enter value'}
                         />
                       )}
                       {valueType === 'template' && (
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                           Use the Insert Variable button above to add dynamic values
                         </p>
                       )}
@@ -1302,7 +1302,7 @@ export default function RuleEditorPage() {
               {actionType === 'create_activity' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Activity Type
                     </label>
                     <select
@@ -1311,7 +1311,7 @@ export default function RuleEditorPage() {
                         setActionConfig({ ...actionConfig, activity_type: e.target.value })
                         handleFieldChange()
                       }}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="note">Note</option>
                       <option value="status_change">Status Change</option>
@@ -1323,7 +1323,7 @@ export default function RuleEditorPage() {
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-sm font-medium text-gray-700">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Activity Content
                       </label>
                       <VariablePicker
@@ -1341,11 +1341,11 @@ export default function RuleEditorPage() {
                         setActionConfig({ ...actionConfig, content_template: e.target.value })
                         handleFieldChange()
                       }}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       rows={4}
                       placeholder="Lead stage changed from {{old_stage}} to {{new_stage}}"
                     />
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Click "Insert Variable" to add dynamic values. For stage changes, use {"{{old_stage}}"} and {"{{new_stage}}"}
                     </p>
                   </div>
@@ -1371,26 +1371,26 @@ export default function RuleEditorPage() {
 
         {/* Stats */}
         {rule.total_executions > 0 && (
-          <div className="mt-5 bg-white rounded-lg border border-gray-200 p-4">
-            <h3 className="text-[13px] font-semibold text-gray-900 mb-3">Execution Stats</h3>
+          <div className="mt-5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <h3 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 mb-3">Execution Stats</h3>
             <div className="grid grid-cols-3 gap-3">
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <div className="text-xl font-semibold text-gray-900">
+              <div className="text-center p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                   {rule.total_executions}
                 </div>
-                <div className="text-[11px] text-gray-500 font-medium">Total Runs</div>
+                <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Total Runs</div>
               </div>
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <div className="text-xl font-semibold text-green-600">
+              <div className="text-center p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                <div className="text-xl font-semibold text-green-600 dark:text-green-400">
                   {rule.total_success}
                 </div>
-                <div className="text-[11px] text-gray-500 font-medium">Successful</div>
+                <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Successful</div>
               </div>
-              <div className="text-center p-3 bg-red-50 rounded-lg">
-                <div className="text-xl font-semibold text-red-600">
+              <div className="text-center p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
+                <div className="text-xl font-semibold text-red-600 dark:text-red-400">
                   {rule.total_failed}
                 </div>
-                <div className="text-[11px] text-gray-500 font-medium">Failed</div>
+                <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Failed</div>
               </div>
             </div>
           </div>
@@ -1408,9 +1408,9 @@ export default function RuleEditorPage() {
       {toast && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
           <div
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg shadow-lg ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg shadow-lg dark:shadow-gray-900/40 ${
               toast.type === 'success'
-                ? 'bg-gray-900 text-white'
+                ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
                 : 'bg-red-600 text-white'
             }`}
           >
@@ -1422,7 +1422,7 @@ export default function RuleEditorPage() {
             <span className="text-[13px]">{toast.message}</span>
             <button
               onClick={() => setToast(null)}
-              className="p-0.5 hover:bg-white/20 rounded ml-2"
+              className="p-0.5 hover:bg-white/20 dark:hover:bg-black/20 rounded ml-2"
             >
               <X className="w-3.5 h-3.5" />
             </button>

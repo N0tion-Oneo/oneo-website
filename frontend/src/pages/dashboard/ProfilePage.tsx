@@ -80,8 +80,8 @@ function BasicUserProfile() {
     <div className="max-w-xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-[22px] font-semibold text-gray-900">My Profile</h1>
-        <p className="text-[14px] text-gray-500 mt-1">
+        <h1 className="text-[22px] font-semibold text-gray-900 dark:text-gray-100">My Profile</h1>
+        <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-1">
           Update your personal information
         </p>
       </div>
@@ -99,39 +99,39 @@ function BasicUserProfile() {
       )}
 
       {/* Form */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
         <div className="space-y-5">
           {/* Email (read-only) */}
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               Email
             </label>
             <input
               type="email"
               value={user?.email || ''}
               disabled
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
+              className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
             />
-            <p className="text-[12px] text-gray-400 mt-1">Email cannot be changed</p>
+            <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-1">Email cannot be changed</p>
           </div>
 
           {/* Role (read-only) */}
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               Role
             </label>
             <input
               type="text"
               value={user?.role ? getRoleLabel(user.role) : ''}
               disabled
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
+              className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
             />
           </div>
 
           {/* Name fields */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 First Name *
               </label>
               <input
@@ -139,11 +139,11 @@ function BasicUserProfile() {
                 name="first_name"
                 value={formData.first_name}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Last Name *
               </label>
               <input
@@ -151,14 +151,14 @@ function BasicUserProfile() {
                 name="last_name"
                 value={formData.last_name}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               />
             </div>
           </div>
 
           {/* Phone */}
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               Phone
             </label>
             <input
@@ -167,12 +167,12 @@ function BasicUserProfile() {
               value={formData.phone}
               onChange={handleInputChange}
               placeholder="+27 12 345 6789"
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             />
           </div>
 
           {/* Save Button */}
-          <div className="pt-4 border-t border-gray-100">
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
             <button
               onClick={handleSave}
               disabled={isUpdating}
@@ -519,7 +519,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-[14px] text-gray-500">Loading profile...</div>
+        <div className="text-[14px] text-gray-500 dark:text-gray-400">Loading profile...</div>
       </div>
     )
   }
@@ -538,7 +538,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
       {isAdminMode && onBack && (
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-[13px] text-gray-500 hover:text-gray-900 mb-4"
+          className="inline-flex items-center gap-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
@@ -549,10 +549,10 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-[22px] font-semibold text-gray-900">
+        <h1 className="text-[22px] font-semibold text-gray-900 dark:text-gray-100">
           {isAdminMode ? 'Edit Candidate Profile' : 'My Profile'}
         </h1>
-        <p className="text-[14px] text-gray-500 mt-1">
+        <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-1">
           {isAdminMode
             ? `Editing profile for ${profile?.first_name} ${profile?.last_name} (${profile?.email})`
             : 'Complete your profile to increase visibility to recruiters'}
@@ -576,8 +576,8 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
         {/* Main Content */}
         <div className="flex-1 min-w-0">
           {/* Tabs */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="border-b border-gray-200">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex -mb-px">
             {tabs.map((tab) => (
               <button
@@ -585,8 +585,8 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-5 py-3 text-[13px] font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? 'border-gray-900 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-gray-900 text-gray-900 dark:text-gray-100'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 {tab.label}
@@ -601,7 +601,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     First Name *
                   </label>
                   <input
@@ -609,11 +609,11 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                     name="first_name"
                     value={formData.first_name}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Last Name *
                   </label>
                   <input
@@ -621,13 +621,13 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                     name="last_name"
                     value={formData.last_name}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Phone
                 </label>
                 <input
@@ -636,12 +636,12 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                   value={formData.phone}
                   onChange={handleInputChange}
                   placeholder="+27 12 345 6789"
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
 
               <div id="field-professional_title" className={`rounded-md ${getHighlightClass('field-professional_title')}`}>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Professional Title *
                 </label>
                 <input
@@ -650,12 +650,12 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                   value={formData.professional_title}
                   onChange={handleInputChange}
                   placeholder="e.g. Senior Software Engineer"
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
 
               <div id="field-headline" className={`rounded-md ${getHighlightClass('field-headline')}`}>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Headline
                 </label>
                 <input
@@ -664,13 +664,13 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                   value={formData.headline}
                   onChange={handleInputChange}
                   placeholder="A brief tagline about yourself"
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div id="field-country" className={`rounded-md ${getHighlightClass('field-country')}`}>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Country
                   </label>
                   <select
@@ -684,7 +684,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                         city_id: null, // Reset city when country changes
                       }))
                     }}
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   >
                     <option value="">Select a country</option>
                     {countries.map((country) => (
@@ -695,7 +695,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                   </select>
                 </div>
                 <div id="field-city" className={`rounded-md ${getHighlightClass('field-city')}`}>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     City
                   </label>
                   <select
@@ -705,7 +705,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                       setFormData((prev) => ({ ...prev, city_id: cityId }))
                     }}
                     disabled={!formData.country_id}
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500"
                   >
                     <option value="">
                       {formData.country_id ? 'Select a city' : 'Select country first'}
@@ -720,14 +720,14 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
               </div>
 
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Profile Visibility
                 </label>
                 <select
                   name="visibility"
                   value={formData.visibility}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 >
                   <option value="private">Private - Only visible to you</option>
                   <option value="public_sanitised">
@@ -743,14 +743,14 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div id="field-seniority" className={`rounded-md ${getHighlightClass('field-seniority')}`}>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Seniority Level
                   </label>
                   <select
                     name="seniority"
                     value={formData.seniority}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   >
                     <option value="">Select level</option>
                     <option value={Seniority.INTERN}>Intern</option>
@@ -763,21 +763,21 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Years of Experience
                   </label>
                   <input
                     type="text"
                     value={profile?.years_of_experience || 'Add work experience to calculate'}
                     disabled
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                   />
-                  <p className="text-[12px] text-gray-400 mt-1">Calculated from your work history</p>
+                  <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-1">Calculated from your work history</p>
                 </div>
               </div>
 
               <div id="field-professional_summary" className={`rounded-md ${getHighlightClass('field-professional_summary')}`}>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Professional Summary
                 </label>
                 <textarea
@@ -786,7 +786,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                   onChange={handleInputChange}
                   rows={5}
                   placeholder="Tell us about your experience, skills, and career goals..."
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
                 />
               </div>
 
@@ -809,14 +809,14 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
           {activeTab === 'preferences' && (
             <div className="space-y-5">
               <div id="field-work_preference" className={`rounded-md ${getHighlightClass('field-work_preference')}`}>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Work Preference
                 </label>
                 <select
                   name="work_preference"
                   value={formData.work_preference}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 >
                   <option value="">Select preference</option>
                   <option value={WorkPreference.REMOTE}>Remote</option>
@@ -833,27 +833,27 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                   name="willing_to_relocate"
                   checked={formData.willing_to_relocate}
                   onChange={handleInputChange}
-                  className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 focus:ring-gray-900"
                 />
-                <label htmlFor="willing_to_relocate" className="text-[14px] text-gray-700">
+                <label htmlFor="willing_to_relocate" className="text-[14px] text-gray-700 dark:text-gray-300">
                   I am willing to relocate for the right opportunity
                 </label>
               </div>
 
-              <div className="border-t border-gray-100 pt-5">
-                <h3 className="text-[14px] font-medium text-gray-900 mb-4">
+              <div className="border-t border-gray-100 dark:border-gray-800 pt-5">
+                <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-4">
                   Salary Expectations
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                    <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Currency
                     </label>
                     <select
                       name="salary_currency"
                       value={formData.salary_currency}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                     >
                       <option value={Currency.ZAR}>ZAR</option>
                       <option value={Currency.USD}>USD</option>
@@ -862,7 +862,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                    <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Minimum (Annual)
                     </label>
                     <input
@@ -870,11 +870,11 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                       min="0"
                       value={formData.salary_expectation_min ?? ''}
                       onChange={(e) => handleNumberChange('salary_expectation_min', e.target.value)}
-                      className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                    <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Maximum (Annual)
                     </label>
                     <input
@@ -882,14 +882,14 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                       min="0"
                       value={formData.salary_expectation_max ?? ''}
                       onChange={(e) => handleNumberChange('salary_expectation_max', e.target.value)}
-                      className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                     />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Notice Period (Days)
                 </label>
                 <input
@@ -899,7 +899,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                   value={formData.notice_period_days ?? ''}
                   onChange={(e) => handleNumberChange('notice_period_days', e.target.value)}
                   placeholder="e.g. 30"
-                  className="w-full max-w-[200px] px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full max-w-[200px] px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
             </div>
@@ -910,8 +910,8 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-[14px] font-medium text-gray-900">Portfolio Links</h3>
-                  <p className="text-[13px] text-gray-500">Add links to your work</p>
+                  <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Portfolio Links</h3>
+                  <p className="text-[13px] text-gray-500 dark:text-gray-400">Add links to your work</p>
                 </div>
                 <button
                   type="button"
@@ -924,25 +924,25 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                       ],
                     }))
                   }}
-                  className="px-3 py-1.5 text-[13px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                  className="px-3 py-1.5 text-[13px] font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   Add Link
                 </button>
               </div>
 
               {formData.portfolio_links.length === 0 ? (
-                <div className="text-center py-8 border border-dashed border-gray-200 rounded-lg">
-                  <p className="text-[14px] text-gray-500">No portfolio links added yet</p>
+                <div className="text-center py-8 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+                  <p className="text-[14px] text-gray-500 dark:text-gray-400">No portfolio links added yet</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {formData.portfolio_links.map((link, index) => (
                     <div
                       key={index}
-                      className="p-4 border border-gray-200 rounded-lg space-y-3"
+                      className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg space-y-3"
                     >
                       <div className="flex items-start justify-between">
-                        <span className="text-[12px] font-medium text-gray-400">
+                        <span className="text-[12px] font-medium text-gray-400 dark:text-gray-500">
                           Link {index + 1}
                         </span>
                         <button
@@ -953,7 +953,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                               portfolio_links: prev.portfolio_links.filter((_, i) => i !== index),
                             }))
                           }}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
+                          className="text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors"
                         >
                           <svg
                             width="16"
@@ -972,7 +972,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                         </button>
                       </div>
                       <div>
-                        <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                        <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                           Title
                         </label>
                         <input
@@ -986,11 +986,11 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                             }
                           }}
                           placeholder="e.g. GitHub Profile"
-                          className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                          className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                         />
                       </div>
                       <div>
-                        <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                        <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                           URL
                         </label>
                         <input
@@ -1004,11 +1004,11 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                             }
                           }}
                           placeholder="https://..."
-                          className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                          className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                         />
                       </div>
                       <div>
-                        <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                        <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                           Description (optional)
                         </label>
                         <input
@@ -1022,7 +1022,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                             }
                           }}
                           placeholder="Brief description"
-                          className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                          className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -1034,7 +1034,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
         </div>
 
             {/* Footer */}
-            <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end">
+            <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800 flex justify-end">
               <button
                 onClick={handleSave}
                 disabled={isUpdating}
@@ -1062,9 +1062,9 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
             <div className="sticky top-6 space-y-4">
               {/* Resume Import (candidates only, not admin mode) */}
               {!isAdminMode && (
-                <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                  <h3 className="text-[13px] font-medium text-gray-700 mb-2">Quick Import</h3>
-                  <p className="text-[12px] text-gray-500 mb-3">
+                <div className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <h3 className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">Quick Import</h3>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400 mb-3">
                     Upload your resume to auto-fill your profile
                   </p>
                   <ResumeImportButton
@@ -1080,7 +1080,7 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
 
               {/* Assigned (admin mode only) */}
               {isAdminMode && (
-                <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                <div className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
                   <AssignedSelect
                     selected={assignedTo}
                     onChange={handleAssignedToChange}
@@ -1090,8 +1090,8 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
               )}
 
               {/* Profile Completeness */}
-              <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                <h3 className="text-[13px] font-medium text-gray-700 mb-3">Profile Completeness</h3>
+              <div className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <h3 className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-3">Profile Completeness</h3>
                 <div className="relative">
                   <div className="flex items-center justify-center">
                     <svg className="w-24 h-24 transform -rotate-90">
@@ -1114,12 +1114,12 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
                         strokeDasharray={`${(profile?.profile_completeness || 0) * 2.51} 251`}
                       />
                     </svg>
-                    <span className="absolute text-[20px] font-semibold text-gray-900">
+                    <span className="absolute text-[20px] font-semibold text-gray-900 dark:text-gray-100">
                       {profile?.profile_completeness || 0}%
                     </span>
                   </div>
                 </div>
-                <p className="text-[12px] text-gray-500 text-center mt-2">
+                <p className="text-[12px] text-gray-500 dark:text-gray-400 text-center mt-2">
                   {(profile?.profile_completeness || 0) < 50
                     ? 'Add more details to improve visibility'
                     : (profile?.profile_completeness || 0) < 80
@@ -1129,29 +1129,29 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
               </div>
 
               {/* Quick Tips */}
-              <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                <h3 className="text-[13px] font-medium text-gray-700 mb-3">Quick Tips</h3>
-                <ul className="space-y-2 text-[12px] text-gray-600">
+              <div className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <h3 className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-3">Quick Tips</h3>
+                <ul className="space-y-2 text-[12px] text-gray-600 dark:text-gray-400">
                   <li className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Add a professional title and headline
                   </li>
                   <li className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Include at least 3 work experiences
                   </li>
                   <li className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Select relevant industries
                   </li>
                   <li className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Set your profile to public when ready
@@ -1160,15 +1160,15 @@ export function CandidateProfile({ candidateSlug, onBack }: CandidateProfileProp
               </div>
 
               {/* Visibility Status */}
-              <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                <h3 className="text-[13px] font-medium text-gray-700 mb-2">Profile Status</h3>
+              <div className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <h3 className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">Profile Status</h3>
                 <div className="flex items-center gap-2">
                   <span
                     className={`w-2 h-2 rounded-full ${
                       formData.visibility === 'public_sanitised' ? 'bg-green-500' : 'bg-gray-300'
                     }`}
                   />
-                  <span className="text-[13px] text-gray-600">
+                  <span className="text-[13px] text-gray-600 dark:text-gray-400">
                     {formData.visibility === 'public_sanitised' ? 'Visible in directory' : 'Private'}
                   </span>
                 </div>

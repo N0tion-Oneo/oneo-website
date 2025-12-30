@@ -132,12 +132,12 @@ function MultiSelectDropdown({
         onClick={handleButtonClick}
         className={`relative flex items-center justify-center w-7 h-7 rounded-md border transition-colors cursor-pointer ${
           isActive
-            ? 'bg-gray-900 border-gray-900'
-            : 'bg-white border-gray-200 hover:border-gray-300'
+            ? 'bg-gray-900 dark:bg-gray-100 border-gray-900 dark:border-gray-100'
+            : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
         }`}
         title={title}
       >
-        <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-gray-400'}`} />
+        <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white dark:text-gray-900' : 'text-gray-400 dark:text-gray-500'}`} />
         {isActive && (
           <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 text-white text-[9px] font-medium rounded-full flex items-center justify-center">
             {selected.length}
@@ -150,21 +150,21 @@ function MultiSelectDropdown({
           <>
             <div className="fixed inset-0 z-[400]" onClick={() => setIsOpen(false)} />
             <div
-              className="fixed w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-[401] py-1 max-h-64 overflow-y-auto"
+              className="fixed w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 z-[401] py-1 max-h-64 overflow-y-auto"
               style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
             >
               {options.map((option) => (
                 <label
                   key={option.value}
-                  className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 cursor-pointer"
+                  className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
                 >
                   <input
                     type="checkbox"
                     checked={selected.includes(option.value)}
                     onChange={() => toggleOption(option.value)}
-                    className="w-3.5 h-3.5 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                    className="w-3.5 h-3.5 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500"
                   />
-                  <span className="text-[12px] text-gray-700">{option.label}</span>
+                  <span className="text-[12px] text-gray-700 dark:text-gray-300">{option.label}</span>
                 </label>
               ))}
               {selected.length > 0 && (
@@ -174,7 +174,7 @@ function MultiSelectDropdown({
                     onChange([])
                     setIsOpen(false)
                   }}
-                  className="w-full px-3 py-1.5 text-[11px] text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-left border-t border-gray-100 mt-1"
+                  className="w-full px-3 py-1.5 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-left border-t border-gray-100 dark:border-gray-800 mt-1"
                 >
                   Clear selection
                 </button>
@@ -310,11 +310,11 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100">
+      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-medium text-gray-900">
+          <h3 className="font-medium text-gray-900 dark:text-gray-100">
             Timeline
-            {count > 0 && <span className="ml-2 text-sm text-gray-500">({count})</span>}
+            {count > 0 && <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">({count})</span>}
           </h3>
           <div className="flex items-center gap-2">
             <button
@@ -323,7 +323,7 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
                 setShowAddNote(!showAddNote)
               }}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                showAddNote ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
+                showAddNote ? 'bg-blue-100 text-blue-700' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
               <MessageSquare className="w-4 h-4" />
@@ -335,7 +335,7 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
                 setShowLogCall(!showLogCall)
               }}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                showLogCall ? 'bg-green-100 text-green-700' : 'text-gray-600 hover:bg-gray-100'
+                showLogCall ? 'bg-green-100 text-green-700' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
               <Phone className="w-4 h-4" />
@@ -351,8 +351,8 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
             onClick={() => setFilters({ ...filters, hideViews: !filters.hideViews })}
             className={`flex-shrink-0 px-2 py-1 text-[11px] rounded-md border transition-colors whitespace-nowrap ${
               filters.hideViews
-                ? 'bg-gray-900 text-white border-gray-900'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
+                : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
             }`}
           >
             Hide views
@@ -361,15 +361,15 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
             onClick={() => setFilters({ ...filters, hasContentOnly: !filters.hasContentOnly })}
             className={`flex-shrink-0 px-2 py-1 text-[11px] rounded-md border transition-colors whitespace-nowrap ${
               filters.hasContentOnly
-                ? 'bg-gray-900 text-white border-gray-900'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
+                : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
             }`}
           >
             With notes
           </button>
 
           {/* Divider */}
-          <div className="flex-shrink-0 w-px h-5 bg-gray-200" />
+          <div className="flex-shrink-0 w-px h-5 bg-gray-200 dark:bg-gray-600" />
 
           {/* Source filter */}
           <MultiSelectDropdown
@@ -408,7 +408,7 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
           {activeFilterCount > 0 && (
             <button
               onClick={clearFilters}
-              className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+              className="flex-shrink-0 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
               title="Clear all filters"
             >
               <X className="w-3.5 h-3.5" />
@@ -420,7 +420,7 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
 
         {/* Filter results count */}
         {activeFilterCount > 0 && (
-          <p className="mt-2 text-[11px] text-gray-500">
+          <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
             Showing {filteredEntries.length} of {entries.length} entries
           </p>
         )}
@@ -428,12 +428,12 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
 
       {/* Add Note Form */}
       {showAddNote && (
-        <div className="px-4 py-3 border-b border-gray-100 bg-blue-50">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-blue-50 dark:bg-blue-900/30">
           <textarea
             value={noteContent}
             onChange={(e) => setNoteContent(e.target.value)}
             placeholder="Add a note..."
-            className="w-full p-3 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={3}
             autoFocus
           />
@@ -443,7 +443,7 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
                 setShowAddNote(false)
                 setNoteContent('')
               }}
-              className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+              className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
             </button>
@@ -461,27 +461,27 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
 
       {/* Log Call Form */}
       {showLogCall && (
-        <div className="px-4 py-3 border-b border-gray-100 bg-green-50">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-green-50 dark:bg-green-900/30">
           <div className="space-y-3">
             <textarea
               value={callNotes}
               onChange={(e) => setCallNotes(e.target.value)}
               placeholder="Call notes..."
-              className="w-full p-3 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
               rows={3}
               autoFocus
             />
             <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">Duration:</label>
+              <label className="text-sm text-gray-600 dark:text-gray-400">Duration:</label>
               <input
                 type="number"
                 value={callDuration}
                 onChange={(e) => setCallDuration(e.target.value)}
                 placeholder="minutes"
-                className="w-24 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-24 px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 min="1"
               />
-              <span className="text-sm text-gray-500">minutes</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">minutes</span>
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-3">
@@ -491,7 +491,7 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
                 setCallNotes('')
                 setCallDuration('')
               }}
-              className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+              className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
               Cancel
             </button>
@@ -511,7 +511,7 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
       <div className="flex-1 overflow-y-auto px-4">
         {isLoading && entries.length === 0 ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
           </div>
         ) : error ? (
           <div className="text-center py-8 text-red-600">{error}</div>
@@ -519,7 +519,7 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
           <div className="text-center py-8">
             {entries.length === 0 ? (
               <>
-                <p className="text-gray-500 text-sm">No activity yet</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">No activity yet</p>
                 <button
                   onClick={() => setShowAddNote(true)}
                   className="mt-2 text-sm text-blue-600 hover:text-blue-700"
@@ -529,7 +529,7 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
               </>
             ) : (
               <>
-                <p className="text-gray-500 text-sm">No entries match your filters</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">No entries match your filters</p>
                 <button onClick={clearFilters} className="mt-2 text-sm text-blue-600 hover:text-blue-700">
                   Clear filters
                 </button>
@@ -538,7 +538,7 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
           </div>
         ) : (
           <>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
               {filteredEntries.map((entry) => (
                 <TimelineEntry key={`${entry.source}-${entry.id}`} entry={entry} />
               ))}

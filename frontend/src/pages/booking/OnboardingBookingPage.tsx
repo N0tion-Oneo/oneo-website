@@ -146,7 +146,7 @@ export default function OnboardingBookingPage() {
   if (isLoading) {
     return (
       <div
-        className="fixed inset-0 flex items-center justify-center"
+        className="fixed inset-0 flex items-center justify-center dark:bg-gray-900"
         style={{ background: `linear-gradient(135deg, ${accentColor}15 0%, ${accentColor}05 100%)` }}
       >
         <div className="text-center">
@@ -156,7 +156,7 @@ export default function OnboardingBookingPage() {
           >
             <Sparkles className="w-8 h-8" style={{ color: accentColor }} />
           </div>
-          <p className="text-gray-600 font-medium">Loading your booking experience...</p>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">Loading your booking experience...</p>
         </div>
       </div>
     )
@@ -165,13 +165,13 @@ export default function OnboardingBookingPage() {
   // Error state
   if (error || !availability) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-red-600" />
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-500" />
           </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Unable to Load</h1>
-          <p className="text-gray-500">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Unable to Load</h1>
+          <p className="text-gray-500 dark:text-gray-400">
             {error || 'Could not load availability. Please try again later.'}
           </p>
         </div>
@@ -185,10 +185,10 @@ export default function OnboardingBookingPage() {
   if (step === 'success' && bookingResult) {
     return (
       <div
-        className="fixed inset-0 flex items-center justify-center p-4"
+        className="fixed inset-0 flex items-center justify-center p-4 dark:bg-gray-900"
         style={{ background: `linear-gradient(135deg, ${accentColor}20 0%, ${accentColor}05 50%, white 100%)` }}
       >
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-100 p-8 text-center relative overflow-hidden">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-gray-900/40 border border-gray-100 dark:border-gray-700 p-8 text-center relative overflow-hidden">
           {/* Decorative elements */}
           <div
             className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-30"
@@ -207,12 +207,12 @@ export default function OnboardingBookingPage() {
               <PartyPopper className="w-10 h-10" style={{ color: accentColor }} />
             </div>
 
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">You're all set!</h1>
-            <p className="text-gray-500 mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">You're all set!</h1>
+            <p className="text-gray-500 dark:text-gray-400 mb-8">
               We can't wait to meet you and start this exciting journey together.
             </p>
 
-            <div className="bg-gray-50 rounded-xl p-5 text-left space-y-4">
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-5 text-left space-y-4">
               <div className="flex items-center gap-4">
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -221,8 +221,8 @@ export default function OnboardingBookingPage() {
                   <Calendar className="w-5 h-5" style={{ color: accentColor }} />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Date</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">
                     {format(parseISO(bookingResult.scheduled_at), 'EEEE, MMMM d, yyyy')}
                   </p>
                 </div>
@@ -235,8 +235,8 @@ export default function OnboardingBookingPage() {
                   <Clock className="w-5 h-5" style={{ color: accentColor }} />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Time</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Time</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">
                     {format(parseISO(bookingResult.scheduled_at), 'h:mm a')} ({meeting_type.duration_minutes} min)
                   </p>
                 </div>
@@ -253,7 +253,7 @@ export default function OnboardingBookingPage() {
   }
 
   return (
-    <div className="fixed inset-0 flex bg-white">
+    <div className="fixed inset-0 flex bg-white dark:bg-gray-900">
       {/* Left Panel - Energetic & Exciting */}
       <div
         className="hidden lg:flex lg:w-[440px] xl:w-[500px] flex-col relative overflow-hidden"
@@ -360,7 +360,7 @@ export default function OnboardingBookingPage() {
       </div>
 
       {/* Right Panel - Booking Form */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden bg-gray-50">
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-800">
         {/* Mobile Header */}
         <div
           className="lg:hidden flex-shrink-0 px-4 py-5"
@@ -390,10 +390,10 @@ export default function OnboardingBookingPage() {
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
             {step === 'slots' && (
               <>
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Pick a time that works</h2>
-                <p className="text-gray-500 mb-6">Choose a slot for your {meeting_type.duration_minutes}-minute onboarding call.</p>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Pick a time that works</h2>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">Choose a slot for your {meeting_type.duration_minutes}-minute onboarding call.</p>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-6">
                   <SlotPicker
                     slots={availability.available_slots}
                     selected={selectedSlot}
@@ -402,7 +402,7 @@ export default function OnboardingBookingPage() {
                     timezone={availability.timezone}
                   />
 
-                  <div className="mt-6 pt-6 border-t border-gray-100">
+                  <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
                     <button
                       type="button"
                       onClick={() => setStep('form')}
@@ -415,7 +415,7 @@ export default function OnboardingBookingPage() {
                   </div>
 
                   {selectedSlot && (
-                    <p className="text-center text-sm text-gray-500 mt-4">
+                    <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
                       {format(parseISO(selectedSlot), 'EEEE, MMMM d')} at{' '}
                       {format(parseISO(selectedSlot), 'h:mm a')}
                     </p>
@@ -428,8 +428,8 @@ export default function OnboardingBookingPage() {
               <>
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Confirm your details</h2>
-                    <p className="text-gray-500 text-sm mt-1">We'll send confirmation to this email.</p>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Confirm your details</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">We'll send confirmation to this email.</p>
                   </div>
                   <button
                     type="button"
@@ -454,19 +454,19 @@ export default function OnboardingBookingPage() {
                       <Calendar className="w-6 h-6" style={{ color: accentColor }} />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">
                         {format(parseISO(selectedSlot), 'EEEE, MMMM d, yyyy')}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {format(parseISO(selectedSlot), 'h:mm a')} · {meeting_type.duration_minutes} min
                       </p>
                     </div>
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
+                <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-6 space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Your name
                     </label>
                     <input
@@ -475,14 +475,14 @@ export default function OnboardingBookingPage() {
                       value={formData.attendee_name}
                       onChange={handleFormChange}
                       required
-                      className="w-full px-4 py-3 text-[15px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent"
+                      className="w-full px-4 py-3 text-[15px] border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent"
                       style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
                       placeholder="John Smith"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Email address
                     </label>
                     <input
@@ -491,14 +491,14 @@ export default function OnboardingBookingPage() {
                       value={formData.attendee_email}
                       onChange={handleFormChange}
                       required
-                      className="w-full px-4 py-3 text-[15px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent"
+                      className="w-full px-4 py-3 text-[15px] border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent"
                       style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
                       placeholder="john@company.com"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Phone number
                     </label>
                     <input
@@ -507,16 +507,16 @@ export default function OnboardingBookingPage() {
                       value={formData.attendee_phone}
                       onChange={handleFormChange}
                       required
-                      className="w-full px-4 py-3 text-[15px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent"
+                      className="w-full px-4 py-3 text-[15px] border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent"
                       style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
                       placeholder="+27 XX XXX XXXX"
                     />
                   </div>
 
                   {createError && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-red-700">{createError}</span>
+                      <span className="text-sm text-red-700 dark:text-red-400">{createError}</span>
                     </div>
                   )}
 

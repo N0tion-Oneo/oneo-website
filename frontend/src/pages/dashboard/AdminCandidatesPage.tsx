@@ -91,9 +91,9 @@ const getWorkPreferenceLabel = (pref: WorkPreference | ''): string => {
 
 const getVisibilityBadge = (visibility: ProfileVisibility) => {
   if (visibility === ProfileVisibility.PUBLIC_SANITISED) {
-    return { bg: 'bg-green-100', text: 'text-green-700', label: 'Public' }
+    return { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-300', label: 'Public' }
   }
-  return { bg: 'bg-gray-100', text: 'text-gray-500', label: 'Private' }
+  return { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-500 dark:text-gray-400', label: 'Private' }
 }
 
 const formatDate = (dateString: string) => {
@@ -321,7 +321,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
               type="checkbox"
               checked={table.getIsAllPageRowsSelected()}
               onChange={table.getToggleAllPageRowsSelectedHandler()}
-              className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:focus:ring-gray-400"
             />
           ),
           cell: ({ row }) => (
@@ -330,7 +330,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                 type="checkbox"
                 checked={row.getIsSelected()}
                 onChange={row.getToggleSelectedHandler()}
-                className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:focus:ring-gray-400"
               />
             </div>
           ),
@@ -371,16 +371,16 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
             const candidate = row.original
             return (
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                  <span className="text-[11px] font-medium text-gray-600">
+                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400">
                     {candidate.initials || '--'}
                   </span>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[13px] font-medium text-gray-900 truncate">
+                  <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
                     {candidate.full_name || 'No name'}
                   </p>
-                  <p className="text-[11px] text-gray-500 truncate">
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
                     {candidate.email}
                   </p>
                 </div>
@@ -392,14 +392,14 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         header: 'Phone',
         size: 120,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600">{getValue() || '-'}</span>
+          <span className="text-[12px] text-gray-600 dark:text-gray-400">{getValue() || '-'}</span>
         ),
       }),
       columnHelper.accessor('professional_title', {
         header: 'Title',
         size: 180,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-900 truncate block max-w-[160px]">
+          <span className="text-[12px] text-gray-900 dark:text-gray-100 truncate block max-w-[160px]">
             {getValue() || '-'}
           </span>
         ),
@@ -408,7 +408,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         header: 'Headline',
         size: 200,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600 truncate block max-w-[180px]" title={getValue()}>
+          <span className="text-[12px] text-gray-600 dark:text-gray-400 truncate block max-w-[180px]" title={getValue()}>
             {getValue() || '-'}
           </span>
         ),
@@ -417,7 +417,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         header: 'Seniority',
         size: 100,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600">{getSeniorityLabel(getValue())}</span>
+          <span className="text-[12px] text-gray-600 dark:text-gray-400">{getSeniorityLabel(getValue())}</span>
         ),
       }),
       columnHelper.accessor('years_of_experience', {
@@ -425,7 +425,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         size: 120,
         enableSorting: true,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600">
+          <span className="text-[12px] text-gray-600 dark:text-gray-400">
             {getValue() || '-'}
           </span>
         ),
@@ -437,7 +437,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           const { city, country, location } = row.original
           const display = location || [city, country].filter(Boolean).join(', ') || '-'
           return (
-            <span className="text-[12px] text-gray-600 truncate block max-w-[130px]" title={display}>
+            <span className="text-[12px] text-gray-600 dark:text-gray-400 truncate block max-w-[130px]" title={display}>
               {display}
             </span>
           )
@@ -447,14 +447,14 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         header: 'Work Pref',
         size: 100,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600">{getWorkPreferenceLabel(getValue())}</span>
+          <span className="text-[12px] text-gray-600 dark:text-gray-400">{getWorkPreferenceLabel(getValue())}</span>
         ),
       }),
       columnHelper.accessor('willing_to_relocate', {
         header: 'Relocate',
         size: 80,
         cell: ({ getValue }) => (
-          <span className={`text-[11px] ${getValue() ? 'text-green-600' : 'text-gray-400'}`}>
+          <span className={`text-[11px] ${getValue() ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
             {getValue() ? 'Yes' : 'No'}
           </span>
         ),
@@ -465,7 +465,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         cell: ({ getValue }) => {
           const locs = getValue() || []
           return (
-            <span className="text-[12px] text-gray-600 truncate block max-w-[130px]" title={locs.join(', ')}>
+            <span className="text-[12px] text-gray-600 dark:text-gray-400 truncate block max-w-[130px]" title={locs.join(', ')}>
               {locs.length > 0 ? locs.join(', ') : '-'}
             </span>
           )
@@ -478,7 +478,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           header: 'Salary Exp.',
           size: 130,
           cell: ({ getValue }) => (
-            <span className="text-[12px] text-gray-600">{getValue()}</span>
+            <span className="text-[12px] text-gray-600 dark:text-gray-400">{getValue()}</span>
           ),
         }
       ),
@@ -486,7 +486,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         header: 'Notice',
         size: 80,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600">
+          <span className="text-[12px] text-gray-600 dark:text-gray-400">
             {getValue() !== null ? `${getValue()}d` : '-'}
           </span>
         ),
@@ -496,9 +496,9 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         size: 70,
         cell: ({ getValue }) => (
           getValue() ? (
-            <FileText className="w-4 h-4 text-green-600" />
+            <FileText className="w-4 h-4 text-green-600 dark:text-green-400" />
           ) : (
-            <span className="text-[11px] text-gray-400">-</span>
+            <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
           )
         ),
       }),
@@ -507,16 +507,16 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         size: 180,
         cell: ({ getValue }) => {
           const industries = getValue() || []
-          if (industries.length === 0) return <span className="text-[11px] text-gray-400">-</span>
+          if (industries.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
           return (
             <div className="flex flex-wrap gap-1 max-w-[160px]">
               {industries.slice(0, 2).map((ind: { id: number; name: string }) => (
-                <span key={ind.id} className="px-1.5 py-0.5 text-[10px] bg-blue-50 text-blue-600 rounded">
+                <span key={ind.id} className="px-1.5 py-0.5 text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded">
                   {ind.name}
                 </span>
               ))}
               {industries.length > 2 && (
-                <span className="text-[10px] text-gray-500">+{industries.length - 2}</span>
+                <span className="text-[10px] text-gray-500 dark:text-gray-400">+{industries.length - 2}</span>
               )}
             </div>
           )
@@ -526,7 +526,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
       columnHelper.group({
         id: 'experience',
         header: () => (
-          <span className="text-[11px] font-semibold text-gray-700 uppercase tracking-wider">
+          <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
             Experience
           </span>
         ),
@@ -537,27 +537,27 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
             size: 280,
             cell: ({ getValue }) => {
               const experiences = getValue() || []
-              if (experiences.length === 0) return <span className="text-[11px] text-gray-400">-</span>
+              if (experiences.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
               return (
                 <div className="py-0.5 space-y-1.5 max-h-[120px] overflow-y-auto">
                   {experiences.map((exp: ExperienceListItem) => {
                     const duration = calculateDuration(exp.start_date, exp.end_date, exp.is_current)
                     return (
                       <div key={exp.id} className="flex items-start gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-gray-300 mt-1.5 flex-shrink-0" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600 mt-1.5 flex-shrink-0" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] font-medium text-gray-900 truncate">
+                            <span className="text-[11px] font-medium text-gray-900 dark:text-gray-100 truncate">
                               {exp.job_title}
                             </span>
                             {exp.is_current && (
-                              <span className="px-1 py-0.5 text-[8px] font-medium bg-green-100 text-green-700 rounded flex-shrink-0">
+                              <span className="px-1 py-0.5 text-[8px] font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded flex-shrink-0">
                                 Current
                               </span>
                             )}
-                            <span className="text-[10px] text-gray-400 flex-shrink-0">({duration})</span>
+                            <span className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0">({duration})</span>
                           </div>
-                          <p className="text-[10px] text-gray-500 truncate">{exp.company_name}</p>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">{exp.company_name}</p>
                         </div>
                       </div>
                     )
@@ -583,7 +583,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
               size: 90,
               cell: ({ getValue }) => {
                 const data = getValue()
-                if (!data) return <span className="text-[11px] text-gray-400">-</span>
+                if (!data) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
                 const years = Math.floor(data.totalMonths / 12)
                 const months = data.totalMonths % 12
                 const duration = years > 0
@@ -591,9 +591,9 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                   : `${months}mo`
                 return (
                   <div className="text-center">
-                    <p className="text-[12px] font-medium text-gray-900">{duration}</p>
+                    <p className="text-[12px] font-medium text-gray-900 dark:text-gray-100">{duration}</p>
                     {data.count > 1 && (
-                      <p className="text-[10px] text-gray-500">{data.count} roles</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{data.count} roles</p>
                     )}
                   </div>
                 )
@@ -608,7 +608,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
               size: 400,
               cell: ({ getValue }) => {
                 const techs = getValue()
-                if (techs.length === 0) return <span className="text-[11px] text-gray-400">-</span>
+                if (techs.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
                 return (
                   <div className="flex flex-wrap gap-1">
                     {techs.map(tech => (
@@ -617,7 +617,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                         className={`group/tooltip relative px-1.5 py-0.5 text-[10px] rounded cursor-default ${getProficiencyStyle(tech.totalMonths, 'tech')}`}
                       >
                         {tech.name}
-                        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-[10px] text-white bg-gray-900 rounded shadow-lg whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[9999]">
+                        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-[10px] text-white bg-gray-900 dark:bg-gray-700 rounded shadow-lg dark:shadow-gray-900/40 whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[9999]">
                           {tech.count} role{tech.count > 1 ? 's' : ''} • {formatTotalDuration(tech.totalMonths)} total
                         </span>
                       </span>
@@ -635,7 +635,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
               size: 400,
               cell: ({ getValue }) => {
                 const skills = getValue()
-                if (skills.length === 0) return <span className="text-[11px] text-gray-400">-</span>
+                if (skills.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
                 return (
                   <div className="flex flex-wrap gap-1">
                     {skills.map(skill => (
@@ -644,7 +644,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                         className={`group/tooltip relative px-1.5 py-0.5 text-[10px] rounded cursor-default ${getProficiencyStyle(skill.totalMonths, 'skill')}`}
                       >
                         {skill.name}
-                        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-[10px] text-white bg-gray-900 rounded shadow-lg whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[9999]">
+                        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-[10px] text-white bg-gray-900 dark:bg-gray-700 rounded shadow-lg dark:shadow-gray-900/40 whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[9999]">
                           {skill.count} role{skill.count > 1 ? 's' : ''} • {formatTotalDuration(skill.totalMonths)} total
                         </span>
                       </span>
@@ -661,7 +661,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         size: 280,
         cell: ({ getValue }) => {
           const education = getValue() || []
-          if (education.length === 0) return <span className="text-[11px] text-gray-400">-</span>
+          if (education.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
           const latest = education[0]
           const display = latest.field_of_study
             ? `${latest.degree} in ${latest.field_of_study}`
@@ -670,25 +670,25 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           return (
             <div className="py-1">
               <div className="flex items-start gap-2">
-                <div className="w-7 h-7 rounded bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <GraduationCap className="w-3.5 h-3.5 text-gray-500" />
+                <div className="w-7 h-7 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <GraduationCap className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] font-medium text-gray-900 truncate" title={display}>
+                    <span className="text-[12px] font-medium text-gray-900 dark:text-gray-100 truncate" title={display}>
                       {display}
                     </span>
                     {latest.is_current && (
-                      <span className="px-1.5 py-0.5 text-[9px] font-medium bg-green-100 text-green-700 rounded flex-shrink-0">
+                      <span className="px-1.5 py-0.5 text-[9px] font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded flex-shrink-0">
                         Current
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+                  <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
                     <span className="truncate">{latest.institution}</span>
                     {latest.grade && (
                       <>
-                        <span className="text-gray-300">·</span>
+                        <span className="text-gray-300 dark:text-gray-600">·</span>
                         <span className="flex-shrink-0">{latest.grade}</span>
                       </>
                     )}
@@ -696,7 +696,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                 </div>
               </div>
               {education.length > 1 && (
-                <div className="mt-1 ml-9 text-[10px] text-gray-500">
+                <div className="mt-1 ml-9 text-[10px] text-gray-500 dark:text-gray-400">
                   +{education.length - 1} more
                 </div>
               )}
@@ -712,7 +712,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           const completeness = getValue()
           return (
             <div className="flex items-center gap-2">
-              <div className="w-10 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div className="w-10 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full ${
                     completeness >= 70
@@ -724,7 +724,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                   style={{ width: `${completeness}%` }}
                 />
               </div>
-              <span className="text-[11px] text-gray-500 w-7">{completeness}%</span>
+              <span className="text-[11px] text-gray-500 dark:text-gray-400 w-7">{completeness}%</span>
             </div>
           )
         },
@@ -734,14 +734,14 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         size: 100,
         enableSorting: true,
         cell: ({ getValue }) => (
-          <span className="text-[11px] text-gray-500">{formatDate(getValue())}</span>
+          <span className="text-[11px] text-gray-500 dark:text-gray-400">{formatDate(getValue())}</span>
         ),
       }),
       columnHelper.accessor('updated_at', {
         header: 'Updated',
         size: 100,
         cell: ({ getValue }) => (
-          <span className="text-[11px] text-gray-500">{formatDate(getValue())}</span>
+          <span className="text-[11px] text-gray-500 dark:text-gray-400">{formatDate(getValue())}</span>
         ),
       }),
       // PINNED RIGHT: Actions
@@ -765,7 +765,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                     setOpenActionsMenu(candidate.id)
                   }
                 }}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded"
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
@@ -779,13 +779,13 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                     }}
                   />
                   <div
-                    className="fixed w-48 bg-white border border-gray-200 rounded-md shadow-lg z-[9999]"
+                    className="fixed w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg dark:shadow-gray-900/40 z-[9999]"
                     style={{ top: menuPosition.top, left: menuPosition.left }}
                   >
                     <div className="py-1">
                       <Link
                         to={`/dashboard/admin/candidates/${candidate.slug}`}
-                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         onClick={() => {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
@@ -796,7 +796,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                       </Link>
                       <Link
                         to={`/candidates/${candidate.slug}`}
-                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         onClick={() => {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
@@ -807,7 +807,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                       </Link>
                       <a
                         href={`mailto:${candidate.email}`}
-                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         onClick={() => {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
@@ -883,10 +883,10 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
   // Early returns - MUST be after all hooks
   if (!isClientMode && (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role))) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-300 dark:text-red-400 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to view this page.
         </p>
       </div>
@@ -896,17 +896,17 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
   if (isClientMode && companyLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-[14px] text-gray-500">Loading...</p>
+        <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading...</p>
       </div>
     )
   }
 
   if (isClientMode && !company) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">No Company Profile</p>
-        <p className="text-[13px] text-gray-500">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">No Company Profile</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You need to be associated with a company to view candidates.
         </p>
       </div>
@@ -917,18 +917,18 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
   if (isFeatureLocked) {
     return (
       <div className="p-6">
-        <div className="bg-white border border-gray-200 rounded-lg p-12 text-center max-w-xl mx-auto">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Lock className="w-8 h-8 text-gray-400" />
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center max-w-xl mx-auto">
+          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-8 h-8 text-gray-400 dark:text-gray-500" />
           </div>
-          <h2 className="text-[18px] font-semibold text-gray-900 mb-2">
+          <h2 className="text-[18px] font-semibold text-gray-900 dark:text-gray-100 mb-2">
             Talent Directory Access Required
           </h2>
-          <p className="text-[14px] text-gray-500 max-w-md mx-auto mb-6">
+          <p className="text-[14px] text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
             The Talent Directory feature allows you to browse and discover pre-vetted candidates
             from our talent pool. This feature is included in the Retained service plan.
           </p>
-          <p className="text-[13px] text-gray-400">
+          <p className="text-[13px] text-gray-400 dark:text-gray-500">
             Contact your account manager to upgrade your plan and unlock this feature.
           </p>
         </div>
@@ -941,10 +941,10 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">
+          <h1 className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">
             {isClientMode ? 'Candidates' : 'All Candidates'}
           </h1>
-          <p className="text-[13px] text-gray-500 mt-0.5">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
             {count} candidate{count !== 1 ? 's' : ''} found
           </p>
         </div>
@@ -959,11 +959,11 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           {/* Export */}
           <CandidateExportMenu filters={filters} totalCount={count} />
           {/* View Toggle */}
-          <div className="flex border border-gray-200 rounded-md overflow-hidden">
+          <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
             <button
               onClick={() => setViewMode('table')}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] transition-colors ${
-                viewMode === 'table' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'
+                viewMode === 'table' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
               title="Table view"
             >
@@ -971,8 +971,8 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
             </button>
             <button
               onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] border-l border-gray-200 transition-colors ${
-                viewMode === 'kanban' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] border-l border-gray-200 dark:border-gray-700 transition-colors ${
+                viewMode === 'kanban' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
               title="Kanban view"
             >
@@ -981,11 +981,11 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           </div>
           {/* Page Size Selector */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[12px] text-gray-500">Show:</span>
+            <span className="text-[12px] text-gray-500 dark:text-gray-400">Show:</span>
             <select
               value={pageSize}
               onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-              className="px-2 py-1 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+              className="px-2 py-1 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
             >
               {PAGE_SIZE_OPTIONS.map(size => (
                 <option key={size} value={size}>{size}</option>
@@ -996,13 +996,13 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-3 py-1.5 text-[13px] border rounded-md transition-colors ${
-              showFilters ? 'border-gray-300 bg-gray-50 text-gray-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+              showFilters ? 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             Filters
             {activeFilterCount > 0 && (
-              <span className="bg-gray-900 text-white text-[11px] px-1.5 py-0.5 rounded-full">
+              <span className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[11px] px-1.5 py-0.5 rounded-full">
                 {activeFilterCount}
               </span>
             )}
@@ -1028,12 +1028,12 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           {/* Active Filters Count */}
           {activeFilterCount > 0 && (
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-[12px] text-gray-500">
+              <span className="text-[12px] text-gray-500 dark:text-gray-400">
                 {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''} applied
               </span>
               <button
                 onClick={handleClearFilters}
-                className="text-[12px] text-gray-500 hover:text-gray-700 underline"
+                className="text-[12px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline"
               >
                 Clear all
               </button>
@@ -1050,29 +1050,29 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           {/* Loading State */}
           {isLoading && (
             <div className="text-center py-12">
-              <p className="text-[14px] text-gray-500">Loading candidates...</p>
+              <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading candidates...</p>
             </div>
           )}
 
           {/* Error State */}
           {error && (
             <div className="text-center py-12">
-              <p className="text-[14px] text-red-500">{error}</p>
+              <p className="text-[14px] text-red-500 dark:text-red-400">{error}</p>
             </div>
           )}
 
           {/* Empty State */}
           {!isLoading && !error && candidates.length === 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-              <User className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-[15px] text-gray-700 mb-1">No candidates found</p>
-              <p className="text-[13px] text-gray-500">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+              <User className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No candidates found</p>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
                 {activeFilterCount > 0 ? 'Try adjusting your filters' : 'No candidates have registered yet'}
               </p>
               {activeFilterCount > 0 && (
                 <button
                   onClick={handleClearFilters}
-                  className="mt-4 text-[13px] text-gray-600 hover:text-gray-900 underline"
+                  className="mt-4 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
                 >
                   Clear all filters
                 </button>
@@ -1091,17 +1091,17 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
 
           {/* Table View */}
           {!isLoading && !error && localCandidates.length > 0 && viewMode === 'table' && (
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-max border-collapse">
                   <thead>
                     {table.getHeaderGroups().map((headerGroup, groupIndex) => (
                       <tr
                         key={headerGroup.id}
-                        className={`border-b border-gray-200 ${
+                        className={`border-b border-gray-200 dark:border-gray-700 ${
                           groupIndex === 0 && table.getHeaderGroups().length > 1
-                            ? 'bg-gray-100'
-                            : 'bg-gray-50'
+                            ? 'bg-gray-100 dark:bg-gray-700'
+                            : 'bg-gray-50 dark:bg-gray-800'
                         }`}
                       >
                         {headerGroup.headers.map(header => {
@@ -1114,9 +1114,9 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                               colSpan={header.colSpan}
                               className={`px-3 text-left text-[11px] font-medium uppercase tracking-wider whitespace-nowrap relative group ${
                                 isGroupHeader
-                                  ? 'py-1.5 text-gray-700 bg-gray-100 border-b border-gray-200 text-center'
-                                  : 'py-2.5 text-gray-500'
-                              } ${isPinnedLeft ? 'sticky z-20 bg-gray-50' : ''} ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50' : ''}`}
+                                  ? 'py-1.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 text-center'
+                                  : 'py-2.5 text-gray-500 dark:text-gray-400'
+                              } ${isPinnedLeft ? 'sticky z-20 bg-gray-50 dark:bg-gray-800' : ''} ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50 dark:bg-gray-800' : ''}`}
                               style={{
                                 width: header.colSpan === 1 ? header.getSize() : undefined,
                                 left: header.id === 'select' ? 0 : header.id === 'full_name' ? 40 : undefined,
@@ -1127,7 +1127,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                                   className={`flex items-center gap-1 ${
                                     isGroupHeader ? 'justify-center' : ''
                                   } ${
-                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700' : ''
+                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300' : ''
                                   }`}
                                   onClick={header.column.getToggleSortingHandler()}
                                 >
@@ -1152,7 +1152,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                                   className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none ${
                                     header.column.getIsResizing()
                                       ? 'bg-blue-500'
-                                      : 'bg-transparent hover:bg-gray-300'
+                                      : 'bg-transparent hover:bg-gray-300 dark:hover:bg-gray-600'
                                   }`}
                                 />
                               )}
@@ -1162,11 +1162,11 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                       </tr>
                     ))}
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {table.getRowModel().rows.map(row => (
                       <tr
                         key={row.id}
-                        className="hover:bg-gray-50 cursor-pointer"
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                         onClick={() => {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
@@ -1180,7 +1180,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                           return (
                             <td
                               key={cell.id}
-                              className={`px-3 py-2.5 whitespace-nowrap ${isPinnedLeft ? 'sticky z-10 bg-white' : ''} ${isPinnedRight ? 'sticky right-0 z-[100] bg-white' : ''}`}
+                              className={`px-3 py-2.5 whitespace-nowrap ${isPinnedLeft ? 'sticky z-10 bg-white dark:bg-gray-800' : ''} ${isPinnedRight ? 'sticky right-0 z-[100] bg-white dark:bg-gray-800' : ''}`}
                               style={{
                                 width: cell.column.getSize(),
                                 left: colId === 'select' ? 0 : colId === 'full_name' ? 40 : undefined,
@@ -1201,14 +1201,14 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           {/* Pagination (Table View Only) */}
           {!isLoading && !error && totalPages > 1 && viewMode === 'table' && (
             <div className="flex items-center justify-between mt-4">
-              <p className="text-[13px] text-gray-500">
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
                 Page {page} of {totalPages} ({count} total)
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={!hasPrevious}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Previous
@@ -1216,7 +1216,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={!hasNext}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                   <ChevronRight className="w-4 h-4" />
@@ -1241,9 +1241,9 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
 // Filter Chip Component
 function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-1 text-[12px] bg-gray-100 text-gray-700 rounded-md">
+    <span className="inline-flex items-center gap-1 px-2 py-1 text-[12px] bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md">
       {label}
-      <button onClick={onRemove} className="hover:text-gray-900">
+      <button onClick={onRemove} className="hover:text-gray-900 dark:hover:text-gray-100">
         <X className="w-3 h-3" />
       </button>
     </span>

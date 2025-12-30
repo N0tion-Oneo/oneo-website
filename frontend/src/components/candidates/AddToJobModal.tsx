@@ -167,38 +167,38 @@ export default function AddToJobModal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 z-[300]"
+        className="fixed inset-0 bg-black/40 dark:bg-black/70 z-[300]"
         onClick={onClose}
       />
 
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center z-[301] p-4">
-        <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl dark:shadow-gray-900/50 w-full max-w-lg max-h-[80vh] flex flex-col">
           {/* Header */}
-          <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <div>
-              <h2 className="text-[16px] font-semibold text-gray-900">Add to Job</h2>
-              <p className="text-[13px] text-gray-500 mt-0.5">
+              <h2 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100">Add to Job</h2>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
                 Add {candidateName} to a job pipeline
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="px-5 pt-3 border-b border-gray-100">
+          <div className="px-5 pt-3 border-b border-gray-100 dark:border-gray-800">
             <div className="flex gap-1">
               <button
                 onClick={() => setActiveTab('open')}
                 className={`px-4 py-2 text-[13px] font-medium rounded-t-lg transition-colors ${
                   activeTab === 'open'
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
                 Open Jobs ({openJobs.length})
@@ -207,8 +207,8 @@ export default function AddToJobModal({
                 onClick={() => setActiveTab('applied')}
                 className={`px-4 py-2 text-[13px] font-medium rounded-t-lg transition-colors ${
                   activeTab === 'applied'
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
                 Already Applied ({appliedJobs.length})
@@ -217,7 +217,7 @@ export default function AddToJobModal({
           </div>
 
           {/* Search */}
-          <div className="px-5 py-3 border-b border-gray-100">
+          <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -225,7 +225,7 @@ export default function AddToJobModal({
                 placeholder="Search jobs..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-[14px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300"
+                className="w-full pl-9 pr-4 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-gray-100/10 focus:border-gray-300 dark:focus:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
           </div>
@@ -238,8 +238,8 @@ export default function AddToJobModal({
               </div>
             ) : filteredJobs.length === 0 ? (
               <div className="text-center py-8">
-                <Briefcase className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-[13px] text-gray-500">
+                <Briefcase className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                <p className="text-[13px] text-gray-500 dark:text-gray-400">
                   {searchQuery
                     ? 'No jobs match your search'
                     : activeTab === 'open'
@@ -262,10 +262,10 @@ export default function AddToJobModal({
                       disabled={!isSelectable}
                       className={`w-full text-left p-3 rounded-lg transition-colors ${
                         isApplied
-                          ? 'bg-gray-50 cursor-default'
+                          ? 'bg-gray-50 dark:bg-gray-800 cursor-default'
                           : selectedJobId === job.id
-                            ? 'bg-gray-900 text-white'
-                            : 'bg-white hover:bg-gray-50 border border-gray-200'
+                            ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
+                            : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700'
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -277,7 +277,7 @@ export default function AddToJobModal({
                           />
                         ) : (
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                            selectedJobId === job.id && !isApplied ? 'bg-gray-700' : 'bg-gray-100'
+                            selectedJobId === job.id && !isApplied ? 'bg-gray-700 dark:bg-gray-300' : 'bg-gray-100 dark:bg-gray-700'
                           }`}>
                             <Building2 className="w-5 h-5 text-gray-400" />
                           </div>
@@ -285,33 +285,33 @@ export default function AddToJobModal({
                         <div className="flex-1 min-w-0">
                           <p className={`text-[14px] font-medium truncate ${
                             isApplied
-                              ? 'text-gray-700'
+                              ? 'text-gray-700 dark:text-gray-300'
                               : selectedJobId === job.id
-                                ? 'text-white'
-                                : 'text-gray-900'
+                                ? 'text-white dark:text-gray-900'
+                                : 'text-gray-900 dark:text-gray-100'
                           }`}>
                             {job.title}
                           </p>
                           <p className={`text-[12px] truncate ${
                             isApplied
-                              ? 'text-gray-500'
+                              ? 'text-gray-500 dark:text-gray-400'
                               : selectedJobId === job.id
-                                ? 'text-gray-300'
-                                : 'text-gray-500'
+                                ? 'text-gray-300 dark:text-gray-600'
+                                : 'text-gray-500 dark:text-gray-400'
                           }`}>
                             {job.company_name}
                             {job.location && ` · ${job.location}`}
                           </p>
                           {/* Show application status for applied jobs */}
                           {isApplied && applicationStatus && (
-                            <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 text-[11px] font-medium bg-gray-200 text-gray-600 rounded-full">
+                            <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 text-[11px] font-medium bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full">
                               <CheckCircle2 className="w-3 h-3" />
                               {getStatusLabel(applicationStatus)}
                             </span>
                           )}
                         </div>
                         {!isApplied && selectedJobId === job.id && (
-                          <Check className="w-5 h-5 text-white flex-shrink-0" />
+                          <Check className="w-5 h-5 text-white dark:text-gray-900 flex-shrink-0" />
                         )}
                       </div>
                     </button>
@@ -323,23 +323,23 @@ export default function AddToJobModal({
 
           {/* Error */}
           {error && (
-            <div className="px-5 py-2 bg-red-50 border-t border-red-100">
-              <p className="text-[13px] text-red-600">{error}</p>
+            <div className="px-5 py-2 bg-red-50 dark:bg-red-900/20 border-t border-red-100 dark:border-red-800">
+              <p className="text-[13px] text-red-600 dark:text-red-400">{error}</p>
             </div>
           )}
 
           {/* Footer */}
-          <div className="px-5 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
+          <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-[14px] font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-[14px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={!selectedJobId || isSubmitting || activeTab === 'applied'}
-              className="px-4 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className="px-4 py-2 text-[14px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               {isSubmitting ? 'Adding...' : 'Add to Job'}

@@ -281,10 +281,10 @@ export default function CMSFAQsPage() {
   // Access check
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to manage FAQs.
         </p>
       </div>
@@ -296,15 +296,15 @@ export default function CMSFAQsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">FAQs</h1>
-          <p className="text-[13px] text-gray-500 mt-0.5">
+          <h1 className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">FAQs</h1>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
             Manage frequently asked questions
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowNewCategory(true)}
-            className="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             <Folder className="w-4 h-4" />
             New Category
@@ -316,7 +316,7 @@ export default function CMSFAQsPage() {
               setEditorInitialContent(defaultContent)
               setEditorKey((k) => k + 1)
             }}
-            className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
           >
             <Plus className="w-4 h-4" />
             New FAQ
@@ -327,8 +327,8 @@ export default function CMSFAQsPage() {
       <div className="flex gap-6">
         {/* Categories Sidebar */}
         <div className="w-64 flex-shrink-0">
-          <div className="bg-white border border-gray-200 rounded-lg p-3">
-            <h3 className="text-[12px] font-medium text-gray-500 uppercase tracking-wider mb-3">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+            <h3 className="text-[12px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
               Categories
             </h3>
             <div className="space-y-1">
@@ -336,8 +336,8 @@ export default function CMSFAQsPage() {
                 onClick={() => setSelectedCategory(null)}
                 className={`w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-md transition-colors ${
                   selectedCategory === null
-                    ? 'bg-gray-100 text-gray-900 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
               >
                 <span>All FAQs</span>
@@ -349,8 +349,8 @@ export default function CMSFAQsPage() {
                     onClick={() => setSelectedCategory(category.id)}
                     className={`w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-md transition-colors ${
                       selectedCategory === category.id
-                        ? 'bg-gray-100 text-gray-900 font-medium'
-                        : 'text-gray-600 hover:bg-gray-50'
+                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                     }`}
                   >
                     <span className="truncate">{category.name}</span>
@@ -362,7 +362,7 @@ export default function CMSFAQsPage() {
                         e.stopPropagation()
                         handleEditCategory(category)
                       }}
-                      className="p-1 text-gray-400 hover:text-gray-600"
+                      className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
                       <Pencil className="w-3 h-3" />
                     </button>
@@ -392,15 +392,15 @@ export default function CMSFAQsPage() {
               placeholder="Search FAQs..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+              className="w-full pl-10 pr-4 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
             />
           </div>
 
           {/* New FAQ Form */}
           {(showNewFAQ || editingFAQ) && (
-            <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[14px] font-medium text-gray-900">
+                <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100">
                   {editingFAQ ? 'Edit FAQ' : 'New FAQ'}
                 </h3>
                 <button
@@ -410,7 +410,7 @@ export default function CMSFAQsPage() {
                     }
                     resetFAQForm()
                   }}
-                  className="p-1 text-gray-400 hover:text-gray-600"
+                  className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -418,7 +418,7 @@ export default function CMSFAQsPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Question *
                   </label>
                   <input
@@ -426,12 +426,12 @@ export default function CMSFAQsPage() {
                     value={faqForm.question}
                     onChange={(e) => setFaqForm({ ...faqForm, question: e.target.value })}
                     placeholder="What is your question?"
-                    className="w-full px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Answer
                   </label>
                   <BlockEditor
@@ -446,13 +446,13 @@ export default function CMSFAQsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                    <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Category
                     </label>
                     <select
                       value={faqForm.category || ''}
                       onChange={(e) => setFaqForm({ ...faqForm, category: e.target.value || null })}
-                      className="w-full px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                      className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     >
                       <option value="">No category</option>
                       {categories.map((cat) => (
@@ -463,14 +463,14 @@ export default function CMSFAQsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                    <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Order
                     </label>
                     <input
                       type="number"
                       value={faqForm.order}
                       onChange={(e) => setFaqForm({ ...faqForm, order: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                      className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     />
                   </div>
                 </div>
@@ -481,18 +481,18 @@ export default function CMSFAQsPage() {
                       type="checkbox"
                       checked={faqForm.is_active}
                       onChange={(e) => setFaqForm({ ...faqForm, is_active: e.target.checked })}
-                      className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500"
                     />
-                    <span className="text-[12px] text-gray-700">Active</span>
+                    <span className="text-[12px] text-gray-700 dark:text-gray-300">Active</span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={faqForm.is_featured}
                       onChange={(e) => setFaqForm({ ...faqForm, is_featured: e.target.checked })}
-                      className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500"
                     />
-                    <span className="text-[12px] text-gray-700">Featured</span>
+                    <span className="text-[12px] text-gray-700 dark:text-gray-300">Featured</span>
                   </label>
                 </div>
 
@@ -504,14 +504,14 @@ export default function CMSFAQsPage() {
                       }
                       resetFAQForm()
                     }}
-                    className="px-4 py-2 text-[13px] text-gray-600 hover:text-gray-800"
+                    className="px-4 py-2 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveFAQ}
                     disabled={isSaving}
-                    className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50"
                   >
                     {isSaving ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -527,9 +527,9 @@ export default function CMSFAQsPage() {
 
           {/* New Category Form */}
           {(showNewCategory || editingCategory) && (
-            <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[14px] font-medium text-gray-900">
+                <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100">
                   {editingCategory ? 'Edit Category' : 'New Category'}
                 </h3>
                 <button
@@ -539,7 +539,7 @@ export default function CMSFAQsPage() {
                     }
                     resetCategoryForm()
                   }}
-                  className="p-1 text-gray-400 hover:text-gray-600"
+                  className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -547,7 +547,7 @@ export default function CMSFAQsPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Name *
                   </label>
                   <input
@@ -555,12 +555,12 @@ export default function CMSFAQsPage() {
                     value={categoryForm.name}
                     onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
                     placeholder="Category name"
-                    className="w-full px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Description
                   </label>
                   <textarea
@@ -568,20 +568,20 @@ export default function CMSFAQsPage() {
                     onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
                     placeholder="Brief description"
                     rows={2}
-                    className="w-full px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 resize-none"
+                    className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                    <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Order
                     </label>
                     <input
                       type="number"
                       value={categoryForm.order}
                       onChange={(e) => setCategoryForm({ ...categoryForm, order: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                      className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     />
                   </div>
                   <div className="flex items-end">
@@ -590,9 +590,9 @@ export default function CMSFAQsPage() {
                         type="checkbox"
                         checked={categoryForm.is_active}
                         onChange={(e) => setCategoryForm({ ...categoryForm, is_active: e.target.checked })}
-                        className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                        className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500"
                       />
-                      <span className="text-[12px] text-gray-700">Active</span>
+                      <span className="text-[12px] text-gray-700 dark:text-gray-300">Active</span>
                     </label>
                   </div>
                 </div>
@@ -605,14 +605,14 @@ export default function CMSFAQsPage() {
                       }
                       resetCategoryForm()
                     }}
-                    className="px-4 py-2 text-[13px] text-gray-600 hover:text-gray-800"
+                    className="px-4 py-2 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveCategory}
                     disabled={isSaving}
-                    className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50"
                   >
                     {isSaving ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -629,22 +629,22 @@ export default function CMSFAQsPage() {
           {/* Loading State */}
           {faqsLoading && (
             <div className="text-center py-12">
-              <p className="text-[14px] text-gray-500">Loading FAQs...</p>
+              <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading FAQs...</p>
             </div>
           )}
 
           {/* Empty State */}
           {!faqsLoading && filteredFAQs.length === 0 && !showNewFAQ && (
-            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-              <HelpCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-[15px] text-gray-700 mb-1">No FAQs found</p>
-              <p className="text-[13px] text-gray-500 mb-4">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+              <HelpCircle className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No FAQs found</p>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
                 {search ? 'Try a different search term' : 'Create your first FAQ'}
               </p>
               {!search && (
                 <button
                   onClick={() => setShowNewFAQ(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800"
+                  className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
                 >
                   <Plus className="w-4 h-4" />
                   Create FAQ
@@ -659,24 +659,24 @@ export default function CMSFAQsPage() {
               {filteredFAQs.map((faq) => (
                 <div
                   key={faq.id}
-                  className="bg-white border border-gray-200 rounded-lg overflow-hidden"
+                  className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
                 >
                   <div
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50"
+                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
                     onClick={() => toggleFAQ(faq.id)}
                   >
-                    <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                    <GripVertical className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
                     {expandedFAQs.has(faq.id) ? (
                       <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
                     ) : (
                       <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium text-gray-900 truncate">
+                      <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
                         {faq.question}
                       </p>
                       {!expandedFAQs.has(faq.id) && faq.answer_plain && (
-                        <p className="text-[12px] text-gray-500 truncate mt-0.5">
+                        <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
                           {faq.answer_plain}
                         </p>
                       )}
@@ -686,15 +686,15 @@ export default function CMSFAQsPage() {
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                       )}
                       {faq.category_name && (
-                        <span className="text-[11px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                        <span className="text-[11px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
                           {faq.category_name}
                         </span>
                       )}
                       <span
                         className={`text-[11px] px-2 py-0.5 rounded ${
                           faq.is_active
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-500'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                         }`}
                       >
                         {faq.is_active ? 'Active' : 'Inactive'}
@@ -704,7 +704,7 @@ export default function CMSFAQsPage() {
                           e.stopPropagation()
                           handleEditFAQ(faq)
                         }}
-                        className="p-1 text-gray-400 hover:text-gray-600"
+                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
@@ -720,10 +720,10 @@ export default function CMSFAQsPage() {
                     </div>
                   </div>
                   {expandedFAQs.has(faq.id) && (
-                    <div className="px-4 pb-4 pt-2 border-t border-gray-100">
-                      <div className="pl-11 text-[13px] text-gray-600">
+                    <div className="px-4 pb-4 pt-2 border-t border-gray-100 dark:border-gray-700">
+                      <div className="pl-11 text-[13px] text-gray-600 dark:text-gray-400">
                         {faq.answer_plain || (
-                          <span className="italic text-gray-400">No answer provided</span>
+                          <span className="italic text-gray-400 dark:text-gray-500">No answer provided</span>
                         )}
                       </div>
                     </div>

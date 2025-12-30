@@ -52,34 +52,34 @@ const PAGE_SIZE_OPTIONS = [20, 30, 50]
 
 const getStatusBadge = (isPublished: boolean) => {
   if (isPublished) {
-    return { bg: 'bg-green-100', text: 'text-green-700', label: 'Published' }
+    return { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Published' }
   }
-  return { bg: 'bg-gray-100', text: 'text-gray-500', label: 'Draft' }
+  return { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-500 dark:text-gray-400', label: 'Draft' }
 }
 
 const getJobStatusBadge = (status: string) => {
   switch (status) {
     case 'published':
-      return { bg: 'bg-green-100', text: 'text-green-700', label: 'Live' }
+      return { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Live' }
     case 'draft':
-      return { bg: 'bg-gray-100', text: 'text-gray-500', label: 'Draft' }
+      return { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-500 dark:text-gray-400', label: 'Draft' }
     case 'closed':
-      return { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Closed' }
+      return { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-400', label: 'Closed' }
     case 'filled':
-      return { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Filled' }
+      return { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', label: 'Filled' }
     default:
-      return { bg: 'bg-gray-100', text: 'text-gray-500', label: status }
+      return { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-500 dark:text-gray-400', label: status }
   }
 }
 
 const getServiceTypeBadge = (serviceType: string | null) => {
   switch (serviceType) {
     case 'headhunting':
-      return { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Headhunting', icon: Target }
+      return { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', label: 'Headhunting', icon: Target }
     case 'retained':
-      return { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Retained', icon: Handshake }
+      return { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400', label: 'Retained', icon: Handshake }
     default:
-      return { bg: 'bg-gray-100', text: 'text-gray-400', label: 'Not Set', icon: null }
+      return { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-400 dark:text-gray-500', label: 'Not Set', icon: null }
   }
 }
 
@@ -147,10 +147,10 @@ export default function AdminCompaniesPage() {
   // Check if user has admin/recruiter access
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-300 dark:text-red-500 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to view this page.
         </p>
       </div>
@@ -216,7 +216,7 @@ export default function AdminCompaniesPage() {
             type="checkbox"
             checked={table.getIsAllPageRowsSelected()}
             onChange={table.getToggleAllPageRowsSelectedHandler()}
-            className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:focus:ring-gray-400 bg-white dark:bg-gray-800"
           />
         ),
         cell: ({ row }) => (
@@ -225,7 +225,7 @@ export default function AdminCompaniesPage() {
               type="checkbox"
               checked={row.getIsSelected()}
               onChange={row.getToggleSelectedHandler()}
-              className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:focus:ring-gray-400 bg-white dark:bg-gray-800"
             />
           </div>
         ),
@@ -265,19 +265,19 @@ export default function AdminCompaniesPage() {
                   className="w-8 h-8 rounded object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
-                  <Building2 className="w-4 h-4 text-gray-400" />
+                <div className="w-8 h-8 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                  <Building2 className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                 </div>
               )}
               <div className="min-w-0">
                 <Link
                   to={`/dashboard/admin/companies/${company.id}`}
-                  className="text-[13px] font-medium text-gray-900 hover:text-gray-700 truncate block"
+                  className="text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300 truncate block"
                 >
                   {company.name}
                 </Link>
                 {company.tagline && (
-                  <p className="text-[11px] text-gray-500 truncate max-w-[200px]">
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
                     {company.tagline}
                   </p>
                 )}
@@ -293,7 +293,7 @@ export default function AdminCompaniesPage() {
         cell: ({ getValue }) => {
           const industry = getValue()
           return (
-            <span className="text-[12px] text-gray-600">
+            <span className="text-[12px] text-gray-600 dark:text-gray-400">
               {industry?.name || '-'}
             </span>
           )
@@ -306,7 +306,7 @@ export default function AdminCompaniesPage() {
         cell: ({ getValue }) => {
           const size = getValue()
           return (
-            <span className="text-[12px] text-gray-600">
+            <span className="text-[12px] text-gray-600 dark:text-gray-400">
               {size ? size.replace('_', '-') : '-'}
             </span>
           )
@@ -317,7 +317,7 @@ export default function AdminCompaniesPage() {
         header: 'Location',
         size: 140,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600 truncate block max-w-[120px]">
+          <span className="text-[12px] text-gray-600 dark:text-gray-400 truncate block max-w-[120px]">
             {getValue() || '-'}
           </span>
         ),
@@ -332,7 +332,7 @@ export default function AdminCompaniesPage() {
           const jobs = company.jobs || []
 
           if (jobs.length === 0) {
-            return <span className="text-[11px] text-gray-400">No jobs</span>
+            return <span className="text-[11px] text-gray-400 dark:text-gray-500">No jobs</span>
           }
 
           return (
@@ -343,7 +343,7 @@ export default function AdminCompaniesPage() {
                   <div key={job.id} className="flex items-center gap-2 group">
                     <Link
                       to={`/dashboard/admin/jobs/${job.id}`}
-                      className="text-[12px] text-gray-700 hover:text-gray-900 hover:underline truncate max-w-[130px]"
+                      className="text-[12px] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:underline truncate max-w-[130px]"
                       title={job.title}
                     >
                       {job.title}
@@ -353,7 +353,7 @@ export default function AdminCompaniesPage() {
                     </span>
                     <Link
                       to={`/dashboard/applications?job=${job.id}`}
-                      className="inline-flex items-center gap-0.5 text-[10px] text-gray-500 hover:text-gray-700"
+                      className="inline-flex items-center gap-0.5 text-[10px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                       title={`${job.applications_count} application${job.applications_count !== 1 ? 's' : ''}`}
                     >
                       <Users className="w-3 h-3" />
@@ -401,7 +401,7 @@ export default function AdminCompaniesPage() {
         size: 100,
         enableSorting: true,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-500">{formatDate(getValue())}</span>
+          <span className="text-[12px] text-gray-500 dark:text-gray-400">{formatDate(getValue())}</span>
         ),
       }),
       // Actions
@@ -425,7 +425,7 @@ export default function AdminCompaniesPage() {
                     setOpenActionsMenu(company.id)
                   }
                 }}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded"
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
@@ -439,14 +439,14 @@ export default function AdminCompaniesPage() {
                     }}
                   />
                   <div
-                    className="fixed w-48 bg-white border border-gray-200 rounded-md shadow-lg z-[9999]"
+                    className="fixed w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg dark:shadow-gray-900/40 z-[9999]"
                     style={{ top: menuPosition.top, left: menuPosition.left }}
                   >
                     <div className="py-1">
                       {company.is_published && (
                         <Link
                           to={`/companies/${company.slug}`}
-                          className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                          className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                           onClick={() => {
                             setOpenActionsMenu(null)
                             setMenuPosition(null)
@@ -458,7 +458,7 @@ export default function AdminCompaniesPage() {
                       )}
                       <Link
                         to={`/dashboard/admin/companies/${company.id}`}
-                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         onClick={() => {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
@@ -469,7 +469,7 @@ export default function AdminCompaniesPage() {
                       </Link>
                       <Link
                         to={`/dashboard/admin/jobs?company=${company.id}`}
-                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         onClick={() => {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
@@ -480,7 +480,7 @@ export default function AdminCompaniesPage() {
                       </Link>
                       <Link
                         to={`/dashboard/admin/jobs/new?company=${company.id}`}
-                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         onClick={() => {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
@@ -533,19 +533,19 @@ export default function AdminCompaniesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">All Companies</h1>
-          <p className="text-[13px] text-gray-500 mt-0.5">
+          <h1 className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">All Companies</h1>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
             {count} compan{count !== 1 ? 'ies' : 'y'} found
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Page Size Selector */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[12px] text-gray-500">Show:</span>
+            <span className="text-[12px] text-gray-500 dark:text-gray-400">Show:</span>
             <select
               value={pageSize}
               onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-              className="px-2 py-1 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+              className="px-2 py-1 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
             >
               {PAGE_SIZE_OPTIONS.map(size => (
                 <option key={size} value={size}>{size}</option>
@@ -553,11 +553,11 @@ export default function AdminCompaniesPage() {
             </select>
           </div>
           {/* View Toggle */}
-          <div className="flex border border-gray-200 rounded-md overflow-hidden">
+          <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
             <button
               onClick={() => setViewMode('table')}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] transition-colors ${
-                viewMode === 'table' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'
+                viewMode === 'table' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
               title="Table view"
             >
@@ -565,8 +565,8 @@ export default function AdminCompaniesPage() {
             </button>
             <button
               onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] border-l border-gray-200 transition-colors ${
-                viewMode === 'kanban' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] border-l border-gray-200 dark:border-gray-700 transition-colors ${
+                viewMode === 'kanban' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
               title="Kanban view"
             >
@@ -577,13 +577,13 @@ export default function AdminCompaniesPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-3 py-1.5 text-[13px] border rounded-md transition-colors ${
-              showFilters ? 'border-gray-300 bg-gray-50 text-gray-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+              showFilters ? 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             Filters
             {activeFilterCount > 0 && (
-              <span className="bg-gray-900 text-white text-[11px] px-1.5 py-0.5 rounded-full">
+              <span className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[11px] px-1.5 py-0.5 rounded-full">
                 {activeFilterCount}
               </span>
             )}
@@ -591,7 +591,7 @@ export default function AdminCompaniesPage() {
           {/* Create Lead Button */}
           <button
             onClick={() => setShowCreateLeadModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Create Lead
@@ -617,12 +617,12 @@ export default function AdminCompaniesPage() {
           {/* Active Filters Count */}
           {activeFilterCount > 0 && (
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-[12px] text-gray-500">
+              <span className="text-[12px] text-gray-500 dark:text-gray-400">
                 {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''} applied
               </span>
               <button
                 onClick={handleClearFilters}
-                className="text-[12px] text-gray-500 hover:text-gray-700 underline"
+                className="text-[12px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline"
               >
                 Clear all
               </button>
@@ -639,29 +639,29 @@ export default function AdminCompaniesPage() {
           {/* Loading State */}
           {isLoading && (
             <div className="text-center py-12">
-              <p className="text-[14px] text-gray-500">Loading companies...</p>
+              <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading companies...</p>
             </div>
           )}
 
           {/* Error State */}
           {error && (
             <div className="text-center py-12">
-              <p className="text-[14px] text-red-500">{error}</p>
+              <p className="text-[14px] text-red-500 dark:text-red-400">{error}</p>
             </div>
           )}
 
           {/* Empty State */}
           {!isLoading && !error && companies.length === 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-              <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-[15px] text-gray-700 mb-1">No companies found</p>
-              <p className="text-[13px] text-gray-500">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+              <Building2 className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No companies found</p>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
                 {activeFilterCount > 0 || filters.search ? 'Try adjusting your filters' : 'No companies have been created yet'}
               </p>
               {activeFilterCount > 0 && (
                 <button
                   onClick={handleClearFilters}
-                  className="mt-4 text-[13px] text-gray-600 hover:text-gray-900 underline"
+                  className="mt-4 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 underline"
                 >
                   Clear all filters
                 </button>
@@ -671,21 +671,21 @@ export default function AdminCompaniesPage() {
 
           {/* Table View */}
           {viewMode === 'table' && !isLoading && !error && companies.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     {table.getHeaderGroups().map(headerGroup => (
-                      <tr key={headerGroup.id} className="border-b border-gray-200 bg-gray-50">
+                      <tr key={headerGroup.id} className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                         {headerGroup.headers.map(header => {
                           const isPinnedLeft = header.id === 'select' || header.id === 'name'
                           const isPinnedRight = header.id === 'actions'
                           return (
                             <th
                               key={header.id}
-                              className={`px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
-                                isPinnedLeft ? 'sticky z-20 bg-gray-50' : ''
-                              } ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50' : ''}`}
+                              className={`px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap ${
+                                isPinnedLeft ? 'sticky z-20 bg-gray-50 dark:bg-gray-900' : ''
+                              } ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50 dark:bg-gray-900' : ''}`}
                               style={{
                                 width: header.getSize(),
                                 left: header.id === 'select' ? 0 : header.id === 'name' ? 40 : undefined,
@@ -694,7 +694,7 @@ export default function AdminCompaniesPage() {
                               {header.isPlaceholder ? null : (
                                 <div
                                   className={`flex items-center gap-1 ${
-                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700' : ''
+                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300' : ''
                                   }`}
                                   onClick={header.column.getToggleSortingHandler()}
                                 >
@@ -717,11 +717,11 @@ export default function AdminCompaniesPage() {
                       </tr>
                     ))}
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {table.getRowModel().rows.map(row => (
                       <tr
                         key={row.id}
-                        className="hover:bg-gray-50 cursor-pointer"
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                         onClick={() => setSelectedCompanyId(row.original.id)}
                       >
                         {row.getVisibleCells().map(cell => {
@@ -732,8 +732,8 @@ export default function AdminCompaniesPage() {
                             <td
                               key={cell.id}
                               className={`px-3 py-2.5 whitespace-nowrap ${
-                                isPinnedLeft ? 'sticky z-10 bg-white' : ''
-                              } ${isPinnedRight ? 'sticky right-0 z-10 bg-white' : ''}`}
+                                isPinnedLeft ? 'sticky z-10 bg-white dark:bg-gray-800' : ''
+                              } ${isPinnedRight ? 'sticky right-0 z-10 bg-white dark:bg-gray-800' : ''}`}
                               style={{
                                 width: cell.column.getSize(),
                                 left: colId === 'select' ? 0 : colId === 'name' ? 40 : undefined,
@@ -764,14 +764,14 @@ export default function AdminCompaniesPage() {
           {/* Pagination */}
           {!isLoading && !error && totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
-              <p className="text-[13px] text-gray-500">
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
                 Page {page} of {totalPages} ({count} total)
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={!hasPrevious}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Previous
@@ -779,7 +779,7 @@ export default function AdminCompaniesPage() {
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={!hasNext}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
                 >
                   Next
                   <ChevronRight className="w-4 h-4" />

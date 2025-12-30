@@ -37,7 +37,7 @@ function ColorInput({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         {label}
       </label>
       <div className="flex items-center gap-2">
@@ -45,18 +45,18 @@ function ColorInput({
           type="color"
           value={value || '#000000'}
           onChange={(e) => onChange(e.target.value)}
-          className={`${compact ? 'h-7 w-8' : 'h-10 w-14'} rounded border border-gray-300 cursor-pointer flex-shrink-0`}
+          className={`${compact ? 'h-7 w-8' : 'h-10 w-14'} rounded border border-gray-300 dark:border-gray-600 cursor-pointer flex-shrink-0`}
         />
         <input
           type="text"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#000000"
-          className={`${compact ? 'w-20 text-xs px-2 py-1' : 'flex-1 text-sm'} rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black`}
+          className={`${compact ? 'w-20 text-xs px-2 py-1' : 'flex-1 text-sm'} rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400`}
         />
       </div>
       {helpText && (
-        <p className="mt-1 text-xs text-gray-500">{helpText}</p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{helpText}</p>
       )}
     </div>
   )
@@ -81,8 +81,8 @@ function ColorGroup({
   onLightChange: (value: string) => void
 }) {
   return (
-    <div className="p-4 bg-gray-50 rounded-lg">
-      <h4 className="text-sm font-semibold text-gray-800 mb-3">{title}</h4>
+    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+      <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">{title}</h4>
       <div className="space-y-3">
         <ColorInput
           label="Base"
@@ -186,12 +186,12 @@ function ImageUpload({
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
 
       {/* Upload area */}
       <div
         className={`relative border-2 border-dashed rounded-lg p-4 transition-colors ${
-          dragOver ? 'border-black bg-gray-50' : 'border-gray-300 hover:border-gray-400'
+          dragOver ? 'border-black dark:border-gray-400 bg-gray-50 dark:bg-gray-800' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
         }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -208,7 +208,7 @@ function ImageUpload({
         {displayUrl ? (
           // Show preview
           <div className="flex items-center gap-4">
-            <div className={`${previewHeight} flex-shrink-0 bg-gray-100 rounded flex items-center justify-center overflow-hidden`}>
+            <div className={`${previewHeight} flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center overflow-hidden`}>
               <img
                 src={displayUrl}
                 alt="Preview"
@@ -220,17 +220,17 @@ function ImageUpload({
             </div>
             <div className="flex-1 min-w-0">
               {file ? (
-                <p className="text-sm text-gray-700 truncate">{file.name}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 truncate">{file.name}</p>
               ) : currentUrl ? (
-                <p className="text-sm text-gray-500">Uploaded file</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Uploaded file</p>
               ) : fallbackUrl ? (
-                <p className="text-sm text-gray-500 truncate">URL: {fallbackUrl}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">URL: {fallbackUrl}</p>
               ) : null}
               <div className="mt-2 flex gap-2">
                 <button
                   type="button"
                   onClick={() => inputRef.current?.click()}
-                  className="text-xs text-black hover:text-gray-600 font-medium"
+                  className="text-xs text-black dark:text-gray-100 hover:text-gray-600 dark:hover:text-gray-300 font-medium"
                 >
                   Change
                 </button>
@@ -238,7 +238,7 @@ function ImageUpload({
                   <button
                     type="button"
                     onClick={onClear}
-                    className="text-xs text-red-600 hover:text-red-800 font-medium"
+                    className="text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium"
                   >
                     Remove
                   </button>
@@ -251,28 +251,28 @@ function ImageUpload({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="w-full flex flex-col items-center justify-center py-4 text-gray-500 hover:text-gray-700"
+            className="w-full flex flex-col items-center justify-center py-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
           >
             <Upload className="h-8 w-8 mb-2" />
             <span className="text-sm font-medium">Click to upload or drag and drop</span>
-            <span className="text-xs text-gray-400 mt-1">PNG, JPG, SVG, or ICO</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">PNG, JPG, SVG, or ICO</span>
           </button>
         )}
       </div>
 
-      {helpText && <p className="text-xs text-gray-500">{helpText}</p>}
+      {helpText && <p className="text-xs text-gray-500 dark:text-gray-400">{helpText}</p>}
 
       {/* URL fallback input */}
       {showUrlFallback && onFallbackUrlChange && (
         <div className="pt-2">
-          <label className="block text-xs font-medium text-gray-500 mb-1">
+          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Or enter URL (used if no file uploaded)
           </label>
           <input
             type="url"
             value={fallbackUrl}
             onChange={(e) => onFallbackUrlChange(e.target.value)}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black text-sm"
+            className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400 text-sm"
             placeholder="https://example.com/logo.png"
           />
         </div>
@@ -292,11 +292,11 @@ function SettingsSection({
   children: React.ReactNode
 }) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <div className="flex items-center gap-2">
-          <Icon className="h-5 w-5 text-gray-500" />
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <Icon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
         </div>
       </div>
       <div className="px-6 py-5">
@@ -501,14 +501,14 @@ export default function BrandingSettingsPage() {
   if (error) {
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-red-700">
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
             <AlertCircle className="h-5 w-5" />
             <p>{error}</p>
           </div>
           <button
             onClick={refetch}
-            className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+            className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline"
           >
             Try again
           </button>
@@ -521,14 +521,14 @@ export default function BrandingSettingsPage() {
     <div className="pb-12">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           Customize the look and feel of your platform
         </p>
         <div className="flex items-center gap-3">
           <button
             onClick={handleReset}
             disabled={isResetting}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${isResetting ? 'animate-spin' : ''}`} />
             Reset to Defaults
@@ -536,7 +536,7 @@ export default function BrandingSettingsPage() {
           <button
             onClick={handleSave}
             disabled={isUpdating}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-black hover:bg-gray-800 disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-black dark:bg-gray-100 dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50"
           >
             {isUpdating ? (
               <RefreshCw className="h-4 w-4 animate-spin" />
@@ -552,7 +552,7 @@ export default function BrandingSettingsPage() {
 
       {/* Success/Error Messages */}
       {saveError && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-700 dark:text-red-400">
           <AlertCircle className="h-4 w-4" />
           <p className="text-sm">{saveError}</p>
         </div>
@@ -563,26 +563,26 @@ export default function BrandingSettingsPage() {
         <SettingsSection title="Company Information" icon={Building2}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Company Name
               </label>
               <input
                 type="text"
                 value={formData.company_name || ''}
                 onChange={(e) => handleChange('company_name', e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
                 placeholder="Your Company Name"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Tagline
               </label>
               <input
                 type="text"
                 value={formData.tagline || ''}
                 onChange={(e) => handleChange('tagline', e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
                 placeholder="Your company tagline"
               />
             </div>
@@ -663,23 +663,23 @@ export default function BrandingSettingsPage() {
         {/* Typography */}
         <SettingsSection title="Typography" icon={Type}>
           <div className="max-w-md">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Font Family
             </label>
             <input
               type="text"
               value={formData.font_family || ''}
               onChange={(e) => handleChange('font_family', e.target.value)}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+              className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
               placeholder="Poppins"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Primary font for the application (e.g., Poppins, Inter, Roboto)
             </p>
             {formData.font_family && (
-              <div className="mt-3 p-4 bg-gray-50 rounded-lg">
-                <p className="text-xs text-gray-500 mb-2">Preview:</p>
-                <p style={{ fontFamily: formData.font_family }} className="text-lg">
+              <div className="mt-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Preview:</p>
+                <p style={{ fontFamily: formData.font_family }} className="text-lg text-gray-900 dark:text-gray-100">
                   The quick brown fox jumps over the lazy dog
                 </p>
               </div>
@@ -689,7 +689,7 @@ export default function BrandingSettingsPage() {
 
         {/* Brand Colors */}
         <SettingsSection title="Brand Colors" icon={Palette}>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             Configure your brand color palette. Each color has dark and light variants for flexibility.
           </p>
 
@@ -725,7 +725,7 @@ export default function BrandingSettingsPage() {
           </div>
 
           {/* Status Colors */}
-          <h4 className="text-sm font-semibold text-gray-800 mb-3 mt-6">Status Colors</h4>
+          <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 mt-6">Status Colors</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <ColorInput
               label="Success"
@@ -748,8 +748,8 @@ export default function BrandingSettingsPage() {
           </div>
 
           {/* Color Preview */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm font-medium text-gray-700 mb-3">Preview</p>
+          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Preview</p>
             <div className="flex flex-wrap gap-4">
               <button
                 style={{ backgroundColor: formData.primary_color || '#003E49' }}
@@ -821,14 +821,14 @@ export default function BrandingSettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Email Footer Text
               </label>
               <textarea
                 value={formData.email_footer_text || ''}
                 onChange={(e) => handleChange('email_footer_text', e.target.value)}
                 rows={3}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
                 placeholder="If you have any questions, please contact the hiring team directly."
               />
             </div>
@@ -839,62 +839,62 @@ export default function BrandingSettingsPage() {
         <SettingsSection title="Social Links" icon={Globe}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Website URL
               </label>
               <input
                 type="url"
                 value={formData.website_url || ''}
                 onChange={(e) => handleChange('website_url', e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
                 placeholder="https://yourcompany.com"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Facebook URL
               </label>
               <input
                 type="url"
                 value={formData.facebook_url || ''}
                 onChange={(e) => handleChange('facebook_url', e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
                 placeholder="https://facebook.com/yourcompany"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Twitter URL
               </label>
               <input
                 type="url"
                 value={formData.twitter_url || ''}
                 onChange={(e) => handleChange('twitter_url', e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
                 placeholder="https://twitter.com/yourcompany"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 LinkedIn URL
               </label>
               <input
                 type="url"
                 value={formData.linkedin_url || ''}
                 onChange={(e) => handleChange('linkedin_url', e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
                 placeholder="https://linkedin.com/company/yourcompany"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Instagram URL
               </label>
               <input
                 type="url"
                 value={formData.instagram_url || ''}
                 onChange={(e) => handleChange('instagram_url', e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
                 placeholder="https://instagram.com/yourcompany"
               />
             </div>
@@ -905,39 +905,39 @@ export default function BrandingSettingsPage() {
         <SettingsSection title="Contact Information" icon={Building2}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Support Email
               </label>
               <input
                 type="email"
                 value={formData.support_email || ''}
                 onChange={(e) => handleChange('support_email', e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
                 placeholder="support@yourcompany.com"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Contact Phone
               </label>
               <input
                 type="tel"
                 value={formData.contact_phone || ''}
                 onChange={(e) => handleChange('contact_phone', e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
                 placeholder="+1 (555) 123-4567"
               />
             </div>
           </div>
           <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Address
             </label>
             <textarea
               value={formData.address || ''}
               onChange={(e) => handleChange('address', e.target.value)}
               rows={2}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+              className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
               placeholder="123 Main Street, Suite 100, City, State 12345"
             />
           </div>
@@ -947,26 +947,26 @@ export default function BrandingSettingsPage() {
         <SettingsSection title="Legal" icon={LinkIcon}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Privacy Policy URL
               </label>
               <input
                 type="url"
                 value={formData.privacy_policy_url || ''}
                 onChange={(e) => handleChange('privacy_policy_url', e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
                 placeholder="https://yourcompany.com/privacy"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Terms of Service URL
               </label>
               <input
                 type="url"
                 value={formData.terms_of_service_url || ''}
                 onChange={(e) => handleChange('terms_of_service_url', e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black"
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400"
                 placeholder="https://yourcompany.com/terms"
               />
             </div>
@@ -976,17 +976,17 @@ export default function BrandingSettingsPage() {
         {/* Advanced */}
         <SettingsSection title="Advanced" icon={Code}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Custom CSS
             </label>
             <textarea
               value={formData.custom_css || ''}
               onChange={(e) => handleChange('custom_css', e.target.value)}
               rows={6}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black font-mono text-sm"
+              className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400 font-mono text-sm"
               placeholder="/* Add custom CSS rules for emails here */"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Custom CSS will be injected into email templates. Use with caution.
             </p>
           </div>
@@ -997,114 +997,114 @@ export default function BrandingSettingsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
                   Customize the base HTML template used for all notification emails.
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Use <code className="px-1 py-0.5 bg-gray-100 rounded">{'{{ email_content|safe }}'}</code> to inject the email content.
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Use <code className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">{'{{ email_content|safe }}'}</code> to inject the email content.
                 </p>
               </div>
               <button
                 onClick={handleResetEmailTemplate}
                 disabled={isResetting}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Reset Template
               </button>
             </div>
 
-            <details className="bg-amber-50 border border-amber-200 rounded-lg">
-              <summary className="px-3 py-2 text-sm font-medium text-amber-800 cursor-pointer hover:bg-amber-100 rounded-lg">
+            <details className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <summary className="px-3 py-2 text-sm font-medium text-amber-800 dark:text-amber-300 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg">
                 Available Template Variables (click to expand)
               </summary>
               <div className="px-3 pb-3 space-y-3 text-xs">
                 {/* Essential */}
                 <div>
-                  <p className="font-semibold text-amber-900 mb-1">Essential</p>
+                  <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">Essential</p>
                   <div className="flex flex-wrap gap-1">
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ email_content|safe }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ site_url }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ email_content|safe }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ site_url }}'}</code>
                   </div>
                 </div>
 
                 {/* Company Info */}
                 <div>
-                  <p className="font-semibold text-amber-900 mb-1">Company Info</p>
+                  <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">Company Info</p>
                   <div className="flex flex-wrap gap-1">
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.company_name }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.tagline }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.logo_url }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.company_name }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.tagline }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.logo_url }}'}</code>
                   </div>
                 </div>
 
                 {/* Typography */}
                 <div>
-                  <p className="font-semibold text-amber-900 mb-1">Typography</p>
+                  <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">Typography</p>
                   <div className="flex flex-wrap gap-1">
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.font_family }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.font_family }}'}</code>
                   </div>
                 </div>
 
                 {/* Colors */}
                 <div>
-                  <p className="font-semibold text-amber-900 mb-1">Colors</p>
+                  <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">Colors</p>
                   <div className="flex flex-wrap gap-1">
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.primary_color }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.primary_color_dark }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.primary_color_light }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.secondary_color }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.secondary_color_dark }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.secondary_color_light }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.accent_color }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.accent_color_dark }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.accent_color_light }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.primary_color }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.primary_color_dark }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.primary_color_light }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.secondary_color }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.secondary_color_dark }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.secondary_color_light }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.accent_color }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.accent_color_dark }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.accent_color_light }}'}</code>
                   </div>
                 </div>
 
                 {/* Status Colors */}
                 <div>
-                  <p className="font-semibold text-amber-900 mb-1">Status Colors</p>
+                  <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">Status Colors</p>
                   <div className="flex flex-wrap gap-1">
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.success_color }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.warning_color }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.error_color }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.success_color }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.warning_color }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.error_color }}'}</code>
                   </div>
                 </div>
 
                 {/* Email Settings */}
                 <div>
-                  <p className="font-semibold text-amber-900 mb-1">Email Settings</p>
+                  <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">Email Settings</p>
                   <div className="flex flex-wrap gap-1">
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.background_color }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.header_background }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.footer_text }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.custom_css|safe }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.background_color }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.header_background }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.footer_text }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.custom_css|safe }}'}</code>
                   </div>
                 </div>
 
                 {/* Social & Links */}
                 <div>
-                  <p className="font-semibold text-amber-900 mb-1">Social & Links</p>
+                  <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">Social & Links</p>
                   <div className="flex flex-wrap gap-1">
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.website_url }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.facebook_url }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.twitter_url }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.linkedin_url }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.instagram_url }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.support_email }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.privacy_policy_url }}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ branding.terms_of_service_url }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.website_url }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.facebook_url }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.twitter_url }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.linkedin_url }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.instagram_url }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.support_email }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.privacy_policy_url }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ branding.terms_of_service_url }}'}</code>
                   </div>
                 </div>
 
                 {/* Django Template Tags */}
                 <div>
-                  <p className="font-semibold text-amber-900 mb-1">Django Template Tags</p>
+                  <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">Django Template Tags</p>
                   <div className="flex flex-wrap gap-1">
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{% if condition %}...{% endif %}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{% now "Y" %}'}</code>
-                    <code className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded">{'{{ var|default:"fallback" }}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{% if condition %}...{% endif %}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{% now "Y" %}'}</code>
+                    <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 rounded">{'{{ var|default:"fallback" }}'}</code>
                   </div>
                 </div>
               </div>
@@ -1114,19 +1114,19 @@ export default function BrandingSettingsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Editor */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Base Email Template (HTML)
                 </label>
                 <textarea
                   value={formData.email_base_template ?? settings?.email_base_template ?? ''}
                   onChange={(e) => handleChange('email_base_template', e.target.value)}
                   rows={24}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black font-mono text-xs leading-relaxed"
+                  className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-black dark:focus:border-gray-400 focus:ring-black dark:focus:ring-gray-400 font-mono text-xs leading-relaxed"
                   placeholder="<!-- Enter your custom HTML email template here -->"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   {formData.email_base_template !== undefined && formData.email_base_template !== settings?.email_base_template ? (
-                    <span className="text-amber-600">Unsaved changes. Click Save to apply.</span>
+                    <span className="text-amber-600 dark:text-amber-400">Unsaved changes. Click Save to apply.</span>
                   ) : (
                     'Edit the template above to customize your emails.'
                   )}
@@ -1135,10 +1135,10 @@ export default function BrandingSettingsPage() {
 
               {/* Preview */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Live Preview
                 </label>
-                <div className="border border-gray-300 rounded-md bg-white overflow-hidden" style={{ height: '540px' }}>
+                <div className="border border-gray-300 dark:border-gray-600 rounded-md bg-white overflow-hidden" style={{ height: '540px' }}>
                   <iframe
                     title="Email Template Preview"
                     srcDoc={(() => {
@@ -1242,7 +1242,7 @@ export default function BrandingSettingsPage() {
                     sandbox="allow-same-origin"
                   />
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Preview updates as you type. Sample content shown for demonstration.
                 </p>
               </div>
@@ -1252,7 +1252,7 @@ export default function BrandingSettingsPage() {
 
         {/* Last Updated */}
         {settings?.updated_at && (
-          <p className="text-sm text-gray-500 text-right">
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-right">
             Last updated: {new Date(settings.updated_at).toLocaleString()}
           </p>
         )}

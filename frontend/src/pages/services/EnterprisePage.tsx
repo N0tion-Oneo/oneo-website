@@ -134,7 +134,7 @@ export default function EnterprisePage() {
   const additionalsFee = pricingConfig ? formatPercent(pricingConfig.enterprise_additionals_fee) : ''
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <SEO />
       <Navbar />
 
@@ -179,10 +179,10 @@ export default function EnterprisePage() {
       {/* Key Benefits */}
       <div className="max-w-5xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Why Choose Enterprise?
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             A single partner for all your talent needs — from recruitment to employment to ongoing management.
           </p>
         </div>
@@ -191,16 +191,16 @@ export default function EnterprisePage() {
           {benefits.map((benefit) => (
             <div
               key={benefit.title}
-              className="flex gap-4 p-6 rounded-xl border border-gray-200 hover:border-amber-200 hover:shadow-sm transition-all"
+              className="flex gap-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-amber-200 dark:hover:border-amber-700 hover:shadow-sm dark:shadow-gray-900/40 transition-all"
             >
-              <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                <benefit.icon className="w-6 h-6 text-amber-600" />
+              <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                <benefit.icon className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h3 className="text-[17px] font-semibold text-gray-900 mb-2">
+                <h3 className="text-[17px] font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   {benefit.title}
                 </h3>
-                <p className="text-[14px] text-gray-600 leading-relaxed">
+                <p className="text-[14px] text-gray-600 dark:text-gray-400 leading-relaxed">
                   {benefit.description}
                 </p>
               </div>
@@ -210,13 +210,13 @@ export default function EnterprisePage() {
       </div>
 
       {/* Pricing Structure */}
-      <div className="bg-gray-50 border-y border-gray-100">
+      <div className="bg-gray-50 dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Transparent Pricing That Rewards Loyalty
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Our margin-based model means you pay a percentage on salaries — no surprises, no large upfront fees.
               And your rate decreases over time.
             </p>
@@ -229,41 +229,41 @@ export default function EnterprisePage() {
                 className={`p-6 rounded-xl text-center ${
                   index === 3
                     ? 'bg-amber-500 text-gray-900'
-                    : 'bg-white border border-gray-200'
+                    : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700'
                 }`}
               >
-                <div className={`text-[13px] font-medium mb-2 ${index === 3 ? 'text-gray-700' : 'text-gray-500'}`}>
+                <div className={`text-[13px] font-medium mb-2 ${index === 3 ? 'text-gray-700' : 'text-gray-500 dark:text-gray-400'}`}>
                   {tier.year}
                 </div>
-                <div className={`text-3xl font-bold mb-1 ${index === 3 ? 'text-gray-900' : 'text-gray-900'}`}>
+                <div className={`text-3xl font-bold mb-1 ${index === 3 ? 'text-gray-900' : 'text-gray-900 dark:text-gray-100'}`}>
                   {tier.margin}
                 </div>
-                <div className={`text-[12px] ${index === 3 ? 'text-gray-700' : 'text-gray-500'}`}>
+                <div className={`text-[12px] ${index === 3 ? 'text-gray-700' : 'text-gray-500 dark:text-gray-400'}`}>
                   {tier.description}
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6 md:p-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">How It Works</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6 md:p-8">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">How It Works</h3>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <CreditCard className="w-5 h-5 text-amber-600" />
-                  <span className="font-medium text-gray-900">Salary Margin</span>
+                  <CreditCard className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <span className="font-medium text-gray-900 dark:text-gray-100">Salary Margin</span>
                 </div>
-                <p className="text-[14px] text-gray-600">
+                <p className="text-[14px] text-gray-600 dark:text-gray-400">
                   We charge a margin on employee salaries (starting at {pricingTiers[0]?.margin || '–'}, decreasing to {pricingTiers[3]?.margin || '–'} by year 4).
                   This covers recruitment, employment, payroll, compliance, and HR support.
                 </p>
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <BarChart3 className="w-5 h-5 text-amber-600" />
-                  <span className="font-medium text-gray-900">Additional Services</span>
+                  <BarChart3 className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <span className="font-medium text-gray-900 dark:text-gray-100">Additional Services</span>
                 </div>
-                <p className="text-[14px] text-gray-600">
+                <p className="text-[14px] text-gray-600 dark:text-gray-400">
                   Asset management, office solutions, and culture activities are charged at a {additionalsFee || '–'} management
                   fee on actual costs — completely transparent and optional.
                 </p>
@@ -276,10 +276,10 @@ export default function EnterprisePage() {
       {/* What's Included */}
       <div className="max-w-5xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Everything Included
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             One partnership covers your entire talent lifecycle.
           </p>
         </div>
@@ -288,15 +288,15 @@ export default function EnterprisePage() {
           {included.map((item) => (
             <div
               key={item.title}
-              className="p-5 rounded-xl border border-gray-200 hover:border-amber-200 transition-colors"
+              className="p-5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-amber-200 dark:hover:border-amber-700 transition-colors"
             >
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="text-[14px] font-semibold text-gray-900 mb-1">
+                  <h3 className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 mb-1">
                     {item.title}
                   </h3>
-                  <p className="text-[12px] text-gray-500">
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400">
                     {item.description}
                   </p>
                 </div>
@@ -343,27 +343,27 @@ export default function EnterprisePage() {
 
       {/* CTA Section */}
       <div className="max-w-5xl mx-auto px-6 py-20">
-        <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-2xl p-8 md:p-12">
+        <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-2xl p-8 md:p-12">
           <div className="md:flex md:items-center md:justify-between">
             <div className="mb-6 md:mb-0">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                 Ready to Transform Your Hiring?
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Let's discuss how Enterprise can work for your business.
               </p>
             </div>
             <div className="flex flex-wrap gap-4">
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
               >
                 Contact Us
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/pricing"
-                className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-white transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors"
               >
                 <Calculator className="w-4 h-4" />
                 Pricing Calculator
@@ -374,7 +374,7 @@ export default function EnterprisePage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 py-8">
+      <footer className="border-t border-gray-100 dark:border-gray-800 py-8">
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-[13px] text-gray-400 text-center">
             © {new Date().getFullYear()} {seoDefaults.companyName || 'All rights reserved'}.{seoDefaults.companyName ? ' All rights reserved.' : ''}

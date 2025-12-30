@@ -29,11 +29,11 @@ export default function FeedPostDetailPage() {
   if (error || !post) {
     return (
       <div className="max-w-3xl mx-auto">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <p className="text-red-700">Post not found or you don't have permission to view it.</p>
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
+          <p className="text-red-700 dark:text-red-400">Post not found or you don't have permission to view it.</p>
           <Link
             to="/dashboard/feed"
-            className="mt-4 inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-800"
+            className="mt-4 inline-flex items-center gap-2 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Feed
@@ -65,16 +65,16 @@ export default function FeedPostDetailPage() {
       {/* Back Link */}
       <Link
         to="/dashboard/feed"
-        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6"
+        className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Feed
       </Link>
 
-      <article className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <article className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         {/* Featured Image (for articles) */}
         {featuredImage && isArticle && (
-          <div className="aspect-[2/1] relative overflow-hidden bg-gray-100">
+          <div className="aspect-[2/1] relative overflow-hidden bg-gray-100 dark:bg-gray-800">
             <img
               src={featuredImage}
               alt={post.featured_image_alt || post.title}
@@ -89,21 +89,21 @@ export default function FeedPostDetailPage() {
             {/* Type Badge */}
             <span className={`inline-block text-xs font-medium px-2 py-1 rounded mb-4 ${
               isArticle
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-green-100 text-green-700'
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
+                : 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
             }`}>
               {post.post_type_display}
             </span>
 
             {/* Title */}
             {post.title && (
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                 {post.title}
               </h1>
             )}
 
             {/* Meta */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
               {/* Company */}
               <div className="flex items-center gap-2">
                 {companyLogo ? (
@@ -115,7 +115,7 @@ export default function FeedPostDetailPage() {
                 ) : (
                   <Building2 className="w-4 h-4" />
                 )}
-                <span className="font-medium text-gray-700">{post.company?.name}</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">{post.company?.name}</span>
               </div>
 
               {/* Author */}
@@ -135,13 +135,13 @@ export default function FeedPostDetailPage() {
           </header>
 
           {/* Content */}
-          <div className="prose prose-gray max-w-none">
+          <div className="prose prose-gray dark:prose-invert max-w-none">
             {/* Article with rich content blocks */}
             {isArticle && post.content_blocks ? (
               <BlockRenderer blocks={post.content_blocks} />
             ) : (
               /* Update with plain text content */
-              <div className="whitespace-pre-wrap text-gray-700 text-base leading-relaxed">
+              <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 text-base leading-relaxed">
                 {post.content}
               </div>
             )}
@@ -160,7 +160,7 @@ export default function FeedPostDetailPage() {
         </div>
 
         {/* Comments */}
-        <div className="border-t border-gray-200">
+        <div className="border-t border-gray-200 dark:border-gray-700">
           <CommentSection postId={post.id} expanded />
         </div>
       </article>

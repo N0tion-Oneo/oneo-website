@@ -259,7 +259,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
               type="checkbox"
               checked={table.getIsAllPageRowsSelected()}
               onChange={table.getToggleAllPageRowsSelectedHandler()}
-              className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:focus:ring-gray-400"
             />
           ),
           cell: ({ row }) => (
@@ -268,7 +268,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                 type="checkbox"
                 checked={row.getIsSelected()}
                 onChange={row.getToggleSelectedHandler()}
-                className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:focus:ring-gray-400"
               />
             </div>
           ),
@@ -315,10 +315,10 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
           const job = row.original
           return (
             <div className="min-w-0">
-              <span className="text-[13px] font-medium text-gray-900 truncate block">
+              <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate block">
                 {job.title}
               </span>
-              <p className="text-[11px] text-gray-500 truncate">
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
                 {job.location_display || 'No location'}
               </p>
             </div>
@@ -342,11 +342,11 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                     className="w-6 h-6 rounded object-cover flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <Building2 className="w-3 h-3 text-gray-400" />
+                  <div className="w-6 h-6 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                   </div>
                 )}
-                <span className="text-[12px] text-gray-600 truncate">
+                <span className="text-[12px] text-gray-600 dark:text-gray-400 truncate">
                   {companyData?.name || 'Unknown'}
                 </span>
               </div>
@@ -360,7 +360,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
         header: 'Seniority',
         size: 90,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600 capitalize">
+          <span className="text-[12px] text-gray-600 dark:text-gray-400 capitalize">
             {getValue()?.replace('_', ' ') || '-'}
           </span>
         ),
@@ -371,7 +371,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
         header: 'Work Mode',
         size: 90,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600 capitalize">
+          <span className="text-[12px] text-gray-600 dark:text-gray-400 capitalize">
             {getValue() || '-'}
           </span>
         ),
@@ -385,7 +385,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
           const status = getValue()
           const badge = getStatusBadge(status)
           return (
-            <span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${badge?.bg || 'bg-gray-100'} ${badge?.text || 'text-gray-700'}`}>
+            <span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${badge?.bg || 'bg-gray-100 dark:bg-gray-700'} ${badge?.text || 'text-gray-700 dark:text-gray-300'}`}>
               {badge?.label || status}
             </span>
           )
@@ -402,7 +402,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
           return (
             <Link
               to={`/dashboard/applications?job=${job.id}`}
-              className="text-[12px] text-gray-600 hover:text-gray-900 hover:underline"
+              className="text-[12px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:underline"
               onClick={(e) => e.stopPropagation()}
             >
               {job.applications_count || 0}
@@ -417,7 +417,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
         size: 100,
         enableSorting: true,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-500">{formatJobDate(getValue())}</span>
+          <span className="text-[12px] text-gray-500 dark:text-gray-400">{formatJobDate(getValue())}</span>
         ),
       }))
 
@@ -442,7 +442,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                     setOpenActionsMenu(job.id)
                   }
                 }}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded"
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
@@ -456,14 +456,14 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                     }}
                   />
                   <div
-                    className="fixed w-48 bg-white border border-gray-200 rounded-md shadow-lg z-[9999]"
+                    className="fixed w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg dark:shadow-gray-900/40 z-[9999]"
                     style={{ top: menuPosition.top, left: menuPosition.left }}
                   >
                     <div className="py-1">
                       {job.status === JobStatus.PUBLISHED && (
                         <Link
                           to={`/jobs/${job.slug}`}
-                          className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                          className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                           onClick={() => {
                             setOpenActionsMenu(null)
                             setMenuPosition(null)
@@ -479,14 +479,14 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                           setMenuPosition(null)
                           handleOpenDrawer(job.id)
                         }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                        className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                       >
                         <Edit className="w-4 h-4" />
                         Edit Job
                       </button>
                       <Link
                         to={`/dashboard/jobs/${job.id}/applications`}
-                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         onClick={() => {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
@@ -500,7 +500,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                         <button
                           onClick={() => handlePublish(job.id)}
                           disabled={isSubmitting}
-                          className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-green-600 hover:bg-green-50"
+                          className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
                         >
                           <Play className="w-4 h-4" />
                           Publish
@@ -512,7 +512,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                           <button
                             onClick={() => handleClose(job.id)}
                             disabled={isSubmitting}
-                            className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-orange-600 hover:bg-orange-50"
+                            className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                           >
                             <Pause className="w-4 h-4" />
                             Close Job
@@ -520,7 +520,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                           <button
                             onClick={() => handleMarkFilled(job.id)}
                             disabled={isSubmitting}
-                            className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-blue-600 hover:bg-blue-50"
+                            className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                           >
                             <CheckCircle className="w-4 h-4" />
                             Mark as Filled
@@ -528,11 +528,11 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                         </>
                       )}
 
-                      <hr className="my-1" />
+                      <hr className="my-1 border-gray-200 dark:border-gray-700" />
                       <button
                         onClick={() => handleDelete(job.id)}
                         disabled={isDeleting}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-red-600 hover:bg-red-50"
+                        className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                       >
                         <Trash2 className="w-4 h-4" />
                         Delete Job
@@ -582,10 +582,10 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
   // Check access: admin mode requires admin/recruiter role
   if (!isClientMode && (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role))) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-300 dark:text-red-400 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to view this page.
         </p>
       </div>
@@ -596,22 +596,22 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
   if (isClientMode && companyLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-[14px] text-gray-500">Loading...</p>
+        <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading...</p>
       </div>
     )
   }
 
   if (isClientMode && !company) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">No company profile</p>
-        <p className="text-[13px] text-gray-500 mb-4">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">No company profile</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
           You need to create a company profile before posting jobs.
         </p>
         <a
           href="/dashboard/company"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[13px] font-medium rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
         >
           Create Company Profile
         </a>
@@ -624,21 +624,21 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">
+          <h1 className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">
             {isClientMode ? 'Job Postings' : 'All Jobs'}
           </h1>
-          <p className="text-[13px] text-gray-500 mt-0.5">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
             {count} job{count !== 1 ? 's' : ''}{isClientMode && company ? ` • ${company.name}` : ' found'}
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Page Size Selector */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[12px] text-gray-500">Show:</span>
+            <span className="text-[12px] text-gray-500 dark:text-gray-400">Show:</span>
             <select
               value={pageSize}
               onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-              className="px-2 py-1 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+              className="px-2 py-1 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               {PAGE_SIZE_OPTIONS.map(size => (
                 <option key={size} value={size}>{size}</option>
@@ -649,13 +649,13 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-3 py-1.5 text-[13px] border rounded-md transition-colors ${
-              showFilters ? 'border-gray-300 bg-gray-50 text-gray-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+              showFilters ? 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             Filters
             {activeFilterCount > 0 && (
-              <span className="bg-gray-900 text-white text-[11px] px-1.5 py-0.5 rounded-full">
+              <span className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[11px] px-1.5 py-0.5 rounded-full">
                 {activeFilterCount}
               </span>
             )}
@@ -663,7 +663,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
           {/* Create Job */}
           <button
             onClick={() => handleOpenDrawer(null)}
-            className="flex items-center gap-2 px-4 py-1.5 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
+            className="flex items-center gap-2 px-4 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[13px] font-medium rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
           >
             <Plus className="w-4 h-4" />
             {isClientMode ? 'Post New Job' : 'Create Job'}
@@ -689,12 +689,12 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
           {/* Active Filters Count */}
           {activeFilterCount > 0 && (
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-[12px] text-gray-500">
+              <span className="text-[12px] text-gray-500 dark:text-gray-400">
                 {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''} applied
               </span>
               <button
                 onClick={handleClearFilters}
-                className="text-[12px] text-gray-500 hover:text-gray-700 underline"
+                className="text-[12px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline"
               >
                 Clear all
               </button>
@@ -711,7 +711,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
           {/* Loading State */}
           {isLoading && (
             <div className="text-center py-12">
-              <p className="text-[14px] text-gray-500">Loading jobs...</p>
+              <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading jobs...</p>
             </div>
           )}
 
@@ -724,16 +724,16 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
 
           {/* Empty State */}
           {!isLoading && !error && jobs.length === 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-              <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-[15px] text-gray-700 mb-1">No jobs found</p>
-              <p className="text-[13px] text-gray-500">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+              <Briefcase className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No jobs found</p>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
                 {activeFilterCount > 0 || filters.search ? 'Try adjusting your filters' : 'No jobs have been created yet'}
               </p>
               {activeFilterCount > 0 && (
                 <button
                   onClick={handleClearFilters}
-                  className="mt-4 text-[13px] text-gray-600 hover:text-gray-900 underline"
+                  className="mt-4 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
                 >
                   Clear all filters
                 </button>
@@ -743,21 +743,21 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
 
           {/* Table */}
           {!isLoading && !error && jobs.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     {table.getHeaderGroups().map(headerGroup => (
-                      <tr key={headerGroup.id} className="border-b border-gray-200 bg-gray-50">
+                      <tr key={headerGroup.id} className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                         {headerGroup.headers.map(header => {
                           const isPinnedLeft = header.id === 'select' || header.id === 'title'
                           const isPinnedRight = header.id === 'actions'
                           return (
                             <th
                               key={header.id}
-                              className={`px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
-                                isPinnedLeft ? 'sticky z-20 bg-gray-50' : ''
-                              } ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50' : ''}`}
+                              className={`px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap ${
+                                isPinnedLeft ? 'sticky z-20 bg-gray-50 dark:bg-gray-800' : ''
+                              } ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50 dark:bg-gray-800' : ''}`}
                               style={{
                                 width: header.getSize(),
                                 left: header.id === 'select' ? 0 : header.id === 'title' ? 40 : undefined,
@@ -766,7 +766,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                               {header.isPlaceholder ? null : (
                                 <div
                                   className={`flex items-center gap-1 ${
-                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700' : ''
+                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300' : ''
                                   }`}
                                   onClick={header.column.getToggleSortingHandler()}
                                 >
@@ -789,11 +789,11 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                       </tr>
                     ))}
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {table.getRowModel().rows.map(row => (
                       <tr
                         key={row.id}
-                        className="hover:bg-gray-50 cursor-pointer"
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                         onClick={() => handleOpenDrawer(row.original.id)}
                       >
                         {row.getVisibleCells().map(cell => {
@@ -804,8 +804,8 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                             <td
                               key={cell.id}
                               className={`px-3 py-2.5 whitespace-nowrap ${
-                                isPinnedLeft ? 'sticky z-10 bg-white' : ''
-                              } ${isPinnedRight ? 'sticky right-0 z-10 bg-white' : ''}`}
+                                isPinnedLeft ? 'sticky z-10 bg-white dark:bg-gray-800' : ''
+                              } ${isPinnedRight ? 'sticky right-0 z-10 bg-white dark:bg-gray-800' : ''}`}
                               style={{
                                 width: cell.column.getSize(),
                                 left: colId === 'select' ? 0 : colId === 'title' ? 40 : undefined,
@@ -826,14 +826,14 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
           {/* Pagination */}
           {!isLoading && !error && totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
-              <p className="text-[13px] text-gray-500">
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
                 Page {page} of {totalPages} ({count} total)
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={!hasPrevious}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Previous
@@ -841,7 +841,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={!hasNext}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
                 >
                   Next
                   <ChevronRight className="w-4 h-4" />

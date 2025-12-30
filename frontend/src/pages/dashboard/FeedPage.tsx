@@ -50,15 +50,15 @@ export default function FeedPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[22px] font-semibold text-gray-900">Feed</h1>
-          <p className="text-[14px] text-gray-500 mt-1">
+          <h1 className="text-[22px] font-semibold text-gray-900 dark:text-gray-100">Feed</h1>
+          <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-1">
             Latest updates from companies
           </p>
         </div>
         {canCreatePost && (
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -80,8 +80,8 @@ export default function FeedPage() {
                 onClick={() => handleFilterChange(filter.value)}
                 className={`px-3 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${
                   activeFilter === filter.value
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 {filter.label}
@@ -91,8 +91,8 @@ export default function FeedPage() {
 
           {/* Error State */}
           {error && (
-            <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-[14px] text-red-600">{error}</p>
+            <div className="mb-5 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-[14px] text-red-600 dark:text-red-400">{error}</p>
             </div>
           )}
 

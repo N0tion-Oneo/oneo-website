@@ -5,6 +5,7 @@ import { usePublicBranding } from '@/hooks';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { SubscriptionBlockedOverlay } from '@/components/subscription';
 import { NotificationBell } from '@/components/notifications';
+import { ThemeToggle } from '@/components/common/ThemeToggle';
 
 interface NavItem {
   name: string;
@@ -296,26 +297,26 @@ export default function CandidateDashboardLayout() {
   const mainPadding = isMinimized ? 'lg:pl-16' : 'lg:pl-64';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Subscription blocked overlay - shown when subscription is paused/terminated */}
       <SubscriptionBlockedOverlay />
 
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 dark:bg-black/70 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full ${sidebarWidth} bg-white border-r border-gray-200 transform transition-all duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full ${sidebarWidth} bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform transition-all duration-200 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Logo & Toggle */}
-        <div className="h-14 flex items-center justify-between px-4 border-b border-gray-200">
+        <div className="h-14 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
           {!isMinimized && (
             <Link to="/" className="flex items-center">
               {branding?.logo_url ? (
@@ -325,7 +326,7 @@ export default function CandidateDashboardLayout() {
                   className="h-7 w-auto"
                 />
               ) : (
-                <span className="text-lg font-semibold text-gray-900">
+                <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {branding?.company_name || ''}
                 </span>
               )}
@@ -333,7 +334,7 @@ export default function CandidateDashboardLayout() {
           )}
           <button
             onClick={() => setIsMinimized(!isMinimized)}
-            className={`hidden lg:flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors ${
+            className={`hidden lg:flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors ${
               isMinimized ? 'mx-auto' : ''
             }`}
             title={isMinimized ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -347,10 +348,10 @@ export default function CandidateDashboardLayout() {
         </div>
 
         {/* User info */}
-        <div className={`p-4 border-b border-gray-100 ${isMinimized ? 'px-2' : ''}`}>
+        <div className={`p-4 border-b border-gray-100 dark:border-gray-800 ${isMinimized ? 'px-2' : ''}`}>
           <div className={`flex ${isMinimized ? 'flex-col items-center gap-2' : 'items-center gap-3'}`}>
             <div
-              className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white text-[12px] font-medium flex-shrink-0"
+              className="w-9 h-9 bg-gray-900 dark:bg-gray-700 rounded-full flex items-center justify-center text-white text-[12px] font-medium flex-shrink-0"
               title={isMinimized ? `${user?.first_name} ${user?.last_name}` : undefined}
             >
               {user?.first_name?.[0]?.toUpperCase()}
@@ -358,10 +359,10 @@ export default function CandidateDashboardLayout() {
             </div>
             {!isMinimized && (
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-medium text-gray-900 truncate">
+                <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100 truncate">
                   {user?.first_name} {user?.last_name}
                 </p>
-                <p className="text-[12px] text-gray-500 truncate">{user?.email}</p>
+                <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
               </div>
             )}
             <NotificationBell dropdownPosition="right" sidebarWidth={isMinimized ? 'minimized' : 'expanded'} />
@@ -377,19 +378,19 @@ export default function CandidateDashboardLayout() {
               onClick={() => setSidebarOpen(false)}
               className={`relative group flex items-center ${isMinimized ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-md text-[14px] font-medium transition-colors ${
                 isActive(item.href)
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
               }`}
               title={isMinimized ? item.name : undefined}
             >
-              <span className={`flex-shrink-0 ${isActive(item.href) ? 'text-gray-900' : 'text-gray-400'}`}>
+              <span className={`flex-shrink-0 ${isActive(item.href) ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'}`}>
                 {item.icon}
               </span>
               {!isMinimized && item.name}
 
               {/* Tooltip for minimized state */}
               {isMinimized && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-[12px] rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-[12px] rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
                   {item.name}
                 </div>
               )}
@@ -398,13 +399,17 @@ export default function CandidateDashboardLayout() {
         </nav>
 
         {/* Bottom section */}
-        <div className={`absolute bottom-0 left-0 right-0 p-3 border-t border-gray-100 ${isMinimized ? 'px-2' : ''}`}>
+        <div className={`absolute bottom-0 left-0 right-0 p-3 border-t border-gray-100 dark:border-gray-800 ${isMinimized ? 'px-2' : ''}`}>
+          {/* Theme Toggle */}
+          <div className={`mb-2 ${isMinimized ? 'flex justify-center' : ''}`}>
+            <ThemeToggle variant={isMinimized ? 'icon' : 'dropdown'} />
+          </div>
           <button
             onClick={logout}
-            className={`relative group flex items-center ${isMinimized ? 'justify-center' : 'gap-3'} w-full px-3 py-2 rounded-md text-[14px] font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors`}
+            className={`relative group flex items-center ${isMinimized ? 'justify-center' : 'gap-3'} w-full px-3 py-2 rounded-md text-[14px] font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors`}
             title={isMinimized ? 'Sign out' : undefined}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400 flex-shrink-0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400 dark:text-gray-500 flex-shrink-0">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" strokeLinecap="round" strokeLinejoin="round" />
               <polyline points="16 17 21 12 16 7" strokeLinecap="round" strokeLinejoin="round" />
               <line x1="21" y1="12" x2="9" y2="12" strokeLinecap="round" />
@@ -413,7 +418,7 @@ export default function CandidateDashboardLayout() {
 
             {/* Tooltip for minimized state */}
             {isMinimized && (
-              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-[12px] rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-[12px] rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
                 Sign out
               </div>
             )}
@@ -424,16 +429,19 @@ export default function CandidateDashboardLayout() {
       {/* Main content */}
       <div className={`${mainPadding} transition-all duration-200`}>
         {/* Top header - mobile only */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 h-14 flex items-center justify-between px-4 lg:hidden">
+        <header className="sticky top-0 z-30 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 h-14 flex items-center justify-between px-4 lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 -ml-2 text-gray-500 hover:text-gray-900"
+            className="p-2 -ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-          <NotificationBell />
+          <div className="flex items-center gap-2">
+            <ThemeToggle variant="icon" />
+            <NotificationBell />
+          </div>
         </header>
 
         {/* Page content */}

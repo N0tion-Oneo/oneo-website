@@ -68,51 +68,51 @@ export default function ProfileSettingsPage() {
     <div className="max-w-xl">
       {/* Success/Error Messages */}
       {saveSuccess && (
-        <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-md">
-          <p className="text-[13px] text-green-700">Profile saved successfully</p>
+        <div className="mb-4 px-4 py-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md">
+          <p className="text-[13px] text-green-700 dark:text-green-400">Profile saved successfully</p>
         </div>
       )}
       {saveError && (
-        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-[13px] text-red-700">{saveError}</p>
+        <div className="mb-4 px-4 py-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md">
+          <p className="text-[13px] text-red-700 dark:text-red-400">{saveError}</p>
         </div>
       )}
 
       {/* Form */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h2 className="text-[16px] font-medium text-gray-900 mb-4">Personal Information</h2>
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h2 className="text-[16px] font-medium text-gray-900 dark:text-gray-100 mb-4">Personal Information</h2>
         <div className="space-y-5">
           {/* Email (read-only) */}
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               Email
             </label>
             <input
               type="email"
               value={user?.email || ''}
               disabled
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
+              className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
             />
             <p className="text-[12px] text-gray-400 mt-1">Email cannot be changed</p>
           </div>
 
           {/* Role (read-only) */}
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               Role
             </label>
             <input
               type="text"
               value={user?.role ? getRoleLabel(user.role) : ''}
               disabled
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
+              className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
             />
           </div>
 
           {/* Name fields */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 First Name *
               </label>
               <input
@@ -120,11 +120,11 @@ export default function ProfileSettingsPage() {
                 name="first_name"
                 value={formData.first_name}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Last Name *
               </label>
               <input
@@ -132,14 +132,14 @@ export default function ProfileSettingsPage() {
                 name="last_name"
                 value={formData.last_name}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
               />
             </div>
           </div>
 
           {/* Phone */}
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               Phone
             </label>
             <input
@@ -148,16 +148,16 @@ export default function ProfileSettingsPage() {
               value={formData.phone}
               onChange={handleInputChange}
               placeholder="+27 12 345 6789"
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
             />
           </div>
 
           {/* Save Button */}
-          <div className="pt-4 border-t border-gray-100">
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
             <button
               onClick={handleSave}
               disabled={isUpdating}
-              className="px-5 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-5 py-2 text-[14px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isUpdating ? 'Saving...' : 'Save Changes'}
             </button>

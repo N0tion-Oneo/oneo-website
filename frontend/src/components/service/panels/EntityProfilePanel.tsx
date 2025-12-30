@@ -157,23 +157,23 @@ function CollapsibleSection({ title, icon, children, defaultOpen = false, count 
   const [isOpen, setIsOpen] = useState(defaultOpen)
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+        className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <span className="text-gray-500">{icon}</span>
-          <span className="text-[13px] font-medium text-gray-900">{title}</span>
+          <span className="text-gray-500 dark:text-gray-400">{icon}</span>
+          <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{title}</span>
           {count !== undefined && (
-            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-200 text-gray-600 rounded-full">
+            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full">
               {count}
             </span>
           )}
         </div>
-        {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+        {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400 dark:text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />}
       </button>
-      {isOpen && <div className="p-3 bg-white border-t border-gray-200">{children}</div>}
+      {isOpen && <div className="p-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">{children}</div>}
     </div>
   )
 }
@@ -185,14 +185,14 @@ function CollapsibleSection({ title, icon, children, defaultOpen = false, count 
 function InfoRow({ label, value, href }: { label: string; value: string | null | undefined; href?: string }) {
   if (!value) return null
   return (
-    <div className="flex items-start justify-between py-2 border-b border-gray-100 last:border-0">
-      <span className="text-[12px] text-gray-500">{label}</span>
+    <div className="flex items-start justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+      <span className="text-[12px] text-gray-500 dark:text-gray-400">{label}</span>
       {href ? (
         <a href={href} target="_blank" rel="noopener noreferrer" className="text-[13px] text-blue-600 hover:text-blue-700 text-right">
           {value}
         </a>
       ) : (
-        <span className="text-[13px] text-gray-900 text-right">{value}</span>
+        <span className="text-[13px] text-gray-900 dark:text-gray-100 text-right">{value}</span>
       )}
     </div>
   )
@@ -239,13 +239,13 @@ function CompanyProfile({ entity }: { entity: Record<string, unknown> }) {
         {company.logo ? (
           <img src={company.logo} alt={company.name} className="w-14 h-14 rounded-lg object-cover" />
         ) : (
-          <div className="w-14 h-14 rounded-lg bg-blue-100 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
             <Building2 className="w-7 h-7 text-blue-600" />
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 truncate">{company.name || 'Unknown Company'}</h3>
-          {company.tagline && <p className="text-sm text-gray-500 line-clamp-2">{company.tagline}</p>}
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{company.name || 'Unknown Company'}</h3>
+          {company.tagline && <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{company.tagline}</p>}
         </div>
       </div>
 
@@ -260,11 +260,11 @@ function CompanyProfile({ entity }: { entity: Record<string, unknown> }) {
           </span>
         )}
         {company.service_type && (
-          <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium capitalize">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 font-medium capitalize">
             {company.service_type}
           </span>
         )}
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${company.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${company.is_published ? 'bg-green-100 dark:bg-green-900/40 text-green-700' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
           {company.is_published ? 'Published' : 'Draft'}
         </span>
       </div>
@@ -284,11 +284,11 @@ function CompanyProfile({ entity }: { entity: Record<string, unknown> }) {
       <CollapsibleSection title="Location" icon={<MapPin className="w-4 h-4" />} defaultOpen>
         <div className="space-y-2">
           <div className="flex items-start gap-2">
-            <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+            <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-[13px] text-gray-900">{company.headquarters_location || 'Not specified'}</p>
+              <p className="text-[13px] text-gray-900 dark:text-gray-100">{company.headquarters_location || 'Not specified'}</p>
               {company.locations && company.locations.length > 0 && (
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                   +{company.locations.length} other location{company.locations.length !== 1 ? 's' : ''}
                 </p>
               )}
@@ -305,11 +305,11 @@ function CompanyProfile({ entity }: { entity: Record<string, unknown> }) {
               href={company.website_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg text-[13px] text-gray-700 hover:bg-gray-100"
+              className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              <Globe className="w-4 h-4 text-gray-400" />
+              <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               <span className="truncate flex-1">{company.website_url}</span>
-              <ExternalLink className="w-3 h-3 text-gray-400" />
+              <ExternalLink className="w-3 h-3 text-gray-400 dark:text-gray-500" />
             </a>
           )}
           {company.linkedin_url && (
@@ -317,15 +317,15 @@ function CompanyProfile({ entity }: { entity: Record<string, unknown> }) {
               href={company.linkedin_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg text-[13px] text-gray-700 hover:bg-gray-100"
+              className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              <Linkedin className="w-4 h-4 text-gray-400" />
+              <Linkedin className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               <span className="truncate flex-1">LinkedIn Profile</span>
-              <ExternalLink className="w-3 h-3 text-gray-400" />
+              <ExternalLink className="w-3 h-3 text-gray-400 dark:text-gray-500" />
             </a>
           )}
           {!company.website_url && !company.linkedin_url && (
-            <p className="text-[13px] text-gray-500">No links added</p>
+            <p className="text-[13px] text-gray-500 dark:text-gray-400">No links added</p>
           )}
         </div>
       </CollapsibleSection>
@@ -335,12 +335,12 @@ function CompanyProfile({ entity }: { entity: Record<string, unknown> }) {
         <CollapsibleSection title="About" icon={<FileText className="w-4 h-4" />}>
           <div className="space-y-3">
             {company.description && (
-              <p className="text-[13px] text-gray-700 whitespace-pre-wrap">{company.description}</p>
+              <p className="text-[13px] text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{company.description}</p>
             )}
             {company.culture_description && (
               <div>
-                <p className="text-[11px] text-gray-500 uppercase tracking-wide mb-1">Culture</p>
-                <p className="text-[13px] text-gray-700 whitespace-pre-wrap">{company.culture_description}</p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Culture</p>
+                <p className="text-[13px] text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{company.culture_description}</p>
               </div>
             )}
           </div>
@@ -352,15 +352,15 @@ function CompanyProfile({ entity }: { entity: Record<string, unknown> }) {
         <CollapsibleSection title="Assigned Recruiters" icon={<Users className="w-4 h-4" />} count={company.assigned_to.length}>
           <div className="space-y-2">
             {company.assigned_to.map((user) => (
-              <div key={user.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User className="w-4 h-4 text-gray-500" />
+              <div key={user.id} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                  <User className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-gray-900 truncate">
+                  <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
                     {user.first_name} {user.last_name}
                   </p>
-                  <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
                 </div>
               </div>
             ))}
@@ -369,13 +369,13 @@ function CompanyProfile({ entity }: { entity: Record<string, unknown> }) {
       )}
 
       {/* Timeline */}
-      <div className="flex items-center gap-2 text-[12px] text-gray-500 pt-2">
+      <div className="flex items-center gap-2 text-[12px] text-gray-500 dark:text-gray-400 pt-2">
         <Calendar className="w-4 h-4" />
         Created {formatDate(company.created_at)}
       </div>
 
       {/* View Full Profile Link */}
-      <div className="pt-2 border-t border-gray-200">
+      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
         <Link
           to={`/dashboard/admin/companies/${company.id}`}
           className="flex items-center gap-2 text-[13px] text-blue-600 hover:text-blue-700"
@@ -465,20 +465,20 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
         {candidate.avatar ? (
           <img src={candidate.avatar} alt={name} className="w-14 h-14 rounded-full object-cover" />
         ) : (
-          <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
-            <User className="w-7 h-7 text-gray-500" />
+          <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+            <User className="w-7 h-7 text-gray-500 dark:text-gray-400" />
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 truncate">{name}</h3>
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{name}</h3>
           {title && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {title}
               {candidate.current_company && ` at ${candidate.current_company}`}
             </p>
           )}
           {candidate.headline && !title && (
-            <p className="text-sm text-gray-500 line-clamp-2">{candidate.headline}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{candidate.headline}</p>
           )}
         </div>
       </div>
@@ -495,7 +495,7 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
         )}
         {candidate.profile_completeness !== undefined && (
           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-            candidate.profile_completeness >= 80 ? 'bg-green-100 text-green-700' :
+            candidate.profile_completeness >= 80 ? 'bg-green-100 dark:bg-green-900/40 text-green-700' :
             candidate.profile_completeness >= 50 ? 'bg-yellow-100 text-yellow-700' :
             'bg-red-100 text-red-700'
           }`}>
@@ -503,7 +503,7 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
           </span>
         )}
         {yearsExp && (
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-medium">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium">
             {yearsExp}+ years
           </span>
         )}
@@ -543,7 +543,7 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
             {candidate.industries.map((industry) => (
               <span
                 key={industry.id}
-                className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md font-medium"
+                className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md font-medium"
               >
                 {industry.name}
               </span>
@@ -556,7 +556,7 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
       {aggregatedTechnologies.length > 0 && (
         <CollapsibleSection title="Technologies" icon={<Code className="w-4 h-4" />} count={aggregatedTechnologies.length} defaultOpen>
           <div className="space-y-2">
-            <p className="text-[10px] text-gray-500">Darker colors indicate more experience</p>
+            <p className="text-[10px] text-gray-500 dark:text-gray-400">Darker colors indicate more experience</p>
             <div className="flex flex-wrap gap-1.5">
               {aggregatedTechnologies.map((tech) => (
                 <span
@@ -576,7 +576,7 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
       {aggregatedSkills.length > 0 && (
         <CollapsibleSection title="Skills" icon={<Briefcase className="w-4 h-4" />} count={aggregatedSkills.length} defaultOpen>
           <div className="space-y-2">
-            <p className="text-[10px] text-gray-500">Darker colors indicate more experience</p>
+            <p className="text-[10px] text-gray-500 dark:text-gray-400">Darker colors indicate more experience</p>
             <div className="flex flex-wrap gap-1.5">
               {aggregatedSkills.map((skill) => (
                 <span
@@ -604,27 +604,27 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
                 ))
               )
               return (
-                <div key={exp.id} className="border border-gray-200 rounded-lg p-3 space-y-2">
+                <div key={exp.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 space-y-2">
                   {/* Header */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-gray-900">{exp.job_title}</p>
-                      <p className="text-[12px] text-gray-700">{exp.company_name}</p>
+                      <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">{exp.job_title}</p>
+                      <p className="text-[12px] text-gray-700 dark:text-gray-300">{exp.company_name}</p>
                     </div>
                     {exp.is_current && (
-                      <span className="px-1.5 py-0.5 text-[10px] font-medium bg-green-100 text-green-700 rounded flex-shrink-0">
+                      <span className="px-1.5 py-0.5 text-[10px] font-medium bg-green-100 dark:bg-green-900/40 text-green-700 rounded flex-shrink-0">
                         Current
                       </span>
                     )}
                   </div>
 
                   {/* Meta info */}
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500 dark:text-gray-400">
                     <span>
                       {formatDateShort(exp.start_date)} - {exp.is_current ? 'Present' : formatDateShort(exp.end_date)}
                     </span>
                     <span className="text-gray-300">•</span>
-                    <span className="font-medium text-gray-600">{duration}</span>
+                    <span className="font-medium text-gray-600 dark:text-gray-400">{duration}</span>
                     {expWithDetails.industry && (
                       <>
                         <span className="text-gray-300">•</span>
@@ -641,26 +641,26 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
 
                   {/* Description */}
                   {expWithDetails.description && (
-                    <p className="text-[12px] text-gray-600 line-clamp-3">{expWithDetails.description}</p>
+                    <p className="text-[12px] text-gray-600 dark:text-gray-400 line-clamp-3">{expWithDetails.description}</p>
                   )}
 
                   {/* Achievements */}
                   {expWithDetails.achievements && (
                     <div className="pt-1">
-                      <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Key Achievements</p>
-                      <p className="text-[12px] text-gray-600 line-clamp-2">{expWithDetails.achievements}</p>
+                      <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Key Achievements</p>
+                      <p className="text-[12px] text-gray-600 dark:text-gray-400 line-clamp-2">{expWithDetails.achievements}</p>
                     </div>
                   )}
 
                   {/* Technologies for this role */}
                   {expWithDetails.technologies && expWithDetails.technologies.length > 0 && (
                     <div className="pt-1">
-                      <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Technologies</p>
+                      <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Technologies</p>
                       <div className="flex flex-wrap gap-1">
                         {expWithDetails.technologies.map((tech) => (
                           <span
                             key={tech.id}
-                            className="px-1.5 py-0.5 text-[10px] bg-blue-50 text-blue-700 rounded"
+                            className="px-1.5 py-0.5 text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-700 rounded"
                           >
                             {tech.name}
                           </span>
@@ -672,12 +672,12 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
                   {/* Skills for this role */}
                   {expWithDetails.skills && expWithDetails.skills.length > 0 && (
                     <div className="pt-1">
-                      <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Skills</p>
+                      <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Skills</p>
                       <div className="flex flex-wrap gap-1">
                         {expWithDetails.skills.map((skill) => (
                           <span
                             key={skill.id}
-                            className="px-1.5 py-0.5 text-[10px] bg-purple-50 text-purple-700 rounded"
+                            className="px-1.5 py-0.5 text-[10px] bg-purple-50 dark:bg-purple-900/30 text-purple-700 rounded"
                           >
                             {skill.name}
                           </span>
@@ -697,11 +697,11 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
         <CollapsibleSection title="Education" icon={<GraduationCap className="w-4 h-4" />} count={candidate.education.length}>
           <div className="space-y-3">
             {candidate.education.map((edu) => (
-              <div key={edu.id} className="border-l-2 border-gray-200 pl-3">
-                <p className="text-[13px] font-medium text-gray-900">{edu.degree}</p>
-                <p className="text-[12px] text-gray-600">{edu.field_of_study}</p>
-                <p className="text-[12px] text-gray-500">{edu.institution_name}</p>
-                <p className="text-[11px] text-gray-500">
+              <div key={edu.id} className="border-l-2 border-gray-200 dark:border-gray-700 pl-3">
+                <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{edu.degree}</p>
+                <p className="text-[12px] text-gray-600 dark:text-gray-400">{edu.field_of_study}</p>
+                <p className="text-[12px] text-gray-500 dark:text-gray-400">{edu.institution_name}</p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400">
                   {formatDateShort(edu.start_date)} - {formatDateShort(edu.end_date) || 'Present'}
                 </p>
               </div>
@@ -713,7 +713,7 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
       {/* Bio */}
       {bio && (
         <CollapsibleSection title="Bio" icon={<FileText className="w-4 h-4" />}>
-          <p className="text-[13px] text-gray-700 whitespace-pre-wrap">{bio}</p>
+          <p className="text-[13px] text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{bio}</p>
         </CollapsibleSection>
       )}
 
@@ -722,15 +722,15 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
         <CollapsibleSection title="Assigned Recruiters" icon={<Users className="w-4 h-4" />} count={candidate.assigned_to.length}>
           <div className="space-y-2">
             {candidate.assigned_to.map((user) => (
-              <div key={user.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User className="w-4 h-4 text-gray-500" />
+              <div key={user.id} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                  <User className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-gray-900 truncate">
+                  <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
                     {user.full_name || `${user.first_name} ${user.last_name}`}
                   </p>
-                  <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
                 </div>
               </div>
             ))}
@@ -739,13 +739,13 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
       )}
 
       {/* Timeline */}
-      <div className="flex items-center gap-2 text-[12px] text-gray-500 pt-2">
+      <div className="flex items-center gap-2 text-[12px] text-gray-500 dark:text-gray-400 pt-2">
         <Calendar className="w-4 h-4" />
         Joined {formatDate(candidate.created_at)}
       </div>
 
       {/* View Full Profile Link */}
-      <div className="pt-2 border-t border-gray-200">
+      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
         <Link
           to={`/dashboard/admin/candidates/${candidate.id}`}
           className="flex items-center gap-2 text-[13px] text-blue-600 hover:text-blue-700"
@@ -795,13 +795,13 @@ function LeadProfile({ entity }: { entity: Record<string, unknown> }) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <div className="w-14 h-14 rounded-lg bg-purple-100 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-lg bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
           <Building2 className="w-7 h-7 text-purple-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 truncate">{lead.name || 'Unknown Lead'}</h3>
-          {lead.company_name && <p className="text-sm text-gray-500">{lead.company_name}</p>}
-          {lead.job_title && <p className="text-xs text-gray-400">{lead.job_title}</p>}
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{lead.name || 'Unknown Lead'}</h3>
+          {lead.company_name && <p className="text-sm text-gray-500 dark:text-gray-400">{lead.company_name}</p>}
+          {lead.job_title && <p className="text-xs text-gray-400 dark:text-gray-500">{lead.job_title}</p>}
         </div>
       </div>
 
@@ -816,12 +816,12 @@ function LeadProfile({ entity }: { entity: Record<string, unknown> }) {
           </span>
         )}
         {lead.source && (
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-medium">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium">
             {getSourceLabel(lead.source)}
           </span>
         )}
         {lead.is_converted && (
-          <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 font-medium">
             Converted
           </span>
         )}
@@ -861,13 +861,13 @@ function LeadProfile({ entity }: { entity: Record<string, unknown> }) {
         <CollapsibleSection title="Admin Status" icon={<CheckCircle className="w-4 h-4" />}>
           <div className="flex gap-3">
             <div className={`flex items-center gap-2 px-3 py-2 text-[12px] font-medium rounded-lg border ${
-              lead.is_read ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white border-gray-200 text-gray-600'
+              lead.is_read ? 'bg-green-50 dark:bg-green-900/30 border-green-200 text-green-700' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
             }`}>
               {lead.is_read ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
               {lead.is_read ? 'Read' : 'Unread'}
             </div>
             <div className={`flex items-center gap-2 px-3 py-2 text-[12px] font-medium rounded-lg border ${
-              lead.is_replied ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-200 text-gray-600'
+              lead.is_replied ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 text-blue-700' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
             }`}>
               {lead.is_replied ? <CheckCircle className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
               {lead.is_replied ? 'Replied' : 'Not Replied'}
@@ -879,14 +879,14 @@ function LeadProfile({ entity }: { entity: Record<string, unknown> }) {
       {/* Message */}
       {lead.message && (
         <CollapsibleSection title="Message" icon={<MessageSquare className="w-4 h-4" />}>
-          <p className="text-[13px] text-gray-700 whitespace-pre-wrap">{lead.message}</p>
+          <p className="text-[13px] text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{lead.message}</p>
         </CollapsibleSection>
       )}
 
       {/* Notes */}
       {lead.notes && (
         <CollapsibleSection title="Notes" icon={<FileText className="w-4 h-4" />}>
-          <p className="text-[13px] text-gray-700 whitespace-pre-wrap">{lead.notes}</p>
+          <p className="text-[13px] text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{lead.notes}</p>
         </CollapsibleSection>
       )}
 
@@ -895,15 +895,15 @@ function LeadProfile({ entity }: { entity: Record<string, unknown> }) {
         <CollapsibleSection title="Assigned To" icon={<Users className="w-4 h-4" />} count={lead.assigned_to.length}>
           <div className="space-y-2">
             {lead.assigned_to.map((user) => (
-              <div key={user.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User className="w-4 h-4 text-gray-500" />
+              <div key={user.id} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                  <User className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-gray-900 truncate">
+                  <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
                     {user.full_name || `${user.first_name} ${user.last_name}`}
                   </p>
-                  <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
                 </div>
               </div>
             ))}
@@ -912,14 +912,14 @@ function LeadProfile({ entity }: { entity: Record<string, unknown> }) {
       )}
 
       {/* Timeline */}
-      <div className="flex items-center gap-2 text-[12px] text-gray-500 pt-2">
+      <div className="flex items-center gap-2 text-[12px] text-gray-500 dark:text-gray-400 pt-2">
         <Calendar className="w-4 h-4" />
         Created {formatDate(lead.created_at)}
       </div>
 
       {/* Quick Actions */}
       {!isTerminal && (
-        <div className="pt-2 border-t border-gray-200">
+        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
           <Link
             to={`/dashboard/leads/${lead.id}`}
             className="flex items-center gap-2 text-[13px] text-blue-600 hover:text-blue-700"
@@ -940,7 +940,7 @@ function LeadProfile({ entity }: { entity: Record<string, unknown> }) {
 export function EntityProfilePanel({ entityType, entityId: _entityId, entity }: EntityProfilePanelProps) {
   if (!entity) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500">
+      <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
         No profile data available
       </div>
     )

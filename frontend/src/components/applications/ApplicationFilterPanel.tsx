@@ -145,14 +145,14 @@ export default function ApplicationFilterPanel({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg sticky top-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg sticky top-4">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h3 className="text-[14px] font-medium text-gray-900">Filters</h3>
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Filters</h3>
         {activeFilterCount > 0 && (
           <button
             onClick={onClearFilters}
-            className="flex items-center gap-1 text-[12px] text-gray-500 hover:text-gray-700"
+            className="flex items-center gap-1 text-[12px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
           >
             <RotateCcw className="w-3 h-3" />
             Clear all
@@ -163,17 +163,17 @@ export default function ApplicationFilterPanel({
       <div className="p-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
         {/* Search - Always visible */}
         <div>
-          <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+          <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
             Search
           </label>
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Candidate name, email, job..."
               value={filters.search}
               onChange={(e) => updateFilter('search', e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+              className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
         </div>
@@ -187,13 +187,13 @@ export default function ApplicationFilterPanel({
           <div className="space-y-4">
             {/* Application Status */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Application Status
               </label>
               <select
                 value={filters.status}
                 onChange={(e) => updateFilter('status', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All statuses</option>
                 {APPLICATION_STATUS_OPTIONS.map(opt => (
@@ -204,13 +204,13 @@ export default function ApplicationFilterPanel({
 
             {/* Stage (0 = Applied, 1+ = interview stages) */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Current Stage
               </label>
               <select
                 value={filters.stage}
                 onChange={(e) => updateFilter('stage', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All stages</option>
                 <option value="0">Applied (No stage)</option>
@@ -233,13 +233,13 @@ export default function ApplicationFilterPanel({
           <div className="space-y-4">
             {/* Job Filter */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Job
               </label>
               <select
                 value={filters.job}
                 onChange={(e) => updateFilter('job', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 disabled={loadingOptions}
               >
                 <option value="">All jobs</option>
@@ -253,13 +253,13 @@ export default function ApplicationFilterPanel({
 
             {/* Job Status */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Job Status
               </label>
               <select
                 value={filters.job_status}
                 onChange={(e) => updateFilter('job_status', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All job statuses</option>
                 {JOB_STATUS_OPTIONS.map(opt => (
@@ -270,13 +270,13 @@ export default function ApplicationFilterPanel({
 
             {/* Company Filter */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Company
               </label>
               <select
                 value={filters.company}
                 onChange={(e) => updateFilter('company', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 disabled={loadingOptions}
               >
                 <option value="">All companies</option>
@@ -289,13 +289,13 @@ export default function ApplicationFilterPanel({
             {/* Recruiter Filter */}
             {recruiters.length > 0 && (
               <div>
-                <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+                <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                   Recruiter
                 </label>
                 <select
                   value={filters.recruiter}
                   onChange={(e) => updateFilter('recruiter', e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   disabled={loadingOptions}
                 >
                   <option value="">All recruiters</option>
@@ -316,25 +316,25 @@ export default function ApplicationFilterPanel({
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Applied After
               </label>
               <input
                 type="date"
                 value={filters.applied_after}
                 onChange={(e) => updateFilter('applied_after', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Applied Before
               </label>
               <input
                 type="date"
                 value={filters.applied_before}
                 onChange={(e) => updateFilter('applied_before', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -357,16 +357,16 @@ function CollapsibleSection({
   children: React.ReactNode
 }) {
   return (
-    <div className="border-t border-gray-200 pt-4">
+    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
       <button
         onClick={onToggle}
         className="flex items-center justify-between w-full text-left"
       >
-        <span className="text-[12px] font-medium text-gray-700">{title}</span>
+        <span className="text-[12px] font-medium text-gray-700 dark:text-gray-300">{title}</span>
         {expanded ? (
-          <ChevronUp className="w-4 h-4 text-gray-400" />
+          <ChevronUp className="w-4 h-4 text-gray-400 dark:text-gray-500" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />
         )}
       </button>
       {expanded && <div className="mt-3">{children}</div>}

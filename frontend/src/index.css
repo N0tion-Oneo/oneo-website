@@ -24,69 +24,106 @@
   --color-error: #ef4444;
 }
 
+/* Light mode (default) */
+:root {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  --color-bg-elevated: #ffffff;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
+  --color-text-inverted: #ffffff;
+  --color-border-default: #e5e7eb;
+  --color-border-strong: #d1d5db;
+  --color-hover-bg: #f9fafb;
+  --color-badge-mix-bg: white;
+  --color-badge-mix-text: black;
+}
+
+/* Dark mode */
+.dark {
+  --color-bg-primary: #111827;
+  --color-bg-secondary: #1f2937;
+  --color-bg-tertiary: #374151;
+  --color-bg-elevated: #1f2937;
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-muted: #9ca3af;
+  --color-text-inverted: #111827;
+  --color-border-default: #374151;
+  --color-border-strong: #4b5563;
+  --color-hover-bg: #1f2937;
+  --color-badge-mix-bg: #1f2937;
+  --color-badge-mix-text: white;
+}
+
 html {
   font-family: var(--font-family-sans);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
 }
 
 /* Status Badge Utilities */
 /* These provide consistent styling for status indicators that respect branding */
 
 .badge-success {
-  background-color: color-mix(in srgb, var(--color-success) 15%, white);
-  color: color-mix(in srgb, var(--color-success) 80%, black);
+  background-color: color-mix(in srgb, var(--color-success) 15%, var(--color-badge-mix-bg));
+  color: color-mix(in srgb, var(--color-success) 80%, var(--color-badge-mix-text));
 }
 
 .badge-warning {
-  background-color: color-mix(in srgb, var(--color-warning) 15%, white);
-  color: color-mix(in srgb, var(--color-warning) 80%, black);
+  background-color: color-mix(in srgb, var(--color-warning) 15%, var(--color-badge-mix-bg));
+  color: color-mix(in srgb, var(--color-warning) 80%, var(--color-badge-mix-text));
 }
 
 .badge-error {
-  background-color: color-mix(in srgb, var(--color-error) 15%, white);
-  color: color-mix(in srgb, var(--color-error) 80%, black);
+  background-color: color-mix(in srgb, var(--color-error) 15%, var(--color-badge-mix-bg));
+  color: color-mix(in srgb, var(--color-error) 80%, var(--color-badge-mix-text));
 }
 
 .badge-primary {
-  background-color: color-mix(in srgb, var(--color-primary) 15%, white);
-  color: color-mix(in srgb, var(--color-primary) 80%, black);
+  background-color: color-mix(in srgb, var(--color-primary) 15%, var(--color-badge-mix-bg));
+  color: color-mix(in srgb, var(--color-primary) 80%, var(--color-badge-mix-text));
 }
 
 .badge-secondary {
-  background-color: color-mix(in srgb, var(--color-secondary) 15%, white);
-  color: color-mix(in srgb, var(--color-secondary) 80%, black);
+  background-color: color-mix(in srgb, var(--color-secondary) 15%, var(--color-badge-mix-bg));
+  color: color-mix(in srgb, var(--color-secondary) 80%, var(--color-badge-mix-text));
 }
 
 .badge-accent {
-  background-color: color-mix(in srgb, var(--color-accent) 15%, white);
-  color: color-mix(in srgb, var(--color-accent) 80%, black);
+  background-color: color-mix(in srgb, var(--color-accent) 15%, var(--color-badge-mix-bg));
+  color: color-mix(in srgb, var(--color-accent) 80%, var(--color-badge-mix-text));
 }
 
 /* Alert/Notice Box Utilities */
 .alert-success {
-  background-color: color-mix(in srgb, var(--color-success) 10%, white);
-  border-color: color-mix(in srgb, var(--color-success) 30%, white);
-  color: color-mix(in srgb, var(--color-success) 90%, black);
+  background-color: color-mix(in srgb, var(--color-success) 10%, var(--color-badge-mix-bg));
+  border-color: color-mix(in srgb, var(--color-success) 30%, var(--color-badge-mix-bg));
+  color: color-mix(in srgb, var(--color-success) 90%, var(--color-badge-mix-text));
 }
 
 .alert-warning {
-  background-color: color-mix(in srgb, var(--color-warning) 10%, white);
-  border-color: color-mix(in srgb, var(--color-warning) 30%, white);
-  color: color-mix(in srgb, var(--color-warning) 90%, black);
+  background-color: color-mix(in srgb, var(--color-warning) 10%, var(--color-badge-mix-bg));
+  border-color: color-mix(in srgb, var(--color-warning) 30%, var(--color-badge-mix-bg));
+  color: color-mix(in srgb, var(--color-warning) 90%, var(--color-badge-mix-text));
 }
 
 .alert-error {
-  background-color: color-mix(in srgb, var(--color-error) 10%, white);
-  border-color: color-mix(in srgb, var(--color-error) 30%, white);
-  color: color-mix(in srgb, var(--color-error) 90%, black);
+  background-color: color-mix(in srgb, var(--color-error) 10%, var(--color-badge-mix-bg));
+  border-color: color-mix(in srgb, var(--color-error) 30%, var(--color-badge-mix-bg));
+  color: color-mix(in srgb, var(--color-error) 90%, var(--color-badge-mix-text));
 }
 
 .alert-info {
-  background-color: color-mix(in srgb, var(--color-secondary) 10%, white);
-  border-color: color-mix(in srgb, var(--color-secondary) 30%, white);
-  color: color-mix(in srgb, var(--color-secondary) 90%, black);
+  background-color: color-mix(in srgb, var(--color-secondary) 10%, var(--color-badge-mix-bg));
+  border-color: color-mix(in srgb, var(--color-secondary) 30%, var(--color-badge-mix-bg));
+  color: color-mix(in srgb, var(--color-secondary) 90%, var(--color-badge-mix-text));
 }

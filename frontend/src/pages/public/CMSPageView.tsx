@@ -77,10 +77,10 @@ export default function CMSPageView() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <Navbar />
         <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
         </div>
       </div>
     )
@@ -89,18 +89,18 @@ export default function CMSPageView() {
   // Error/Not found state
   if (error || !page) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <Navbar />
         <div className="max-w-3xl mx-auto px-6 py-16">
           <div className="text-center">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h1 className="text-[24px] font-semibold text-gray-900 mb-2">Page Not Found</h1>
-            <p className="text-[15px] text-gray-500 mb-6">
+            <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h1 className="text-[24px] font-semibold text-gray-900 dark:text-gray-100 mb-2">Page Not Found</h1>
+            <p className="text-[15px] text-gray-500 dark:text-gray-400 mb-6">
               The page you're looking for doesn't exist or has been removed.
             </p>
             <Link
               to="/"
-              className="inline-flex items-center gap-2 text-[14px] text-gray-600 hover:text-gray-900"
+              className="inline-flex items-center gap-2 text-[14px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Home
@@ -112,7 +112,7 @@ export default function CMSPageView() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <SEO
         title={page.title}
         description={page.meta_description || `${page.title} - ${seoDefaults.companyName}`}
@@ -123,20 +123,20 @@ export default function CMSPageView() {
       <Navbar />
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-gray-50 to-white border-b border-gray-100">
+      <div className="bg-gradient-to-b from-gray-50 dark:from-gray-800 to-white dark:to-gray-900 border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-5xl mx-auto px-6 py-16 md:py-20">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center">
-              <Scale className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">
+              <Scale className="w-5 h-5 text-white dark:text-gray-900" />
             </div>
-            <span className="text-[13px] font-medium text-gray-500 uppercase tracking-wide">
+            <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Legal
             </span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 tracking-tight mb-4">
+          <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight mb-4">
             {page.title}
           </h1>
-          <div className="flex flex-wrap items-center gap-4 text-[13px] text-gray-500">
+          <div className="flex flex-wrap items-center gap-4 text-[13px] text-gray-500 dark:text-gray-400">
             {page.version && (
               <div className="flex items-center gap-1.5">
                 <Hash className="w-3.5 h-3.5" />
@@ -160,7 +160,7 @@ export default function CMSPageView() {
           {headers.length > 3 && (
             <aside className="hidden lg:block w-64 flex-shrink-0">
               <div className="sticky top-24">
-                <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-4">
+                <h3 className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">
                   On this page
                 </h3>
                 <nav className="space-y-1">
@@ -168,7 +168,7 @@ export default function CMSPageView() {
                     <a
                       key={header.id}
                       href={`#${header.id}`}
-                      className={`block text-[13px] text-gray-500 hover:text-gray-900 transition-colors py-1 ${
+                      className={`block text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors py-1 ${
                         header.level === 3 ? 'pl-4' : ''
                       }`}
                     >
@@ -184,8 +184,8 @@ export default function CMSPageView() {
           <article className="flex-1 min-w-0">
             {/* Mobile Table of Contents */}
             {headers.length > 3 && (
-              <div className="lg:hidden mb-8 p-4 bg-gray-50 rounded-lg">
-                <h3 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              <div className="lg:hidden mb-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <h3 className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
                   Contents
                 </h3>
                 <nav className="space-y-1">
@@ -193,7 +193,7 @@ export default function CMSPageView() {
                     <a
                       key={header.id}
                       href={`#${header.id}`}
-                      className="block text-[13px] text-gray-600 hover:text-gray-900 py-0.5"
+                      className="block text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 py-0.5"
                     >
                       {header.text}
                     </a>
@@ -210,60 +210,60 @@ export default function CMSPageView() {
       </div>
 
       {/* Related Legal Documents */}
-      <div className="border-t border-gray-100 bg-gray-50">
+      <div className="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-5xl mx-auto px-6 py-12">
-          <h3 className="text-[13px] font-semibold text-gray-400 uppercase tracking-wider mb-6">
+          <h3 className="text-[13px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-6">
             Related Documents
           </h3>
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
             <Link
               to="/terms-of-service"
-              className={`p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all ${
-                slug === 'terms-of-service' ? 'border-gray-900 bg-gray-50' : ''
+              className={`p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm dark:hover:shadow-gray-900/40 transition-all ${
+                slug === 'terms-of-service' ? 'border-gray-900 dark:border-gray-300 bg-gray-50 dark:bg-gray-800' : ''
               }`}
             >
-              <p className="text-[14px] font-medium text-gray-900">Terms of Service</p>
-              <p className="text-[12px] text-gray-500 mt-1">Usage terms and conditions</p>
+              <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Terms of Service</p>
+              <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-1">Usage terms and conditions</p>
             </Link>
             <Link
               to="/privacy-policy"
-              className={`p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all ${
-                slug === 'privacy-policy' ? 'border-gray-900 bg-gray-50' : ''
+              className={`p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm dark:hover:shadow-gray-900/40 transition-all ${
+                slug === 'privacy-policy' ? 'border-gray-900 dark:border-gray-300 bg-gray-50 dark:bg-gray-800' : ''
               }`}
             >
-              <p className="text-[14px] font-medium text-gray-900">Privacy Policy</p>
-              <p className="text-[12px] text-gray-500 mt-1">How we handle your data</p>
+              <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Privacy Policy</p>
+              <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-1">How we handle your data</p>
             </Link>
             <Link
               to="/cookie-policy"
-              className={`p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all ${
-                slug === 'cookie-policy' ? 'border-gray-900 bg-gray-50' : ''
+              className={`p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm dark:hover:shadow-gray-900/40 transition-all ${
+                slug === 'cookie-policy' ? 'border-gray-900 dark:border-gray-300 bg-gray-50 dark:bg-gray-800' : ''
               }`}
             >
-              <p className="text-[14px] font-medium text-gray-900">Cookie Policy</p>
-              <p className="text-[12px] text-gray-500 mt-1">Our use of cookies</p>
+              <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Cookie Policy</p>
+              <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-1">Our use of cookies</p>
             </Link>
             <Link
               to="/acceptable-use-policy"
-              className={`p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all ${
-                slug === 'acceptable-use-policy' ? 'border-gray-900 bg-gray-50' : ''
+              className={`p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm dark:hover:shadow-gray-900/40 transition-all ${
+                slug === 'acceptable-use-policy' ? 'border-gray-900 dark:border-gray-300 bg-gray-50 dark:bg-gray-800' : ''
               }`}
             >
-              <p className="text-[14px] font-medium text-gray-900">Acceptable Use</p>
-              <p className="text-[12px] text-gray-500 mt-1">Platform usage guidelines</p>
+              <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Acceptable Use</p>
+              <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-1">Platform usage guidelines</p>
             </Link>
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 py-8">
+      <footer className="border-t border-gray-100 dark:border-gray-700 py-8 bg-white dark:bg-gray-900">
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <p className="text-[13px] text-gray-400">
+            <p className="text-[13px] text-gray-400 dark:text-gray-500">
               Last updated: {new Date(page.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
             </p>
-            <p className="text-[13px] text-gray-400">
+            <p className="text-[13px] text-gray-400 dark:text-gray-500">
               © {new Date().getFullYear()} {seoDefaults.companyName}. All rights reserved.
             </p>
           </div>

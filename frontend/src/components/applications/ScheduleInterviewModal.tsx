@@ -182,21 +182,21 @@ export default function ScheduleInterviewModal({
   const interviewerHasCalendar = selectedInterviewer?.has_calendar ?? false
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[300]">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-[300]">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/50 w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               {isReschedule ? 'Reschedule Interview' : 'Schedule Interview'}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {candidateName} - {instance.stage_template.name}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600 rounded-md"
+            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md"
           >
             <X className="w-5 h-5" />
           </button>
@@ -206,30 +206,30 @@ export default function ScheduleInterviewModal({
         <div className="px-6 py-4 overflow-y-auto flex-1 space-y-4">
           {/* Booking link success message */}
           {bookingLinkResult && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <span className="font-medium text-green-800">Booking link sent!</span>
+                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                <span className="font-medium text-green-800 dark:text-green-300">Booking link sent!</span>
               </div>
-              <p className="text-sm text-green-700 mb-2">{bookingLinkResult.message}</p>
+              <p className="text-sm text-green-700 dark:text-green-400 mb-2">{bookingLinkResult.message}</p>
 
               {/* Booking URL with copy button */}
-              <div className="mt-3 p-2 bg-white border border-green-200 rounded-md">
+              <div className="mt-3 p-2 bg-white dark:bg-gray-800 border border-green-200 dark:border-green-800 rounded-md">
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     readOnly
                     value={bookingLinkResult.booking_url}
-                    className="flex-1 text-xs text-gray-700 bg-transparent border-none focus:outline-none truncate"
+                    className="flex-1 text-xs text-gray-700 dark:text-gray-300 bg-transparent border-none focus:outline-none truncate"
                   />
                   <button
                     type="button"
                     onClick={handleCopyBookingLink}
-                    className="flex-shrink-0 p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                    className="flex-shrink-0 p-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                     title="Copy link"
                   >
                     {copiedLink ? (
-                      <Check className="w-4 h-4 text-green-600" />
+                      <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
                     ) : (
                       <Copy className="w-4 h-4" />
                     )}
@@ -237,7 +237,7 @@ export default function ScheduleInterviewModal({
                 </div>
               </div>
 
-              <p className="text-xs text-green-600 mt-2">
+              <p className="text-xs text-green-600 dark:text-green-400 mt-2">
                 {bookingLinkResult.expires_at && (
                   <>Link expires: {new Date(bookingLinkResult.expires_at).toLocaleDateString()}</>
                 )}
@@ -246,16 +246,16 @@ export default function ScheduleInterviewModal({
           )}
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <span className="text-sm text-red-700">{error}</span>
+              <span className="text-sm text-red-700 dark:text-red-400">{error}</span>
             </div>
           )}
 
           {/* Stage Info */}
           <div className="flex items-center justify-between">
             <StageTypeBadge stageType={instance.stage_template.stage_type} />
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               <Clock className="w-4 h-4 inline mr-1" />
               {defaultDuration} min
             </span>
@@ -263,7 +263,7 @@ export default function ScheduleInterviewModal({
 
           {/* Interviewer Selection - Always visible */}
           <div>
-            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               <User className="w-4 h-4" />
               Primary Interviewer
             </label>
@@ -271,7 +271,7 @@ export default function ScheduleInterviewModal({
               value={formData.interviewer_id}
               onChange={(e) => handleChange('interviewer_id', e.target.value)}
               disabled={isLoadingInterviewers}
-              className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-100"
+              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-700"
             >
               <option value="">Select interviewer...</option>
               {interviewers.map((interviewer) => (
@@ -281,7 +281,7 @@ export default function ScheduleInterviewModal({
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               {interviewers.some((i) => i.has_calendar)
                 ? '✓ indicates calendar connected'
                 : 'No team members have connected their calendars yet'}
@@ -290,16 +290,16 @@ export default function ScheduleInterviewModal({
 
           {/* PRIMARY OPTION: Send Booking Link (for both schedule and reschedule) */}
           {!bookingLinkResult && (
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
               <div className="flex items-start gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
-                  <Link2 className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <Link2 className="w-5 h-5 text-white dark:text-gray-900" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900">
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100">
                     {isReschedule ? 'Send new booking link' : 'Let candidate choose a time'}
                   </h3>
-                  <p className="text-sm text-gray-500 mt-0.5">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                     {isReschedule
                       ? 'Send a new booking link so the candidate can pick a different time'
                       : 'Send a booking link and the candidate will pick from available slots on the interviewer\'s calendar'}
@@ -310,7 +310,7 @@ export default function ScheduleInterviewModal({
                 type="button"
                 onClick={handleSendBookingLink}
                 disabled={!formData.interviewer_id || isSendingBookingLink || !interviewerHasCalendar}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSendingBookingLink ? (
                   <>
@@ -325,17 +325,17 @@ export default function ScheduleInterviewModal({
                 )}
               </button>
               {!interviewerHasCalendar && formData.interviewer_id && !isLoadingInterviewers && (
-                <p className="text-xs text-amber-600 mt-2 text-center">
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 text-center">
                   Selected interviewer needs to connect their calendar first
                 </p>
               )}
               {!formData.interviewer_id && !isLoadingInterviewers && (
-                <p className="text-xs text-gray-500 mt-2 text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
                   Select an interviewer above to send a booking link
                 </p>
               )}
               {isLoadingInterviewers && (
-                <p className="text-xs text-gray-500 mt-2 text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
                   Loading interviewers...
                 </p>
               )}
@@ -344,13 +344,13 @@ export default function ScheduleInterviewModal({
 
           {/* EXPANDABLE: Manual Scheduling Section */}
           {!bookingLinkResult && (
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               <button
                 type="button"
                 onClick={() => setShowManualScheduling(!showManualScheduling)}
-                className="w-full px-4 py-3 flex items-center justify-between bg-white hover:bg-gray-50 transition-colors"
+                className="w-full px-4 py-3 flex items-center justify-between bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {isReschedule ? 'Reschedule details' : 'Or schedule manually'}
                 </span>
                 {showManualScheduling ? (
@@ -361,11 +361,11 @@ export default function ScheduleInterviewModal({
               </button>
 
               {showManualScheduling && (
-                <form onSubmit={handleSubmit} className="px-4 pb-4 pt-2 space-y-4 border-t border-gray-100">
+                <form onSubmit={handleSubmit} className="px-4 pb-4 pt-2 space-y-4 border-t border-gray-100 dark:border-gray-800">
                   {/* Date & Time */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         <Calendar className="w-4 h-4" />
                         Date
                       </label>
@@ -375,11 +375,11 @@ export default function ScheduleInterviewModal({
                         onChange={(e) => handleChange('date', e.target.value)}
                         min={new Date().toISOString().split('T')[0]}
                         required
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         <Clock className="w-4 h-4" />
                         Time
                       </label>
@@ -388,25 +388,25 @@ export default function ScheduleInterviewModal({
                         value={formData.time}
                         onChange={(e) => handleChange('time', e.target.value)}
                         required
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                       />
                     </div>
                   </div>
 
                   {/* Additional Participants */}
                   <div>
-                    <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                    <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       <Users className="w-4 h-4" />
                       Additional Participants
                       <span className="text-gray-400 font-normal">(optional)</span>
                     </label>
-                    <div className="border border-gray-200 rounded-md p-2 space-y-1 max-h-32 overflow-y-auto">
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-md p-2 space-y-1 max-h-32 overflow-y-auto bg-white dark:bg-gray-800">
                       {interviewers
                         .filter((i) => i.id !== formData.interviewer_id)
                         .map((participant) => (
                           <label
                             key={participant.id}
-                            className="flex items-center gap-2 p-1.5 hover:bg-gray-50 rounded cursor-pointer"
+                            className="flex items-center gap-2 p-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer"
                           >
                             <input
                               type="checkbox"
@@ -421,16 +421,16 @@ export default function ScheduleInterviewModal({
                                   )
                                 }
                               }}
-                              className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+                              className="w-4 h-4 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 rounded focus:ring-gray-900 dark:focus:ring-gray-100"
                             />
-                            <span className="text-sm text-gray-700">
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
                               {participant.full_name}
                               {participant.has_calendar ? ' ✓' : ''}
                             </span>
                           </label>
                         ))}
                       {interviewers.filter((i) => i.id !== formData.interviewer_id).length === 0 && (
-                        <p className="text-sm text-gray-500 p-1.5">No other team members available</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 p-1.5">No other team members available</p>
                       )}
                     </div>
                   </div>
@@ -438,7 +438,7 @@ export default function ScheduleInterviewModal({
                   {/* Location (for in-person) */}
                   {showLocation && (
                     <div>
-                      <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         <MapPin className="w-4 h-4" />
                         Location
                       </label>
@@ -447,7 +447,7 @@ export default function ScheduleInterviewModal({
                         value={formData.location}
                         onChange={(e) => handleChange('location', e.target.value)}
                         placeholder="Office address or meeting room..."
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                       />
                     </div>
                   )}
@@ -455,7 +455,7 @@ export default function ScheduleInterviewModal({
                   {/* Reschedule Reason */}
                   {isReschedule && (
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                         Reason for Rescheduling
                         <span className="text-gray-400 font-normal ml-1">(optional)</span>
                       </label>
@@ -464,26 +464,26 @@ export default function ScheduleInterviewModal({
                         onChange={(e) => handleChange('reason', e.target.value)}
                         placeholder="Let the candidate know why you're rescheduling..."
                         rows={2}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent resize-none"
                       />
                     </div>
                   )}
 
                   {/* Calendar Invite Option */}
-                  <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.send_calendar_invite}
                         onChange={(e) => handleChange('send_calendar_invite', e.target.checked)}
                         disabled={!interviewerHasCalendar}
-                        className="mt-0.5 w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+                        className="mt-0.5 w-4 h-4 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 rounded focus:ring-gray-900 dark:focus:ring-gray-100"
                       />
                       <div>
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           Send calendar invite with meeting link
                         </span>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                           {interviewerHasCalendar
                             ? 'A calendar event with a Google Meet or Teams link will be auto-created'
                             : formData.interviewer_id
@@ -498,7 +498,7 @@ export default function ScheduleInterviewModal({
                   <button
                     type="submit"
                     disabled={isSubmitting || !formData.date || !formData.time}
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send className="w-4 h-4" />
                     {isSubmitting
@@ -516,12 +516,12 @@ export default function ScheduleInterviewModal({
         </div>
 
         {/* Footer - Just close button now */}
-        <div className="flex justify-end px-6 py-4 border-t border-gray-100 flex-shrink-0">
+        <div className="flex justify-end px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex-shrink-0">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             {bookingLinkResult ? 'Close' : 'Cancel'}
           </button>

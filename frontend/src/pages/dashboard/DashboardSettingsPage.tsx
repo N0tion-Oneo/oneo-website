@@ -27,7 +27,7 @@ export default function DashboardSettingsPage() {
   if (user?.role !== UserRole.ADMIN) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">You don't have permission to view this page.</p>
+        <p className="text-gray-500 dark:text-gray-400">You don't have permission to view this page.</p>
       </div>
     )
   }
@@ -57,7 +57,7 @@ export default function DashboardSettingsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
       </div>
     )
   }
@@ -75,31 +75,31 @@ export default function DashboardSettingsPage() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Dashboard Settings</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Dashboard Settings</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Configure thresholds for the recruiter dashboard alerts and notifications.
         </p>
       </div>
 
       {/* Success/Error Messages */}
       {saveSuccess && (
-        <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-md flex items-center gap-2 text-green-700">
+        <div className="mb-6 p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md flex items-center gap-2 text-green-700 dark:text-green-400">
           <CheckCircle className="w-5 h-5" />
           <span className="text-sm">Settings saved successfully</span>
         </div>
       )}
       {saveError && (
-        <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2 text-red-700">
+        <div className="mb-6 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md flex items-center gap-2 text-red-700 dark:text-red-400">
           <AlertCircle className="w-5 h-5" />
           <span className="text-sm">{saveError}</span>
         </div>
       )}
 
       {/* Settings Form */}
-      <div className="bg-white border border-gray-200 rounded-lg">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Candidates Needing Attention</h2>
-          <p className="text-sm text-gray-500 mt-1">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">Candidates Needing Attention</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Configure thresholds that determine when candidates appear in the "Needs Attention" section on the recruiter dashboard.
           </p>
         </div>
@@ -107,10 +107,10 @@ export default function DashboardSettingsPage() {
         <div className="p-6 space-y-6">
           {/* Days Without Contact */}
           <div>
-            <label htmlFor="daysWithoutContact" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="daysWithoutContact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Days without contact
             </label>
-            <p className="text-xs text-gray-500 mb-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
               Candidates who haven't been contacted in this many days will appear in the "Not Contacted" section.
             </p>
             <div className="flex items-center gap-3">
@@ -121,18 +121,18 @@ export default function DashboardSettingsPage() {
                 max={365}
                 value={daysWithoutContact}
                 onChange={(e) => setDaysWithoutContact(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300"
+                className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600"
               />
-              <span className="text-sm text-gray-500">days</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">days</span>
             </div>
           </div>
 
           {/* Days Stuck in Stage */}
           <div>
-            <label htmlFor="daysStuckInStage" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="daysStuckInStage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Days stuck in stage
             </label>
-            <p className="text-xs text-gray-500 mb-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
               Candidates who have been in the same stage for this many days will appear in the "Stuck in Stage" section.
             </p>
             <div className="flex items-center gap-3">
@@ -143,18 +143,18 @@ export default function DashboardSettingsPage() {
                 max={365}
                 value={daysStuckInStage}
                 onChange={(e) => setDaysStuckInStage(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300"
+                className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600"
               />
-              <span className="text-sm text-gray-500">days</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">days</span>
             </div>
           </div>
 
           {/* Days Before Interview Prep */}
           <div>
-            <label htmlFor="daysBeforeInterviewPrep" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="daysBeforeInterviewPrep" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Days before interview for prep
             </label>
-            <p className="text-xs text-gray-500 mb-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
               Candidates with interviews scheduled within this many days will appear in the "Needs Interview Prep" section.
             </p>
             <div className="flex items-center gap-3">
@@ -165,19 +165,19 @@ export default function DashboardSettingsPage() {
                 max={30}
                 value={daysBeforeInterviewPrep}
                 onChange={(e) => setDaysBeforeInterviewPrep(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300"
+                className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600"
               />
-              <span className="text-sm text-gray-500">days</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">days</span>
             </div>
           </div>
         </div>
 
         {/* Save Button */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end">
+        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end">
           <button
             onClick={handleSave}
             disabled={isUpdating || !hasChanges}
-            className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
             {isUpdating ? 'Saving...' : 'Save Changes'}
@@ -186,7 +186,7 @@ export default function DashboardSettingsPage() {
       </div>
 
       {/* Help Text */}
-      <p className="mt-4 text-xs text-gray-500">
+      <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
         These settings apply globally to all users in the system. Changes will take effect immediately.
       </p>
     </div>

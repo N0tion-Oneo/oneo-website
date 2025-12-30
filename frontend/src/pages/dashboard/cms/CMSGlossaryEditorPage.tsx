@@ -166,10 +166,10 @@ export default function CMSGlossaryEditorPage() {
   // Access check
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to edit glossary terms.
         </p>
       </div>
@@ -188,12 +188,12 @@ export default function CMSGlossaryEditorPage() {
   // Error state
   if (!isNew && termError) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Glossary term not found</p>
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Glossary term not found</p>
         <Link
           to="/dashboard/cms/glossary"
-          className="text-[13px] text-gray-500 hover:text-gray-700 underline"
+          className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline"
         >
           Back to glossary
         </Link>
@@ -207,22 +207,22 @@ export default function CMSGlossaryEditorPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 -mx-6 px-6 py-3">
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 -mx-6 px-6 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               to="/dashboard/cms/glossary"
-              className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700"
+              className="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
             </Link>
-            <div className="h-4 w-px bg-gray-200" />
-            <h1 className="text-[16px] font-medium text-gray-900">
+            <div className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
+            <h1 className="text-[16px] font-medium text-gray-900 dark:text-gray-100">
               {isNew ? 'New Glossary Term' : 'Edit Term'}
             </h1>
             {hasChanges && (
-              <span className="text-[11px] text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+              <span className="text-[11px] text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded">
                 Unsaved changes
               </span>
             )}
@@ -234,8 +234,8 @@ export default function CMSGlossaryEditorPage() {
               onClick={() => handleChange('is_active', !formData.is_active)}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] border rounded-md transition-colors ${
                 formData.is_active
-                  ? 'border-green-300 bg-green-50 text-green-700'
-                  : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                  ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
               <Eye className={`w-4 h-4 ${formData.is_active ? '' : 'opacity-50'}`} />
@@ -247,8 +247,8 @@ export default function CMSGlossaryEditorPage() {
               onClick={() => setShowSettings(!showSettings)}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] border rounded-md transition-colors ${
                 showSettings
-                  ? 'border-gray-300 bg-gray-100 text-gray-700'
-                  : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                  ? 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
               <Settings2 className="w-4 h-4" />
@@ -260,7 +260,7 @@ export default function CMSGlossaryEditorPage() {
               <Link
                 to={`/glossary/${term.slug}?preview=true`}
                 target="_blank"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] border border-gray-200 text-gray-500 rounded-md hover:bg-gray-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 <Eye className="w-4 h-4" />
                 Preview
@@ -271,7 +271,7 @@ export default function CMSGlossaryEditorPage() {
             <button
               onClick={handleSubmit}
               disabled={isSaving}
-              className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -294,7 +294,7 @@ export default function CMSGlossaryEditorPage() {
             placeholder="Glossary Term"
             value={formData.title}
             onChange={(e) => handleTitleChange(e.target.value)}
-            className="w-full text-[28px] font-semibold text-gray-900 placeholder-gray-300 border-0 focus:outline-none focus:ring-0 mb-4"
+            className="w-full text-[28px] font-semibold text-gray-900 dark:text-gray-100 placeholder-gray-300 dark:placeholder-gray-600 border-0 focus:outline-none focus:ring-0 mb-4 bg-transparent"
           />
 
           {/* Short Definition */}
@@ -303,7 +303,7 @@ export default function CMSGlossaryEditorPage() {
             value={formData.definition_plain}
             onChange={(e) => handleChange('definition_plain', e.target.value)}
             rows={2}
-            className="w-full text-[14px] text-gray-600 placeholder-gray-400 border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-300 mb-4 resize-none"
+            className="w-full text-[14px] text-gray-600 dark:text-gray-400 placeholder-gray-400 dark:placeholder-gray-500 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 mb-4 resize-none bg-white dark:bg-gray-900"
           />
 
           {/* Block Editor */}
@@ -321,31 +321,31 @@ export default function CMSGlossaryEditorPage() {
         {/* Settings Sidebar */}
         {showSettings && (
           <div className="w-80 flex-shrink-0">
-            <div className="bg-white border border-gray-200 rounded-lg p-4 sticky top-20">
-              <h3 className="text-[14px] font-medium text-gray-900 mb-4">Term Settings</h3>
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sticky top-20">
+              <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-4">Term Settings</h3>
 
               {/* Slug */}
               <div className="mb-4">
-                <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                   URL Slug
                 </label>
                 <div className="flex items-center">
-                  <span className="text-[12px] text-gray-500 mr-1">/glossary/</span>
+                  <span className="text-[12px] text-gray-500 dark:text-gray-400 mr-1">/glossary/</span>
                   <input
                     type="text"
                     value={formData.slug}
                     onChange={(e) => handleChange('slug', e.target.value)}
-                    className="flex-1 px-2 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    className="flex-1 px-2 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
               </div>
 
               {/* SEO Section */}
-              <div className="border-t border-gray-200 mt-4 pt-4">
-                <h4 className="text-[12px] font-medium text-gray-900 mb-3">SEO</h4>
+              <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4">
+                <h4 className="text-[12px] font-medium text-gray-900 dark:text-gray-100 mb-3">SEO</h4>
 
                 <div className="mb-4">
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Meta Title
                   </label>
                   <input
@@ -354,7 +354,7 @@ export default function CMSGlossaryEditorPage() {
                     onChange={(e) => handleChange('meta_title', e.target.value)}
                     placeholder={formData.title || 'Term title'}
                     maxLength={60}
-                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                   <span className="text-[10px] text-gray-400 mt-1">
                     {(formData.meta_title || formData.title).length}/60 · "{seoDefaults.titleSuffix}" added automatically
@@ -362,7 +362,7 @@ export default function CMSGlossaryEditorPage() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Meta Description
                   </label>
                   <textarea
@@ -371,7 +371,7 @@ export default function CMSGlossaryEditorPage() {
                     placeholder={formData.definition_plain || 'Term description for search engines'}
                     maxLength={160}
                     rows={3}
-                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 resize-none"
+                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                   <span className="text-[10px] text-gray-400 mt-1">
                     {(formData.meta_description || formData.definition_plain).length}/160
@@ -380,24 +380,24 @@ export default function CMSGlossaryEditorPage() {
               </div>
 
               {/* FAQs Section */}
-              <div className="border-t border-gray-200 mt-4 pt-4">
+              <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4">
                 <div className="flex items-center gap-2 mb-3">
                   <HelpCircle className="w-4 h-4 text-purple-500" />
-                  <h4 className="text-[12px] font-medium text-gray-900">FAQs</h4>
+                  <h4 className="text-[12px] font-medium text-gray-900 dark:text-gray-100">FAQs</h4>
                   {selectedFaqIds.length > 0 && (
-                    <span className="text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded">
                       {selectedFaqIds.length} selected
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-gray-500 mb-3">
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
                   Select FAQs to display on this term page.
                 </p>
 
                 {allFaqs.length === 0 ? (
                   <p className="text-[11px] text-gray-400 italic">No FAQs available</p>
                 ) : (
-                  <div className="max-h-48 overflow-y-auto space-y-1 border border-gray-100 rounded-md p-2">
+                  <div className="max-h-48 overflow-y-auto space-y-1 border border-gray-100 dark:border-gray-700 rounded-md p-2">
                     {allFaqs.map((faq) => (
                       <button
                         key={faq.id}
@@ -405,22 +405,22 @@ export default function CMSGlossaryEditorPage() {
                         onClick={() => handleToggleFaq(faq.id)}
                         className={`w-full flex items-start gap-2 p-2 rounded text-left transition-colors ${
                           selectedFaqIds.includes(faq.id)
-                            ? 'bg-purple-50 border border-purple-200'
-                            : 'hover:bg-gray-50 border border-transparent'
+                            ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-800 border border-transparent'
                         }`}
                       >
                         <div
                           className={`flex-shrink-0 w-4 h-4 rounded border mt-0.5 flex items-center justify-center ${
                             selectedFaqIds.includes(faq.id)
                               ? 'bg-purple-500 border-purple-500'
-                              : 'border-gray-300'
+                              : 'border-gray-300 dark:border-gray-600'
                           }`}
                         >
                           {selectedFaqIds.includes(faq.id) && (
                             <Check className="w-3 h-3 text-white" />
                           )}
                         </div>
-                        <span className="text-[11px] text-gray-700 line-clamp-2">
+                        <span className="text-[11px] text-gray-700 dark:text-gray-300 line-clamp-2">
                           {faq.question}
                         </span>
                       </button>
@@ -431,9 +431,9 @@ export default function CMSGlossaryEditorPage() {
 
               {/* Term Info */}
               {!isNew && term && (
-                <div className="border-t border-gray-200 mt-4 pt-4">
-                  <h4 className="text-[12px] font-medium text-gray-900 mb-3">Info</h4>
-                  <div className="space-y-2 text-[11px] text-gray-500">
+                <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4">
+                  <h4 className="text-[12px] font-medium text-gray-900 dark:text-gray-100 mb-3">Info</h4>
+                  <div className="space-y-2 text-[11px] text-gray-500 dark:text-gray-400">
                     <p>Created: {new Date(term.created_at).toLocaleString()}</p>
                     <p>Updated: {new Date(term.updated_at).toLocaleString()}</p>
                   </div>

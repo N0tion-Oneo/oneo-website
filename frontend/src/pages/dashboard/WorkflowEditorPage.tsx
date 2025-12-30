@@ -282,7 +282,7 @@ function WorkflowEditorContent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     )
@@ -290,14 +290,14 @@ function WorkflowEditorContent() {
 
   if (!workflow) {
     return (
-      <div className="p-6">
-        <div className="flex items-center gap-2 text-red-600 bg-red-50 p-4 rounded-lg">
+      <div className="p-6 bg-white dark:bg-gray-900">
+        <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 p-4 rounded-lg">
           <AlertCircle className="w-5 h-5" />
           <span>Workflow not found</span>
         </div>
         <button
           onClick={() => navigate('/dashboard/admin/automations')}
-          className="mt-4 flex items-center gap-2 text-blue-600 hover:underline"
+          className="mt-4 flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Automations
@@ -309,22 +309,22 @@ function WorkflowEditorContent() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Left Sidebar - Node Palette */}
-      <div className="w-60 border-r bg-white flex flex-col">
+      <div className="w-60 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col">
         {/* Header */}
-        <div className="p-3 border-b">
+        <div className="p-3 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-2">
             <button
               onClick={() => navigate('/dashboard/admin/automations')}
-              className="p-1 hover:bg-gray-100 rounded"
+              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
             </button>
-            <span className="font-semibold text-gray-900 truncate flex-1 text-sm">
+            <span className="font-semibold text-gray-900 dark:text-gray-100 truncate flex-1 text-sm">
               {workflowName}
             </span>
           </div>
           {hasUnsavedChanges && (
-            <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded">
+            <span className="text-xs px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded">
               Unsaved changes
             </span>
           )}
@@ -357,7 +357,7 @@ function WorkflowEditorContent() {
               <button
                 onClick={handleTest}
                 disabled={isTesting || nodes.length === 0}
-                className="flex items-center gap-1 px-3 py-1.5 border rounded-lg bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 {isTesting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -383,7 +383,7 @@ function WorkflowEditorContent() {
 
           {/* Workflow settings panel */}
           <Panel position="top-left">
-            <div className="bg-white rounded-lg shadow px-3 py-2 min-w-[160px]">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/40 px-3 py-2 min-w-[160px]">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -392,9 +392,9 @@ function WorkflowEditorContent() {
                     setWorkflowActive(e.target.checked)
                     setHasUnsavedChanges(true)
                   }}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-gray-700 dark:text-gray-300">
                   {workflowActive ? 'Active' : 'Inactive'}
                 </span>
               </label>
@@ -405,7 +405,7 @@ function WorkflowEditorContent() {
 
       {/* Right Sidebar - Node Config Panel */}
       {configPanelOpen && selectedNode && (
-        <div className="w-[360px] border-l bg-white">
+        <div className="w-[360px] border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <NodeConfigPanel
             node={selectedNode}
             models={models}
@@ -421,7 +421,7 @@ function WorkflowEditorContent() {
       {toast && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
           <div
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg dark:shadow-gray-900/40 ${
               toast.type === 'success'
                 ? 'bg-green-600 text-white'
                 : 'bg-red-600 text-white'

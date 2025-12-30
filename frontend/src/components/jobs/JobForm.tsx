@@ -470,7 +470,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
   return (
     <form onSubmit={handleSubmit}>
       {/* Step Tabs */}
-      <div className="mb-6 -mx-6 -mt-6 px-6 py-3 border-b border-gray-200 bg-white">
+      <div className="mb-6 -mx-6 -mt-6 px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="flex gap-1">
           {steps.map((step) => (
             <button
@@ -479,8 +479,8 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
               onClick={() => setCurrentStep(step.id)}
               className={`flex items-center gap-2 px-4 py-2 text-[13px] font-medium rounded-md transition-colors ${
                 currentStep === step.id
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
               }`}
             >
               {step.title}
@@ -491,29 +491,29 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
 
       {/* Error Message */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-[13px] text-red-600">{error}</p>
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+          <p className="text-[13px] text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
 
       {/* Blocked Stages Warning - shown when trying to delete stages with scheduled interviews */}
       {blockedStages && blockedStages.length > 0 && (
-        <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+        <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="text-[14px] font-medium text-amber-800 mb-1">
+              <h4 className="text-[14px] font-medium text-amber-800 dark:text-amber-200 mb-1">
                 Cannot remove stages with scheduled interviews
               </h4>
-              <p className="text-[13px] text-amber-700 mb-3">
+              <p className="text-[13px] text-amber-700 dark:text-amber-300 mb-3">
                 The following stages have active interviews that need to be completed or cancelled first:
               </p>
               <ul className="space-y-1.5 mb-3">
                 {blockedStages.map((stage, index) => (
-                  <li key={index} className="flex items-center gap-2 text-[13px] text-amber-800">
-                    <Calendar className="w-4 h-4 text-amber-600" />
+                  <li key={index} className="flex items-center gap-2 text-[13px] text-amber-800 dark:text-amber-200">
+                    <Calendar className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                     <span className="font-medium">{stage.name}</span>
-                    <span className="text-amber-600">
+                    <span className="text-amber-600 dark:text-amber-400">
                       ({stage.active_interviews} scheduled interview{stage.active_interviews !== 1 ? 's' : ''})
                     </span>
                   </li>
@@ -522,7 +522,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
               <button
                 type="button"
                 onClick={clearStagesError}
-                className="text-[12px] text-amber-700 hover:text-amber-900 underline"
+                className="text-[12px] text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 underline"
               >
                 Dismiss
               </button>
@@ -535,7 +535,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
       {currentStep === 1 && (
         <div className="space-y-4">
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               Job Title *
             </label>
             <input
@@ -545,13 +545,13 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
               onChange={handleInputChange}
               required
               placeholder="e.g., Senior Software Engineer"
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
             />
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Seniority Level *
               </label>
               <select
@@ -559,7 +559,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
                 value={formData.seniority || ''}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
               >
                 <option value="">Select level</option>
                 {seniorityOptions.map((opt) => (
@@ -571,7 +571,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Job Type *
               </label>
               <select
@@ -579,7 +579,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
                 value={formData.job_type || ''}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
               >
                 <option value="">Select type</option>
                 {jobTypeOptions.map((opt) => (
@@ -593,14 +593,14 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Department
               </label>
               <select
                 name="department"
                 value={formData.department || ''}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
               >
                 <option value="">Select department</option>
                 {departmentOptions.map((opt) => (
@@ -612,7 +612,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Work Mode *
               </label>
               <select
@@ -620,7 +620,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
                 value={formData.work_mode || ''}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
               >
                 <option value="">Select mode</option>
                 {workModeOptions.map((opt) => (
@@ -634,13 +634,13 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Country
               </label>
               <select
                 value={formData.location_country_id || ''}
                 onChange={handleCountryChange}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
               >
                 <option value="">Select country</option>
                 {countries.map((country) => (
@@ -652,7 +652,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 City
               </label>
               <select
@@ -660,7 +660,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
                 value={formData.location_city_id || ''}
                 onChange={handleInputChange}
                 disabled={!formData.location_country_id}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-50"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-800"
               >
                 <option value="">Select city</option>
                 {cities.map((city) => (
@@ -674,7 +674,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Application Deadline
               </label>
               <input
@@ -682,12 +682,12 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
                 name="application_deadline"
                 value={formData.application_deadline?.split('T')[0] || ''}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Positions to Fill
               </label>
               <input
@@ -697,9 +697,9 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
                 onChange={handleInputChange}
                 min={1}
                 max={100}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
               />
-              <p className="text-[12px] text-gray-500 mt-1">
+              <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-1">
                 Job will auto-mark as filled when this many candidates are hired
               </p>
             </div>
@@ -712,7 +712,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
       {currentStep === 2 && (
         <div className="space-y-4">
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               Summary *
             </label>
             <textarea
@@ -722,12 +722,12 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
               required
               rows={2}
               placeholder="Brief summary of the role (shown in job cards)"
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent resize-none"
             />
           </div>
 
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               Job Description
             </label>
             <textarea
@@ -736,12 +736,12 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
               onChange={handleInputChange}
               rows={6}
               placeholder="Detailed description of the role and opportunity..."
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent resize-none"
             />
           </div>
 
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               Responsibilities
             </label>
             <textarea
@@ -750,7 +750,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
               onChange={handleInputChange}
               rows={6}
               placeholder="Key responsibilities for this role..."
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent resize-none"
             />
           </div>
         </div>
@@ -760,7 +760,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
       {currentStep === 3 && (
         <div className="space-y-4">
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               Requirements
             </label>
             <textarea
@@ -769,12 +769,12 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
               onChange={handleInputChange}
               rows={6}
               placeholder="Required qualifications and experience..."
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent resize-none"
             />
           </div>
 
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               Nice to Have
             </label>
             <textarea
@@ -783,7 +783,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
               onChange={handleInputChange}
               rows={4}
               placeholder="Nice to have qualifications..."
-              className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent resize-none"
             />
           </div>
 
@@ -807,7 +807,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
         <div className="space-y-4">
           <div className="grid md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Minimum Salary
               </label>
               <input
@@ -816,12 +816,12 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
                 value={formData.salary_min || ''}
                 onChange={handleInputChange}
                 placeholder="e.g., 50000"
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Maximum Salary
               </label>
               <input
@@ -830,19 +830,19 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
                 value={formData.salary_max || ''}
                 onChange={handleInputChange}
                 placeholder="e.g., 80000"
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Currency
               </label>
               <select
                 name="salary_currency"
                 value={formData.salary_currency || Currency.ZAR}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
               >
                 {currencyOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -860,9 +860,9 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
                 name="salary_visible"
                 checked={formData.salary_visible ?? true}
                 onChange={handleInputChange}
-                className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+                className="w-4 h-4 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 rounded focus:ring-gray-900 dark:focus:ring-gray-100"
               />
-              <span className="text-[13px] text-gray-700">Show salary on job listing</span>
+              <span className="text-[13px] text-gray-700 dark:text-gray-300">Show salary on job listing</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -871,9 +871,9 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
                 name="equity_offered"
                 checked={formData.equity_offered || false}
                 onChange={handleInputChange}
-                className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+                className="w-4 h-4 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 rounded focus:ring-gray-900 dark:focus:ring-gray-100"
               />
-              <span className="text-[13px] text-gray-700">Equity offered</span>
+              <span className="text-[13px] text-gray-700 dark:text-gray-300">Equity offered</span>
             </label>
           </div>
         </div>
@@ -884,8 +884,8 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-[14px] font-medium text-gray-900">Interview Pipeline</h3>
-              <p className="text-[12px] text-gray-500 mt-0.5">
+              <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Interview Pipeline</h3>
+              <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5">
                 Define the stages candidates will go through in your hiring process.
                 Each stage type has specific scheduling and notification features.
               </p>
@@ -893,7 +893,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
             <button
               type="button"
               onClick={() => setShowStageSelector(!showStageSelector)}
-              className="flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50"
+              className="flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Stage
@@ -902,12 +902,12 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
 
           {/* Stage Type Selector */}
           {showStageSelector && (
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg mb-4">
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mb-4">
               <StageTypeSelector onSelect={handleAddStageTemplate} />
               <button
                 type="button"
                 onClick={() => setShowStageSelector(false)}
-                className="mt-4 text-sm text-gray-500 hover:text-gray-700"
+                className="mt-4 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               >
                 Cancel
               </button>
@@ -929,11 +929,11 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-[14px] font-medium text-gray-900 flex items-center gap-2">
+              <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Application Questions
               </h3>
-              <p className="text-[12px] text-gray-500 mt-0.5">
+              <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5">
                 Custom questions candidates must answer when applying
               </p>
             </div>
@@ -946,7 +946,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
                       e.target.value = ''
                     }
                   }}
-                  className="px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100"
                   defaultValue=""
                 >
                   <option value="">Apply from template...</option>
@@ -972,18 +972,18 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-[14px] font-medium text-gray-900 flex items-center gap-2">
+              <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
                 <Star className="w-4 h-4" />
                 Shortlist Screening Questions
               </h3>
-              <p className="text-[12px] text-gray-500 mt-0.5">
+              <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5">
                 Questions reviewers will score (1-5 stars) when evaluating shortlisted candidates
               </p>
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <p className="text-[12px] text-blue-700">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+            <p className="text-[12px] text-blue-700 dark:text-blue-300">
               <strong>Who answers:</strong> Admins, Recruiters, and Client team members will answer these questions when reviewing candidates in the Shortlisted stage.
             </p>
           </div>
@@ -998,12 +998,12 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
       )}
 
       {/* Navigation Buttons */}
-      <div className="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between">
+      <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <button
           type="button"
           onClick={(e) => prevStep(e)}
           disabled={currentStep === 1}
-          className="flex items-center gap-1 px-4 py-2 text-[13px] font-medium text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1 px-4 py-2 text-[13px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ChevronLeft className="w-4 h-4" />
           Previous
@@ -1013,7 +1013,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
           <button
             type="button"
             onClick={(e) => nextStep(e)}
-            className="flex items-center gap-1 px-4 py-2 text-[13px] font-medium bg-gray-900 text-white rounded-md hover:bg-gray-800"
+            className="flex items-center gap-1 px-4 py-2 text-[13px] font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
           >
             Next
             <ChevronRight className="w-4 h-4" />
@@ -1022,7 +1022,7 @@ export default function JobForm({ job, companyId, onSuccess, selectedRecruiters 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-2 text-[13px] font-medium bg-gray-900 text-white rounded-md hover:bg-gray-800 disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-2 text-[13px] font-medium bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50"
           >
             {isSubmitting ? (
               <>

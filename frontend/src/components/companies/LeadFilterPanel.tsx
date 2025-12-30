@@ -90,14 +90,14 @@ export default function LeadFilterPanel({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg sticky top-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg sticky top-4">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h3 className="text-[14px] font-medium text-gray-900">Filters</h3>
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Filters</h3>
         {activeFilterCount > 0 && (
           <button
             onClick={onClearFilters}
-            className="flex items-center gap-1 text-[12px] text-gray-500 hover:text-gray-700"
+            className="flex items-center gap-1 text-[12px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
           >
             <RotateCcw className="w-3 h-3" />
             Clear all
@@ -108,17 +108,17 @@ export default function LeadFilterPanel({
       <div className="p-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
         {/* Search */}
         <div>
-          <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+          <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
             Search
           </label>
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Name, email, company..."
               value={filters.search}
               onChange={(e) => updateFilter('search', e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+              className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
         </div>
@@ -132,13 +132,13 @@ export default function LeadFilterPanel({
           <div className="space-y-4">
             {/* Stage */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Stage
               </label>
               <select
                 value={filters.stage}
                 onChange={(e) => updateFilter('stage', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All stages</option>
                 {stages.map(stage => (
@@ -149,13 +149,13 @@ export default function LeadFilterPanel({
 
             {/* Source */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Source
               </label>
               <select
                 value={filters.source}
                 onChange={(e) => updateFilter('source', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All sources</option>
                 {SOURCE_OPTIONS.map(opt => (
@@ -166,13 +166,13 @@ export default function LeadFilterPanel({
 
             {/* Industry */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Industry
               </label>
               <select
                 value={filters.industry}
                 onChange={(e) => updateFilter('industry', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All industries</option>
                 {allIndustries.map(industry => (
@@ -183,13 +183,13 @@ export default function LeadFilterPanel({
 
             {/* Company Size */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Company Size
               </label>
               <select
                 value={filters.company_size}
                 onChange={(e) => updateFilter('company_size', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Any size</option>
                 {COMPANY_SIZE_OPTIONS.map(opt => (
@@ -200,13 +200,13 @@ export default function LeadFilterPanel({
 
             {/* Converted Status */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Conversion Status
               </label>
               <select
                 value={filters.converted}
                 onChange={(e) => updateFilter('converted', e.target.value as LeadFilters['converted'])}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All leads</option>
                 <option value="false">Not Converted</option>
@@ -224,25 +224,25 @@ export default function LeadFilterPanel({
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Created After
               </label>
               <input
                 type="date"
                 value={filters.created_after}
                 onChange={(e) => updateFilter('created_after', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Created Before
               </label>
               <input
                 type="date"
                 value={filters.created_before}
                 onChange={(e) => updateFilter('created_before', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -264,16 +264,16 @@ function CollapsibleSection({
   children: React.ReactNode
 }) {
   return (
-    <div className="border-t border-gray-200 pt-4">
+    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
       <button
         onClick={onToggle}
         className="flex items-center justify-between w-full text-left"
       >
-        <span className="text-[12px] font-medium text-gray-700">{title}</span>
+        <span className="text-[12px] font-medium text-gray-700 dark:text-gray-300">{title}</span>
         {expanded ? (
-          <ChevronUp className="w-4 h-4 text-gray-400" />
+          <ChevronUp className="w-4 h-4 text-gray-400 dark:text-gray-500" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />
         )}
       </button>
       {expanded && <div className="mt-3">{children}</div>}

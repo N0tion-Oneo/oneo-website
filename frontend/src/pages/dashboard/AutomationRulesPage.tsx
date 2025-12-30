@@ -462,8 +462,8 @@ export default function AutomationRulesPage() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Automations</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Automations</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Configure automation rules, notification templates, and webhooks.
         </p>
       </div>
@@ -474,8 +474,8 @@ export default function AutomationRulesPage() {
           onClick={() => setActiveTab('rules')}
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'rules'
-              ? 'border-gray-900 text-gray-900'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-gray-900 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'
           }`}
         >
           <Zap className="w-4 h-4" />
@@ -485,8 +485,8 @@ export default function AutomationRulesPage() {
           onClick={() => setActiveTab('templates')}
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'templates'
-              ? 'border-gray-900 text-gray-900'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-gray-900 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'
           }`}
         >
           <FileText className="w-4 h-4" />
@@ -496,8 +496,8 @@ export default function AutomationRulesPage() {
           onClick={() => setActiveTab('notifications')}
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'notifications'
-              ? 'border-gray-900 text-gray-900'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-gray-900 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'
           }`}
         >
           <Bell className="w-4 h-4" />
@@ -507,8 +507,8 @@ export default function AutomationRulesPage() {
           onClick={() => setActiveTab('webhooks')}
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'webhooks'
-              ? 'border-gray-900 text-gray-900'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-gray-900 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'
           }`}
         >
           <Link2 className="w-4 h-4" />
@@ -518,8 +518,8 @@ export default function AutomationRulesPage() {
           onClick={() => setActiveTab('executions')}
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'executions'
-              ? 'border-gray-900 text-gray-900'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-gray-900 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'
           }`}
         >
           <History className="w-4 h-4" />
@@ -532,7 +532,7 @@ export default function AutomationRulesPage() {
         <>
           {/* Rules Header */}
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {isLoading ? 'Loading...' : `${activeRules} active of ${totalRules} rules`}
             </p>
             <button
@@ -557,13 +557,13 @@ export default function AutomationRulesPage() {
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
                     isActive
                       ? 'bg-gray-900 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:bg-gray-600'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
                   {action.label}
                   <span className={`ml-0.5 px-1.5 py-0.5 rounded text-[10px] ${
-                    isActive ? 'bg-white/20' : 'bg-gray-200'
+                    isActive ? 'bg-white dark:bg-gray-900/20' : 'bg-gray-200 dark:bg-gray-600'
                   }`}>
                     {count}
                   </span>
@@ -578,7 +578,7 @@ export default function AutomationRulesPage() {
                 <select
                   value={modelFilter}
                   onChange={(e) => setModelFilter(e.target.value)}
-                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-[12px] font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[12px] font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 >
                   <option value="all">All Models ({filteredByAction.length})</option>
                   {availableModels.map(model => (
@@ -593,35 +593,35 @@ export default function AutomationRulesPage() {
 
           {/* Search */}
           <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Search rules..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             />
           </div>
 
           {/* Rules List */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         {isLoading ? (
           <div className="p-8 flex items-center justify-center">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
           </div>
         ) : filteredRules.length === 0 ? (
           <div className="p-8 text-center">
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-              <Zap className="w-6 h-6 text-gray-400" />
+            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-3">
+              <Zap className="w-6 h-6 text-gray-400 dark:text-gray-500" />
             </div>
-            <h3 className="text-[14px] font-medium text-gray-900 mb-1">
+            <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-1">
               {searchQuery
                 ? 'No rules match your search'
                 : actionFilter !== 'all' || modelFilter !== 'all'
                   ? 'No rules match your filters'
                   : 'No automation rules yet'}
             </h3>
-            <p className="text-[13px] text-gray-500 mb-4">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
               {searchQuery
                 ? 'Try adjusting your search query'
                 : actionFilter !== 'all' || modelFilter !== 'all'
@@ -641,43 +641,43 @@ export default function AutomationRulesPage() {
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+              <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Rule
                 </th>
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Trigger
                 </th>
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Conditions
                 </th>
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Action
                 </th>
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="text-center px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-center px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Executions
                 </th>
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Last Run
                 </th>
                 <th className="w-12"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {filteredRules.map((rule) => (
                 <tr
                   key={rule.id}
                   onClick={() => handleEditRule(rule.id)}
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3">
                     <div>
-                      <p className="text-[13px] font-medium text-gray-900">{rule.name}</p>
+                      <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{rule.name}</p>
                       {rule.description && (
-                        <p className="text-[12px] text-gray-500 truncate max-w-xs">
+                        <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate max-w-xs">
                           {rule.description}
                         </p>
                       )}
@@ -688,33 +688,33 @@ export default function AutomationRulesPage() {
                       <span className="px-2 py-0.5 bg-green-50 text-green-700 text-[11px] font-medium rounded">
                         {triggerLabels[rule.trigger_type] || rule.trigger_type}
                       </span>
-                      <span className="text-[12px] text-gray-600">
+                      <span className="text-[12px] text-gray-600 dark:text-gray-400">
                         {rule.trigger_model?.split('.')[1] || rule.trigger_model}
                       </span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
                     {!rule.trigger_conditions || rule.trigger_conditions.length === 0 ? (
-                      <span className="text-[12px] text-gray-400 italic">None</span>
+                      <span className="text-[12px] text-gray-400 dark:text-gray-500 italic">None</span>
                     ) : (
                       <div className="space-y-0.5 max-w-[200px]">
                         {rule.trigger_conditions.slice(0, 2).map((condition, idx) => (
                           <div key={idx} className="flex items-center gap-1 text-[11px]">
-                            <span className="font-medium text-gray-700 truncate max-w-[60px]">
+                            <span className="font-medium text-gray-700 dark:text-gray-300 truncate max-w-[60px]">
                               {condition.field}
                             </span>
-                            <span className="text-gray-400">
+                            <span className="text-gray-400 dark:text-gray-500">
                               {condition.operator === 'equals' ? '=' : condition.operator === 'not_equals' ? '≠' : condition.operator}
                             </span>
                             {!['is_empty', 'is_not_empty'].includes(condition.operator) && (
-                              <span className="text-gray-600 truncate max-w-[60px]">
+                              <span className="text-gray-600 dark:text-gray-400 truncate max-w-[60px]">
                                 {Array.isArray(condition.value) ? condition.value.join(', ') : condition.value}
                               </span>
                             )}
                           </div>
                         ))}
                         {rule.trigger_conditions.length > 2 && (
-                          <span className="text-[10px] text-gray-400">
+                          <span className="text-[10px] text-gray-400 dark:text-gray-500">
                             +{rule.trigger_conditions.length - 2} more
                           </span>
                         )}
@@ -726,7 +726,7 @@ export default function AutomationRulesPage() {
                       <span className="p-1 bg-blue-50 text-blue-600 rounded">
                         {actionIcons[rule.action_type]}
                       </span>
-                      <span className="text-[12px] text-gray-600">
+                      <span className="text-[12px] text-gray-600 dark:text-gray-400">
                         {actionLabels[rule.action_type] || rule.action_type}
                       </span>
                     </div>
@@ -736,7 +736,7 @@ export default function AutomationRulesPage() {
                       className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
                         rule.is_active
                           ? 'bg-green-50 text-green-700'
-                          : 'bg-gray-100 text-gray-600'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                       }`}
                     >
                       <span
@@ -749,14 +749,14 @@ export default function AutomationRulesPage() {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="inline-flex items-center gap-2">
-                      <span className="text-[13px] font-medium text-gray-900">{rule.total_executions}</span>
+                      <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{rule.total_executions}</span>
                       <span className="text-[12px] text-green-600">{rule.total_success}</span>
                       <span className="text-gray-300">/</span>
                       <span className="text-[12px] text-red-600">{rule.total_failed}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-[12px] text-gray-500">
+                    <span className="text-[12px] text-gray-500 dark:text-gray-400">
                       {formatDate(rule.last_triggered_at)}
                     </span>
                   </td>
@@ -767,19 +767,19 @@ export default function AutomationRulesPage() {
                           e.stopPropagation()
                           setMenuOpen(menuOpen === rule.id ? null : rule.id)
                         }}
-                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                       >
-                        <MoreVertical className="w-4 h-4 text-gray-500" />
+                        <MoreVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                       </button>
                       {menuOpen === rule.id && (
-                        <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                        <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
                               handleEditRule(rule.id)
                               setMenuOpen(null)
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                             Edit
@@ -789,7 +789,7 @@ export default function AutomationRulesPage() {
                               e.stopPropagation()
                               handleToggleActive(rule)
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                           >
                             {rule.is_active ? (
                               <>
@@ -809,12 +809,12 @@ export default function AutomationRulesPage() {
                               handleEditRule(rule.id)
                               setMenuOpen(null)
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                           >
                             <History className="w-3.5 h-3.5" />
                             View History
                           </button>
-                          <div className="my-1 border-t border-gray-100" />
+                          <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
@@ -847,19 +847,19 @@ export default function AutomationRulesPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                 <input
                   type="text"
                   value={templateSearch}
                   onChange={(e) => setTemplateSearch(e.target.value)}
                   placeholder="Search templates..."
-                  className="pl-9 pr-4 py-2 w-64 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="pl-9 pr-4 py-2 w-64 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
               <select
                 value={templateActiveFilter}
                 onChange={(e) => setTemplateActiveFilter(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
               >
                 <option value="">All Status</option>
                 <option value="true">Active</option>
@@ -876,20 +876,20 @@ export default function AutomationRulesPage() {
           </div>
 
           {/* Templates Table */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
             {isLoadingTemplates ? (
               <div className="p-8 flex items-center justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
               </div>
             ) : templates.length === 0 ? (
               <div className="p-8 text-center">
-                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                  <FileText className="w-6 h-6 text-gray-400" />
+                <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-3">
+                  <FileText className="w-6 h-6 text-gray-400 dark:text-gray-500" />
                 </div>
-                <h3 className="text-[14px] font-medium text-gray-900 mb-1">
+                <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-1">
                   No templates yet
                 </h3>
-                <p className="text-[13px] text-gray-500 mb-4">
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
                   Create reusable notification templates for your automation rules
                 </p>
                 <button
@@ -903,56 +903,56 @@ export default function AutomationRulesPage() {
             ) : (
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Template
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Type
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Recipient
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Channel
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="w-12"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {templates.map((template) => (
                     <tr
                       key={template.id}
                       onClick={() => handleEditTemplate(template.id)}
-                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
                     >
                       <td className="px-4 py-3">
                         <div>
-                          <p className="text-[13px] font-medium text-gray-900">
+                          <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100">
                             {template.name}
                           </p>
                           {template.description && (
-                            <p className="text-[12px] text-gray-500 truncate max-w-xs">
+                            <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate max-w-xs">
                               {template.description}
                             </p>
                           )}
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-[12px] text-gray-600">
+                        <span className="text-[12px] text-gray-600 dark:text-gray-400">
                           {template.template_type || 'Custom'}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-[12px] text-gray-600">
+                        <span className="text-[12px] text-gray-600 dark:text-gray-400">
                           {RecipientTypeLabels[template.recipient_type as keyof typeof RecipientTypeLabels] || template.recipient_type}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-[11px] font-medium rounded">
+                        <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-[11px] font-medium rounded">
                           {NotificationChannelLabels[template.default_channel as keyof typeof NotificationChannelLabels] || template.default_channel}
                         </span>
                       </td>
@@ -961,7 +961,7 @@ export default function AutomationRulesPage() {
                           className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
                             template.is_active
                               ? 'bg-green-50 text-green-700'
-                              : 'bg-gray-100 text-gray-600'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                           }`}
                         >
                           <span
@@ -979,24 +979,24 @@ export default function AutomationRulesPage() {
                               e.stopPropagation()
                               setTemplateMenuOpen(templateMenuOpen === template.id ? null : template.id)
                             }}
-                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                           >
-                            <MoreVertical className="w-4 h-4 text-gray-500" />
+                            <MoreVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                           </button>
                           {templateMenuOpen === template.id && (
-                            <div className="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                            <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   handleEditTemplate(template.id)
                                   setTemplateMenuOpen(null)
                                 }}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                                className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                                 Edit
                               </button>
-                              <div className="my-1 border-t border-gray-100" />
+                              <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
@@ -1029,7 +1029,7 @@ export default function AutomationRulesPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                 <input
                   type="text"
                   placeholder="Search by email or title..."
@@ -1038,7 +1038,7 @@ export default function AutomationRulesPage() {
                     setNotificationSearch(e.target.value)
                     setNotificationPage(1)
                   }}
-                  className="pl-9 pr-4 py-2 w-64 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="pl-9 pr-4 py-2 w-64 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
                 />
               </div>
               <select
@@ -1047,7 +1047,7 @@ export default function AutomationRulesPage() {
                   setNotificationTypeFilter(e.target.value as NotificationType | '')
                   setNotificationPage(1)
                 }}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
               >
                 <option value="">All Types</option>
                 {Object.entries(NotificationTypeLabels).map(([key, label]) => (
@@ -1062,7 +1062,7 @@ export default function AutomationRulesPage() {
                   setNotificationChannelFilter(e.target.value as NotificationChannel | '')
                   setNotificationPage(1)
                 }}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
               >
                 <option value="">All Channels</option>
                 {Object.entries(NotificationChannelLabels).map(([key, label]) => (
@@ -1077,7 +1077,7 @@ export default function AutomationRulesPage() {
                   setNotificationReadFilter(e.target.value)
                   setNotificationPage(1)
                 }}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
               >
                 <option value="">All Status</option>
                 <option value="true">Read</option>
@@ -1095,8 +1095,8 @@ export default function AutomationRulesPage() {
 
           {/* Bulk actions */}
           {isAdmin && selectedNotificationIds.size > 0 && (
-            <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-              <span className="text-[13px] text-gray-600">
+            <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <span className="text-[13px] text-gray-600 dark:text-gray-400">
                 {selectedNotificationIds.size} selected
               </span>
               <button
@@ -1111,80 +1111,80 @@ export default function AutomationRulesPage() {
           )}
 
           {/* Table */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
             {isLoadingNotifications ? (
               <div className="p-8 flex items-center justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
               </div>
             ) : notifications.length === 0 ? (
               <div className="p-8 text-center">
-                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                  <Bell className="w-6 h-6 text-gray-400" />
+                <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-3">
+                  <Bell className="w-6 h-6 text-gray-400 dark:text-gray-500" />
                 </div>
-                <h3 className="text-[14px] font-medium text-gray-900 mb-1">No notifications found</h3>
-                <p className="text-[13px] text-gray-500">Try adjusting your filters</p>
+                <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-1">No notifications found</h3>
+                <p className="text-[13px] text-gray-500 dark:text-gray-400">Try adjusting your filters</p>
               </div>
             ) : (
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
+                  <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                     {isAdmin && (
                       <th className="px-4 py-3 text-left">
                         <input
                           type="checkbox"
                           checked={selectedNotificationIds.size === notifications.length && notifications.length > 0}
                           onChange={handleSelectAllNotifications}
-                          className="rounded border-gray-300"
+                          className="rounded border-gray-300 dark:border-gray-600"
                         />
                       </th>
                     )}
-                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Recipient
                     </th>
-                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Type
                     </th>
-                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Title
                     </th>
-                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Channel
                     </th>
-                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Sent
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {notifications.map((notification) => (
-                    <tr key={notification.id} className="hover:bg-gray-50">
+                    <tr key={notification.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                       {isAdmin && (
                         <td className="px-4 py-3">
                           <input
                             type="checkbox"
                             checked={selectedNotificationIds.has(notification.id)}
                             onChange={() => handleSelectNotification(notification.id)}
-                            className="rounded border-gray-300"
+                            className="rounded border-gray-300 dark:border-gray-600"
                           />
                         </td>
                       )}
                       <td className="px-4 py-3">
-                        <div className="text-[13px] text-gray-900">{notification.recipient_name}</div>
-                        <div className="text-[12px] text-gray-500">{notification.recipient_email}</div>
+                        <div className="text-[13px] text-gray-900 dark:text-gray-100">{notification.recipient_name}</div>
+                        <div className="text-[12px] text-gray-500 dark:text-gray-400">{notification.recipient_email}</div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-[13px] text-gray-700">
+                        <span className="text-[13px] text-gray-700 dark:text-gray-300">
                           {notification.notification_type_display || notification.notification_type}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-[13px] text-gray-900 line-clamp-1">{notification.title}</span>
+                        <span className="text-[13px] text-gray-900 dark:text-gray-100 line-clamp-1">{notification.title}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-[13px] text-gray-600">
+                        <span className="text-[13px] text-gray-600 dark:text-gray-400">
                           {notification.channel_display || notification.channel}
                         </span>
                       </td>
@@ -1193,7 +1193,7 @@ export default function AutomationRulesPage() {
                           <span
                             className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${
                               notification.is_read
-                                ? 'bg-gray-100 text-gray-600'
+                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                                 : 'badge-secondary'
                             }`}
                           >
@@ -1207,7 +1207,7 @@ export default function AutomationRulesPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-[13px] text-gray-500">
+                        <span className="text-[13px] text-gray-500 dark:text-gray-400">
                           {formatNotificationDate(notification.sent_at)}
                         </span>
                       </td>
@@ -1219,15 +1219,15 @@ export default function AutomationRulesPage() {
 
             {/* Pagination */}
             {notificationNumPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
-                <span className="text-[13px] text-gray-600">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                <span className="text-[13px] text-gray-600 dark:text-gray-400">
                   Page {notificationPage} of {notificationNumPages}
                 </span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setNotificationPage((p) => p - 1)}
                     disabled={!notificationHasPrevious}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-white dark:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft className="w-4 h-4" />
                     Previous
@@ -1235,7 +1235,7 @@ export default function AutomationRulesPage() {
                   <button
                     onClick={() => setNotificationPage((p) => p + 1)}
                     disabled={!notificationHasNext}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-white dark:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                     <ChevronRight className="w-4 h-4" />
@@ -1253,13 +1253,13 @@ export default function AutomationRulesPage() {
           {/* Header with sub-tabs */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <div className="flex bg-gray-100 rounded-md p-1">
+              <div className="flex bg-gray-100 dark:bg-gray-700 rounded-md p-1">
                 <button
                   onClick={() => setWebhookSubTab('endpoints')}
                   className={`px-3 py-1.5 text-sm font-medium rounded transition-colors ${
                     webhookSubTab === 'endpoints'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm dark:shadow-gray-900/20'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                   }`}
                 >
                   Endpoints
@@ -1268,8 +1268,8 @@ export default function AutomationRulesPage() {
                   onClick={() => setWebhookSubTab('history')}
                   className={`px-3 py-1.5 text-sm font-medium rounded transition-colors ${
                     webhookSubTab === 'history'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm dark:shadow-gray-900/20'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                   }`}
                 >
                   History
@@ -1291,7 +1291,7 @@ export default function AutomationRulesPage() {
             {webhookSubTab === 'history' && (
               <button
                 onClick={() => refetchReceipts()}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
                 Refresh
@@ -1303,18 +1303,18 @@ export default function AutomationRulesPage() {
           {webhookSubTab === 'endpoints' && (
           <>
           {/* Webhooks Table */}
-          <div className="bg-white border border-gray-200 rounded-lg">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
             {isLoadingWebhooks ? (
               <div className="p-8 flex items-center justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
               </div>
             ) : endpoints.length === 0 ? (
               <div className="p-8 text-center">
-                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                  <Link2 className="w-6 h-6 text-gray-400" />
+                <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-3">
+                  <Link2 className="w-6 h-6 text-gray-400 dark:text-gray-500" />
                 </div>
-                <h3 className="text-[14px] font-medium text-gray-900 mb-1">No webhook endpoints yet</h3>
-                <p className="text-[13px] text-gray-500 mb-4">
+                <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-1">No webhook endpoints yet</h3>
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
                   Create a webhook endpoint to receive data from external systems like forms, Zapier, or other platforms.
                 </p>
                 <button
@@ -1331,29 +1331,29 @@ export default function AutomationRulesPage() {
             ) : (
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Endpoint
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Target
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Auth
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="text-center px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="text-center px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Received
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Last Received
                     </th>
                     <th className="w-12"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {endpoints.map((endpoint) => (
                     <tr
                       key={endpoint.id}
@@ -1361,13 +1361,13 @@ export default function AutomationRulesPage() {
                         setSelectedWebhookId(endpoint.id)
                         setWebhookDrawerOpen(true)
                       }}
-                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
                     >
                       <td className="px-4 py-3">
                         <div>
-                          <p className="text-[13px] font-medium text-gray-900">{endpoint.name}</p>
+                          <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{endpoint.name}</p>
                           <div className="flex items-center gap-1 mt-0.5">
-                            <code className="text-[11px] text-gray-500 font-mono truncate max-w-[200px]">
+                            <code className="text-[11px] text-gray-500 dark:text-gray-400 font-mono truncate max-w-[200px]">
                               {endpoint.webhook_url}
                             </code>
                             <button
@@ -1378,7 +1378,7 @@ export default function AutomationRulesPage() {
                                 setCopiedWebhookUrl(endpoint.id)
                                 setTimeout(() => setCopiedWebhookUrl(null), 2000)
                               }}
-                              className="p-0.5 text-gray-400 hover:text-gray-600"
+                              className="p-0.5 text-gray-400 dark:text-gray-500 hover:text-gray-600"
                             >
                               {copiedWebhookUrl === endpoint.id ? (
                                 <Check className="w-3 h-3 text-green-600" />
@@ -1394,7 +1394,7 @@ export default function AutomationRulesPage() {
                           <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-medium rounded">
                             {endpoint.target_action}
                           </span>
-                          <span className="text-[12px] text-gray-600">
+                          <span className="text-[12px] text-gray-600 dark:text-gray-400">
                             {endpoint.target_model_display}
                           </span>
                         </div>
@@ -1405,7 +1405,7 @@ export default function AutomationRulesPage() {
                             ? 'bg-green-50 text-green-700'
                             : endpoint.auth_type === 'hmac'
                               ? 'bg-purple-50 text-purple-700'
-                              : 'bg-gray-100 text-gray-600'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                         }`}>
                           {endpoint.auth_type === 'api_key' && <Key className="w-3 h-3" />}
                           {endpoint.auth_type === 'hmac' && <Shield className="w-3 h-3" />}
@@ -1417,7 +1417,7 @@ export default function AutomationRulesPage() {
                           className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
                             endpoint.is_active
                               ? 'bg-green-50 text-green-700'
-                              : 'bg-gray-100 text-gray-600'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                           }`}
                         >
                           <span
@@ -1430,14 +1430,14 @@ export default function AutomationRulesPage() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="inline-flex items-center gap-2">
-                          <span className="text-[13px] font-medium text-gray-900">{endpoint.total_received}</span>
+                          <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{endpoint.total_received}</span>
                           <span className="text-[12px] text-green-600">{endpoint.total_success}</span>
                           <span className="text-gray-300">/</span>
                           <span className="text-[12px] text-red-600">{endpoint.total_failed}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-[12px] text-gray-500">
+                        <span className="text-[12px] text-gray-500 dark:text-gray-400">
                           {endpoint.last_received_at
                             ? formatDistanceToNow(new Date(endpoint.last_received_at), { addSuffix: true })
                             : 'Never'}
@@ -1450,12 +1450,12 @@ export default function AutomationRulesPage() {
                               e.stopPropagation()
                               setWebhookMenuOpen(webhookMenuOpen === endpoint.id ? null : endpoint.id)
                             }}
-                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                           >
-                            <MoreVertical className="w-4 h-4 text-gray-500" />
+                            <MoreVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                           </button>
                           {webhookMenuOpen === endpoint.id && (
-                            <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                            <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
@@ -1463,7 +1463,7 @@ export default function AutomationRulesPage() {
                                   setWebhookDrawerOpen(true)
                                   setWebhookMenuOpen(null)
                                 }}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                                className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                                 Edit
@@ -1475,7 +1475,7 @@ export default function AutomationRulesPage() {
                                   refetchWebhooks()
                                   setWebhookMenuOpen(null)
                                 }}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                                className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                               >
                                 {endpoint.is_active ? (
                                   <>
@@ -1489,7 +1489,7 @@ export default function AutomationRulesPage() {
                                   </>
                                 )}
                               </button>
-                              <div className="my-1 border-t border-gray-100" />
+                              <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
@@ -1525,7 +1525,7 @@ export default function AutomationRulesPage() {
                   <select
                     value={receiptStatusFilter}
                     onChange={(e) => setReceiptStatusFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   >
                     <option value="">All statuses</option>
                     <option value="success">Success</option>
@@ -1537,7 +1537,7 @@ export default function AutomationRulesPage() {
                   <select
                     value={receiptEndpointFilter}
                     onChange={(e) => setReceiptEndpointFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   >
                     <option value="">All endpoints</option>
                     {endpoints.map((ep) => (
@@ -1547,51 +1547,51 @@ export default function AutomationRulesPage() {
                 </div>
 
                 {/* Receipts Table */}
-                <div className="bg-white border border-gray-200 rounded-lg">
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
                   {isLoadingReceipts ? (
                     <div className="p-8 flex items-center justify-center">
-                      <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                      <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
                     </div>
                   ) : receipts.length === 0 ? (
                     <div className="p-8 text-center">
-                      <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                        <History className="w-6 h-6 text-gray-400" />
+                      <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-3">
+                        <History className="w-6 h-6 text-gray-400 dark:text-gray-500" />
                       </div>
-                      <h3 className="text-[14px] font-medium text-gray-900 mb-1">No webhook receipts yet</h3>
-                      <p className="text-[13px] text-gray-500">
+                      <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-1">No webhook receipts yet</h3>
+                      <p className="text-[13px] text-gray-500 dark:text-gray-400">
                         Incoming webhook requests will appear here
                       </p>
                     </div>
                   ) : (
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-gray-200 bg-gray-50">
-                          <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                        <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                          <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Status
                           </th>
-                          <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Endpoint
                           </th>
-                          <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             IP Address
                           </th>
-                          <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Processing
                           </th>
-                          <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Created Record
                           </th>
-                          <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Received
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {receipts.map((receipt) => (
                           <tr
                             key={receipt.id}
                             onClick={() => setSelectedReceipt(receipt)}
-                            className={`hover:bg-gray-50 cursor-pointer transition-colors ${
+                            className={`hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
                               selectedReceipt?.id === receipt.id ? 'bg-blue-50' : ''
                             }`}
                           >
@@ -1616,17 +1616,17 @@ export default function AutomationRulesPage() {
                               </span>
                             </td>
                             <td className="px-4 py-3">
-                              <span className="text-[13px] font-medium text-gray-900">
+                              <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100">
                                 {receipt.endpoint_name || 'Unknown'}
                               </span>
                             </td>
                             <td className="px-4 py-3">
-                              <code className="text-[12px] text-gray-600 font-mono">
+                              <code className="text-[12px] text-gray-600 dark:text-gray-400 font-mono">
                                 {receipt.ip_address}
                               </code>
                             </td>
                             <td className="px-4 py-3">
-                              <span className="text-[12px] text-gray-600">
+                              <span className="text-[12px] text-gray-600 dark:text-gray-400">
                                 {receipt.processing_time_ms ? `${receipt.processing_time_ms}ms` : '—'}
                               </span>
                             </td>
@@ -1636,11 +1636,11 @@ export default function AutomationRulesPage() {
                                   {receipt.created_object_id.substring(0, 8)}...
                                 </code>
                               ) : (
-                                <span className="text-[12px] text-gray-400">—</span>
+                                <span className="text-[12px] text-gray-400 dark:text-gray-500">—</span>
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              <span className="text-[12px] text-gray-500">
+                              <span className="text-[12px] text-gray-500 dark:text-gray-400">
                                 {formatDistanceToNow(new Date(receipt.created_at), { addSuffix: true })}
                               </span>
                             </td>
@@ -1655,13 +1655,13 @@ export default function AutomationRulesPage() {
               {/* Receipt Detail Panel */}
               {selectedReceipt && (
                 <div className="w-[400px] flex-shrink-0">
-                  <div className="bg-white border border-gray-200 rounded-lg sticky top-4">
+                  <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg sticky top-4">
                     {/* Header */}
-                    <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                      <h3 className="text-[13px] font-semibold text-gray-900">Receipt Details</h3>
+                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                      <h3 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">Receipt Details</h3>
                       <button
                         onClick={() => setSelectedReceipt(null)}
-                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                        className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -1671,7 +1671,7 @@ export default function AutomationRulesPage() {
                     <div className="p-4 max-h-[calc(100vh-200px)] overflow-y-auto space-y-4">
                       {/* Status */}
                       <div>
-                        <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Status</label>
+                        <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Status</label>
                         <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[12px] font-medium ${
                           selectedReceipt.status === 'success'
                             ? 'bg-green-50 text-green-700'
@@ -1684,22 +1684,22 @@ export default function AutomationRulesPage() {
 
                       {/* Endpoint */}
                       <div>
-                        <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Endpoint</label>
-                        <span className="text-[13px] text-gray-900">{selectedReceipt.endpoint_name}</span>
+                        <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Endpoint</label>
+                        <span className="text-[13px] text-gray-900 dark:text-gray-100">{selectedReceipt.endpoint_name}</span>
                       </div>
 
                       {/* IP Address */}
                       <div>
-                        <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">IP Address</label>
-                        <code className="text-[12px] text-gray-700 bg-gray-100 px-2 py-1 rounded font-mono">
+                        <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">IP Address</label>
+                        <code className="text-[12px] text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-mono">
                           {selectedReceipt.ip_address}
                         </code>
                       </div>
 
                       {/* Received At */}
                       <div>
-                        <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Received</label>
-                        <span className="text-[13px] text-gray-900">
+                        <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Received</label>
+                        <span className="text-[13px] text-gray-900 dark:text-gray-100">
                           {new Date(selectedReceipt.created_at).toLocaleString()}
                         </span>
                       </div>
@@ -1707,16 +1707,16 @@ export default function AutomationRulesPage() {
                       {/* Processing Time */}
                       {selectedReceipt.processing_time_ms && (
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Processing Time</label>
-                          <span className="text-[13px] text-gray-900">{selectedReceipt.processing_time_ms}ms</span>
+                          <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Processing Time</label>
+                          <span className="text-[13px] text-gray-900 dark:text-gray-100">{selectedReceipt.processing_time_ms}ms</span>
                         </div>
                       )}
 
                       {/* Created Record */}
                       {selectedReceipt.created_object_id && (
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Created Record ID</label>
-                          <code className="text-[12px] text-gray-700 bg-gray-100 px-2 py-1 rounded font-mono break-all">
+                          <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Created Record ID</label>
+                          <code className="text-[12px] text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-mono break-all">
                             {selectedReceipt.created_object_id}
                           </code>
                         </div>
@@ -1725,7 +1725,7 @@ export default function AutomationRulesPage() {
                       {/* Error Message */}
                       {selectedReceipt.error_message && (
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Error</label>
+                          <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Error</label>
                           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                             <pre className="text-[12px] text-red-700 whitespace-pre-wrap font-mono">
                               {selectedReceipt.error_message}
@@ -1736,9 +1736,9 @@ export default function AutomationRulesPage() {
 
                       {/* Payload */}
                       <div>
-                        <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Payload</label>
-                        <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg overflow-x-auto">
-                          <pre className="text-[11px] text-gray-700 font-mono">
+                        <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Payload</label>
+                        <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto">
+                          <pre className="text-[11px] text-gray-700 dark:text-gray-300 font-mono">
                             {JSON.stringify(selectedReceipt.payload, null, 2)}
                           </pre>
                         </div>
@@ -1746,9 +1746,9 @@ export default function AutomationRulesPage() {
 
                       {/* Headers */}
                       <div>
-                        <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Headers</label>
-                        <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg overflow-x-auto">
-                          <pre className="text-[11px] text-gray-700 font-mono">
+                        <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Headers</label>
+                        <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto">
+                          <pre className="text-[11px] text-gray-700 dark:text-gray-300 font-mono">
                             {JSON.stringify(selectedReceipt.headers, null, 2)}
                           </pre>
                         </div>
@@ -1773,7 +1773,7 @@ export default function AutomationRulesPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as ExecutionStatus | '')}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 >
                   <option value="">All statuses</option>
                   <option value="success">Success</option>
@@ -1784,7 +1784,7 @@ export default function AutomationRulesPage() {
               </div>
               <button
                 onClick={() => refetchExecutions()}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
                 Refresh
@@ -1792,51 +1792,51 @@ export default function AutomationRulesPage() {
             </div>
 
             {/* Executions Table */}
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               {isLoadingExecutions ? (
                 <div className="p-8 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
                 </div>
               ) : executions.length === 0 ? (
                 <div className="p-8 text-center">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                    <History className="w-6 h-6 text-gray-400" />
+                  <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-3">
+                    <History className="w-6 h-6 text-gray-400 dark:text-gray-500" />
                   </div>
-                  <h3 className="text-[14px] font-medium text-gray-900 mb-1">No executions yet</h3>
-                  <p className="text-[13px] text-gray-500">
+                  <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-1">No executions yet</h3>
+                  <p className="text-[13px] text-gray-500 dark:text-gray-400">
                     Executions will appear here when rules are triggered
                   </p>
                 </div>
               ) : (
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                      <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Rule
                       </th>
-                      <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Trigger
                       </th>
-                      <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Action
                       </th>
-                      <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Duration
                       </th>
-                      <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="text-left px-4 py-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Time
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {executions.map((execution) => (
                       <tr
                         key={execution.id}
                         onClick={() => setSelectedExecutionId(execution.id)}
-                        className={`hover:bg-gray-50 cursor-pointer transition-colors ${
+                        className={`hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
                           selectedExecutionId === execution.id ? 'bg-blue-50' : ''
                         }`}
                       >
@@ -1853,7 +1853,7 @@ export default function AutomationRulesPage() {
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-[13px] font-medium text-gray-900">
+                          <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100">
                             {execution.rule_name || 'Unknown Rule'}
                           </span>
                         </td>
@@ -1862,7 +1862,7 @@ export default function AutomationRulesPage() {
                             <span className="px-2 py-0.5 bg-green-50 text-green-700 text-[11px] font-medium rounded">
                               {triggerLabels[execution.trigger_type as TriggerType] || execution.trigger_type}
                             </span>
-                            <span className="text-[12px] text-gray-600">
+                            <span className="text-[12px] text-gray-600 dark:text-gray-400">
                               {execution.trigger_model?.split('.')[1] || execution.trigger_model}
                             </span>
                           </div>
@@ -1872,18 +1872,18 @@ export default function AutomationRulesPage() {
                             <span className="p-1 bg-blue-50 text-blue-600 rounded">
                               {actionIcons[execution.action_type as ActionType]}
                             </span>
-                            <span className="text-[12px] text-gray-600">
+                            <span className="text-[12px] text-gray-600 dark:text-gray-400">
                               {actionLabels[execution.action_type as ActionType] || execution.action_type}
                             </span>
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-[12px] text-gray-500">
+                          <span className="text-[12px] text-gray-500 dark:text-gray-400">
                             {execution.duration_display || '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-[12px] text-gray-500">
+                          <span className="text-[12px] text-gray-500 dark:text-gray-400">
                             {formatDistanceToNow(new Date(execution.started_at), { addSuffix: true })}
                           </span>
                         </td>
@@ -1898,13 +1898,13 @@ export default function AutomationRulesPage() {
           {/* Execution Detail Panel */}
           {selectedExecutionId && (
             <div className="w-[400px] flex-shrink-0">
-              <div className="bg-white border border-gray-200 rounded-lg sticky top-4">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg sticky top-4">
                 {/* Header */}
-                <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                  <h3 className="text-[13px] font-semibold text-gray-900">Execution Details</h3>
+                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                  <h3 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">Execution Details</h3>
                   <button
                     onClick={() => setSelectedExecutionId(null)}
-                    className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                    className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1914,13 +1914,13 @@ export default function AutomationRulesPage() {
                 <div className="p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
                   {isLoadingDetail ? (
                     <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                      <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
                     </div>
                   ) : executionDetail ? (
                     <div className="space-y-4">
                       {/* Status */}
                       <div>
-                        <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Status</label>
+                        <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Status</label>
                         <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[12px] font-medium ${statusStyles[executionDetail.status]}`}>
                           {statusIcons[executionDetail.status]}
                           {executionDetail.status}
@@ -1934,7 +1934,7 @@ export default function AutomationRulesPage() {
 
                       {/* Rule */}
                       <div>
-                        <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Rule</label>
+                        <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Rule</label>
                         <button
                           onClick={() => {
                             handleEditRule(executionDetail.rule)
@@ -1949,16 +1949,16 @@ export default function AutomationRulesPage() {
 
                       {/* Trigger Info */}
                       <div>
-                        <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Trigger</label>
-                        <div className="text-[13px] text-gray-900">
+                        <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Trigger</label>
+                        <div className="text-[13px] text-gray-900 dark:text-gray-100">
                           <span className="px-2 py-0.5 bg-green-50 text-green-700 text-[11px] font-medium rounded mr-2">
                             {triggerLabels[executionDetail.trigger_type as TriggerType] || executionDetail.trigger_type}
                           </span>
                           {executionDetail.trigger_model}
                         </div>
                         {executionDetail.trigger_object_id && (
-                          <div className="text-[12px] text-gray-500 mt-1">
-                            Record ID: <code className="bg-gray-100 px-1 rounded">{executionDetail.trigger_object_id}</code>
+                          <div className="text-[12px] text-gray-500 dark:text-gray-400 mt-1">
+                            Record ID: <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{executionDetail.trigger_object_id}</code>
                           </div>
                         )}
                       </div>
@@ -1966,15 +1966,15 @@ export default function AutomationRulesPage() {
                       {/* Timestamps */}
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Started</label>
-                          <div className="text-[12px] text-gray-900">
+                          <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Started</label>
+                          <div className="text-[12px] text-gray-900 dark:text-gray-100">
                             {new Date(executionDetail.started_at).toLocaleString()}
                           </div>
                         </div>
                         {executionDetail.completed_at && (
                           <div>
-                            <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Completed</label>
-                            <div className="text-[12px] text-gray-900">
+                            <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Completed</label>
+                            <div className="text-[12px] text-gray-900 dark:text-gray-100">
                               {new Date(executionDetail.completed_at).toLocaleString()}
                             </div>
                           </div>
@@ -1984,9 +1984,9 @@ export default function AutomationRulesPage() {
                       {/* Duration */}
                       {executionDetail.duration_display && (
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Duration</label>
-                          <div className="text-[13px] text-gray-900 flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-gray-400" />
+                          <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Duration</label>
+                          <div className="text-[13px] text-gray-900 dark:text-gray-100 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
                             {executionDetail.duration_display}
                           </div>
                         </div>
@@ -1995,7 +1995,7 @@ export default function AutomationRulesPage() {
                       {/* Error Message */}
                       {executionDetail.error_message && (
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Error</label>
+                          <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Error</label>
                           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                             <pre className="text-[12px] text-red-700 whitespace-pre-wrap font-mono">
                               {executionDetail.error_message}
@@ -2037,9 +2037,9 @@ export default function AutomationRulesPage() {
                       {/* Trigger Data */}
                       {executionDetail.trigger_data && Object.keys(executionDetail.trigger_data).length > 0 && (
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Trigger Data</label>
-                          <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg overflow-x-auto">
-                            <pre className="text-[11px] text-gray-700 font-mono">
+                          <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Trigger Data</label>
+                          <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto">
+                            <pre className="text-[11px] text-gray-700 dark:text-gray-300 font-mono">
                               {JSON.stringify(executionDetail.trigger_data, null, 2)}
                             </pre>
                           </div>
@@ -2049,9 +2049,9 @@ export default function AutomationRulesPage() {
                       {/* Action Result */}
                       {executionDetail.action_result && Object.keys(executionDetail.action_result).length > 0 && (
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Action Result</label>
-                          <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg overflow-x-auto">
-                            <pre className="text-[11px] text-gray-700 font-mono">
+                          <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Action Result</label>
+                          <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto">
+                            <pre className="text-[11px] text-gray-700 dark:text-gray-300 font-mono">
                               {JSON.stringify(executionDetail.action_result, null, 2)}
                             </pre>
                           </div>
@@ -2061,15 +2061,15 @@ export default function AutomationRulesPage() {
                       {/* Triggered By */}
                       {executionDetail.triggered_by_name && (
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Triggered By</label>
-                          <div className="text-[13px] text-gray-900">{executionDetail.triggered_by_name}</div>
+                          <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Triggered By</label>
+                          <div className="text-[13px] text-gray-900 dark:text-gray-100">{executionDetail.triggered_by_name}</div>
                         </div>
                       )}
 
                       {/* Notification Details */}
                       {executionDetail.notifications && executionDetail.notifications.length > 0 && (
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">Notification Sent</label>
+                          <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Notification Sent</label>
                           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                             <div className="flex items-center gap-2 mb-2">
                               <Bell className="w-3.5 h-3.5 text-blue-600" />
@@ -2080,11 +2080,11 @@ export default function AutomationRulesPage() {
                                 {executionDetail.notifications?.[0]?.channel}
                               </span>
                             </div>
-                            <div className="text-[13px] font-medium text-gray-900">
+                            <div className="text-[13px] font-medium text-gray-900 dark:text-gray-100">
                               {executionDetail.notifications?.[0]?.title}
                             </div>
                             {executionDetail.notifications?.[0]?.body && (
-                              <div className="text-[12px] text-gray-600 mt-1 line-clamp-3">
+                              <div className="text-[12px] text-gray-600 dark:text-gray-400 mt-1 line-clamp-3">
                                 {executionDetail.notifications?.[0]?.body}
                               </div>
                             )}
@@ -2096,10 +2096,10 @@ export default function AutomationRulesPage() {
                       {((executionDetail.notifications && executionDetail.notifications.length > 0) ||
                         (executionDetail.external_emails && executionDetail.external_emails.length > 0)) && (
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-500 uppercase mb-1">
+                          <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">
                             Recipients ({(executionDetail.notifications?.length || 0) + (executionDetail.external_emails?.length || 0)})
                           </label>
-                          <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
+                          <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg space-y-2">
                             {/* Summary stats */}
                             <div className="flex items-center gap-3 text-[11px] mb-2">
                               {(() => {
@@ -2129,8 +2129,8 @@ export default function AutomationRulesPage() {
                               {executionDetail.notifications?.map((notif) => (
                                 <div key={notif.id} className="flex items-center justify-between text-[12px]">
                                   <div className="flex items-center gap-2">
-                                    <User className="w-3 h-3 text-gray-400" />
-                                    <span className="text-gray-700 truncate max-w-[180px]">
+                                    <User className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                                    <span className="text-gray-700 dark:text-gray-300 truncate max-w-[180px]">
                                       {notif.title}
                                     </span>
                                   </div>
@@ -2145,7 +2145,7 @@ export default function AutomationRulesPage() {
                                         Read
                                       </span>
                                     ) : (
-                                      <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded text-[10px]">
+                                      <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded text-[10px]">
                                         Unread
                                       </span>
                                     )}
@@ -2155,8 +2155,8 @@ export default function AutomationRulesPage() {
                               {executionDetail.external_emails?.map((ext, idx) => (
                                 <div key={idx} className="flex items-center justify-between text-[12px]">
                                   <div className="flex items-center gap-2">
-                                    <ExternalLink className="w-3 h-3 text-gray-400" />
-                                    <span className="text-gray-700 truncate max-w-[180px]">
+                                    <ExternalLink className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                                    <span className="text-gray-700 dark:text-gray-300 truncate max-w-[180px]">
                                       {ext.name || ext.email}
                                     </span>
                                   </div>
@@ -2179,7 +2179,7 @@ export default function AutomationRulesPage() {
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                       <p className="text-[13px]">Select an execution to view details</p>
                     </div>
                   )}
@@ -2193,12 +2193,12 @@ export default function AutomationRulesPage() {
       {/* Delete Confirmation Dialog */}
       {deleteDialogOpen && selectedRule && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-sm mx-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-sm mx-4">
             <div className="p-4 border-b">
               <h2 className="text-lg font-semibold">Delete Rule</h2>
             </div>
             <div className="p-4">
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Are you sure you want to delete "{selectedRule.name}"? This action
                 cannot be undone.
               </p>
@@ -2206,7 +2206,7 @@ export default function AutomationRulesPage() {
             <div className="p-4 border-t flex justify-end gap-2">
               <button
                 onClick={() => setDeleteDialogOpen(false)}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
               >
                 Cancel
               </button>
@@ -2259,12 +2259,12 @@ export default function AutomationRulesPage() {
       {/* Delete Webhook Confirmation Dialog */}
       {deleteWebhookDialogOpen && selectedWebhook && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[300]">
-          <div className="bg-white rounded-lg w-full max-w-sm mx-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-sm mx-4">
             <div className="p-4 border-b">
               <h2 className="text-lg font-semibold">Delete Webhook Endpoint</h2>
             </div>
             <div className="p-4">
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Are you sure you want to delete "{selectedWebhook.name}"? This will remove the webhook
                 endpoint and any external systems sending data to it will start receiving errors.
               </p>
@@ -2275,7 +2275,7 @@ export default function AutomationRulesPage() {
                   setDeleteWebhookDialogOpen(false)
                   setSelectedWebhook(null)
                 }}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
               >
                 Cancel
               </button>
@@ -2327,20 +2327,20 @@ export default function AutomationRulesPage() {
       {/* Delete Template Confirmation Dialog */}
       {deleteTemplateDialogOpen && selectedTemplateForDelete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[300]">
-          <div className="bg-white rounded-lg w-full max-w-sm mx-4 shadow-xl">
-            <div className="px-5 py-4 border-b border-gray-200">
-              <h2 className="text-[15px] font-semibold text-gray-900">Delete Template</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-sm mx-4 shadow-xl">
+            <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">Delete Template</h2>
             </div>
             <div className="p-5">
-              <p className="text-[13px] text-gray-600">
+              <p className="text-[13px] text-gray-600 dark:text-gray-400">
                 Are you sure you want to delete <span className="font-medium">"{selectedTemplateForDelete.name}"</span>?
                 This action cannot be undone.
               </p>
             </div>
-            <div className="px-5 py-4 border-t border-gray-200 flex justify-end gap-2">
+            <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
               <button
                 onClick={() => setDeleteTemplateDialogOpen(false)}
-                className="px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 Cancel
               </button>

@@ -16,10 +16,10 @@ export default function AdminCompanyEditPage() {
   // Check if user has admin/recruiter access
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-300 dark:text-red-500 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to view this page.
         </p>
       </div>
@@ -40,8 +40,8 @@ export default function AdminCompanyEditPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-gray-900 mx-auto" />
-          <p className="text-[14px] text-gray-500 mt-3">Loading company...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 dark:border-gray-700 border-t-gray-900 dark:border-t-gray-100 mx-auto" />
+          <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-3">Loading company...</p>
         </div>
       </div>
     )
@@ -51,13 +51,13 @@ export default function AdminCompanyEditPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <p className="text-[15px] text-gray-700 mb-1">
+          <AlertCircle className="w-12 h-12 text-red-400 dark:text-red-500 mx-auto mb-4" />
+          <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">
             {error || 'Company not found'}
           </p>
           <Link
             to="/dashboard/admin/companies"
-            className="text-[13px] text-gray-500 hover:text-gray-700 underline"
+            className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline"
           >
             Back to Companies
           </Link>
@@ -73,48 +73,48 @@ export default function AdminCompanyEditPage() {
         <div>
           <Link
             to="/dashboard/admin/companies"
-            className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700 mb-2"
+            className="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 mb-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to All Companies
           </Link>
           <div className="flex items-center gap-2">
-            <h1 className="text-[22px] font-semibold text-gray-900">
+            <h1 className="text-[22px] font-semibold text-gray-900 dark:text-gray-100">
               Edit: {company.name}
             </h1>
             {company.is_platform ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-700">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">
                 <Sparkles className="w-3 h-3" />
                 Platform
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
                 <Building2 className="w-3 h-3" />
                 Client
               </span>
             )}
           </div>
-          <p className="text-[14px] text-gray-500 mt-0.5">
+          <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-0.5">
             Editing company profile as {user.role}
           </p>
         </div>
         <div className="flex items-center gap-3">
           {saveSuccess && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg text-[14px]">
+            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-[14px]">
               <CheckCircle className="w-4 h-4" />
               Changes saved successfully
             </div>
           )}
           <Link
             to={`/dashboard/admin/jobs?company=${company.id}`}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 text-[13px] font-medium rounded-md hover:bg-gray-50"
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-[13px] font-medium rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             <Briefcase className="w-4 h-4" />
             View Jobs
           </Link>
           <Link
             to={`/dashboard/admin/jobs/new?company=${company.id}`}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-gray-800"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[13px] font-medium rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
           >
             <Plus className="w-4 h-4" />
             Create Job

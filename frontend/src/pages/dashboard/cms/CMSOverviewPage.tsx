@@ -151,10 +151,10 @@ export default function CMSOverviewPage() {
   // Access check
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to access the CMS.
         </p>
       </div>
@@ -165,20 +165,20 @@ export default function CMSOverviewPage() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-[24px] font-semibold text-gray-900">Content Management</h1>
-        <p className="text-[14px] text-gray-500 mt-1">
+        <h1 className="text-[24px] font-semibold text-gray-900 dark:text-gray-100">Content Management</h1>
+        <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-1">
           Manage your website content, blog posts, and more
         </p>
       </div>
 
       {/* Content Cards */}
       <div className="mb-8">
-        <h2 className="text-[16px] font-medium text-gray-900 mb-4">Content</h2>
+        <h2 className="text-[16px] font-medium text-gray-900 dark:text-gray-100 mb-4">Content</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {contentCards.map((card) => (
             <div
               key={card.title}
-              className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow"
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:shadow-md dark:hover:shadow-gray-900/40 transition-shadow"
             >
               <div className="flex items-start justify-between mb-4">
                 <div
@@ -187,13 +187,13 @@ export default function CMSOverviewPage() {
                   {card.icon}
                 </div>
                 {card.count !== undefined && (
-                  <span className="text-[24px] font-semibold text-gray-900">
+                  <span className="text-[24px] font-semibold text-gray-900 dark:text-gray-100">
                     {card.count}
                   </span>
                 )}
               </div>
-              <h3 className="text-[15px] font-medium text-gray-900 mb-1">{card.title}</h3>
-              <p className="text-[13px] text-gray-500 mb-4">{card.description}</p>
+              <h3 className="text-[15px] font-medium text-gray-900 dark:text-gray-100 mb-1">{card.title}</h3>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">{card.description}</p>
               <div className="flex items-center gap-3">
                 {card.actions.map((action, index) => (
                   <Link
@@ -201,8 +201,8 @@ export default function CMSOverviewPage() {
                     to={action.href}
                     className={`flex items-center gap-1 text-[13px] ${
                       index === 0
-                        ? 'text-gray-900 font-medium hover:text-gray-700'
-                        : 'text-gray-500 hover:text-gray-700'
+                        ? 'text-gray-900 dark:text-gray-100 font-medium hover:text-gray-700 dark:hover:text-gray-300'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                     }`}
                   >
                     {action.label.includes('Create') || action.label.includes('Add') ? (
@@ -221,13 +221,13 @@ export default function CMSOverviewPage() {
 
       {/* Submissions Section */}
       <div>
-        <h2 className="text-[16px] font-medium text-gray-900 mb-4">Submissions</h2>
+        <h2 className="text-[16px] font-medium text-gray-900 dark:text-gray-100 mb-4">Submissions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {submissionCards.map((card) => (
             <Link
               key={card.title}
               to={card.href}
-              className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow"
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:shadow-md dark:hover:shadow-gray-900/40 transition-shadow"
             >
               <div className="flex items-start justify-between mb-4">
                 <div
@@ -236,46 +236,46 @@ export default function CMSOverviewPage() {
                   {card.icon}
                 </div>
                 <div className="text-right">
-                  <span className="text-[24px] font-semibold text-gray-900">{card.count}</span>
+                  <span className="text-[24px] font-semibold text-gray-900 dark:text-gray-100">{card.count}</span>
                   {'unread' in card && card.unread > 0 && (
-                    <p className="text-[12px] text-orange-600">
+                    <p className="text-[12px] text-orange-600 dark:text-orange-400">
                       {card.unread} unread
                     </p>
                   )}
                 </div>
               </div>
-              <h3 className="text-[15px] font-medium text-gray-900 mb-1">{card.title}</h3>
-              <p className="text-[13px] text-gray-500">{card.description}</p>
+              <h3 className="text-[15px] font-medium text-gray-900 dark:text-gray-100 mb-1">{card.title}</h3>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">{card.description}</p>
             </Link>
           ))}
         </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-        <h3 className="text-[13px] font-medium text-gray-700 mb-3">Quick Stats</h3>
+      <div className="mt-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <h3 className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-3">Quick Stats</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <p className="text-[11px] text-gray-500 uppercase tracking-wider">Published Pages</p>
-            <p className="text-[20px] font-semibold text-gray-900">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">Published Pages</p>
+            <p className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">
               {pages.filter((p) => p.status === 'published').length}
             </p>
           </div>
           <div>
-            <p className="text-[11px] text-gray-500 uppercase tracking-wider">Published Posts</p>
-            <p className="text-[20px] font-semibold text-gray-900">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">Published Posts</p>
+            <p className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">
               {posts.filter((p) => p.status === 'published').length}
             </p>
           </div>
           <div>
-            <p className="text-[11px] text-gray-500 uppercase tracking-wider">Active FAQs</p>
-            <p className="text-[20px] font-semibold text-gray-900">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active FAQs</p>
+            <p className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">
               {faqs.filter((f) => f.is_active).length}
             </p>
           </div>
           <div>
-            <p className="text-[11px] text-gray-500 uppercase tracking-wider">Active Subscribers</p>
-            <p className="text-[20px] font-semibold text-gray-900">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active Subscribers</p>
+            <p className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">
               {subscribers.filter((s) => s.is_active).length}
             </p>
           </div>

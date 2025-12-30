@@ -59,7 +59,7 @@ const formatDate = (dateString: string) => {
 
 const getStatusColor = (status: ApplicationStatus) => {
   const colors = {
-    [ApplicationStatus.APPLIED]: 'bg-gray-100 text-gray-700',
+    [ApplicationStatus.APPLIED]: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
     [ApplicationStatus.SHORTLISTED]: 'bg-blue-100 text-blue-700',
     [ApplicationStatus.IN_PROGRESS]: 'bg-yellow-100 text-yellow-700',
     [ApplicationStatus.OFFER_MADE]: 'bg-purple-100 text-purple-700',
@@ -67,7 +67,7 @@ const getStatusColor = (status: ApplicationStatus) => {
     [ApplicationStatus.OFFER_DECLINED]: 'bg-orange-100 text-orange-700',
     [ApplicationStatus.REJECTED]: 'bg-red-100 text-red-700',
   }
-  return colors[status] || 'bg-gray-100 text-gray-700'
+  return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
 }
 
 const getKanbanColumnName = (application: Application): string => {
@@ -175,7 +175,7 @@ export default function ApplicationDrawer({
     if (!application || !applicationId) {
       return (
         <div className="flex items-center justify-center h-32">
-          <p className="text-[14px] text-gray-500">Application not found</p>
+          <p className="text-[14px] text-gray-500 dark:text-gray-400">Application not found</p>
         </div>
       )
     }
@@ -275,8 +275,8 @@ export default function ApplicationDrawer({
 
         {/* Stage Dropdown - Shows current status, opens Interview Mode for stage changes */}
         {isStageDropdownOpen && (
-          <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
-            <div className="px-3 py-2 text-[11px] text-gray-500 uppercase tracking-wide border-b border-gray-100">
+          <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 py-1">
+            <div className="px-3 py-2 text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-100 dark:border-gray-800">
               Current Status
             </div>
             <div className="px-3 py-2">
@@ -284,13 +284,13 @@ export default function ApplicationDrawer({
                 {getKanbanColumnName(application)}
               </span>
             </div>
-            <div className="border-t border-gray-100 mt-1 pt-1">
+            <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
               <button
                 onClick={() => {
                   setIsStageDropdownOpen(false)
                   setIsInterviewMode(true)
                 }}
-                className="w-full text-left px-3 py-2 text-[12px] text-gray-700 hover:bg-gray-50"
+                className="w-full text-left px-3 py-2 text-[12px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Open Interview Mode to change stage...
               </button>

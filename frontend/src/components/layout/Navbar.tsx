@@ -77,10 +77,10 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
   ];
 
   return (
-    <header className={`border-b ${variant === 'transparent' ? 'border-transparent bg-transparent' : 'border-gray-200 bg-white'}`}>
+    <header className={`border-b ${variant === 'transparent' ? 'border-transparent bg-transparent' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900'}`}>
       <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link to="/" className="text-lg font-semibold text-gray-900 min-w-[60px]">
+          <Link to="/" className="text-lg font-semibold text-gray-900 dark:text-gray-100 min-w-[60px]">
             {seoDefaults.isLoaded ? (seoDefaults.companyName || 'Home') : '\u00A0'}
           </Link>
           <nav className="hidden md:flex items-center gap-6">
@@ -92,8 +92,8 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
                   to={item.href}
                   className={`text-[13px] font-medium transition-colors ${
                     isActive(item.href)
-                      ? 'text-gray-900'
-                      : 'text-gray-500 hover:text-gray-900'
+                      ? 'text-gray-900 dark:text-gray-100'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                   }`}
                 >
                   {item.name}
@@ -108,29 +108,29 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
                     onClick={() => setDirectoryOpen(!directoryOpen)}
                     className={`flex items-center gap-1 text-[13px] font-medium transition-colors ${
                       isDirectoryActive
-                        ? 'text-gray-900'
-                        : 'text-gray-500 hover:text-gray-900'
+                        ? 'text-gray-900 dark:text-gray-100'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
                   >
                     Directory
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${directoryOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {directoryOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
+                    <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 py-2 z-50">
                       {directoryLinks.map((link) => (
                         <Link
                           key={link.href}
                           to={link.href}
-                          className={`block px-4 py-2.5 hover:bg-gray-50 transition-colors ${
-                            isActive(link.href) ? 'bg-gray-50' : ''
+                          className={`block px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+                            isActive(link.href) ? 'bg-gray-50 dark:bg-gray-800' : ''
                           }`}
                         >
                           <span className={`block text-[13px] font-medium ${
-                            isActive(link.href) ? 'text-gray-900' : 'text-gray-700'
+                            isActive(link.href) ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'
                           }`}>
                             {link.name}
                           </span>
-                          <span className="block text-[11px] text-gray-500 mt-0.5">
+                          <span className="block text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
                             {link.description}
                           </span>
                         </Link>
@@ -145,29 +145,29 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
                     onClick={() => setServicesOpen(!servicesOpen)}
                     className={`flex items-center gap-1 text-[13px] font-medium transition-colors ${
                       isServiceActive
-                        ? 'text-gray-900'
-                        : 'text-gray-500 hover:text-gray-900'
+                        ? 'text-gray-900 dark:text-gray-100'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
                   >
                     Services
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${servicesOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {servicesOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
+                    <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 py-2 z-50">
                       {serviceLinks.map((link) => (
                         <Link
                           key={link.href}
                           to={link.href}
-                          className={`block px-4 py-2.5 hover:bg-gray-50 transition-colors ${
-                            isActive(link.href) ? 'bg-gray-50' : ''
+                          className={`block px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+                            isActive(link.href) ? 'bg-gray-50 dark:bg-gray-800' : ''
                           }`}
                         >
                           <span className={`block text-[13px] font-medium ${
-                            isActive(link.href) ? 'text-gray-900' : 'text-gray-700'
+                            isActive(link.href) ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'
                           }`}>
                             {link.name}
                           </span>
-                          <span className="block text-[11px] text-gray-500 mt-0.5">
+                          <span className="block text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
                             {link.description}
                           </span>
                         </Link>
@@ -182,29 +182,29 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
                     onClick={() => setResourcesOpen(!resourcesOpen)}
                     className={`flex items-center gap-1 text-[13px] font-medium transition-colors ${
                       isResourceActive
-                        ? 'text-gray-900'
-                        : 'text-gray-500 hover:text-gray-900'
+                        ? 'text-gray-900 dark:text-gray-100'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
                   >
                     Resources
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${resourcesOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {resourcesOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
+                    <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 py-2 z-50">
                       {resourceLinks.map((link) => (
                         <Link
                           key={link.href}
                           to={link.href}
-                          className={`block px-4 py-2.5 hover:bg-gray-50 transition-colors ${
-                            isActive(link.href) ? 'bg-gray-50' : ''
+                          className={`block px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+                            isActive(link.href) ? 'bg-gray-50 dark:bg-gray-800' : ''
                           }`}
                         >
                           <span className={`block text-[13px] font-medium ${
-                            isActive(link.href) ? 'text-gray-900' : 'text-gray-700'
+                            isActive(link.href) ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'
                           }`}>
                             {link.name}
                           </span>
-                          <span className="block text-[11px] text-gray-500 mt-0.5">
+                          <span className="block text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
                             {link.description}
                           </span>
                         </Link>
@@ -227,11 +227,11 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
                 <div className="w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center text-white text-[11px] font-medium">
                   {user?.first_name?.[0]?.toUpperCase()}
                 </div>
-                <span className="text-[13px] text-gray-700">{user?.first_name}</span>
+                <span className="text-[13px] text-gray-700 dark:text-gray-300">{user?.first_name}</span>
               </div>
               <button
                 onClick={logout}
-                className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors"
+                className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
               >
                 Sign out
               </button>
@@ -240,7 +240,7 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
             <>
               <Link
                 to="/login"
-                className="text-[13px] font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                className="text-[13px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
               >
                 Sign in
               </Link>
@@ -256,7 +256,7 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-1.5 text-gray-500 hover:text-gray-900"
+            className="md:hidden p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               {mobileMenuOpen ? (
@@ -271,7 +271,7 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
 
       {/* Mobile nav */}
       {mobileMenuOpen && !isLoading && (
-        <div className="md:hidden border-t border-gray-100 px-6 py-3 space-y-1 bg-white">
+        <div className="md:hidden border-t border-gray-100 dark:border-gray-800 px-6 py-3 space-y-1 bg-white dark:bg-gray-900">
           {isAuthenticated ? (
             // Authenticated mobile links
             authenticatedLinks.map((item) => (
@@ -280,7 +280,7 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
                 to={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block py-2 text-[14px] font-medium ${
-                  isActive(item.href) ? 'text-gray-900' : 'text-gray-500'
+                  isActive(item.href) ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'
                 }`}
               >
                 {item.name}
@@ -291,7 +291,7 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
             <>
               {/* Directory section */}
               <div className="pb-1">
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                   Directory
                 </span>
               </div>
@@ -301,7 +301,7 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
                   to={link.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`block py-2 text-[14px] font-medium ${
-                    isActive(link.href) ? 'text-gray-900' : 'text-gray-500'
+                    isActive(link.href) ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   {link.name}
@@ -309,8 +309,8 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
               ))}
 
               {/* Services section */}
-              <div className="pt-2 pb-1 border-t border-gray-100 mt-2">
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+              <div className="pt-2 pb-1 border-t border-gray-100 dark:border-gray-800 mt-2">
+                <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                   Services
                 </span>
               </div>
@@ -320,7 +320,7 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
                   to={link.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`block py-2 text-[14px] font-medium ${
-                    isActive(link.href) ? 'text-gray-900' : 'text-gray-500'
+                    isActive(link.href) ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   {link.name}
@@ -328,8 +328,8 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
               ))}
 
               {/* Resources section */}
-              <div className="pt-2 pb-1 border-t border-gray-100 mt-2">
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+              <div className="pt-2 pb-1 border-t border-gray-100 dark:border-gray-800 mt-2">
+                <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                   Resources
                 </span>
               </div>
@@ -339,7 +339,7 @@ export default function Navbar({ variant = 'default' }: NavbarProps) {
                   to={link.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`block py-2 text-[14px] font-medium ${
-                    isActive(link.href) ? 'text-gray-900' : 'text-gray-500'
+                    isActive(link.href) ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   {link.name}

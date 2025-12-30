@@ -136,7 +136,7 @@ export default function ExperienceForm({
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Job Title *
           </label>
           <input
@@ -145,8 +145,8 @@ export default function ExperienceForm({
             value={formData.job_title}
             onChange={handleInputChange}
             placeholder="e.g. Senior Software Engineer"
-            className={`w-full px-3 py-2 text-[14px] border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${
-              errors.job_title ? 'border-red-300' : 'border-gray-200'
+            className={`w-full px-3 py-2 text-[14px] border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 ${
+              errors.job_title ? 'border-red-300' : 'border-gray-200 dark:border-gray-700'
             }`}
           />
           {errors.job_title && (
@@ -154,7 +154,7 @@ export default function ExperienceForm({
           )}
         </div>
         <div>
-          <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Company Name *
           </label>
           <input
@@ -163,8 +163,8 @@ export default function ExperienceForm({
             value={formData.company_name}
             onChange={handleInputChange}
             placeholder="e.g. Acme Inc."
-            className={`w-full px-3 py-2 text-[14px] border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${
-              errors.company_name ? 'border-red-300' : 'border-gray-200'
+            className={`w-full px-3 py-2 text-[14px] border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 ${
+              errors.company_name ? 'border-red-300' : 'border-gray-200 dark:border-gray-700'
             }`}
           />
           {errors.company_name && (
@@ -175,14 +175,14 @@ export default function ExperienceForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Company Size
           </label>
           <select
             name="company_size"
             value={formData.company_size}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
           >
             <option value="">Select size</option>
             <option value={CompanySize.SIZE_1_10}>1-10 employees</option>
@@ -205,7 +205,7 @@ export default function ExperienceForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Start Date *
           </label>
           <input
@@ -213,8 +213,8 @@ export default function ExperienceForm({
             name="start_date"
             value={formData.start_date}
             onChange={handleInputChange}
-            className={`w-full px-3 py-2 text-[14px] border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${
-              errors.start_date ? 'border-red-300' : 'border-gray-200'
+            className={`w-full px-3 py-2 text-[14px] border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
+              errors.start_date ? 'border-red-300' : 'border-gray-200 dark:border-gray-700'
             }`}
           />
           {errors.start_date && (
@@ -222,7 +222,7 @@ export default function ExperienceForm({
           )}
         </div>
         <div>
-          <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             End Date
           </label>
           <input
@@ -231,8 +231,8 @@ export default function ExperienceForm({
             value={formData.end_date || ''}
             onChange={handleInputChange}
             disabled={formData.is_current}
-            className={`w-full px-3 py-2 text-[14px] border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 ${
-              errors.end_date ? 'border-red-300' : 'border-gray-200'
+            className={`w-full px-3 py-2 text-[14px] border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
+              errors.end_date ? 'border-red-300' : 'border-gray-200 dark:border-gray-700'
             }`}
           />
           {errors.end_date && (
@@ -248,15 +248,15 @@ export default function ExperienceForm({
           name="is_current"
           checked={formData.is_current}
           onChange={handleCurrentChange}
-          className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+          className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100"
         />
-        <label htmlFor="is_current" className="text-[14px] text-gray-700">
+        <label htmlFor="is_current" className="text-[14px] text-gray-700 dark:text-gray-300">
           I currently work here
         </label>
       </div>
 
       <div>
-        <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+        <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
           Description
         </label>
         <textarea
@@ -265,12 +265,12 @@ export default function ExperienceForm({
           onChange={handleInputChange}
           rows={4}
           placeholder="Describe your role and responsibilities..."
-          className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+          className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent resize-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
         />
       </div>
 
       <div>
-        <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+        <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
           Key Achievements
         </label>
         <textarea
@@ -279,7 +279,7 @@ export default function ExperienceForm({
           onChange={handleInputChange}
           rows={3}
           placeholder="List your key achievements and accomplishments..."
-          className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+          className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent resize-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
         />
       </div>
 
@@ -301,19 +301,19 @@ export default function ExperienceForm({
         />
       </div>
 
-      <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+      <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-4 py-2 text-[14px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          className="px-4 py-2 text-[14px] font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-4 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 text-[14px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isSubmitting ? 'Saving...' : experience ? 'Update' : 'Add Experience'}
         </button>

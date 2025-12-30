@@ -208,14 +208,14 @@ function PanelHeader({
   if (isMinimized) {
     return (
       <div
-        className="h-full flex flex-col items-center py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+        className="h-full flex flex-col items-center py-3 bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         onClick={onMinimize}
         title={`Expand ${title}`}
       >
-        <ChevronRight className="w-4 h-4 text-gray-400 mb-2" />
+        <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500 mb-2" />
         <div className="flex-1 flex items-center">
           <span
-            className="text-xs font-medium text-gray-600 whitespace-nowrap"
+            className="text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap"
             style={{
               writingMode: 'vertical-rl',
               textOrientation: 'mixed',
@@ -232,14 +232,14 @@ function PanelHeader({
 
   // Normal state
   return (
-    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
+    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
       <div className="relative flex items-center gap-2">
         <button
           onClick={(e) => {
             e.stopPropagation()
             setIsDropdownOpen(!isDropdownOpen)
           }}
-          className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+          className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
         >
           {icon}
           {title}
@@ -252,7 +252,7 @@ function PanelHeader({
               className="fixed inset-0 z-10"
               onClick={() => setIsDropdownOpen(false)}
             />
-            <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 z-20 py-1">
               {panelOptions.map((option) => (
                 <button
                   key={option.type}
@@ -260,7 +260,7 @@ function PanelHeader({
                     onChangePanel(option.type)
                     setIsDropdownOpen(false)
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   {option.icon}
                   {option.label}
@@ -278,7 +278,7 @@ function PanelHeader({
               e.stopPropagation()
               onMinimize()
             }}
-            className="p-1 text-gray-400 hover:text-gray-600 rounded"
+            className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 rounded"
             title="Minimize"
           >
             <Minimize2 className="w-4 h-4" />
@@ -290,7 +290,7 @@ function PanelHeader({
               e.stopPropagation()
               onMaximize()
             }}
-            className="p-1 text-gray-400 hover:text-gray-600 rounded"
+            className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 rounded"
             title={isMaximized ? 'Restore' : 'Maximize'}
           >
             {isMaximized ? (
@@ -306,7 +306,7 @@ function PanelHeader({
               e.stopPropagation()
               onRemove()
             }}
-            className="p-1 text-gray-400 hover:text-red-600 rounded"
+            className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 rounded"
             title="Remove panel"
           >
             <X className="w-4 h-4" />
@@ -502,7 +502,7 @@ export default function FocusMode(props: FocusModeProps) {
     if (isLoading) {
       return (
         <div className="h-full flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100" />
         </div>
       )
     }
@@ -672,16 +672,16 @@ export default function FocusMode(props: FocusModeProps) {
   const modeLabel = target.mode === 'application' ? 'Interview Mode' : 'Service Mode'
 
   return (
-    <div className="fixed inset-0 bg-white z-[300] flex flex-col">
+    <div className="fixed inset-0 bg-white dark:bg-gray-900 z-[300] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-gray-50">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold text-gray-900">{modeLabel}</h1>
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{modeLabel}</h1>
           <span className="text-gray-300">|</span>
           <div className="flex items-center gap-2">
             {entityTypeIcons[displayInfo.type]}
-            <span className="text-sm font-medium text-gray-700">{displayInfo.name}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{displayInfo.name}</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
               {entityTypeLabels[displayInfo.type]}
             </span>
           </div>
@@ -711,14 +711,14 @@ export default function FocusMode(props: FocusModeProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={addPanel}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Panel
           </button>
           <button
             onClick={onClose}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <X className="w-4 h-4" />
             Exit {modeLabel}
@@ -759,7 +759,7 @@ export default function FocusMode(props: FocusModeProps) {
               return (
                 <div
                   key={panel.id}
-                  className={`flex flex-col border-r border-gray-200 last:border-r-0 transition-all duration-200 ${
+                  className={`flex flex-col border-r border-gray-200 dark:border-gray-700 last:border-r-0 transition-all duration-200 ${
                     isMinimized ? 'flex-shrink-0' : ''
                   }`}
                   style={{

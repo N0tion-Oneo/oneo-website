@@ -135,8 +135,8 @@ function SubscriptionStatusBadge({ status }: { status: SubscriptionStatus | 'non
     active: { bg: 'bg-green-100', text: 'text-green-700', icon: <CheckCircle className="w-3.5 h-3.5" />, label: 'Active' },
     paused: { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: <PauseCircle className="w-3.5 h-3.5" />, label: 'Paused' },
     terminated: { bg: 'bg-red-100', text: 'text-red-700', icon: <XCircle className="w-3.5 h-3.5" />, label: 'Terminated' },
-    expired: { bg: 'bg-gray-100', text: 'text-gray-600', icon: <Clock className="w-3.5 h-3.5" />, label: 'Expired' },
-    none: { bg: 'bg-gray-50', text: 'text-gray-400', icon: <CreditCard className="w-3.5 h-3.5" />, label: 'No Subscription' },
+    expired: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', icon: <Clock className="w-3.5 h-3.5" />, label: 'Expired' },
+    none: { bg: 'bg-gray-50 dark:bg-gray-800', text: 'text-gray-400 dark:text-gray-500', icon: <CreditCard className="w-3.5 h-3.5" />, label: 'No Subscription' },
   }
   const config = configs[status]
   return (
@@ -150,7 +150,7 @@ function SubscriptionStatusBadge({ status }: { status: SubscriptionStatus | 'non
 // Service type badge
 function ServiceTypeBadge({ type }: { type: string | null }) {
   if (!type) {
-    return <span className="text-xs text-gray-400">Not set</span>
+    return <span className="text-xs text-gray-400 dark:text-gray-500">Not set</span>
   }
   const isRetained = type === 'retained'
   return (
@@ -165,11 +165,11 @@ function ServiceTypeBadge({ type }: { type: string | null }) {
 // Invoice status badge
 function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
   const configs: Record<InvoiceStatus, { bg: string; text: string }> = {
-    draft: { bg: 'bg-gray-100', text: 'text-gray-600' },
+    draft: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400' },
     sent: { bg: 'bg-blue-100', text: 'text-blue-700' },
     paid: { bg: 'bg-green-100', text: 'text-green-700' },
     overdue: { bg: 'bg-red-100', text: 'text-red-700' },
-    cancelled: { bg: 'bg-gray-100', text: 'text-gray-500' },
+    cancelled: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-500 dark:text-gray-400' },
     partially_paid: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
   }
   const config = configs[status]
@@ -210,7 +210,7 @@ function SummaryCard({
   color?: 'gray' | 'green' | 'yellow' | 'red' | 'blue'
 }) {
   const colorClasses = {
-    gray: 'bg-gray-100 text-gray-600',
+    gray: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
     green: 'bg-green-100 text-green-600',
     yellow: 'bg-yellow-100 text-yellow-600',
     red: 'bg-red-100 text-red-600',
@@ -218,12 +218,12 @@ function SummaryCard({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-2xl font-semibold text-gray-900 mt-1">{value}</p>
-          {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
+          <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-1">{value}</p>
+          {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
         </div>
         <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
           <Icon className="w-6 h-6" />
@@ -278,18 +278,18 @@ function CreateSubscriptionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/20 w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Create {serviceTypeLabel} Contract</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Create {serviceTypeLabel} Contract</h3>
+          <button onClick={onClose} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Creating {serviceTypeLabel.toLowerCase()} contract for <strong>{company.name}</strong>
           {isHeadhunting && (
-            <span className="block mt-1 text-xs text-gray-500">
+            <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">
               This contract tracks agreement terms. Invoices are created per placement.
             </span>
           )}
@@ -303,23 +303,23 @@ function CreateSubscriptionModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contract Start Date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contract Start Date</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
-            <p className="text-xs text-gray-500 mt-1">Contract will be for 1 year from this date</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Contract will be for 1 year from this date</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Billing Day of Month</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Billing Day of Month</label>
             <select
               value={billingDay}
               onChange={(e) => setBillingDay(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
                 <option key={day} value={day}>{day}</option>
@@ -333,16 +333,16 @@ function CreateSubscriptionModal({
               id="autoRenew"
               checked={autoRenew}
               onChange={(e) => setAutoRenew(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300"
+              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600"
             />
-            <label htmlFor="autoRenew" className="text-sm text-gray-700">Auto-renew annually</label>
+            <label htmlFor="autoRenew" className="text-sm text-gray-700 dark:text-gray-300">Auto-renew annually</label>
           </div>
 
           <div className="flex gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
             >
               Cancel
             </button>
@@ -390,27 +390,27 @@ function PauseSubscriptionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/20 w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Pause Subscription</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pause Subscription</h3>
+          <button onClick={onClose} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Pause subscription for <strong>{companyName}</strong>. The subscription can be resumed later.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reason (optional)</label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={3}
               placeholder="Enter reason for pausing..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -418,7 +418,7 @@ function PauseSubscriptionModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
             >
               Cancel
             </button>
@@ -499,30 +499,30 @@ function AdjustContractModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/20 w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Adjust Contract</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Adjust Contract</h3>
+          <button onClick={onClose} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Adjust the contract end date for <strong>{companyName}</strong>.
         </p>
 
         {/* Current Contract Info */}
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-gray-500">Current End Date</p>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Current End Date</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {formatDate(subscription.contract_end_date)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Days Remaining</p>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Days Remaining</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {subscription.days_until_renewal} days
               </p>
             </div>
@@ -532,7 +532,7 @@ function AdjustContractModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Quick Adjustments */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Quick Adjust</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick Adjust</label>
             <div className="flex flex-wrap gap-2">
               {quickAdjustments.map((adj) => (
                 <button
@@ -553,13 +553,13 @@ function AdjustContractModal({
 
           {/* Date Picker */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">New End Date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New End Date</label>
             <input
               type="date"
               value={newEndDate}
               onChange={(e) => setNewEndDate(e.target.value)}
               min={today.toISOString().split('T')[0]}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -593,7 +593,7 @@ function AdjustContractModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
             >
               Cancel
             </button>
@@ -658,10 +658,10 @@ function TerminateSubscriptionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/20 w-full max-w-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-red-600">Terminate Subscription</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -674,10 +674,10 @@ function TerminateSubscriptionModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Termination Type</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Termination Type</label>
             <div className="space-y-2">
-              <label className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
-                terminationType === 'without_cause' ? 'border-red-300 bg-red-50' : 'border-gray-200'
+              <label className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                terminationType === 'without_cause' ? 'border-red-300 bg-red-50' : 'border-gray-200 dark:border-gray-700'
               }`}>
                 <input
                   type="radio"
@@ -688,14 +688,14 @@ function TerminateSubscriptionModal({
                   className="mt-0.5"
                 />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">Without Cause</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Without Cause</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {isRetained ? 'Standard termination, early termination fee applies' : 'Standard termination, no termination fee applies'}
                   </p>
                 </div>
               </label>
-              <label className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
-                terminationType === 'for_cause' ? 'border-gray-400 bg-gray-50' : 'border-gray-200'
+              <label className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                terminationType === 'for_cause' ? 'border-gray-400 bg-gray-50 dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700'
               }`}>
                 <input
                   type="radio"
@@ -706,8 +706,8 @@ function TerminateSubscriptionModal({
                   className="mt-0.5"
                 />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">For Cause</p>
-                  <p className="text-xs text-gray-500">Breach of contract, no termination fee</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">For Cause</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Breach of contract, no termination fee</p>
                 </div>
               </label>
             </div>
@@ -766,14 +766,14 @@ function TerminateSubscriptionModal({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               required
               placeholder="Enter termination notes..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -781,7 +781,7 @@ function TerminateSubscriptionModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
             >
               Cancel
             </button>
@@ -835,21 +835,21 @@ function RecordPaymentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/20 w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Record Payment</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Record Payment</h3>
+          <button onClick={onClose} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Recording payment for invoice <strong>{invoice.invoice_number}</strong>
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Amount (ZAR)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount (ZAR)</label>
             <input
               type="number"
               value={amount}
@@ -857,28 +857,28 @@ function RecordPaymentModal({
               required
               step="0.01"
               max={invoice.balance_due}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
-            <p className="text-xs text-gray-500 mt-1">Balance due: {formatCurrency(invoice.balance_due)}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Balance due: {formatCurrency(invoice.balance_due)}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Date</label>
             <input
               type="date"
               value={paymentDate}
               onChange={(e) => setPaymentDate(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Method</label>
             <select
               value={paymentMethod}
               onChange={(e) => setPaymentMethod(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value="bank_transfer">Bank Transfer</option>
               <option value="credit_card">Credit Card</option>
@@ -890,13 +890,13 @@ function RecordPaymentModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Reference Number</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reference Number</label>
             <input
               type="text"
               value={reference}
               onChange={(e) => setReference(e.target.value)}
               placeholder="e.g., Bank reference"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -904,7 +904,7 @@ function RecordPaymentModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
             >
               Cancel
             </button>
@@ -1104,16 +1104,16 @@ function CreateInvoiceModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Create Invoice</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/20 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Create Invoice</h3>
+          <button onClick={onClose} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             Creating invoice for <strong>{company.name}</strong>
             <span className="ml-2">
               <ServiceTypeBadge type={company.service_type} />
@@ -1129,7 +1129,7 @@ function CreateInvoiceModal({
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Invoice Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Invoice Type</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Invoice Type</label>
               <div className="grid grid-cols-2 gap-2">
                 {availableTypes.map((type) => (
                   <button
@@ -1139,7 +1139,7 @@ function CreateInvoiceModal({
                     className={`px-4 py-2 text-sm font-medium rounded-lg border ${
                       invoiceType === type.value
                         ? 'bg-gray-900 text-white border-gray-900'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
                   >
                     {type.label}
@@ -1151,9 +1151,9 @@ function CreateInvoiceModal({
             {/* Placement Selection (for placement invoices) */}
             {invoiceType === 'placement' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Placement</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Placement</label>
                 {placementsLoading ? (
-                  <div className="animate-pulse h-10 bg-gray-100 rounded-lg" />
+                  <div className="animate-pulse h-10 bg-gray-100 dark:bg-gray-700 rounded-lg" />
                 ) : availablePlacements.length === 0 ? (
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-700">
                     No placements available. All accepted offers already have invoices or there are no accepted offers.
@@ -1163,7 +1163,7 @@ function CreateInvoiceModal({
                     <select
                       value={selectedPlacementId}
                       onChange={(e) => handlePlacementChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       required
                     >
                       <option value="">Select a placement...</option>
@@ -1199,21 +1199,21 @@ function CreateInvoiceModal({
             {invoiceType === 'retainer' && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Billing Period Start</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Billing Period Start</label>
                   <input
                     type="date"
                     value={billingPeriodStart}
                     onChange={(e) => setBillingPeriodStart(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Billing Period End</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Billing Period End</label>
                   <input
                     type="date"
                     value={billingPeriodEnd}
                     onChange={(e) => setBillingPeriodEnd(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
               </div>
@@ -1222,43 +1222,43 @@ function CreateInvoiceModal({
             {/* Invoice Dates */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Date</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Invoice Date</label>
                 <input
                   type="date"
                   value={invoiceDate}
                   onChange={(e) => setInvoiceDate(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
                 <input
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
                 placeholder="Invoice description..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
 
             {/* Line Items */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-700">Line Items</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Line Items</label>
                 <button
                   type="button"
                   onClick={addLineItem}
@@ -1276,7 +1276,7 @@ function CreateInvoiceModal({
                         value={item.description}
                         onChange={(e) => updateLineItem(index, 'description', e.target.value)}
                         placeholder="Description"
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>
                     <div className="w-20">
@@ -1287,7 +1287,7 @@ function CreateInvoiceModal({
                         placeholder="Qty"
                         step="1"
                         min="1"
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>
                     <div className="w-32">
@@ -1297,14 +1297,14 @@ function CreateInvoiceModal({
                         onChange={(e) => updateLineItem(index, 'unit_price', e.target.value)}
                         placeholder="Amount"
                         step="0.01"
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={() => removeLineItem(index)}
                       disabled={lineItems.length === 1}
-                      className="p-2 text-gray-400 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -1312,25 +1312,25 @@ function CreateInvoiceModal({
                 ))}
               </div>
               {invoiceType === 'adjustment' && (
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Tip: Use negative amounts for credits
                 </p>
               )}
             </div>
 
             {/* Totals */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium text-gray-900">{formatCurrency(subtotal)}</span>
+                <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm mt-2">
-                <span className="text-gray-600">VAT (15%)</span>
-                <span className="font-medium text-gray-900">{formatCurrency(subtotal * 0.15)}</span>
+                <span className="text-gray-600 dark:text-gray-400">VAT (15%)</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(subtotal * 0.15)}</span>
               </div>
-              <div className="flex justify-between text-base mt-3 pt-3 border-t border-gray-200">
-                <span className="font-semibold text-gray-900">Total</span>
-                <span className="font-bold text-gray-900">{formatCurrency(subtotal * 1.15)}</span>
+              <div className="flex justify-between text-base mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <span className="font-semibold text-gray-900 dark:text-gray-100">Total</span>
+                <span className="font-bold text-gray-900 dark:text-gray-100">{formatCurrency(subtotal * 1.15)}</span>
               </div>
             </div>
 
@@ -1339,7 +1339,7 @@ function CreateInvoiceModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 Cancel
               </button>
@@ -1413,7 +1413,7 @@ function PlacementRow({
   }
 
   return (
-    <div className={`rounded-lg overflow-hidden ${isCsuite ? 'bg-amber-50' : 'bg-gray-50'}`}>
+    <div className={`rounded-lg overflow-hidden ${isCsuite ? 'bg-amber-50' : 'bg-gray-50 dark:bg-gray-800'}`}>
       {/* Main Row - Clickable */}
       <button
         onClick={() => {
@@ -1421,33 +1421,33 @@ function PlacementRow({
           if (isExpanded) setSelectedStatus(null) // Clear selection when collapsing
         }}
         className={`w-full flex items-center justify-between p-3 hover:bg-opacity-80 transition-colors ${
-          isCsuite ? 'hover:bg-amber-100' : 'hover:bg-gray-100'
+          isCsuite ? 'hover:bg-amber-100' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
         }`}
       >
         <div className="flex items-center gap-2">
           <ChevronDown
             className={`w-4 h-4 transition-transform ${isExpanded ? '' : '-rotate-90'} ${
-              isCsuite ? 'text-amber-600' : 'text-gray-500'
+              isCsuite ? 'text-amber-600' : 'text-gray-500 dark:text-gray-400'
             }`}
           />
           <div className="text-left">
-            <p className={`text-sm font-medium ${isCsuite ? 'text-amber-900' : 'text-gray-900'}`}>{label}</p>
-            <p className={`text-xs ${isCsuite ? 'text-amber-700' : 'text-gray-500'}`}>
+            <p className={`text-sm font-medium ${isCsuite ? 'text-amber-900' : 'text-gray-900 dark:text-gray-100'}`}>{label}</p>
+            <p className={`text-xs ${isCsuite ? 'text-amber-700' : 'text-gray-500 dark:text-gray-400'}`}>
               {count} invoice{count !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className={`text-sm font-semibold ${isCsuite ? 'text-amber-900' : 'text-gray-900'}`}>
+          <p className={`text-sm font-semibold ${isCsuite ? 'text-amber-900' : 'text-gray-900 dark:text-gray-100'}`}>
             {formatCurrency(revenue)}
           </p>
-          <p className={`text-xs ${isCsuite ? 'text-amber-700' : 'text-gray-500'}`}>Total</p>
+          <p className={`text-xs ${isCsuite ? 'text-amber-700' : 'text-gray-500 dark:text-gray-400'}`}>Total</p>
         </div>
       </button>
 
       {/* Expanded Breakdown - Cards Grid */}
       {isExpanded && (
-        <div className={`px-3 pb-3 pt-2 border-t ${isCsuite ? 'border-amber-200' : 'border-gray-200'}`}>
+        <div className={`px-3 pb-3 pt-2 border-t ${isCsuite ? 'border-amber-200' : 'border-gray-200 dark:border-gray-700'}`}>
           <div className="grid grid-cols-6 gap-2">
             {statusCards.map(({ key, label, data, bgColor, textColor, borderColor, selectedBg, ring }) => {
               const isSelected = selectedStatus === key
@@ -1473,32 +1473,32 @@ function PlacementRow({
 
           {/* Invoice List when a status is selected */}
           {selectedStatus && (
-            <div className="mt-3 border-t border-gray-200 pt-3">
+            <div className="mt-3 border-t border-gray-200 dark:border-gray-700 pt-3">
               {isLoading ? (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-                  <span className="ml-2 text-sm text-gray-500">Loading invoices...</span>
+                  <Loader2 className="w-5 h-5 animate-spin text-gray-400 dark:text-gray-500" />
+                  <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">Loading invoices...</span>
                 </div>
               ) : invoices.length === 0 ? (
-                <p className="text-center text-sm text-gray-500 py-4">No invoices found</p>
+                <p className="text-center text-sm text-gray-500 dark:text-gray-400 py-4">No invoices found</p>
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {invoices.map((invoice) => (
                     <button
                       key={invoice.id}
                       onClick={() => onInvoiceClick?.(invoice.id)}
-                      className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors text-left"
+                      className="w-full flex items-center justify-between p-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors text-left"
                     >
                       <div className="flex items-center gap-3">
-                        <FileText className="w-4 h-4 text-gray-400" />
+                        <FileText className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{invoice.invoice_number}</p>
-                          <p className="text-xs text-gray-500">{invoice.company_name}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.invoice_number}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{invoice.company_name}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">{formatCurrency(invoice.total_amount)}</p>
-                        <p className="text-xs text-gray-500">{formatDate(invoice.invoice_date)}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(invoice.total_amount)}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(invoice.invoice_date)}</p>
                       </div>
                     </button>
                   ))}
@@ -1557,37 +1557,37 @@ function RetainerRow({
   }
 
   return (
-    <div className="rounded-lg overflow-hidden bg-gray-50">
+    <div className="rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800">
       {/* Main Row - Clickable */}
       <button
         onClick={() => {
           setIsExpanded(!isExpanded)
           if (isExpanded) setSelectedStatus(null) // Clear selection when collapsing
         }}
-        className="w-full flex items-center justify-between p-3 hover:bg-gray-100 transition-colors"
+        className="w-full flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
       >
         <div className="flex items-center gap-2">
           <ChevronDown
-            className={`w-4 h-4 transition-transform text-gray-500 ${isExpanded ? '' : '-rotate-90'}`}
+            className={`w-4 h-4 transition-transform text-gray-500 dark:text-gray-400 ${isExpanded ? '' : '-rotate-90'}`}
           />
           <div className="text-left">
-            <p className="text-sm font-medium text-gray-900">Subscription Invoices</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Subscription Invoices</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {count} invoice{count !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-sm font-semibold text-gray-900">
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
             {formatCurrency(revenue)}
           </p>
-          <p className="text-xs text-gray-500">Total</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
         </div>
       </button>
 
       {/* Expanded Breakdown - Cards Grid */}
       {isExpanded && (
-        <div className="px-3 pb-3 pt-2 border-t border-gray-200">
+        <div className="px-3 pb-3 pt-2 border-t border-gray-200 dark:border-gray-700">
           <div className="grid grid-cols-6 gap-2">
             {statusCards.map(({ key, label, data, bgColor, textColor, borderColor, selectedBg, ring }) => {
               const isSelected = selectedStatus === key
@@ -1613,32 +1613,32 @@ function RetainerRow({
 
           {/* Invoice List when a status is selected */}
           {selectedStatus && (
-            <div className="mt-3 border-t border-gray-200 pt-3">
+            <div className="mt-3 border-t border-gray-200 dark:border-gray-700 pt-3">
               {isLoading ? (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-                  <span className="ml-2 text-sm text-gray-500">Loading invoices...</span>
+                  <Loader2 className="w-5 h-5 animate-spin text-gray-400 dark:text-gray-500" />
+                  <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">Loading invoices...</span>
                 </div>
               ) : invoices.length === 0 ? (
-                <p className="text-center text-sm text-gray-500 py-4">No invoices found</p>
+                <p className="text-center text-sm text-gray-500 dark:text-gray-400 py-4">No invoices found</p>
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {invoices.map((invoice) => (
                     <button
                       key={invoice.id}
                       onClick={() => onInvoiceClick?.(invoice.id)}
-                      className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors text-left"
+                      className="w-full flex items-center justify-between p-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-colors text-left"
                     >
                       <div className="flex items-center gap-3">
-                        <FileText className="w-4 h-4 text-gray-400" />
+                        <FileText className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{invoice.invoice_number}</p>
-                          <p className="text-xs text-gray-500">{invoice.company_name}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.invoice_number}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{invoice.company_name}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">{formatCurrency(invoice.total_amount)}</p>
-                        <p className="text-xs text-gray-500">{formatDate(invoice.invoice_date)}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(invoice.total_amount)}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(invoice.invoice_date)}</p>
                       </div>
                     </button>
                   ))}
@@ -1699,7 +1699,7 @@ function ServiceTypeCard({
   const totalRevenue = parseFloat(regularRevenue) + parseFloat(csuiteRevenue)
 
   return (
-    <div className={`bg-white border rounded-lg overflow-hidden ${isRetained ? 'border-purple-200' : 'border-indigo-200'}`}>
+    <div className={`bg-white dark:bg-gray-900 border rounded-lg overflow-hidden ${isRetained ? 'border-purple-200' : 'border-indigo-200'}`}>
       {/* Header */}
       <div className={`px-6 py-4 ${isRetained ? 'bg-purple-50' : 'bg-indigo-50'}`}>
         <div className="flex items-center justify-between">
@@ -1743,9 +1743,9 @@ function ServiceTypeCard({
                 <p className="text-2xl font-bold text-red-700">{terminatedSubscriptions ?? 0}</p>
                 <p className="text-[10px] font-medium text-red-600 uppercase tracking-wide">Terminated</p>
               </div>
-              <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
-                <p className="text-2xl font-bold text-gray-600">{expiredSubscriptions ?? 0}</p>
-                <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">Expired</p>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+                <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{expiredSubscriptions ?? 0}</p>
+                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Expired</p>
               </div>
             </div>
             {/* Monthly MRR */}
@@ -1761,8 +1761,8 @@ function ServiceTypeCard({
         {/* Placements Section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-medium text-gray-700">Placements</p>
-            <p className="text-sm font-semibold text-gray-900">{totalPlacements} total</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Placements</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{totalPlacements} total</p>
           </div>
 
           <div className="space-y-2">
@@ -1796,8 +1796,8 @@ function ServiceTypeCard({
         {retainerCount != null && retainerCount > 0 && retainerBreakdown && retainerRevenue && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-gray-700">Subscriptions</p>
-              <p className="text-sm font-semibold text-gray-900">{retainerCount} invoice{retainerCount !== 1 ? 's' : ''}</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Subscriptions</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{retainerCount} invoice{retainerCount !== 1 ? 's' : ''}</p>
             </div>
 
             <RetainerRow
@@ -1821,7 +1821,7 @@ function ServiceTypeCard({
             </p>
           </div>
           {retainerCount != null && retainerCount > 0 && retainerRevenue && (
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
               <p className={`text-sm font-medium ${isRetained ? 'text-purple-900' : 'text-indigo-900'}`}>
                 Total Subscription Revenue
               </p>
@@ -1865,20 +1865,20 @@ function InvoiceListSection() {
   ]
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
       {/* Header with tabs and time range */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           {/* Tabs */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   activeTab === tab.key
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm dark:shadow-gray-900/20'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                 }`}
               >
                 {tab.label}
@@ -1888,11 +1888,11 @@ function InvoiceListSection() {
 
           {/* Time Range Selector */}
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">Show:</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Show:</span>
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-              className="text-sm border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               {timeRanges.map((range) => (
                 <option key={range.key} value={range.key}>
@@ -1905,11 +1905,11 @@ function InvoiceListSection() {
       </div>
 
       {/* Invoice List */}
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-gray-100 dark:divide-gray-800">
         {isLoading ? (
           <div className="p-8 text-center">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" />
-            <p className="text-sm text-gray-500 mt-2">Loading invoices...</p>
+            <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500 mx-auto" />
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading invoices...</p>
           </div>
         ) : error ? (
           <div className="p-8 text-center">
@@ -1918,19 +1918,19 @@ function InvoiceListSection() {
           </div>
         ) : invoices.length === 0 ? (
           <div className="p-8 text-center">
-            <FileText className="w-8 h-8 text-gray-300 mx-auto" />
-            <p className="text-sm text-gray-500 mt-2">No invoices found</p>
+            <FileText className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto" />
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">No invoices found</p>
           </div>
         ) : (
           invoices.slice(0, 10).map((invoice) => (
-            <div key={invoice.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+            <div key={invoice.id} className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3">
-                    <p className="text-sm font-medium text-gray-900">{invoice.invoice_number}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{invoice.invoice_number}</p>
                     <InvoiceStatusBadge status={invoice.status} />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {invoice.company_name} &middot; {formatDate(invoice.invoice_date)}
                     {invoice.due_date && (
                       <span className="ml-2">Due: {formatDate(invoice.due_date)}</span>
@@ -1938,9 +1938,9 @@ function InvoiceListSection() {
                   </p>
                 </div>
                 <div className="text-right ml-4">
-                  <p className="text-sm font-semibold text-gray-900">{formatCurrency(invoice.total_amount)}</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(invoice.total_amount)}</p>
                   {invoice.balance_due && parseFloat(invoice.balance_due) > 0 && parseFloat(invoice.balance_due) < parseFloat(invoice.total_amount) && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       Balance: {formatCurrency(invoice.balance_due)}
                     </p>
                   )}
@@ -1951,8 +1951,8 @@ function InvoiceListSection() {
         )}
 
         {invoices.length > 10 && (
-          <div className="px-6 py-3 text-center bg-gray-50">
-            <p className="text-sm text-gray-500">
+          <div className="px-6 py-3 text-center bg-gray-50 dark:bg-gray-800">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Showing 10 of {invoices.length} invoices
             </p>
           </div>
@@ -1973,12 +1973,12 @@ function OverviewTab({ summary }: { summary: SubscriptionSummary | null }) {
       <div className="animate-pulse space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-gray-100 rounded-lg" />
+            <div key={i} className="h-32 bg-gray-100 dark:bg-gray-700 rounded-lg" />
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-64 bg-gray-100 rounded-lg" />
-          <div className="h-64 bg-gray-100 rounded-lg" />
+          <div className="h-64 bg-gray-100 dark:bg-gray-700 rounded-lg" />
+          <div className="h-64 bg-gray-100 dark:bg-gray-700 rounded-lg" />
         </div>
       </div>
     )
@@ -2055,21 +2055,21 @@ function OverviewTab({ summary }: { summary: SubscriptionSummary | null }) {
 
         {/* Upcoming Renewals */}
         {summary.upcoming_renewals.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Renewals (30 days)</h3>
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Upcoming Renewals (30 days)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {summary.upcoming_renewals.map((renewal) => (
-                <div key={renewal.company_id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div key={renewal.company_id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{renewal.company_name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{renewal.company_name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       Expires {formatDate(renewal.contract_end_date)} ({renewal.days_until_renewal} days)
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">{formatCurrency(renewal.monthly_retainer)}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatCurrency(renewal.monthly_retainer)}</p>
                     <span className={`text-xs px-1.5 py-0.5 rounded ${
-                      renewal.auto_renew ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                      renewal.auto_renew ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                     }`}>
                       {renewal.auto_renew ? 'Auto-renew' : 'Manual'}
                     </span>
@@ -2082,7 +2082,7 @@ function OverviewTab({ summary }: { summary: SubscriptionSummary | null }) {
 
         {/* Invoice List with Tabs */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Invoices</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Invoices</h3>
           <InvoiceListSection />
         </div>
       </div>
@@ -2142,20 +2142,20 @@ function CompaniesTab({
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Search companies..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
         </div>
         <div className="flex gap-2">
           <select
             value={serviceTypeFilter}
             onChange={(e) => setServiceTypeFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             <option value="">All Service Types</option>
             <option value="retained">Retained</option>
@@ -2164,7 +2164,7 @@ function CompaniesTab({
           <select
             value={subscriptionFilter}
             onChange={(e) => setSubscriptionFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             <option value="">All Subscriptions</option>
             <option value="active">Active</option>
@@ -2174,7 +2174,7 @@ function CompaniesTab({
           </select>
           <button
             onClick={() => refetch()}
-            className="p-2 text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -2183,66 +2183,66 @@ function CompaniesTab({
 
       {/* Stats Row */}
       <div className="flex flex-wrap gap-4 text-sm">
-        <span className="text-gray-500">
-          Showing <span className="font-medium text-gray-900">{filteredCompanies.length}</span> of {companies.length} companies
+        <span className="text-gray-500 dark:text-gray-400">
+          Showing <span className="font-medium text-gray-900 dark:text-gray-100">{filteredCompanies.length}</span> of {companies.length} companies
         </span>
-        <span className="text-gray-300">|</span>
-        <span className="text-gray-500">
+        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <span className="text-gray-500 dark:text-gray-400">
           <span className="font-medium text-green-600">{activeCount}</span> active contracts
         </span>
-        <span className="text-gray-300">|</span>
-        <span className="text-gray-500">
+        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <span className="text-gray-500 dark:text-gray-400">
           <span className="font-medium text-purple-600">{retainedCount}</span> retained
         </span>
-        <span className="text-gray-300">|</span>
-        <span className="text-gray-500">
+        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <span className="text-gray-500 dark:text-gray-400">
           <span className="font-medium text-blue-600">{headhuntingCount}</span> headhunting
         </span>
       </div>
 
       {/* Companies Table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-gray-900 rounded-full mx-auto" />
+            <div className="animate-spin w-8 h-8 border-2 border-gray-300 dark:border-gray-600 border-t-gray-900 dark:border-t-gray-100 rounded-full mx-auto" />
           </div>
         ) : filteredCompanies.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No companies found</div>
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400">No companies found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Company
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Contact
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Service
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Contract
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Pricing
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredCompanies.map((company) => {
                   const sub = company.subscription
                   const contact = company.primary_contact
                   const pricing = company.pricing
                   return (
-                    <tr key={company.id} className="hover:bg-gray-50">
+                    <tr key={company.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                       {/* Company */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
@@ -2253,13 +2253,13 @@ function CompaniesTab({
                               className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
                             />
                           ) : (
-                            <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <Building2 className="w-4 h-4 text-gray-400" />
+                            <div className="w-9 h-9 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Building2 className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                             </div>
                           )}
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">{company.name}</p>
-                            <p className="text-xs text-gray-500">{company.jobs_total} jobs</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{company.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{company.jobs_total} jobs</p>
                           </div>
                         </div>
                       </td>
@@ -2267,11 +2267,11 @@ function CompaniesTab({
                       <td className="px-4 py-3">
                         {contact ? (
                           <div className="min-w-0">
-                            <p className="text-sm text-gray-900 truncate">{contact.name}</p>
-                            <p className="text-xs text-gray-500 truncate">{contact.email}</p>
+                            <p className="text-sm text-gray-900 dark:text-gray-100 truncate">{contact.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{contact.email}</p>
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400">No contact</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">No contact</span>
                         )}
                       </td>
                       {/* Service Type */}
@@ -2290,7 +2290,7 @@ function CompaniesTab({
                                   Auto
                                 </span>
                               ) : (
-                                <span className="text-gray-400">No auto-renew</span>
+                                <span className="text-gray-400 dark:text-gray-500">No auto-renew</span>
                               )}
                             </div>
                           )}
@@ -2300,13 +2300,13 @@ function CompaniesTab({
                       <td className="px-4 py-3">
                         {sub?.contract_end_date ? (
                           <div className="text-sm">
-                            <p className="text-gray-900">{formatDate(sub.contract_end_date)}</p>
+                            <p className="text-gray-900 dark:text-gray-100">{formatDate(sub.contract_end_date)}</p>
                             <p className={`text-xs ${
                               sub.days_until_renewal <= 30
                                 ? sub.days_until_renewal <= 7
                                   ? 'text-red-600 font-medium'
                                   : 'text-yellow-600'
-                                : 'text-gray-500'
+                                : 'text-gray-500 dark:text-gray-400'
                             }`}>
                               {sub.days_until_renewal <= 0
                                 ? 'Expired'
@@ -2314,7 +2314,7 @@ function CompaniesTab({
                             </p>
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400">No contract</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">No contract</span>
                         )}
                       </td>
                       {/* Pricing */}
@@ -2322,25 +2322,25 @@ function CompaniesTab({
                         {pricing ? (
                           <div className="text-xs space-y-0.5">
                             {pricing.monthly_retainer && (
-                              <p className="text-gray-900">
+                              <p className="text-gray-900 dark:text-gray-100">
                                 R{parseInt(pricing.monthly_retainer).toLocaleString()}/mo
                               </p>
                             )}
-                            <p className="text-gray-500">
+                            <p className="text-gray-500 dark:text-gray-400">
                               {pricing.placement_fee
                                 ? `${(parseFloat(pricing.placement_fee) * 100).toFixed(0)}%`
                                 : '—'} placement
                             </p>
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400">Default</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">Default</span>
                         )}
                       </td>
                       {/* Actions */}
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => onSelectCompany(company)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
                         >
                           <Eye className="w-4 h-4" />
                           Manage
@@ -2391,20 +2391,20 @@ function InvoicesTab({
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Search invoices..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
         </div>
         <div className="flex gap-2">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as InvoiceStatus | '')}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             <option value="">All Statuses</option>
             <option value="draft">Draft</option>
@@ -2416,7 +2416,7 @@ function InvoicesTab({
           </select>
           <button
             onClick={() => refetch()}
-            className="p-2 text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -2424,64 +2424,64 @@ function InvoicesTab({
       </div>
 
       {/* Invoices Table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-gray-900 rounded-full mx-auto" />
+            <div className="animate-spin w-8 h-8 border-2 border-gray-300 dark:border-gray-600 border-t-gray-900 dark:border-t-gray-100 rounded-full mx-auto" />
           </div>
         ) : filteredInvoices.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No invoices found</div>
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400">No invoices found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Invoice
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Company
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Due Date
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredInvoices.map((inv: InvoiceListItem) => (
-                  <tr key={inv.id} className="hover:bg-gray-50">
+                  <tr key={inv.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                     <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-gray-900">{inv.invoice_number}</span>
-                      <p className="text-xs text-gray-500">{formatDate(inv.invoice_date)}</p>
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{inv.invoice_number}</span>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(inv.invoice_date)}</p>
                     </td>
                     <td className="px-6 py-4">
                       <button
                         onClick={() => handleViewCompany(inv.company_id)}
-                        className="text-sm text-gray-900 hover:text-blue-600"
+                        className="text-sm text-gray-900 dark:text-gray-100 hover:text-blue-600"
                       >
                         {inv.company_name}
                       </button>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 capitalize">
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 capitalize">
                       {inv.invoice_type_display}
                     </td>
                     <td className="px-6 py-4">
                       <InvoiceStatusBadge status={inv.status} />
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {formatCurrency(inv.total_amount)}
                       </span>
                       {parseFloat(inv.balance_due) > 0 && parseFloat(inv.balance_due) < parseFloat(inv.total_amount) && (
@@ -2495,7 +2495,7 @@ function InvoicesTab({
                         className={`text-sm ${
                           new Date(inv.due_date) < new Date() && inv.status !== 'paid'
                             ? 'text-red-600 font-medium'
-                            : 'text-gray-500'
+                            : 'text-gray-500 dark:text-gray-400'
                         }`}
                       >
                         {formatDate(inv.due_date)}
@@ -2504,7 +2504,7 @@ function InvoicesTab({
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => setSelectedInvoiceId(inv.id)}
-                        className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+                        className="inline-flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                       >
                         <Eye className="w-4 h-4" />
                         View
@@ -2543,12 +2543,12 @@ function AlertsTab({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           {alerts.length} alert{alerts.length !== 1 ? 's' : ''} requiring attention
         </p>
         <button
           onClick={() => refetch()}
-          className="p-2 text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg"
+          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -2557,31 +2557,31 @@ function AlertsTab({
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+            <div key={i} className="h-24 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
           ))}
         </div>
       ) : alerts.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
           <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">All Clear!</h3>
-          <p className="text-gray-500">No alerts or actions required at this time.</p>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">All Clear!</h3>
+          <p className="text-gray-500 dark:text-gray-400">No alerts or actions required at this time.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {alerts.map((alert: SubscriptionAlert, index: number) => (
             <div
               key={index}
-              className="bg-white border border-gray-200 rounded-lg p-4 flex items-start gap-4"
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex items-start gap-4"
             >
               <AlertSeverityBadge severity={alert.severity} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{alert.message}</p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{alert.message}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                       <button
                         onClick={() => onSelectCompany(alert.company_id)}
-                        className="hover:text-gray-700"
+                        className="hover:text-gray-700 dark:hover:text-gray-300"
                       >
                         {alert.company_name}
                       </button>
@@ -2591,9 +2591,9 @@ function AlertsTab({
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-xs text-gray-500">Due</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Due</p>
                     <p className={`text-sm font-medium ${
-                      new Date(alert.due_date) < new Date() ? 'text-red-600' : 'text-gray-900'
+                      new Date(alert.due_date) < new Date() ? 'text-red-600' : 'text-gray-900 dark:text-gray-100'
                     }`}>
                       {formatDate(alert.due_date)}
                     </p>
@@ -2602,7 +2602,7 @@ function AlertsTab({
               </div>
               <button
                 onClick={() => onSelectCompany(alert.company_id)}
-                className="p-2 text-gray-400 hover:text-gray-600 flex-shrink-0"
+                className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -2639,20 +2639,20 @@ export function SubscriptionsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Subscription Management</h1>
-                <p className="text-sm text-gray-500 mt-1">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Subscription Management</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Manage company subscriptions, invoices, and billing
                 </p>
               </div>
               <div className="flex gap-3">
-                <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                <button className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                   <Download className="w-4 h-4" />
                   Export
                 </button>
@@ -2668,8 +2668,8 @@ export function SubscriptionsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 pb-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? 'border-gray-900 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
                 <tab.icon className="w-4 h-4" />

@@ -74,9 +74,9 @@ export default function CMSLegalListPage() {
 
   const getStatusBadge = (status: ContentStatus) => {
     const styles: Record<ContentStatus, string> = {
-      [ContentStatus.DRAFT]: 'bg-yellow-100 text-yellow-700',
-      [ContentStatus.PUBLISHED]: 'bg-green-100 text-green-700',
-      [ContentStatus.ARCHIVED]: 'bg-gray-100 text-gray-600',
+      [ContentStatus.DRAFT]: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+      [ContentStatus.PUBLISHED]: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+      [ContentStatus.ARCHIVED]: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
     }
     return (
       <span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${styles[status]}`}>
@@ -87,7 +87,7 @@ export default function CMSLegalListPage() {
 
   const getTypeBadge = (type: LegalDocumentType) => {
     return (
-      <span className="inline-flex px-2 py-0.5 text-[11px] font-medium rounded bg-purple-100 text-purple-700">
+      <span className="inline-flex px-2 py-0.5 text-[11px] font-medium rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">
         {LegalDocumentTypeLabels[type]}
       </span>
     )
@@ -96,10 +96,10 @@ export default function CMSLegalListPage() {
   // Access check
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to manage legal documents.
         </p>
       </div>
@@ -111,14 +111,14 @@ export default function CMSLegalListPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">Legal Documents</h1>
-          <p className="text-[13px] text-gray-500 mt-0.5">
+          <h1 className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">Legal Documents</h1>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
             Manage Terms & Conditions, Privacy Policy, and other legal content
           </p>
         </div>
         <Link
           to="/dashboard/cms/legal/new"
-          className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
         >
           <Plus className="w-4 h-4" />
           New Document
@@ -135,7 +135,7 @@ export default function CMSLegalListPage() {
             placeholder="Search documents..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+            className="w-full pl-10 pr-4 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
           />
         </div>
 
@@ -143,7 +143,7 @@ export default function CMSLegalListPage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+          className="px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
         >
           {STATUS_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -156,7 +156,7 @@ export default function CMSLegalListPage() {
       {/* Loading State */}
       {isLoading && (
         <div className="text-center py-12">
-          <p className="text-[14px] text-gray-500">Loading documents...</p>
+          <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading documents...</p>
         </div>
       )}
 
@@ -169,10 +169,10 @@ export default function CMSLegalListPage() {
 
       {/* Empty State */}
       {!isLoading && !error && filteredDocuments.length === 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-          <Scale className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-[15px] text-gray-700 mb-1">No legal documents found</p>
-          <p className="text-[13px] text-gray-500 mb-4">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+          <Scale className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No legal documents found</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
             {search || statusFilter
               ? 'Try adjusting your filters'
               : 'Create your first legal document to get started'}
@@ -180,7 +180,7 @@ export default function CMSLegalListPage() {
           {!search && !statusFilter && (
             <Link
               to="/dashboard/cms/legal/new"
-              className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800"
+              className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
             >
               <Plus className="w-4 h-4" />
               Create Document
@@ -191,50 +191,50 @@ export default function CMSLegalListPage() {
 
       {/* Documents Table */}
       {!isLoading && !error && filteredDocuments.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg overflow-visible">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-visible">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Document
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Version
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Effective Date
                 </th>
-                <th className="px-4 py-3 text-right text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {filteredDocuments.map((doc: CMSLegalDocumentListItem) => (
-                <tr key={doc.id} className="hover:bg-gray-50">
+                <tr key={doc.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                   <td className="px-4 py-3">
                     <div>
-                      <p className="text-[13px] font-medium text-gray-900">{doc.title}</p>
-                      <code className="text-[11px] text-gray-500 bg-gray-100 px-1 py-0.5 rounded">
+                      <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{doc.title}</p>
+                      <code className="text-[11px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">
                         /{doc.slug}
                       </code>
                     </div>
                   </td>
                   <td className="px-4 py-3">{getTypeBadge(doc.document_type)}</td>
                   <td className="px-4 py-3">
-                    <span className="text-[12px] text-gray-600">
+                    <span className="text-[12px] text-gray-600 dark:text-gray-400">
                       {doc.version || '-'}
                     </span>
                   </td>
                   <td className="px-4 py-3">{getStatusBadge(doc.status)}</td>
                   <td className="px-4 py-3">
-                    <span className="text-[12px] text-gray-500">
+                    <span className="text-[12px] text-gray-500 dark:text-gray-400">
                       {doc.effective_date
                         ? new Date(doc.effective_date).toLocaleDateString()
                         : '-'}
@@ -244,7 +244,7 @@ export default function CMSLegalListPage() {
                     <div className="relative inline-block">
                       <button
                         onClick={() => setOpenMenu(openMenu === doc.id ? null : doc.id)}
-                        className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
@@ -254,11 +254,11 @@ export default function CMSLegalListPage() {
                             className="fixed inset-0 z-10"
                             onClick={() => setOpenMenu(null)}
                           />
-                          <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+                          <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg dark:shadow-gray-900/40 z-20">
                             <div className="py-1">
                               <Link
                                 to={`/dashboard/cms/legal/${doc.id}`}
-                                className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                                className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                                 onClick={() => setOpenMenu(null)}
                               >
                                 <Pencil className="w-4 h-4" />
@@ -267,7 +267,7 @@ export default function CMSLegalListPage() {
                               <Link
                                 to={`/${doc.slug}`}
                                 target="_blank"
-                                className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                                className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                                 onClick={() => setOpenMenu(null)}
                               >
                                 <Eye className="w-4 h-4" />
@@ -275,7 +275,7 @@ export default function CMSLegalListPage() {
                               </Link>
                               <button
                                 onClick={() => handleDelete(doc.id)}
-                                className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-red-600 hover:bg-red-50"
+                                className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                               >
                                 <Trash2 className="w-4 h-4" />
                                 Delete

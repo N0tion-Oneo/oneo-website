@@ -155,8 +155,8 @@ export function AnalyticsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Analytics</h1>
-          <p className="text-[13px] text-gray-500 mt-0.5">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Analytics</h1>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
             Recruitment performance insights
           </p>
         </div>
@@ -228,7 +228,7 @@ export function AnalyticsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="flex gap-6">
           {tabs.map((tab) => (
             <button
@@ -236,8 +236,8 @@ export function AnalyticsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`pb-3 text-[13px] font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'border-gray-900 text-gray-900'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
               {tab.label}
@@ -304,8 +304,8 @@ export function AnalyticsPage() {
               }
               loading={funnelLoading}
             />
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h3 className="text-[14px] font-medium text-gray-900 mb-4">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-4">
                 Conversion Breakdown
               </h3>
               <div className="space-y-4">
@@ -329,12 +329,12 @@ export function AnalyticsPage() {
                 ].map((item) => (
                   <div key={item.label}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[12px] text-gray-600">{item.label}</span>
-                      <span className="text-[12px] font-medium text-gray-900">
+                      <span className="text-[12px] text-gray-600 dark:text-gray-400">{item.label}</span>
+                      <span className="text-[12px] font-medium text-gray-900 dark:text-gray-100">
                         {item.value.toFixed(1)}%
                       </span>
                     </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-blue-500 rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(item.value, 100)}%` }}

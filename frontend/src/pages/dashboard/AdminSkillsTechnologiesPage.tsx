@@ -104,37 +104,37 @@ function EditModal({ isOpen, onClose, item, type, categories, onSave, isCreating
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h3 className="text-lg font-semibold">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/40 w-full max-w-md mx-4">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {isCreating ? 'Create' : 'Edit'} {type === 'skills' ? 'Skill' : 'Technology'}
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
             <X className="w-5 h-5" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300"
+              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600"
               placeholder={`Enter ${type === 'skills' ? 'skill' : 'technology'} name`}
             />
           </div>
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300"
+              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600"
             >
               {categories.map((cat) => (
                 <option key={cat.value} value={cat.value}>
@@ -147,14 +147,14 @@ function EditModal({ isOpen, onClose, item, type, categories, onSave, isCreating
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 text-sm bg-gray-900 text-white rounded-md hover:bg-gray-800 disabled:opacity-50"
+              className="px-4 py-2 text-sm bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Save'}
             </button>
@@ -207,32 +207,32 @@ function MergeModal({ isOpen, onClose, sourceItem, allItems, type, onMerge }: Me
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h3 className="text-lg font-semibold">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/40 w-full max-w-md mx-4">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Merge {type === 'skills' ? 'Skill' : 'Technology'}
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
             <X className="w-5 h-5" />
           </button>
         </div>
         <div className="p-6">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             Merge <span className="font-semibold">"{sourceItem.name}"</span> into another{' '}
             {type === 'skills' ? 'skill' : 'technology'}. All references will be transferred and the source will be
             deleted.
           </p>
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Merge into</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Merge into</label>
             <select
               value={targetId || ''}
               onChange={(e) => setTargetId(Number(e.target.value) || null)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300"
+              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600"
             >
               <option value="">Select target...</option>
               {availableTargets.map((item) => (
@@ -246,7 +246,7 @@ function MergeModal({ isOpen, onClose, sourceItem, allItems, type, onMerge }: Me
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
             >
               Cancel
             </button>
@@ -337,10 +337,10 @@ export default function AdminSkillsTechnologiesPage() {
   // Check permissions
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">You do not have permission to view this page.</p>
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-300 dark:text-red-400 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">You do not have permission to view this page.</p>
       </div>
     )
   }
@@ -434,10 +434,10 @@ export default function AdminSkillsTechnologiesPage() {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-[13px] text-gray-500">Manage skills and technologies used across the platform</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">Manage skills and technologies used across the platform</p>
         <button
           onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm rounded-md hover:bg-gray-800"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
         >
           <Plus className="w-4 h-4" />
           Add {activeTab === 'skills' ? 'Skill' : 'Technology'}
@@ -445,7 +445,7 @@ export default function AdminSkillsTechnologiesPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 border-b border-gray-200">
+      <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => {
             setActiveTab('skills')
@@ -453,8 +453,8 @@ export default function AdminSkillsTechnologiesPage() {
           }}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
             activeTab === 'skills'
-              ? 'border-gray-900 text-gray-900'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
           <Lightbulb className="w-4 h-4" />
@@ -467,8 +467,8 @@ export default function AdminSkillsTechnologiesPage() {
           }}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
             activeTab === 'technologies'
-              ? 'border-gray-900 text-gray-900'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
           <Wrench className="w-4 h-4" />
@@ -485,13 +485,13 @@ export default function AdminSkillsTechnologiesPage() {
             placeholder={`Search ${activeTab}...`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+            className="w-full pl-10 pr-4 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
           />
         </div>
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+          className="px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
         >
           <option value="">All Categories</option>
           {currentCategories.map((cat) => (
@@ -506,18 +506,18 @@ export default function AdminSkillsTechnologiesPage() {
             const val = e.target.value
             setNeedsReviewFilter(val === '' ? null : val === 'true')
           }}
-          className="px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+          className="px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
         >
           <option value="">All Review Status</option>
           <option value="true">Needs Review</option>
           <option value="false">Reviewed</option>
         </select>
-        <label className="flex items-center gap-2 text-[13px] text-gray-600">
+        <label className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400">
           <input
             type="checkbox"
             checked={includeInactive}
             onChange={(e) => setIncludeInactive(e.target.checked)}
-            className="rounded border-gray-300"
+            className="rounded border-gray-300 dark:border-gray-600"
           />
           Show inactive
         </label>
@@ -526,27 +526,27 @@ export default function AdminSkillsTechnologiesPage() {
       {/* Loading */}
       {currentLoading && (
         <div className="text-center py-12">
-          <p className="text-[14px] text-gray-500">Loading {activeTab}...</p>
+          <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading {activeTab}...</p>
         </div>
       )}
 
       {/* Error */}
       {currentError && (
         <div className="text-center py-12">
-          <p className="text-[14px] text-red-500">{currentError}</p>
+          <p className="text-[14px] text-red-500 dark:text-red-400">{currentError}</p>
         </div>
       )}
 
       {/* Empty */}
       {!currentLoading && !currentError && currentItems.length === 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
           {activeTab === 'skills' ? (
-            <Lightbulb className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <Lightbulb className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
           ) : (
-            <Wrench className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <Wrench className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
           )}
-          <p className="text-[15px] text-gray-700 mb-1">No {activeTab} found</p>
-          <p className="text-[13px] text-gray-500">
+          <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No {activeTab} found</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">
             {search ? `No ${activeTab} match your search` : `No ${activeTab} have been created yet`}
           </p>
         </div>
@@ -554,35 +554,35 @@ export default function AdminSkillsTechnologiesPage() {
 
       {/* Table */}
       {!currentLoading && !currentError && currentItems.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+              <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Category
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Slug
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-4 py-3 text-right text-[11px] font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {currentItems.map((item) => (
-                <tr key={item.id} className={`hover:bg-gray-50 ${item.is_active === false ? 'opacity-50' : ''}`}>
+                <tr key={item.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800 ${item.is_active === false ? 'opacity-50' : ''}`}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-medium text-gray-900">{item.name}</span>
+                      <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{item.name}</span>
                       {item.needs_review && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
                           <Eye className="w-3 h-3" />
                           Needs Review
                         </span>
@@ -590,19 +590,19 @@ export default function AdminSkillsTechnologiesPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-[13px] text-gray-600">{getCategoryLabel(item.category)}</span>
+                    <span className="text-[13px] text-gray-600 dark:text-gray-400">{getCategoryLabel(item.category)}</span>
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-[12px] text-gray-400 font-mono">{item.slug}</span>
                   </td>
                   <td className="px-4 py-3">
                     {item.is_active !== false ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-100 text-green-700">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
                         <Check className="w-3 h-3" />
                         Active
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-500">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                         Inactive
                       </span>
                     )}
@@ -612,7 +612,7 @@ export default function AdminSkillsTechnologiesPage() {
                       {item.needs_review && (
                         <button
                           onClick={() => handleMarkAsReviewed(item)}
-                          className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
+                          className="p-1.5 text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded"
                           title="Mark as Reviewed"
                         >
                           <CheckCircle className="w-4 h-4" />
@@ -620,21 +620,21 @@ export default function AdminSkillsTechnologiesPage() {
                       )}
                       <button
                         onClick={() => handleEdit(item)}
-                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                        className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                         title="Edit"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleMerge(item)}
-                        className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded"
+                        className="p-1.5 text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded"
                         title="Merge"
                       >
                         <Merge className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(item)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                        className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
                         title="Deactivate"
                       >
                         <Trash2 className="w-4 h-4" />

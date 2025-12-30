@@ -77,15 +77,15 @@ export default function BillingLegalForm({ company, onSave, isSubmitting = false
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       <div className="p-6">
         <div className="space-y-6">
           {/* Legal/Registration Section */}
           <div>
-            <h3 className="text-[14px] font-medium text-gray-900 mb-4">Legal Information</h3>
+            <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-4">Legal Information</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Legal Business Name
                 </label>
                 <input
@@ -94,12 +94,12 @@ export default function BillingLegalForm({ company, onSave, isSubmitting = false
                   value={formData.legal_name}
                   onChange={handleInputChange}
                   placeholder="Official registered business name"
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Registration Number
                   </label>
                   <input
@@ -108,11 +108,11 @@ export default function BillingLegalForm({ company, onSave, isSubmitting = false
                     value={formData.registration_number}
                     onChange={handleInputChange}
                     placeholder="Company registration number"
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     VAT / Tax ID
                   </label>
                   <input
@@ -121,7 +121,7 @@ export default function BillingLegalForm({ company, onSave, isSubmitting = false
                     value={formData.vat_number}
                     onChange={handleInputChange}
                     placeholder="VAT or Tax ID number"
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   />
                 </div>
               </div>
@@ -129,11 +129,11 @@ export default function BillingLegalForm({ company, onSave, isSubmitting = false
           </div>
 
           {/* Billing Address Section */}
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-[14px] font-medium text-gray-900 mb-4">Billing Address</h3>
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-4">Billing Address</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Street Address
                 </label>
                 <input
@@ -142,23 +142,23 @@ export default function BillingLegalForm({ company, onSave, isSubmitting = false
                   value={formData.billing_address}
                   onChange={handleInputChange}
                   placeholder="123 Main Street, Suite 100"
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">City</label>
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">City</label>
                   <input
                     type="text"
                     name="billing_city"
                     value={formData.billing_city}
                     onChange={handleInputChange}
                     placeholder="City"
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Postal Code
                   </label>
                   <input
@@ -167,18 +167,18 @@ export default function BillingLegalForm({ company, onSave, isSubmitting = false
                     value={formData.billing_postal_code}
                     onChange={handleInputChange}
                     placeholder="Postal code"
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Country
                   </label>
                   <select
                     name="billing_country_id"
                     value={formData.billing_country_id || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                   >
                     <option value="">Select country</option>
                     {countries.map((country) => (
@@ -193,12 +193,12 @@ export default function BillingLegalForm({ company, onSave, isSubmitting = false
           </div>
 
           {/* Billing Contact Section */}
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-[14px] font-medium text-gray-900 mb-4">Billing Contact</h3>
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-4">Billing Contact</h3>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Contact Name
                   </label>
                   <input
@@ -207,11 +207,11 @@ export default function BillingLegalForm({ company, onSave, isSubmitting = false
                     value={formData.billing_contact_name}
                     onChange={handleInputChange}
                     placeholder="Full name"
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Contact Email
                   </label>
                   <input
@@ -220,12 +220,12 @@ export default function BillingLegalForm({ company, onSave, isSubmitting = false
                     value={formData.billing_contact_email}
                     onChange={handleInputChange}
                     placeholder="billing@company.com"
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Contact Phone
                 </label>
                 <input
@@ -234,7 +234,7 @@ export default function BillingLegalForm({ company, onSave, isSubmitting = false
                   value={formData.billing_contact_phone}
                   onChange={handleInputChange}
                   placeholder="+1 (555) 123-4567"
-                  className="w-full max-w-xs px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full max-w-xs px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -243,11 +243,11 @@ export default function BillingLegalForm({ company, onSave, isSubmitting = false
       </div>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end">
+      <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800 flex justify-end">
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="px-5 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-5 py-2 text-[14px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isSubmitting ? 'Saving...' : 'Save Changes'}
         </button>

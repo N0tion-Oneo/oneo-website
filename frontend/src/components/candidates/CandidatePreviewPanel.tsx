@@ -177,7 +177,7 @@ export default function CandidatePreviewPanel({
     if (!candidate) {
       return (
         <div className="flex items-center justify-center h-32">
-          <p className="text-[14px] text-gray-500">Candidate not found</p>
+          <p className="text-[14px] text-gray-500 dark:text-gray-400">Candidate not found</p>
         </div>
       )
     }
@@ -249,7 +249,7 @@ export default function CandidatePreviewPanel({
   const pendingSuggestionsCount = suggestions.filter((s) => s.status === 'pending').length
   const statusBadge =
     !isClientMode && pendingSuggestionsCount > 0 ? (
-      <span className="px-2 py-0.5 text-[11px] font-medium bg-amber-100 text-amber-700 rounded-full">
+      <span className="px-2 py-0.5 text-[11px] font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
         {pendingSuggestionsCount} pending suggestion{pendingSuggestionsCount !== 1 ? 's' : ''}
       </span>
     ) : undefined

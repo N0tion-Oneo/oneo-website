@@ -17,10 +17,10 @@ export default function AdminNewJobPage() {
   // Check if user has admin/recruiter access
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-300 dark:text-red-400 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to view this page.
         </p>
       </div>
@@ -30,15 +30,15 @@ export default function AdminNewJobPage() {
   // Require a company ID
   if (!companyId) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-        <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">No Company Selected</p>
-        <p className="text-[13px] text-gray-500 mb-4">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+        <Building2 className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">No Company Selected</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
           Please select a company to create a job for.
         </p>
         <Link
           to="/dashboard/admin/companies"
-          className="text-[13px] text-gray-700 underline hover:text-gray-900"
+          className="text-[13px] text-gray-700 dark:text-gray-300 underline hover:text-gray-900 dark:hover:text-gray-100"
         >
           Go to Companies
         </Link>
@@ -50,8 +50,8 @@ export default function AdminNewJobPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-gray-900 mx-auto" />
-          <p className="text-[14px] text-gray-500 mt-3">Loading company...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 dark:border-gray-700 border-t-gray-900 dark:border-t-gray-100 mx-auto" />
+          <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-3">Loading company...</p>
         </div>
       </div>
     )
@@ -62,12 +62,12 @@ export default function AdminNewJobPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <p className="text-[15px] text-gray-700 mb-1">
+          <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">
             {error || 'Company not found'}
           </p>
           <Link
             to="/dashboard/admin/companies"
-            className="text-[13px] text-gray-500 hover:text-gray-700 underline"
+            className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline"
           >
             Back to Companies
           </Link>
@@ -86,21 +86,21 @@ export default function AdminNewJobPage() {
       <div className="mb-6">
         <button
           onClick={() => navigate(`/dashboard/admin/jobs?company=${companyId}`)}
-          className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700 mb-3"
+          className="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 mb-3"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Jobs
         </button>
-        <h1 className="text-[20px] font-semibold text-gray-900">
+        <h1 className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">
           Create Job for {company.name}
         </h1>
-        <p className="text-[13px] text-gray-500 mt-0.5">
+        <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
           Fill in the details below to create a new job listing
         </p>
       </div>
 
       {/* Form */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
         <JobForm companyId={companyId} onSuccess={handleSuccess} />
       </div>
     </div>

@@ -119,7 +119,7 @@ export default function EORPage() {
   const monthlyFee = pricingConfig ? formatCurrency(pricingConfig.eor_monthly_fee) : ''
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <SEO />
       <Navbar />
 
@@ -164,15 +164,15 @@ export default function EORPage() {
       <div className="max-w-5xl mx-auto px-6 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
               What is Employer of Record?
             </h2>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
               An Employer of Record (EOR) is a service where we become the legal employer of your
               team members in South Africa. While you manage their day-to-day work, we handle all
               the employment administration, compliance, and payroll.
             </p>
-            <p className="text-gray-600 mb-8 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
               This is ideal for international companies wanting to hire in South Africa without
               setting up a local entity, or local businesses wanting to outsource employment
               administration.
@@ -180,24 +180,24 @@ export default function EORPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                <span className="text-[14px] text-gray-700">No entity required</span>
+                <span className="text-[14px] text-gray-700 dark:text-gray-300">No entity required</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                <span className="text-[14px] text-gray-700">Full SA compliance</span>
+                <span className="text-[14px] text-gray-700 dark:text-gray-300">Full SA compliance</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                <span className="text-[14px] text-gray-700">Fast onboarding</span>
+                <span className="text-[14px] text-gray-700 dark:text-gray-300">Fast onboarding</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                <span className="text-[14px] text-gray-700">Flexible terms</span>
+                <span className="text-[14px] text-gray-700 dark:text-gray-300">Flexible terms</span>
               </div>
             </div>
           </div>
-          <div className="bg-blue-50 rounded-2xl p-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">
+          <div className="bg-blue-50 dark:bg-blue-900/30 rounded-2xl p-8">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
               How It Works
             </h3>
             <div className="space-y-4">
@@ -206,8 +206,8 @@ export default function EORPage() {
                   1
                 </div>
                 <div>
-                  <p className="text-[14px] font-medium text-gray-900">You find the talent</p>
-                  <p className="text-[13px] text-gray-500">Identify who you want to employ</p>
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">You find the talent</p>
+                  <p className="text-[13px] text-gray-500 dark:text-gray-400">Identify who you want to employ</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -215,8 +215,8 @@ export default function EORPage() {
                   2
                 </div>
                 <div>
-                  <p className="text-[14px] font-medium text-gray-900">We employ them</p>
-                  <p className="text-[13px] text-gray-500">Legal employment through our entity</p>
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">We employ them</p>
+                  <p className="text-[13px] text-gray-500 dark:text-gray-400">Legal employment through our entity</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -224,8 +224,8 @@ export default function EORPage() {
                   3
                 </div>
                 <div>
-                  <p className="text-[14px] font-medium text-gray-900">They work for you</p>
-                  <p className="text-[13px] text-gray-500">You manage their work, we handle the rest</p>
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">They work for you</p>
+                  <p className="text-[13px] text-gray-500 dark:text-gray-400">You manage their work, we handle the rest</p>
                 </div>
               </div>
             </div>
@@ -234,13 +234,13 @@ export default function EORPage() {
       </div>
 
       {/* Benefits Section */}
-      <div className="bg-gray-50 border-y border-gray-100">
+      <div className="bg-gray-50 dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Why Choose EOR?
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Let us handle the complexity of South African employment compliance.
             </p>
           </div>
@@ -249,16 +249,16 @@ export default function EORPage() {
             {benefits.map((benefit) => (
               <div
                 key={benefit.title}
-                className="flex gap-4 p-6 bg-white rounded-xl border border-gray-200"
+                className="flex gap-4 p-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700"
               >
-                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <benefit.icon className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <benefit.icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-[17px] font-semibold text-gray-900 mb-2">
+                  <h3 className="text-[17px] font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     {benefit.title}
                   </h3>
-                  <p className="text-[14px] text-gray-600 leading-relaxed">
+                  <p className="text-[14px] text-gray-600 dark:text-gray-400 leading-relaxed">
                     {benefit.description}
                   </p>
                 </div>
@@ -271,16 +271,16 @@ export default function EORPage() {
       {/* Pricing Section */}
       <div id="pricing" className="max-w-5xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             One flat monthly fee per employee. No hidden costs, no surprises.
           </p>
         </div>
 
         <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             {/* Pricing Header */}
             <div className="bg-blue-600 text-white p-8 text-center">
               <p className="text-blue-100 text-sm mb-2">Per Employee</p>
@@ -290,12 +290,12 @@ export default function EORPage() {
 
             {/* What's Included */}
             <div className="p-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">What's Included</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">What's Included</h3>
               <div className="grid sm:grid-cols-2 gap-3">
                 {includedServices.map((service) => (
                   <div key={service} className="flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                    <span className="text-[14px] text-gray-700">{service}</span>
+                    <span className="text-[14px] text-gray-700 dark:text-gray-300">{service}</span>
                   </div>
                 ))}
               </div>
@@ -314,13 +314,13 @@ export default function EORPage() {
       </div>
 
       {/* Process */}
-      <div className="bg-gray-50 border-y border-gray-100">
+      <div className="bg-gray-50 dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Getting Started
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Simple and straightforward — we can have your employee onboarded in days.
             </p>
           </div>
@@ -329,16 +329,16 @@ export default function EORPage() {
             {process.map((item, index) => (
               <div key={item.step} className="relative">
                 {index < process.length - 1 && (
-                  <div className="hidden md:block absolute top-8 left-full w-full h-[2px] bg-gray-200 -translate-x-1/2" />
+                  <div className="hidden md:block absolute top-8 left-full w-full h-[2px] bg-gray-200 dark:bg-gray-700 -translate-x-1/2" />
                 )}
                 <div className="text-center">
                   <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
                     {item.step}
                   </div>
-                  <h3 className="text-[15px] font-semibold text-gray-900 mb-2">
+                  <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     {item.title}
                   </h3>
-                  <p className="text-[13px] text-gray-600">
+                  <p className="text-[13px] text-gray-600 dark:text-gray-400">
                     {item.description}
                   </p>
                 </div>
@@ -376,25 +376,25 @@ export default function EORPage() {
 
       {/* CTA Section */}
       <div className="max-w-5xl mx-auto px-6 py-20">
-        <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl p-8 md:p-12 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+        <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-8 md:p-12 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Ready to Simplify Employment?
           </h2>
-          <p className="text-gray-600 max-w-xl mx-auto mb-8">
+          <p className="text-gray-600 dark:text-gray-400 max-w-xl mx-auto mb-8">
             Let's discuss how our EOR service can help you employ talent in South Africa
             without the complexity.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               to="/contact"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
             >
               Contact Us
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               to="/pricing"
-              className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-white transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors"
             >
               <Calculator className="w-4 h-4" />
               Pricing Calculator
@@ -404,7 +404,7 @@ export default function EORPage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 py-8">
+      <footer className="border-t border-gray-100 dark:border-gray-800 py-8">
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-[13px] text-gray-400 text-center">
             © {new Date().getFullYear()} {seoDefaults.companyName || 'All rights reserved'}.{seoDefaults.companyName ? ' All rights reserved.' : ''}

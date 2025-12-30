@@ -204,10 +204,10 @@ export default function CandidateSignupPage() {
 
   if (validating) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-blue-600 mx-auto" />
-          <p className="text-[14px] text-gray-500 mt-3">Validating invitation...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 dark:border-gray-700 border-t-blue-600 mx-auto" />
+          <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-3">Validating invitation...</p>
         </div>
       </div>
     )
@@ -215,22 +215,22 @@ export default function CandidateSignupPage() {
 
   if (!invitationValid) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
         <header className="p-6">
           <Link to="/" className="flex items-center">
             {branding?.logo_url ? (
               <img src={branding.logo_url} alt={brandName} className="h-8 w-auto" />
             ) : (
-              <span className="text-xl font-semibold text-gray-900">{brandName}</span>
+              <span className="text-xl font-semibold text-gray-900 dark:text-gray-100">{brandName}</span>
             )}
           </Link>
         </header>
 
         <main className="flex-1 flex items-center justify-center px-6 pb-12">
           <div className="w-full max-w-[340px] text-center">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-6 h-6 text-red-600"
+                className="w-6 h-6 text-red-600 dark:text-red-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -243,14 +243,14 @@ export default function CandidateSignupPage() {
                 />
               </svg>
             </div>
-            <h1 className="text-[22px] font-semibold text-gray-900">Invalid Invitation</h1>
-            <p className="mt-2 text-[14px] text-gray-500">
+            <h1 className="text-[22px] font-semibold text-gray-900 dark:text-gray-100">Invalid Invitation</h1>
+            <p className="mt-2 text-[14px] text-gray-500 dark:text-gray-400">
               This invitation link is invalid or has expired. Please contact us if you believe this
               is an error.
             </p>
             <Link
               to="/"
-              className="mt-6 inline-block text-[14px] font-medium text-gray-900 hover:underline"
+              className="mt-6 inline-block text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:underline"
             >
               Go to homepage
             </Link>
@@ -261,13 +261,13 @@ export default function CandidateSignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
       <header className="p-6">
         <Link to="/" className="flex items-center">
           {branding?.logo_url ? (
             <img src={branding.logo_url} alt={brandName} className="h-8 w-auto" />
           ) : (
-            <span className="text-xl font-semibold text-gray-900">{brandName}</span>
+            <span className="text-xl font-semibold text-gray-900 dark:text-gray-100">{brandName}</span>
           )}
         </Link>
       </header>
@@ -275,14 +275,14 @@ export default function CandidateSignupPage() {
       <main className="flex-1 flex items-center justify-center px-6 pb-12">
         <div className="w-full max-w-[400px]">
           <div className="flex items-center gap-2 mb-4">
-            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[11px] font-medium rounded-full">
+            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-[11px] font-medium rounded-full">
               Candidate
             </span>
           </div>
-          <h1 className="text-[28px] font-semibold text-gray-900 tracking-tight">
+          <h1 className="text-[28px] font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
             Complete your registration
           </h1>
-          <p className="mt-2 text-[15px] text-gray-500">
+          <p className="mt-2 text-[15px] text-gray-500 dark:text-gray-400">
             {invitationName
               ? `Hi ${invitationName.split(' ')[0]}, create your account to complete your profile before your meeting`
               : 'Create your account to complete your profile before your meeting'}
@@ -290,17 +290,17 @@ export default function CandidateSignupPage() {
 
           {/* Meeting info card */}
           {bookingInfo && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg">
-              <h3 className="text-[13px] font-medium text-blue-900 mb-2">Upcoming Meeting</h3>
-              <div className="space-y-1.5 text-[13px] text-blue-800">
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg">
+              <h3 className="text-[13px] font-medium text-blue-900 dark:text-blue-300 mb-2">Upcoming Meeting</h3>
+              <div className="space-y-1.5 text-[13px] text-blue-800 dark:text-blue-400">
                 {bookingInfo.meeting_type && (
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-blue-600" />
+                    <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-500" />
                     <span>{bookingInfo.meeting_type}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-600" />
+                  <Clock className="w-4 h-4 text-blue-600 dark:text-blue-500" />
                   <span>
                     {format(parseISO(bookingInfo.scheduled_at), 'EEEE, MMMM d, yyyy h:mm a')} (
                     {bookingInfo.duration_minutes} min)
@@ -308,7 +308,7 @@ export default function CandidateSignupPage() {
                 </div>
                 {bookingInfo.organizer_name && (
                   <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-blue-600" />
+                    <User className="w-4 h-4 text-blue-600 dark:text-blue-500" />
                     <span>With {bookingInfo.organizer_name}</span>
                   </div>
                 )}
@@ -318,8 +318,8 @@ export default function CandidateSignupPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-6" noValidate>
             {serverError && (
-              <div className="mb-6 px-3 py-2.5 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-[13px] text-red-600">{serverError}</p>
+              <div className="mb-6 px-3 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                <p className="text-[13px] text-red-600 dark:text-red-400">{serverError}</p>
               </div>
             )}
 
@@ -329,7 +329,7 @@ export default function CandidateSignupPage() {
                 <div>
                   <label
                     htmlFor="first_name"
-                    className="block text-[13px] font-medium text-gray-700 mb-1.5"
+                    className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"
                   >
                     First name
                   </label>
@@ -338,21 +338,21 @@ export default function CandidateSignupPage() {
                     id="first_name"
                     type="text"
                     autoComplete="given-name"
-                    className={`w-full h-10 px-3 text-[14px] border rounded-md bg-white transition-colors
+                    className={`w-full h-10 px-3 text-[14px] border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-colors
                       ${
                         errors.first_name
-                          ? 'border-red-300 focus:border-red-400 focus:ring-1 focus:ring-red-400'
-                          : 'border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900'
+                          ? 'border-red-300 dark:border-red-700 focus:border-red-400 dark:focus:border-red-600 focus:ring-1 focus:ring-red-400 dark:focus:ring-red-600'
+                          : 'border-gray-300 dark:border-gray-600 focus:border-gray-900 dark:focus:border-gray-400 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-400'
                       } outline-none`}
                   />
                   {errors.first_name && (
-                    <p className="mt-1 text-[12px] text-red-500">{errors.first_name.message}</p>
+                    <p className="mt-1 text-[12px] text-red-500 dark:text-red-400">{errors.first_name.message}</p>
                   )}
                 </div>
                 <div>
                   <label
                     htmlFor="last_name"
-                    className="block text-[13px] font-medium text-gray-700 mb-1.5"
+                    className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"
                   >
                     Last name
                   </label>
@@ -361,15 +361,15 @@ export default function CandidateSignupPage() {
                     id="last_name"
                     type="text"
                     autoComplete="family-name"
-                    className={`w-full h-10 px-3 text-[14px] border rounded-md bg-white transition-colors
+                    className={`w-full h-10 px-3 text-[14px] border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-colors
                       ${
                         errors.last_name
-                          ? 'border-red-300 focus:border-red-400 focus:ring-1 focus:ring-red-400'
-                          : 'border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900'
+                          ? 'border-red-300 dark:border-red-700 focus:border-red-400 dark:focus:border-red-600 focus:ring-1 focus:ring-red-400 dark:focus:ring-red-600'
+                          : 'border-gray-300 dark:border-gray-600 focus:border-gray-900 dark:focus:border-gray-400 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-400'
                       } outline-none`}
                   />
                   {errors.last_name && (
-                    <p className="mt-1 text-[12px] text-red-500">{errors.last_name.message}</p>
+                    <p className="mt-1 text-[12px] text-red-500 dark:text-red-400">{errors.last_name.message}</p>
                   )}
                 </div>
               </div>
@@ -378,7 +378,7 @@ export default function CandidateSignupPage() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-[13px] font-medium text-gray-700 mb-1.5"
+                  className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"
                 >
                   Email
                 </label>
@@ -388,17 +388,17 @@ export default function CandidateSignupPage() {
                   type="email"
                   autoComplete="email"
                   readOnly={!!invitationEmail}
-                  className={`w-full h-10 px-3 text-[14px] border rounded-md transition-colors
-                    ${invitationEmail ? 'bg-gray-50' : 'bg-white'}
+                  className={`w-full h-10 px-3 text-[14px] border rounded-md transition-colors text-gray-900 dark:text-gray-100
+                    ${invitationEmail ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-800'}
                     ${
                       errors.email
-                        ? 'border-red-300 focus:border-red-400 focus:ring-1 focus:ring-red-400'
-                        : 'border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900'
-                    } outline-none`}
+                        ? 'border-red-300 dark:border-red-700 focus:border-red-400 dark:focus:border-red-600 focus:ring-1 focus:ring-red-400 dark:focus:ring-red-600'
+                        : 'border-gray-300 dark:border-gray-600 focus:border-gray-900 dark:focus:border-gray-400 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-400'
+                    } outline-none placeholder-gray-400 dark:placeholder-gray-500`}
                   placeholder="you@example.com"
                 />
                 {errors.email && (
-                  <p className="mt-1.5 text-[12px] text-red-500">{errors.email.message}</p>
+                  <p className="mt-1.5 text-[12px] text-red-500 dark:text-red-400">{errors.email.message}</p>
                 )}
               </div>
 
@@ -406,16 +406,16 @@ export default function CandidateSignupPage() {
               <div>
                 <label
                   htmlFor="phone"
-                  className="block text-[13px] font-medium text-gray-700 mb-1.5"
+                  className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"
                 >
-                  Phone <span className="text-gray-400 font-normal">(optional)</span>
+                  Phone <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
                 </label>
                 <input
                   {...register('phone')}
                   id="phone"
                   type="tel"
                   autoComplete="tel"
-                  className="w-full h-10 px-3 text-[14px] border rounded-md bg-white transition-colors border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+                  className="w-full h-10 px-3 text-[14px] border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-colors border-gray-300 dark:border-gray-600 focus:border-gray-900 dark:focus:border-gray-400 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-400 outline-none placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="+1 (555) 000-0000"
                 />
               </div>
@@ -424,7 +424,7 @@ export default function CandidateSignupPage() {
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-[13px] font-medium text-gray-700 mb-1.5"
+                  className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"
                 >
                   Password
                 </label>
@@ -434,17 +434,17 @@ export default function CandidateSignupPage() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="new-password"
-                    className={`w-full h-10 px-3 pr-10 text-[14px] border rounded-md bg-white transition-colors
+                    className={`w-full h-10 px-3 pr-10 text-[14px] border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-colors
                       ${
                         errors.password
-                          ? 'border-red-300 focus:border-red-400 focus:ring-1 focus:ring-red-400'
-                          : 'border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900'
+                          ? 'border-red-300 dark:border-red-700 focus:border-red-400 dark:focus:border-red-600 focus:ring-1 focus:ring-red-400 dark:focus:ring-red-600'
+                          : 'border-gray-300 dark:border-gray-600 focus:border-gray-900 dark:focus:border-gray-400 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-400'
                       } outline-none`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                     tabIndex={-1}
                   >
                     <EyeIcon show={showPassword} />
@@ -456,7 +456,7 @@ export default function CandidateSignupPage() {
                     <span
                       key={i}
                       className={`text-[11px] px-2 py-0.5 rounded-full transition-colors ${
-                        req.met ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                        req.met ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                       }`}
                     >
                       {req.text}
@@ -469,7 +469,7 @@ export default function CandidateSignupPage() {
               <div>
                 <label
                   htmlFor="password_confirm"
-                  className="block text-[13px] font-medium text-gray-700 mb-1.5"
+                  className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"
                 >
                   Confirm password
                 </label>
@@ -478,15 +478,15 @@ export default function CandidateSignupPage() {
                   id="password_confirm"
                   type="password"
                   autoComplete="new-password"
-                  className={`w-full h-10 px-3 text-[14px] border rounded-md bg-white transition-colors
+                  className={`w-full h-10 px-3 text-[14px] border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-colors
                     ${
                       errors.password_confirm
-                        ? 'border-red-300 focus:border-red-400 focus:ring-1 focus:ring-red-400'
-                        : 'border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900'
+                        ? 'border-red-300 dark:border-red-700 focus:border-red-400 dark:focus:border-red-600 focus:ring-1 focus:ring-red-400 dark:focus:ring-red-600'
+                        : 'border-gray-300 dark:border-gray-600 focus:border-gray-900 dark:focus:border-gray-400 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-400'
                     } outline-none`}
                 />
                 {errors.password_confirm && (
-                  <p className="mt-1.5 text-[12px] text-red-500">
+                  <p className="mt-1.5 text-[12px] text-red-500 dark:text-red-400">
                     {errors.password_confirm.message}
                   </p>
                 )}
@@ -501,13 +501,13 @@ export default function CandidateSignupPage() {
               {isSubmitting ? 'Creating account...' : 'Create account'}
             </button>
 
-            <p className="mt-4 text-[12px] text-center text-gray-400">
+            <p className="mt-4 text-[12px] text-center text-gray-400 dark:text-gray-500">
               By signing up, you agree to our{' '}
-              <Link to="/terms" className="text-gray-500 hover:underline">
+              <Link to="/terms" className="text-gray-500 dark:text-gray-400 hover:underline">
                 Terms
               </Link>{' '}
               and{' '}
-              <Link to="/privacy" className="text-gray-500 hover:underline">
+              <Link to="/privacy" className="text-gray-500 dark:text-gray-400 hover:underline">
                 Privacy Policy
               </Link>
             </p>

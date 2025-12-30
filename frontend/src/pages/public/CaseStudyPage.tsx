@@ -80,10 +80,10 @@ export default function CaseStudyPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <Navbar />
         <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
         </div>
       </div>
     )
@@ -92,18 +92,18 @@ export default function CaseStudyPage() {
   // Error/Not found state
   if (error || !study) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <Navbar />
         <div className="max-w-3xl mx-auto px-6 py-16">
           <div className="text-center">
-            <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h1 className="text-[24px] font-semibold text-gray-900 mb-2">Case Study Not Found</h1>
-            <p className="text-[15px] text-gray-500 mb-6">
+            <Building2 className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h1 className="text-[24px] font-semibold text-gray-900 dark:text-gray-100 mb-2">Case Study Not Found</h1>
+            <p className="text-[15px] text-gray-500 dark:text-gray-400 mb-6">
               The case study you're looking for doesn't exist or has been removed.
             </p>
             <Link
               to="/case-studies"
-              className="inline-flex items-center gap-2 text-[14px] text-gray-600 hover:text-gray-900"
+              className="inline-flex items-center gap-2 text-[14px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Case Studies
@@ -115,7 +115,7 @@ export default function CaseStudyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <SEO
         title={study.meta_title || undefined}
         description={study.meta_description || undefined}
@@ -133,15 +133,15 @@ export default function CaseStudyPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-gray-50 to-white border-b border-gray-100">
+      <div className="bg-gradient-to-b from-gray-50 dark:from-gray-800 to-white dark:to-gray-900 border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-5xl mx-auto px-6 py-12 md:py-16">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-[13px] text-gray-500 mb-8">
-            <Link to="/" className="hover:text-gray-900">Home</Link>
+          <nav className="flex items-center gap-2 text-[13px] text-gray-500 dark:text-gray-400 mb-8">
+            <Link to="/" className="hover:text-gray-900 dark:hover:text-gray-100">Home</Link>
             <span>/</span>
-            <Link to="/case-studies" className="hover:text-gray-900">Case Studies</Link>
+            <Link to="/case-studies" className="hover:text-gray-900 dark:hover:text-gray-100">Case Studies</Link>
             <span>/</span>
-            <span className="text-gray-900">{study.title}</span>
+            <span className="text-gray-900 dark:text-gray-100">{study.title}</span>
           </nav>
 
           <div className="flex items-center gap-3 mb-6">
@@ -155,18 +155,18 @@ export default function CaseStudyPage() {
             )}
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 tracking-tight mb-4">
+          <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight mb-4">
             {study.title}
           </h1>
 
           {study.excerpt && (
-            <p className="text-lg text-gray-600 max-w-3xl mb-6">
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mb-6">
               {study.excerpt}
             </p>
           )}
 
           {/* Meta Info */}
-          <div className="flex flex-wrap items-center gap-6 text-[13px] text-gray-500">
+          <div className="flex flex-wrap items-center gap-6 text-[13px] text-gray-500 dark:text-gray-400">
             {study.client_name && (
               <div className="flex items-center gap-2">
                 {study.client_logo ? (
@@ -198,7 +198,7 @@ export default function CaseStudyPage() {
       {/* Featured Image */}
       {study.featured_image && (
         <div className="max-w-5xl mx-auto px-6 -mt-4 mb-12">
-          <div className="aspect-[21/9] rounded-xl overflow-hidden shadow-lg">
+          <div className="aspect-[21/9] rounded-xl overflow-hidden shadow-lg dark:shadow-gray-900/40">
             <img
               src={study.featured_image}
               alt={study.title}
@@ -214,17 +214,17 @@ export default function CaseStudyPage() {
           {/* Sidebar - Highlights */}
           {study.highlights && study.highlights.length > 0 && (
             <aside className="hidden lg:block w-72 flex-shrink-0">
-              <div className="sticky top-24 bg-gray-50 rounded-xl p-6">
-                <h3 className="text-[13px] font-semibold text-gray-900 uppercase tracking-wide mb-4">
+              <div className="sticky top-24 bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                <h3 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-4">
                   Key Results
                 </h3>
                 <div className="space-y-4">
                   {study.highlights.map((highlight: { label: string; value: string }, index: number) => (
                     <div key={index} className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-2xl font-bold text-gray-900">{highlight.value}</p>
-                        <p className="text-[13px] text-gray-600">{highlight.label}</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{highlight.value}</p>
+                        <p className="text-[13px] text-gray-600 dark:text-gray-400">{highlight.label}</p>
                       </div>
                     </div>
                   ))}
@@ -237,15 +237,15 @@ export default function CaseStudyPage() {
           <article className="flex-1 min-w-0">
             {/* Mobile Highlights */}
             {study.highlights && study.highlights.length > 0 && (
-              <div className="lg:hidden bg-gray-50 rounded-xl p-6 mb-8">
-                <h3 className="text-[13px] font-semibold text-gray-900 uppercase tracking-wide mb-4">
+              <div className="lg:hidden bg-gray-50 dark:bg-gray-800 rounded-xl p-6 mb-8">
+                <h3 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-4">
                   Key Results
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   {study.highlights.map((highlight: { label: string; value: string }, index: number) => (
                     <div key={index}>
-                      <p className="text-2xl font-bold text-gray-900">{highlight.value}</p>
-                      <p className="text-[13px] text-gray-600">{highlight.label}</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{highlight.value}</p>
+                      <p className="text-[13px] text-gray-600 dark:text-gray-400">{highlight.label}</p>
                     </div>
                   ))}
                 </div>
@@ -253,30 +253,30 @@ export default function CaseStudyPage() {
             )}
 
             {/* Content Blocks */}
-            <div className="prose prose-lg max-w-none">
+            <div className="prose prose-lg dark:prose-invert max-w-none">
               <BlockRenderer content={study.content} />
             </div>
 
             {/* Testimonial */}
             {study.testimonial_quote && (
-              <div className="mt-12 bg-gray-50 rounded-2xl p-8 md:p-10 border border-gray-100">
-                <Quote className="w-10 h-10 text-emerald-500 mb-4" />
-                <blockquote className="text-[18px] md:text-[20px] text-gray-700 leading-relaxed mb-6 font-medium">
+              <div className="mt-12 bg-gray-50 dark:bg-gray-800 rounded-2xl p-8 md:p-10 border border-gray-100 dark:border-gray-700">
+                <Quote className="w-10 h-10 text-emerald-500 dark:text-emerald-400 mb-4" />
+                <blockquote className="text-[18px] md:text-[20px] text-gray-700 dark:text-gray-300 leading-relaxed mb-6 font-medium">
                   "{study.testimonial_quote}"
                 </blockquote>
                 {(study.testimonial_author || study.testimonial_role) && (
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                      <span className="text-emerald-600 font-semibold text-lg">
+                    <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 rounded-full flex items-center justify-center">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-lg">
                         {study.testimonial_author?.charAt(0) || 'A'}
                       </span>
                     </div>
                     <div>
                       {study.testimonial_author && (
-                        <p className="text-[15px] font-semibold text-gray-900">{study.testimonial_author}</p>
+                        <p className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">{study.testimonial_author}</p>
                       )}
                       {study.testimonial_role && (
-                        <p className="text-[13px] text-gray-500">{study.testimonial_role}</p>
+                        <p className="text-[13px] text-gray-500 dark:text-gray-400">{study.testimonial_role}</p>
                       )}
                     </div>
                   </div>
@@ -307,17 +307,17 @@ export default function CaseStudyPage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 py-8">
+      <footer className="border-t border-gray-100 dark:border-gray-700 py-8 bg-white dark:bg-gray-900">
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <Link
               to="/case-studies"
-              className="inline-flex items-center gap-2 text-[14px] text-gray-600 hover:text-gray-900"
+              className="inline-flex items-center gap-2 text-[14px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Case Studies
             </Link>
-            <p className="text-[13px] text-gray-400">
+            <p className="text-[13px] text-gray-400 dark:text-gray-500">
               © {new Date().getFullYear()} {seoDefaults.companyName}. All rights reserved.
             </p>
           </div>

@@ -226,9 +226,9 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
   ]
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="flex -mb-px">
           {tabs.map((tab) => (
             <button
@@ -236,8 +236,8 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
               onClick={() => setActiveTab(tab.id)}
               className={`px-5 py-3 text-[13px] font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'border-gray-900 text-gray-900'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
               {tab.label}
@@ -252,27 +252,27 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
           <div className="space-y-5">
             {/* Logo */}
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-2">Company Logo</label>
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">Company Logo</label>
               <div className="flex items-center gap-4">
                 {logoPreview ? (
                   <div className="relative">
                     <img
                       src={logoPreview}
                       alt="Company logo"
-                      className="w-20 h-20 rounded-lg object-cover border border-gray-200"
+                      className="w-20 h-20 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
                     />
                     <button
                       type="button"
                       onClick={removeLogo}
-                      className="absolute -top-2 -right-2 p-1 bg-white rounded-full shadow-md border border-gray-200 text-gray-500 hover:text-red-500"
+                      className="absolute -top-2 -right-2 p-1 bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-red-500"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </div>
                 ) : (
-                  <label className="w-20 h-20 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 cursor-pointer hover:border-gray-400 transition-colors">
-                    <Upload className="w-5 h-5 text-gray-400" />
-                    <span className="text-[11px] text-gray-500 mt-1">Upload</span>
+                  <label className="w-20 h-20 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                    <Upload className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Upload</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -281,7 +281,7 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
                     />
                   </label>
                 )}
-                <div className="text-[12px] text-gray-500">
+                <div className="text-[12px] text-gray-500 dark:text-gray-400">
                   <p>Square image, at least 200x200px</p>
                   <p>JPG, PNG, GIF (max 5MB)</p>
                 </div>
@@ -300,7 +300,7 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
             {/* Name and Tagline */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Company Name *
                 </label>
                 <input
@@ -309,28 +309,28 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="e.g. Acme Inc."
-                  className={`w-full px-3 py-2 text-[14px] border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${
-                    errors.name ? 'border-red-300' : 'border-gray-200'
+                  className={`w-full px-3 py-2 text-[14px] border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 ${
+                    errors.name ? 'border-red-300' : 'border-gray-200 dark:border-gray-700'
                   }`}
                 />
                 {errors.name && <p className="mt-1 text-[12px] text-red-500">{errors.name}</p>}
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Tagline</label>
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tagline</label>
                 <input
                   type="text"
                   name="tagline"
                   value={formData.tagline}
                   onChange={handleInputChange}
                   placeholder="A short description of what you do"
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 About the Company
               </label>
               <textarea
@@ -339,7 +339,7 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
                 onChange={handleInputChange}
                 rows={4}
                 placeholder="Tell candidates about your company, mission, and what makes you unique..."
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent resize-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
 
@@ -352,14 +352,14 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
                 label="Industry"
               />
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Company Size
                 </label>
                 <select
                   name="company_size"
                   value={formData.company_size}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">Select size</option>
                   <option value="1-10">1-10 employees</option>
@@ -371,7 +371,7 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
                 </select>
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Founded Year
                 </label>
                 <input
@@ -382,7 +382,7 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
                   min={1800}
                   max={currentYear}
                   placeholder={currentYear.toString()}
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -390,14 +390,14 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
             {/* Funding and Location */}
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Funding Stage
                 </label>
                 <select
                   name="funding_stage"
                   value={formData.funding_stage}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">Select stage</option>
                   <option value="bootstrapped">Bootstrapped</option>
@@ -410,14 +410,14 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
                 </select>
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Country
                 </label>
                 <select
                   name="headquarters_country_id"
                   value={formData.headquarters_country_id || ''}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">Select country</option>
                   {countries.map((country) => (
@@ -428,7 +428,7 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
                 </select>
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Headquarters City
                 </label>
                 <select
@@ -436,7 +436,7 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
                   value={formData.headquarters_city_id || ''}
                   onChange={handleInputChange}
                   disabled={!formData.headquarters_country_id}
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">
                     {formData.headquarters_country_id ? 'Select city' : 'Select country first'}
@@ -453,25 +453,25 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
             {/* Links */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Website</label>
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Website</label>
                 <input
                   type="url"
                   name="website_url"
                   value={formData.website_url}
                   onChange={handleInputChange}
                   placeholder="https://www.example.com"
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">LinkedIn</label>
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">LinkedIn</label>
                 <input
                   type="url"
                   name="linkedin_url"
                   value={formData.linkedin_url}
                   onChange={handleInputChange}
                   placeholder="https://linkedin.com/company/example"
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -482,7 +482,7 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
         {activeTab === 'culture' && (
           <div className="space-y-5">
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Culture Description
               </label>
               <textarea
@@ -491,21 +491,21 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
                 onChange={handleInputChange}
                 rows={4}
                 placeholder="Describe your company culture, work environment, and team dynamics..."
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent resize-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
 
             <ValuesEditor values={formData.values || []} onChange={handleValuesChange} />
 
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Remote Work Policy
               </label>
               <select
                 name="remote_work_policy"
                 value={formData.remote_work_policy}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Select policy</option>
                 {remoteWorkPolicyOptions.map((option) => (
@@ -534,7 +534,7 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
               maxItems={30}
               label="Tech Stack"
             />
-            <p className="text-[13px] text-gray-500">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400">
               Select the technologies and tools your company uses.
             </p>
           </div>
@@ -551,13 +551,13 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
                   name="is_published"
                   checked={formData.is_published}
                   onChange={handleInputChange}
-                  className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100"
                 />
-                <label htmlFor="is_published" className="text-[14px] text-gray-700">
+                <label htmlFor="is_published" className="text-[14px] text-gray-700 dark:text-gray-300">
                   Publish company profile
                 </label>
               </div>
-              <p className="text-[13px] text-gray-500">
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
                 When published, your company profile will be visible in the public company directory and
                 candidates can view your profile.
               </p>
@@ -565,8 +565,8 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
 
             {/* Candidate Access - Staff only */}
             {isStaffUser && (
-              <div className="space-y-4 pt-4 border-t border-gray-200">
-                <h4 className="text-[13px] font-medium text-gray-900">Candidate Access</h4>
+              <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h4 className="text-[13px] font-medium text-gray-900 dark:text-gray-100">Candidate Access</h4>
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
@@ -574,13 +574,13 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
                     name="can_view_all_candidates"
                     checked={formData.can_view_all_candidates || false}
                     onChange={handleInputChange}
-                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100"
                   />
-                  <label htmlFor="can_view_all_candidates" className="text-[14px] text-gray-700">
+                  <label htmlFor="can_view_all_candidates" className="text-[14px] text-gray-700 dark:text-gray-300">
                     Allow access to all candidates
                   </label>
                 </div>
-                <p className="text-[13px] text-gray-500">
+                <p className="text-[13px] text-gray-500 dark:text-gray-400">
                   When enabled, users from this company can browse all candidates on the platform.
                   Otherwise, they only see candidates who have applied to their jobs.
                 </p>
@@ -591,11 +591,11 @@ export default function CompanyForm({ company, onSave, isSubmitting = false, isA
       </div>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end">
+      <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800 flex justify-end">
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="px-5 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-5 py-2 text-[14px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isSubmitting ? 'Saving...' : 'Save Changes'}
         </button>

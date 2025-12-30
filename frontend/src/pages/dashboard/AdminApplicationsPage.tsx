@@ -57,7 +57,7 @@ import {
 const PAGE_SIZE_OPTIONS = [20, 30, 50]
 
 const STATUS_COLORS: Record<ApplicationStatus, { bg: string; text: string }> = {
-  [ApplicationStatus.APPLIED]: { bg: 'bg-gray-100', text: 'text-gray-700' },
+  [ApplicationStatus.APPLIED]: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-700 dark:text-gray-300' },
   [ApplicationStatus.SHORTLISTED]: { bg: 'bg-blue-100', text: 'text-blue-700' },
   [ApplicationStatus.IN_PROGRESS]: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
   [ApplicationStatus.OFFER_MADE]: { bg: 'bg-purple-100', text: 'text-purple-700' },
@@ -247,10 +247,10 @@ export default function AdminApplicationsPage() {
   // Check if user has access (admin, recruiter, or client)
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER, UserRole.CLIENT].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to view this page.
         </p>
       </div>
@@ -623,7 +623,7 @@ export default function AdminApplicationsPage() {
             type="checkbox"
             checked={table.getIsAllPageRowsSelected()}
             onChange={table.getToggleAllPageRowsSelectedHandler()}
-            className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:bg-gray-800"
           />
         ),
         cell: ({ row }) => (
@@ -632,7 +632,7 @@ export default function AdminApplicationsPage() {
               type="checkbox"
               checked={row.getIsSelected()}
               onChange={row.getToggleSelectedHandler()}
-              className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:bg-gray-800"
             />
           </div>
         ),
@@ -665,16 +665,16 @@ export default function AdminApplicationsPage() {
           const app = row.original
           return (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-[11px] font-medium text-gray-600">
+              <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400">
                   {app.candidate_name?.split(' ').map(n => n[0]).join('') || '--'}
                 </span>
               </div>
               <div className="min-w-0">
-                <p className="text-[13px] font-medium text-gray-900 truncate">
+                <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
                   {app.candidate_name || 'No name'}
                 </p>
-                <p className="text-[11px] text-gray-500 truncate">
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
                   {app.candidate_email}
                 </p>
               </div>
@@ -693,14 +693,14 @@ export default function AdminApplicationsPage() {
             <div className="min-w-0">
               <Link
                 to={`/jobs/${app.job_slug}`}
-                className="text-[13px] font-medium text-gray-900 hover:text-blue-600 truncate block"
+                className="text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 truncate block"
                 onClick={(e) => e.stopPropagation()}
               >
                 {app.job_title}
               </Link>
               <div className="flex items-center gap-1 mt-0.5">
-                <Building2 className="w-3 h-3 text-gray-400" />
-                <span className="text-[11px] text-gray-500 truncate">{app.company_name}</span>
+                <Building2 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{app.company_name}</span>
               </div>
             </div>
           )
@@ -714,7 +714,7 @@ export default function AdminApplicationsPage() {
           const app = row.original
           const stageName = app.current_stage_name || 'Applied'
           return (
-            <span className="px-2 py-1 text-[11px] font-medium bg-gray-100 text-gray-700 rounded">
+            <span className="px-2 py-1 text-[11px] font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
               {stageName}
             </span>
           )
@@ -727,7 +727,7 @@ export default function AdminApplicationsPage() {
         enableSorting: true,
         cell: ({ getValue }) => {
           const status = getValue() as ApplicationStatus
-          const colors = STATUS_COLORS[status] || { bg: 'bg-gray-100', text: 'text-gray-700' }
+          const colors = STATUS_COLORS[status] || { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-700 dark:text-gray-300' }
           return (
             <span className={`px-2 py-1 text-[11px] font-medium rounded ${colors.bg} ${colors.text}`}>
               {STATUS_LABELS[status] || status}
@@ -741,7 +741,7 @@ export default function AdminApplicationsPage() {
         size: 100,
         enableSorting: true,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600">{formatDate(getValue())}</span>
+          <span className="text-[12px] text-gray-600 dark:text-gray-400">{formatDate(getValue())}</span>
         ),
       }),
       // Time in Stage
@@ -749,7 +749,7 @@ export default function AdminApplicationsPage() {
         header: 'Time in Stage',
         size: 100,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-500">{formatTimeInStage(getValue())}</span>
+          <span className="text-[12px] text-gray-500 dark:text-gray-400">{formatTimeInStage(getValue())}</span>
         ),
       }),
       // Next Interview (if scheduled)
@@ -759,10 +759,10 @@ export default function AdminApplicationsPage() {
         cell: ({ getValue }) => {
           const instance = getValue()
           if (!instance?.scheduled_at) {
-            return <span className="text-[11px] text-gray-400">-</span>
+            return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
           }
           return (
-            <span className="text-[12px] text-gray-600">
+            <span className="text-[12px] text-gray-600 dark:text-gray-400">
               {formatDate(instance.scheduled_at)}
             </span>
           )
@@ -789,7 +789,7 @@ export default function AdminApplicationsPage() {
                     setOpenActionsMenu(app.id)
                   }
                 }}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded"
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
@@ -803,7 +803,7 @@ export default function AdminApplicationsPage() {
                     }}
                   />
                   <div
-                    className="fixed w-40 bg-white border border-gray-200 rounded-md shadow-lg z-[9999]"
+                    className="fixed w-40 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg dark:shadow-gray-900/20 z-[9999]"
                     style={{ top: menuPosition.top, left: menuPosition.left }}
                   >
                     <div className="py-1">
@@ -813,14 +813,14 @@ export default function AdminApplicationsPage() {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
                         }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50 text-left"
+                        className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-left"
                       >
                         <FileText className="w-4 h-4" />
                         View Details
                       </button>
                       <Link
                         to={`/jobs/${app.job_slug}`}
-                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50"
+                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                         onClick={() => {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
@@ -873,20 +873,20 @@ export default function AdminApplicationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">All Applications</h1>
-          <p className="text-[13px] text-gray-500 mt-0.5">
+          <h1 className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">All Applications</h1>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
             {count} application{count !== 1 ? 's' : ''} found
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* View Toggle */}
-          <div className="flex border border-gray-200 rounded-md overflow-hidden">
+          <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
             <button
               onClick={() => setViewMode('table')}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] transition-colors ${
                 viewMode === 'table'
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-500 hover:bg-gray-50'
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
               title="Table view"
             >
@@ -894,10 +894,10 @@ export default function AdminApplicationsPage() {
             </button>
             <button
               onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] border-l border-gray-200 transition-colors ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] border-l border-gray-200 dark:border-gray-700 transition-colors ${
                 viewMode === 'kanban'
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-500 hover:bg-gray-50'
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
               title="Kanban view"
             >
@@ -907,11 +907,11 @@ export default function AdminApplicationsPage() {
           {/* Page Size Selector - only in table view */}
           {viewMode === 'table' && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[12px] text-gray-500">Show:</span>
+              <span className="text-[12px] text-gray-500 dark:text-gray-400">Show:</span>
               <select
                 value={pageSize}
                 onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                className="px-2 py-1 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="px-2 py-1 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:bg-gray-800 dark:text-gray-200"
               >
                 {PAGE_SIZE_OPTIONS.map(size => (
                   <option key={size} value={size}>{size}</option>
@@ -923,13 +923,13 @@ export default function AdminApplicationsPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-3 py-1.5 text-[13px] border rounded-md transition-colors ${
-              showFilters ? 'border-gray-300 bg-gray-50 text-gray-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+              showFilters ? 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             Filters
             {activeFilterCount > 0 && (
-              <span className="bg-gray-900 text-white text-[11px] px-1.5 py-0.5 rounded-full">
+              <span className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[11px] px-1.5 py-0.5 rounded-full">
                 {activeFilterCount}
               </span>
             )}
@@ -963,12 +963,12 @@ export default function AdminApplicationsPage() {
           {/* Active Filters Count */}
           {activeFilterCount > 0 && (
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-[12px] text-gray-500">
+              <span className="text-[12px] text-gray-500 dark:text-gray-400">
                 {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''} applied
               </span>
               <button
                 onClick={handleClearFilters}
-                className="text-[12px] text-gray-500 hover:text-gray-700 underline"
+                className="text-[12px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline"
               >
                 Clear all
               </button>
@@ -986,22 +986,22 @@ export default function AdminApplicationsPage() {
           {/* Loading State */}
           {isLoading && (
             <div className="text-center py-12">
-              <p className="text-[14px] text-gray-500">Loading applications...</p>
+              <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading applications...</p>
             </div>
           )}
 
           {/* Empty State */}
           {!isLoading && !error && applications.length === 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-[15px] text-gray-700 mb-1">No applications found</p>
-              <p className="text-[13px] text-gray-500">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+              <FileText className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No applications found</p>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
                 {activeFilterCount > 0 ? 'Try adjusting your filters' : 'No applications have been submitted yet'}
               </p>
               {activeFilterCount > 0 && (
                 <button
                   onClick={handleClearFilters}
-                  className="mt-4 text-[13px] text-gray-600 hover:text-gray-900 underline"
+                  className="mt-4 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 underline"
                 >
                   Clear all filters
                 </button>
@@ -1011,21 +1011,21 @@ export default function AdminApplicationsPage() {
 
           {/* Table View */}
           {viewMode === 'table' && !isLoading && !error && applications.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     {table.getHeaderGroups().map(headerGroup => (
-                      <tr key={headerGroup.id} className="border-b border-gray-200 bg-gray-50">
+                      <tr key={headerGroup.id} className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                         {headerGroup.headers.map(header => {
                           const isPinnedLeft = header.id === 'select' || header.id === 'candidate_name'
                           const isPinnedRight = header.id === 'actions'
                           return (
                             <th
                               key={header.id}
-                              className={`px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
-                                isPinnedLeft ? 'sticky z-20 bg-gray-50' : ''
-                              } ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50' : ''}`}
+                              className={`px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap ${
+                                isPinnedLeft ? 'sticky z-20 bg-gray-50 dark:bg-gray-800' : ''
+                              } ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50 dark:bg-gray-800' : ''}`}
                               style={{
                                 width: header.getSize(),
                                 left: header.id === 'select' ? 0 : header.id === 'candidate_name' ? 40 : undefined,
@@ -1034,7 +1034,7 @@ export default function AdminApplicationsPage() {
                               {header.isPlaceholder ? null : (
                                 <div
                                   className={`flex items-center gap-1 ${
-                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700' : ''
+                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300' : ''
                                   }`}
                                   onClick={header.column.getToggleSortingHandler()}
                                 >
@@ -1057,11 +1057,11 @@ export default function AdminApplicationsPage() {
                       </tr>
                     ))}
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {table.getRowModel().rows.map(row => (
                       <tr
                         key={row.id}
-                        className="hover:bg-gray-50 cursor-pointer"
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
                         onClick={() => {
                           setOpenActionsMenu(null)
                           setMenuPosition(null)
@@ -1076,8 +1076,8 @@ export default function AdminApplicationsPage() {
                             <td
                               key={cell.id}
                               className={`px-3 py-2.5 whitespace-nowrap ${
-                                isPinnedLeft ? 'sticky z-10 bg-white' : ''
-                              } ${isPinnedRight ? 'sticky right-0 z-10 bg-white' : ''}`}
+                                isPinnedLeft ? 'sticky z-10 bg-white dark:bg-gray-900' : ''
+                              } ${isPinnedRight ? 'sticky right-0 z-10 bg-white dark:bg-gray-900' : ''}`}
                               style={{
                                 width: cell.column.getSize(),
                                 left: colId === 'select' ? 0 : colId === 'candidate_name' ? 40 : undefined,
@@ -1130,14 +1130,14 @@ export default function AdminApplicationsPage() {
           {/* Pagination - Table view only */}
           {viewMode === 'table' && !isLoading && !error && totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
-              <p className="text-[13px] text-gray-500">
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
                 Page {page} of {totalPages} ({count} total)
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={!hasPrevious}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-300"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Previous
@@ -1145,7 +1145,7 @@ export default function AdminApplicationsPage() {
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={!hasNext}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:text-gray-300"
                 >
                   Next
                   <ChevronRight className="w-4 h-4" />
@@ -1174,9 +1174,9 @@ export default function AdminApplicationsPage() {
       {/* Reject Modal */}
       {rejectModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-[16px] font-medium text-gray-900">Reject Application</h3>
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/20 w-full max-w-md mx-4">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-[16px] font-medium text-gray-900 dark:text-gray-100">Reject Application</h3>
             </div>
             <div className="px-6 py-4 space-y-4">
               {actionError && (
@@ -1187,13 +1187,13 @@ export default function AdminApplicationsPage() {
               )}
 
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Rejection Reason <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value as RejectionReason)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-800 dark:text-gray-200"
                 >
                   <option value="">Select a reason...</option>
                   {Object.entries(RejectionReasonLabels).map(([value, label]) => (
@@ -1203,19 +1203,19 @@ export default function AdminApplicationsPage() {
               </div>
 
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Feedback (optional)
                 </label>
                 <textarea
                   value={rejectionFeedback}
                   onChange={(e) => setRejectionFeedback(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-800 dark:text-gray-200"
                   placeholder="Additional notes about the rejection..."
                 />
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3">
               <button
                 onClick={() => {
                   setRejectModal(null)
@@ -1224,7 +1224,7 @@ export default function AdminApplicationsPage() {
                   setActionError(null)
                 }}
                 disabled={isProcessing}
-                className="px-4 py-2 text-[14px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-[14px] font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>
@@ -1243,10 +1243,10 @@ export default function AdminApplicationsPage() {
       {/* Make Offer Modal */}
       {offerModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-[16px] font-medium text-gray-900">Make Offer</h3>
-              <p className="text-[13px] text-gray-500 mt-1">Enter the offer details for this candidate</p>
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/20 w-full max-w-2xl mx-4">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-[16px] font-medium text-gray-900 dark:text-gray-100">Make Offer</h3>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">Enter the offer details for this candidate</p>
             </div>
             <div className="px-6 py-4 max-h-[60vh] overflow-y-auto">
               {actionError && (
@@ -1257,7 +1257,7 @@ export default function AdminApplicationsPage() {
               )}
               <OfferForm offerDetails={offerDetails} setOfferDetails={setOfferDetails} />
             </div>
-            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3">
               <button
                 onClick={() => {
                   setOfferModal(null)
@@ -1265,7 +1265,7 @@ export default function AdminApplicationsPage() {
                   setActionError(null)
                 }}
                 disabled={isProcessing}
-                className="px-4 py-2 text-[14px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-[14px] font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>
@@ -1284,10 +1284,10 @@ export default function AdminApplicationsPage() {
       {/* Accept Offer Modal */}
       {acceptModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-[16px] font-medium text-gray-900">Confirm Offer Acceptance</h3>
-              <p className="text-[13px] text-gray-500 mt-1">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-gray-900/20 w-full max-w-lg mx-4">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-[16px] font-medium text-gray-900 dark:text-gray-100">Confirm Offer Acceptance</h3>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">
                 Confirm the final offer details. Adjust if there were any negotiations.
               </p>
             </div>
@@ -1307,38 +1307,38 @@ export default function AdminApplicationsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1">Final Annual Salary</label>
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Final Annual Salary</label>
                   <input
                     type="number"
                     value={finalOfferDetails.annual_salary || ''}
                     onChange={(e) => setFinalOfferDetails({ ...finalOfferDetails, annual_salary: e.target.value ? parseInt(e.target.value) : null })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-800 dark:text-gray-200"
                     placeholder="Leave blank to use original"
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1">Start Date</label>
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
                   <input
                     type="date"
                     value={finalOfferDetails.start_date || ''}
                     onChange={(e) => setFinalOfferDetails({ ...finalOfferDetails, start_date: e.target.value || null })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-800 dark:text-gray-200"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1">Notes</label>
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
                 <textarea
                   value={finalOfferDetails.notes || ''}
                   onChange={(e) => setFinalOfferDetails({ ...finalOfferDetails, notes: e.target.value })}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900 dark:bg-gray-800 dark:text-gray-200"
                   placeholder="Any adjustments or notes about the final offer..."
                 />
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3">
               <button
                 onClick={() => {
                   setAcceptModal(null)
@@ -1346,7 +1346,7 @@ export default function AdminApplicationsPage() {
                   setActionError(null)
                 }}
                 disabled={isProcessing}
-                className="px-4 py-2 text-[14px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-[14px] font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>

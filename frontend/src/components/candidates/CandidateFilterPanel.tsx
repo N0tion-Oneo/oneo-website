@@ -136,14 +136,14 @@ export default function CandidateFilterPanel({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg sticky top-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg sticky top-4">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h3 className="text-[14px] font-medium text-gray-900">Filters</h3>
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Filters</h3>
         {activeFilterCount > 0 && (
           <button
             onClick={onClearFilters}
-            className="flex items-center gap-1 text-[12px] text-gray-500 hover:text-gray-700"
+            className="flex items-center gap-1 text-[12px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
           >
             <RotateCcw className="w-3 h-3" />
             Clear all
@@ -154,17 +154,17 @@ export default function CandidateFilterPanel({
       <div className="p-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
         {/* Search - Always visible */}
         <div>
-          <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+          <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
             Search
           </label>
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Name, email, title..."
               value={filters.search}
               onChange={(e) => updateFilter('search', e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+              className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
         </div>
@@ -178,13 +178,13 @@ export default function CandidateFilterPanel({
           <div className="space-y-4">
             {/* Seniority */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Seniority
               </label>
               <select
                 value={filters.seniority}
                 onChange={(e) => updateFilter('seniority', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All levels</option>
                 {SENIORITY_OPTIONS.map(opt => (
@@ -195,13 +195,13 @@ export default function CandidateFilterPanel({
 
             {/* Work Preference */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Work Preference
               </label>
               <select
                 value={filters.work_preference}
                 onChange={(e) => updateFilter('work_preference', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All preferences</option>
                 {WORK_PREFERENCE_OPTIONS.map(opt => (
@@ -212,13 +212,13 @@ export default function CandidateFilterPanel({
 
             {/* Visibility */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Profile Visibility
               </label>
               <select
                 value={filters.visibility}
                 onChange={(e) => updateFilter('visibility', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All</option>
                 {VISIBILITY_OPTIONS.map(opt => (
@@ -229,13 +229,13 @@ export default function CandidateFilterPanel({
 
             {/* Profile Completeness */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Min Profile Completeness
               </label>
               <select
                 value={filters.min_completeness ?? ''}
                 onChange={(e) => updateFilter('min_completeness', e.target.value ? parseInt(e.target.value) : undefined)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Any</option>
                 <option value="25">25%+</option>
@@ -256,7 +256,7 @@ export default function CandidateFilterPanel({
           <div className="space-y-4">
             {/* Years of Experience Range */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Years of Experience
               </label>
               <div className="flex items-center gap-2">
@@ -267,9 +267,9 @@ export default function CandidateFilterPanel({
                   placeholder="Min"
                   value={filters.min_experience ?? ''}
                   onChange={(e) => updateFilter('min_experience', e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
-                <span className="text-gray-400">-</span>
+                <span className="text-gray-400 dark:text-gray-500">-</span>
                 <input
                   type="number"
                   min="0"
@@ -277,14 +277,14 @@ export default function CandidateFilterPanel({
                   placeholder="Max"
                   value={filters.max_experience ?? ''}
                   onChange={(e) => updateFilter('max_experience', e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
 
             {/* Industries */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Industries
               </label>
               {filters.industries.length > 0 && (
@@ -292,7 +292,7 @@ export default function CandidateFilterPanel({
                   {getSelectedIndustryNames().map((name, idx) => (
                     <span
                       key={idx}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] bg-blue-50 text-blue-700 rounded"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded"
                     >
                       {name}
                       <button
@@ -300,7 +300,7 @@ export default function CandidateFilterPanel({
                           const industry = allIndustries.find(i => i.name === name)
                           if (industry) toggleIndustry(industry.id)
                         }}
-                        className="hover:text-blue-900"
+                        className="hover:text-blue-900 dark:hover:text-blue-100"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -313,7 +313,7 @@ export default function CandidateFilterPanel({
                 onChange={(e) => {
                   if (e.target.value) toggleIndustry(parseInt(e.target.value))
                 }}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Add industry filter...</option>
                 {allIndustries
@@ -335,13 +335,13 @@ export default function CandidateFilterPanel({
           <div className="space-y-4">
             {/* Salary Currency */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Salary Currency
               </label>
               <select
                 value={filters.salary_currency}
                 onChange={(e) => updateFilter('salary_currency', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Any currency</option>
                 {CURRENCY_OPTIONS.map(opt => (
@@ -352,7 +352,7 @@ export default function CandidateFilterPanel({
 
             {/* Salary Range */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Salary Range (annual)
               </label>
               <div className="flex items-center gap-2">
@@ -363,9 +363,9 @@ export default function CandidateFilterPanel({
                   placeholder="Min"
                   value={filters.min_salary ?? ''}
                   onChange={(e) => updateFilter('min_salary', e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
-                <span className="text-gray-400">-</span>
+                <span className="text-gray-400 dark:text-gray-500">-</span>
                 <input
                   type="number"
                   min="0"
@@ -373,32 +373,32 @@ export default function CandidateFilterPanel({
                   placeholder="Max"
                   value={filters.max_salary ?? ''}
                   onChange={(e) => updateFilter('max_salary', e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
               </div>
             </div>
 
             {/* Notice Period */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Notice Period
               </label>
               <div className="flex items-center gap-2">
                 <select
                   value={filters.notice_period_min ?? ''}
                   onChange={(e) => updateFilter('notice_period_min', e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">Min</option>
                   {NOTICE_PERIOD_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
-                <span className="text-gray-400">-</span>
+                <span className="text-gray-400 dark:text-gray-500">-</span>
                 <select
                   value={filters.notice_period_max ?? ''}
                   onChange={(e) => updateFilter('notice_period_max', e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">Max</option>
                   {NOTICE_PERIOD_OPTIONS.map(opt => (
@@ -418,25 +418,25 @@ export default function CandidateFilterPanel({
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Created After
               </label>
               <input
                 type="date"
                 value={filters.created_after}
                 onChange={(e) => updateFilter('created_after', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Created Before
               </label>
               <input
                 type="date"
                 value={filters.created_before}
                 onChange={(e) => updateFilter('created_before', e.target.value)}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -451,7 +451,7 @@ export default function CandidateFilterPanel({
           <div className="space-y-4">
             {/* Willing to Relocate */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Willing to Relocate
               </label>
               <select
@@ -460,7 +460,7 @@ export default function CandidateFilterPanel({
                   const value = e.target.value
                   updateFilter('willing_to_relocate', value === '' ? undefined : value === 'true')
                 }}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Any</option>
                 <option value="true">Yes</option>
@@ -470,7 +470,7 @@ export default function CandidateFilterPanel({
 
             {/* Has Resume */}
             <div>
-              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+              <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                 Has Resume
               </label>
               <select
@@ -479,7 +479,7 @@ export default function CandidateFilterPanel({
                   const value = e.target.value
                   updateFilter('has_resume', value === '' ? undefined : value === 'true')
                 }}
-                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Any</option>
                 <option value="true">Yes</option>
@@ -507,16 +507,16 @@ function CollapsibleSection({
   children: React.ReactNode
 }) {
   return (
-    <div className="border-t border-gray-200 pt-4">
+    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
       <button
         onClick={onToggle}
         className="flex items-center justify-between w-full text-left"
       >
-        <span className="text-[12px] font-medium text-gray-700">{title}</span>
+        <span className="text-[12px] font-medium text-gray-700 dark:text-gray-300">{title}</span>
         {expanded ? (
-          <ChevronUp className="w-4 h-4 text-gray-400" />
+          <ChevronUp className="w-4 h-4 text-gray-400 dark:text-gray-500" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />
         )}
       </button>
       {expanded && <div className="mt-3">{children}</div>}

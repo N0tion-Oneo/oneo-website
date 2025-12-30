@@ -540,7 +540,7 @@ export default function PricingCalculatorPage() {
   }, [roles, additionals, years, config, customAdditionals, totalAnnualSalary, monthlyAdditionals, oneTimeAdditionals])
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <SEO />
       <Navbar />
 
@@ -566,18 +566,18 @@ export default function PricingCalculatorPage() {
       </div>
 
       {/* Pricing Models Panel */}
-      <div className="bg-gray-100 py-12">
+      <div className="bg-gray-100 dark:bg-gray-800 py-12">
         <div className="max-w-5xl mx-auto px-6">
           <div className="mb-8">
-            <span className="text-[13px] font-medium text-gray-500 uppercase tracking-wide">Step 1</span>
-            <h2 className="text-[28px] font-bold text-gray-900 mt-1">Understand Our Pricing Models</h2>
-            <p className="text-[15px] text-gray-600 mt-2">Explore how each service is priced before building your plan.</p>
+            <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Step 1</span>
+            <h2 className="text-[28px] font-bold text-gray-900 dark:text-gray-100 mt-1">Understand Our Pricing Models</h2>
+            <p className="text-[15px] text-gray-600 dark:text-gray-400 mt-2">Explore how each service is priced before building your plan.</p>
           </div>
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden min-h-[70vh] flex">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg dark:shadow-gray-900/40 overflow-hidden min-h-[70vh] flex">
             {/* Vertical Tabs */}
-            <div className="w-[200px] bg-gray-50 border-r border-gray-200 flex flex-col">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="text-[13px] font-semibold text-gray-500 uppercase tracking-wide">Our Services</h3>
+            <div className="w-[200px] bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-[13px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Our Services</h3>
               </div>
               {[
                 { key: 'enterprise', name: 'Enterprise', icon: Building2, color: 'amber' },
@@ -593,19 +593,19 @@ export default function PricingCalculatorPage() {
                     onClick={() => setExpandedPricing(tab.key)}
                     className={`w-full px-4 py-4 flex items-center gap-3 text-left transition-all border-l-4 ${
                       isActive
-                        ? `${colors.borderActive} bg-white`
-                        : 'border-transparent hover:bg-gray-100'
+                        ? `${colors.borderActive} bg-white dark:bg-gray-900`
+                        : 'border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
                     }`}
                   >
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                      isActive ? colors.bgLight : 'bg-gray-200'
+                      isActive ? colors.bgLight : 'bg-gray-200 dark:bg-gray-700'
                     }`}>
                       <tab.icon className={`w-4 h-4 ${
-                        isActive ? colors.text : 'text-gray-500'
+                        isActive ? colors.text : 'text-gray-500 dark:text-gray-400'
                       }`} />
                     </div>
                     <span className={`text-[14px] font-medium ${
-                      isActive ? 'text-gray-900' : 'text-gray-600'
+                      isActive ? 'text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-400'
                     }`}>{tab.name}</span>
                   </button>
                 )
@@ -854,55 +854,55 @@ export default function PricingCalculatorPage() {
       <div className="max-w-5xl mx-auto px-6 py-12">
         {/* Section Header */}
         <div className="mb-8">
-          <span className="text-[13px] font-medium text-gray-500 uppercase tracking-wide">Step 2</span>
-          <h2 className="text-[28px] font-bold text-gray-900 mt-1">Build Your Plan & See Your Estimate</h2>
-          <p className="text-[15px] text-gray-600 mt-2">Configure your requirements and watch your estimate update in real-time.</p>
+          <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Step 2</span>
+          <h2 className="text-[28px] font-bold text-gray-900 dark:text-gray-100 mt-1">Build Your Plan & See Your Estimate</h2>
+          <p className="text-[15px] text-gray-600 dark:text-gray-400 mt-2">Configure your requirements and watch your estimate update in real-time.</p>
         </div>
 
         <div className="flex gap-8">
           {/* Left: Configurator */}
           <div className="flex-1 space-y-6">
             {/* Services Needed */}
-            <div className="bg-gray-50 rounded-xl p-5">
-              <h3 className="text-[14px] font-semibold text-gray-900 mb-4">What do you need?</h3>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
+              <h3 className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 mb-4">What do you need?</h3>
               <div className="flex gap-3">
-                <label className={`flex-1 flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${needs.recruitment ? 'border-gray-900 bg-white' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                <label className={`flex-1 flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${needs.recruitment ? 'border-gray-900 dark:border-gray-100 bg-white dark:bg-gray-900' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600'}`}>
                   <input
                     type="checkbox"
                     checked={needs.recruitment}
                     onChange={(e) => setNeeds({ ...needs, recruitment: e.target.checked })}
-                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 focus:ring-gray-900"
                   />
                   <div>
-                    <span className="text-[14px] font-medium text-gray-900 block">Recruitment</span>
-                    <span className="text-[12px] text-gray-500">Find & hire talent</span>
+                    <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100 block">Recruitment</span>
+                    <span className="text-[12px] text-gray-500 dark:text-gray-400">Find & hire talent</span>
                   </div>
                 </label>
-                <label className={`flex-1 flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${needs.eor ? 'border-gray-900 bg-white' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                <label className={`flex-1 flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${needs.eor ? 'border-gray-900 dark:border-gray-100 bg-white dark:bg-gray-900' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600'}`}>
                   <input
                     type="checkbox"
                     checked={needs.eor}
                     onChange={(e) => setNeeds({ ...needs, eor: e.target.checked })}
-                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 focus:ring-gray-900"
                   />
                   <div>
-                    <span className="text-[14px] font-medium text-gray-900 block">Employment</span>
-                    <span className="text-[12px] text-gray-500">EOR services</span>
+                    <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100 block">Employment</span>
+                    <span className="text-[12px] text-gray-500 dark:text-gray-400">EOR services</span>
                   </div>
                 </label>
               </div>
 
               {/* Hire Type - shown when recruitment is selected but NOT when both are selected */}
               {needs.recruitment && !needs.eor && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-[13px] text-gray-600 mb-3">What type of hiring?</p>
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <p className="text-[13px] text-gray-600 dark:text-gray-400 mb-3">What type of hiring?</p>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setHireType('single')}
                       className={`flex-1 px-4 py-2.5 rounded-lg border-2 text-[13px] font-medium transition-all ${
                         hireType === 'single'
-                          ? 'border-gray-900 bg-gray-900 text-white'
-                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                          ? 'border-gray-900 dark:border-gray-100 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
+                          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                     >
                       Single Hire
@@ -911,8 +911,8 @@ export default function PricingCalculatorPage() {
                       onClick={() => setHireType('team')}
                       className={`flex-1 px-4 py-2.5 rounded-lg border-2 text-[13px] font-medium transition-all ${
                         hireType === 'team'
-                          ? 'border-gray-900 bg-gray-900 text-white'
-                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                          ? 'border-gray-900 dark:border-gray-100 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
+                          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                     >
                       Team / Multiple
@@ -923,20 +923,20 @@ export default function PricingCalculatorPage() {
             </div>
 
             {/* Hiring Plan */}
-            <div className="bg-gray-50 rounded-xl p-5">
-              <h3 className="text-[14px] font-semibold text-gray-900 mb-4">Hiring Plan</h3>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
+              <h3 className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 mb-4">Hiring Plan</h3>
 
               <div className="space-y-3">
                 {Array.from({ length: years }, (_, i) => i + 1).map((year) => {
                   const yearRoles = rolesByYear[year] || []
                   return (
-                    <div key={year} className="bg-white rounded-lg p-3 border border-gray-200">
+                    <div key={year} className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[13px] font-semibold text-gray-700">Year {year}</span>
+                        <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">Year {year}</span>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => addRole(year)}
-                            className="text-[12px] text-gray-500 hover:text-gray-900 font-medium"
+                            className="text-[12px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium"
                           >
                             + Add Role
                           </button>
@@ -965,7 +965,7 @@ export default function PricingCalculatorPage() {
                                 value={role.title}
                                 onChange={(e) => updateRole(role.id, 'title', e.target.value)}
                                 placeholder="Role"
-                                className="flex-1 min-w-0 h-8 px-2 border border-gray-200 rounded text-[13px] focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+                                className="flex-1 min-w-0 h-8 px-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded text-[13px] focus:border-gray-900 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-500 outline-none"
                               />
                               <div className="relative">
                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-[12px]">R</span>
@@ -973,7 +973,7 @@ export default function PricingCalculatorPage() {
                                   type="number"
                                   value={role.salary}
                                   onChange={(e) => updateRole(role.id, 'salary', Number(e.target.value))}
-                                  className="w-24 h-8 pl-5 pr-1 border border-gray-200 rounded text-[13px] focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+                                  className="w-24 h-8 pl-5 pr-1 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded text-[13px] focus:border-gray-900 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-500 outline-none"
                                   step="5000"
                                 />
                               </div>
@@ -981,13 +981,13 @@ export default function PricingCalculatorPage() {
                                 type="number"
                                 value={role.count}
                                 onChange={(e) => updateRole(role.id, 'count', Number(e.target.value))}
-                                className="w-12 h-8 px-1 border border-gray-200 rounded text-[13px] text-center focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+                                className="w-12 h-8 px-1 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded text-[13px] text-center focus:border-gray-900 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-500 outline-none"
                                 min="1"
                               />
                               <select
                                 value={role.level}
                                 onChange={(e) => updateRole(role.id, 'level', e.target.value)}
-                                className="h-8 px-1 border border-gray-200 rounded text-[11px] focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+                                className="h-8 px-1 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded text-[11px] focus:border-gray-900 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-500 outline-none"
                                 title="Role level (affects Retained placement fees)"
                               >
                                 <option value="regular">Regular</option>
@@ -1011,7 +1011,7 @@ export default function PricingCalculatorPage() {
                 {years < 5 && (
                   <button
                     onClick={() => setYears(years + 1)}
-                    className="w-full py-2.5 border-2 border-dashed border-gray-300 rounded-lg text-[13px] font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-colors flex items-center justify-center gap-1.5"
+                    className="w-full py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-[13px] font-medium text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors flex items-center justify-center gap-1.5"
                   >
                     <Plus className="w-4 h-4" />
                     Add Year {years + 1}
@@ -1019,19 +1019,19 @@ export default function PricingCalculatorPage() {
                 )}
               </div>
 
-              <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
-                <span className="text-[13px] text-gray-600">{totalHires} hire{totalHires !== 1 ? 's' : ''}</span>
-                <span className="text-[14px] font-semibold text-gray-900">{formatCurrency(totalAnnualSalary)}/yr</span>
+              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <span className="text-[13px] text-gray-600 dark:text-gray-400">{totalHires} hire{totalHires !== 1 ? 's' : ''}</span>
+                <span className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(totalAnnualSalary)}/yr</span>
               </div>
             </div>
 
             {/* Additional Services (only for Enterprise - when both recruitment AND EOR selected) */}
             {needs.recruitment && needs.eor && (
-              <div className="bg-gray-50 rounded-xl p-5">
-                <h3 className="text-[14px] font-semibold text-gray-900 mb-4">Additional Services</h3>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
+                <h3 className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 mb-4">Additional Services</h3>
 
                 {/* Column Headers */}
-                <div className="flex items-center text-[10px] text-gray-500 uppercase tracking-wide mb-2 px-3">
+                <div className="flex items-center text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-3">
                   <span className="flex-1">Service</span>
                   <span className="w-[120px] text-center">Rate</span>
                   <span className="w-[80px] text-right">Total</span>
@@ -1074,7 +1074,7 @@ export default function PricingCalculatorPage() {
                         inputLabel: '/pp'
                       },
                     ].map((item) => (
-                      <div key={item.key} className="flex items-center bg-white rounded-lg px-3 py-2 border border-gray-200">
+                      <div key={item.key} className="flex items-center bg-white dark:bg-gray-900 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-700">
                         <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
                           <input
                             type="checkbox"
@@ -1086,9 +1086,9 @@ export default function PricingCalculatorPage() {
                                 [key]: { ...additionals[key], enabled: e.target.checked }
                               })
                             }}
-                            className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 flex-shrink-0"
+                            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 focus:ring-gray-900 flex-shrink-0"
                           />
-                          <span className="text-[13px] text-gray-700 truncate">{item.label}</span>
+                          <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate">{item.label}</span>
                         </label>
                         <div className="w-[120px] flex items-center justify-center gap-1">
                           <span className="text-[11px] text-gray-400">R</span>
@@ -1103,28 +1103,28 @@ export default function PricingCalculatorPage() {
                                 [key]: { ...additionals[key], [valueKey]: Number(e.target.value) }
                               })
                             }}
-                            className="w-20 h-8 px-2 border border-gray-200 rounded text-[13px] text-right focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none disabled:opacity-50 disabled:bg-gray-100"
+                            className="w-20 h-8 px-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded text-[13px] text-right focus:border-gray-900 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-500 outline-none disabled:opacity-50 disabled:bg-gray-100 dark:disabled:bg-gray-700"
                             disabled={!item.enabled}
                           />
                           <span className="text-[9px] text-gray-400 w-[36px]">{item.inputLabel}</span>
                         </div>
-                        <span className="w-[80px] text-[12px] font-medium text-gray-700 text-right">
+                        <span className="w-[80px] text-[12px] font-medium text-gray-700 dark:text-gray-300 text-right">
                           {item.enabled ? formatCurrency(item.annual) : '—'}
                         </span>
                       </div>
                     ))}
                   </div>
-                  <div className="flex items-center px-3 py-2 border-t border-gray-200 mt-2">
-                    <span className="flex-1 text-[12px] font-medium text-gray-600">Annual subtotal</span>
+                  <div className="flex items-center px-3 py-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+                    <span className="flex-1 text-[12px] font-medium text-gray-600 dark:text-gray-400">Annual subtotal</span>
                     <span className="w-[120px]"></span>
-                    <span className="w-[80px] text-[13px] font-semibold text-gray-900 text-right">{formatCurrency(monthlyAdditionals * 12)}</span>
+                    <span className="w-[80px] text-[13px] font-semibold text-gray-900 dark:text-gray-100 text-right">{formatCurrency(monthlyAdditionals * 12)}</span>
                   </div>
                 </div>
 
                 {/* One-Off Costs */}
                 <div>
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 px-3">One-Off Costs</div>
-                  <div className="flex items-center bg-white rounded-lg px-3 py-2 border border-gray-200">
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-3">One-Off Costs</div>
+                  <div className="flex items-center bg-white dark:bg-gray-900 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-700">
                     <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
                       <input
                         type="checkbox"
@@ -1135,9 +1135,9 @@ export default function PricingCalculatorPage() {
                             assets: { ...additionals.assets, enabled: e.target.checked }
                           })
                         }}
-                        className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 flex-shrink-0"
+                        className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 focus:ring-gray-900 flex-shrink-0"
                       />
-                      <span className="text-[13px] text-gray-700 truncate">Assets (laptop, etc)</span>
+                      <span className="text-[13px] text-gray-700 dark:text-gray-300 truncate">Assets (laptop, etc)</span>
                     </label>
                     <div className="w-[120px] flex items-center justify-center gap-1">
                       <span className="text-[11px] text-gray-400">R</span>
@@ -1150,29 +1150,29 @@ export default function PricingCalculatorPage() {
                             assets: { ...additionals.assets, costPerHire: Number(e.target.value) }
                           })
                         }}
-                        className="w-20 h-8 px-2 border border-gray-200 rounded text-[13px] text-right focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none disabled:opacity-50 disabled:bg-gray-100"
+                        className="w-20 h-8 px-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded text-[13px] text-right focus:border-gray-900 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-500 outline-none disabled:opacity-50 disabled:bg-gray-100 dark:disabled:bg-gray-700"
                         disabled={!additionals.assets.enabled}
                       />
                       <span className="text-[9px] text-gray-400 w-[36px]">/hire</span>
                     </div>
-                    <span className="w-[80px] text-[12px] font-medium text-gray-700 text-right">
+                    <span className="w-[80px] text-[12px] font-medium text-gray-700 dark:text-gray-300 text-right">
                       {additionals.assets.enabled ? formatCurrency(oneTimeAdditionals) : '—'}
                     </span>
                   </div>
-                  <div className="flex items-center px-3 py-2 border-t border-gray-200 mt-2">
-                    <span className="flex-1 text-[12px] font-medium text-gray-600">One-off subtotal</span>
+                  <div className="flex items-center px-3 py-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+                    <span className="flex-1 text-[12px] font-medium text-gray-600 dark:text-gray-400">One-off subtotal</span>
                     <span className="w-[120px]"></span>
-                    <span className="w-[80px] text-[13px] font-semibold text-gray-900 text-right">{formatCurrency(oneTimeAdditionals)}</span>
+                    <span className="w-[80px] text-[13px] font-semibold text-gray-900 dark:text-gray-100 text-right">{formatCurrency(oneTimeAdditionals)}</span>
                   </div>
                 </div>
 
                 {/* Custom Services */}
-                <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between mb-2 px-3">
-                    <span className="text-[10px] text-gray-500 uppercase tracking-wide">Custom Services</span>
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Custom Services</span>
                     <button
                       onClick={addCustomAdditional}
-                      className="flex items-center gap-1 text-[12px] text-gray-600 hover:text-gray-900 font-medium"
+                      className="flex items-center gap-1 text-[12px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       Add Custom
@@ -1197,20 +1197,20 @@ export default function PricingCalculatorPage() {
                           }
                         }
                         return (
-                          <div key={custom.id} className="flex items-center bg-white rounded-lg px-3 py-2 border border-gray-200">
+                          <div key={custom.id} className="flex items-center bg-white dark:bg-gray-900 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-700">
                             <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
                               <input
                                 type="checkbox"
                                 checked={custom.enabled}
                                 onChange={(e) => updateCustomAdditional(custom.id, 'enabled', e.target.checked)}
-                                className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 flex-shrink-0"
+                                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 focus:ring-gray-900 flex-shrink-0"
                               />
                               <input
                                 type="text"
                                 value={custom.name}
                                 onChange={(e) => updateCustomAdditional(custom.id, 'name', e.target.value)}
                                 placeholder="Service name"
-                                className="flex-1 min-w-0 h-6 px-1 border-0 text-[13px] text-gray-700 focus:ring-0 outline-none bg-transparent"
+                                className="flex-1 min-w-0 h-6 px-1 border-0 text-[13px] text-gray-700 dark:text-gray-300 focus:ring-0 outline-none bg-transparent"
                               />
                             </label>
                             <div className="flex items-center gap-1">
@@ -1219,13 +1219,13 @@ export default function PricingCalculatorPage() {
                                 type="number"
                                 value={custom.costPerPerson}
                                 onChange={(e) => updateCustomAdditional(custom.id, 'costPerPerson', Number(e.target.value))}
-                                className="w-16 h-7 px-1 border border-gray-200 rounded text-[12px] text-right focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none disabled:opacity-50 disabled:bg-gray-100"
+                                className="w-16 h-7 px-1 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded text-[12px] text-right focus:border-gray-900 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-500 outline-none disabled:opacity-50 disabled:bg-gray-100 dark:disabled:bg-gray-700"
                                 disabled={!custom.enabled}
                               />
                               <select
                                 value={custom.frequency}
                                 onChange={(e) => updateCustomAdditional(custom.id, 'frequency', e.target.value)}
-                                className="h-7 px-1 border border-gray-200 rounded text-[11px] focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none disabled:opacity-50 disabled:bg-gray-100"
+                                className="h-7 px-1 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded text-[11px] focus:border-gray-900 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-500 outline-none disabled:opacity-50 disabled:bg-gray-100 dark:disabled:bg-gray-700"
                                 disabled={!custom.enabled}
                               >
                                 <option value="monthly">/mo/pp</option>
@@ -1234,7 +1234,7 @@ export default function PricingCalculatorPage() {
                                 <option value="one-off">/hire</option>
                               </select>
                             </div>
-                            <span className="w-[70px] text-[12px] font-medium text-gray-700 text-right">
+                            <span className="w-[70px] text-[12px] font-medium text-gray-700 dark:text-gray-300 text-right">
                               {custom.enabled ? formatCurrency(customAnnual) : '—'}
                             </span>
                             <button
@@ -1257,11 +1257,11 @@ export default function PricingCalculatorPage() {
           <div className="w-[340px] flex-shrink-0">
             <div className="sticky top-24">
               {!needs.recruitment && !needs.eor ? (
-                <div className="bg-gray-50 rounded-xl p-8 text-center">
-                  <div className="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 text-center">
+                  <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Calculator className="w-7 h-7 text-gray-400" />
                   </div>
-                  <p className="text-[14px] text-gray-600 font-medium">Select a service to see your estimate</p>
+                  <p className="text-[14px] text-gray-600 dark:text-gray-400 font-medium">Select a service to see your estimate</p>
                   <p className="text-[13px] text-gray-400 mt-1">Choose Recruitment or Employment</p>
                 </div>
               ) : (
@@ -1272,7 +1272,7 @@ export default function PricingCalculatorPage() {
                     if (!calc || !colors) return null
 
                     return (
-                      <div key={s.key} className={`rounded-xl border-2 overflow-hidden bg-white shadow-lg ${colors.border}`}>
+                      <div key={s.key} className={`rounded-xl border-2 overflow-hidden bg-white dark:bg-gray-800 shadow-lg dark:shadow-gray-900/40 ${colors.border}`}>
                         {/* Header */}
                         <div className={`${colors.bg} px-5 py-5`}>
                           <div className="flex items-center gap-3 mb-2">
@@ -1288,19 +1288,19 @@ export default function PricingCalculatorPage() {
                         </div>
 
                         {/* Total Price */}
-                        <div className="px-5 py-5 border-b border-gray-100 bg-gray-50">
+                        <div className="px-5 py-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
                           {s.key === 'eor' ? (
                             <>
-                              <div className="text-[12px] text-gray-500 uppercase tracking-wide mb-1">Monthly Cost</div>
+                              <div className="text-[12px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Monthly Cost</div>
                               <div className={`text-[28px] font-bold ${colors.text}`}>
                                 {formatCurrency(calc.monthly)}
                               </div>
-                              <div className="text-[13px] text-gray-500">
+                              <div className="text-[13px] text-gray-500 dark:text-gray-400">
                                 {formatCurrency(calc.monthly * 12)}/year • {formatCurrency(calc.total)} total
                               </div>
                               {/* Year by Year for EOR (if multi-year) */}
                               {years > 1 && (
-                                <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
+                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 space-y-1.5">
                                   {calc.byYear.map((yearData, idx) => {
                                     // Calculate cumulative employees for this year
                                     const hiresUpToYear = roles
@@ -1308,11 +1308,11 @@ export default function PricingCalculatorPage() {
                                       .reduce((sum, r) => sum + r.count, 0)
                                     return (
                                       <div key={idx} className="flex justify-between text-[13px]">
-                                        <span className="text-gray-500">
+                                        <span className="text-gray-500 dark:text-gray-400">
                                           Year {idx + 1}
                                           <span className="text-gray-400 ml-1">({hiresUpToYear} employee{hiresUpToYear !== 1 ? 's' : ''})</span>
                                         </span>
-                                        <span className="font-medium text-gray-700">{formatCurrency(yearData.total)}</span>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">{formatCurrency(yearData.total)}</span>
                                       </div>
                                     )
                                   })}
@@ -1321,14 +1321,14 @@ export default function PricingCalculatorPage() {
                             </>
                           ) : (
                             <>
-                              <div className="text-[12px] text-gray-500 uppercase tracking-wide mb-1">Estimated Total</div>
+                              <div className="text-[12px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Estimated Total</div>
                               <div className={`text-[28px] font-bold ${colors.text}`}>
                                 {formatCurrency(calc.total)}
                               </div>
-                              <div className="text-[13px] text-gray-500">over {years} year{years > 1 ? 's' : ''}</div>
+                              <div className="text-[13px] text-gray-500 dark:text-gray-400">over {years} year{years > 1 ? 's' : ''}</div>
                               {/* Year by Year (if multi-year) */}
                               {years > 1 && (
-                                <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
+                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 space-y-1.5">
                                   {calc.byYear.map((yearData, idx) => {
                                     const enterpriseMarkups = [
                                       Number(config.enterprise_markup_year1) || 0.22,
@@ -1339,13 +1339,13 @@ export default function PricingCalculatorPage() {
                                     const rateForYear = s.key === 'enterprise' ? enterpriseMarkups[Math.min(idx, 3)] : null
                                     return (
                                       <div key={idx} className="flex justify-between text-[13px]">
-                                        <span className="text-gray-500">
+                                        <span className="text-gray-500 dark:text-gray-400">
                                           Year {idx + 1}
                                           {rateForYear != null && (
                                             <span className="text-gray-400 ml-1">({Math.round(rateForYear * 100)}%)</span>
                                           )}
                                         </span>
-                                        <span className="font-medium text-gray-700">{formatCurrency(yearData.total)}</span>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">{formatCurrency(yearData.total)}</span>
                                       </div>
                                     )
                                   })}
@@ -1356,8 +1356,8 @@ export default function PricingCalculatorPage() {
                         </div>
 
                         {/* Cost Breakdown - Service Specific */}
-                        <div className="px-5 py-4 border-b border-gray-100">
-                          <div className="text-[11px] text-gray-500 uppercase tracking-wide mb-3">Fee Breakdown</div>
+                        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+                          <div className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Fee Breakdown</div>
 
                           {/* Enterprise Breakdown */}
                           {s.key === 'enterprise' && calc.details && (
@@ -1365,8 +1365,8 @@ export default function PricingCalculatorPage() {
                               {calc.totals.salaryMargin > 0 && (
                                 <div>
                                   <div className="flex justify-between text-[13px]">
-                                    <span className="text-gray-600">Salary Markup</span>
-                                    <span className="font-medium text-gray-900">{formatCurrency(calc.totals.salaryMargin)}</span>
+                                    <span className="text-gray-600 dark:text-gray-400">Salary Markup</span>
+                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(calc.totals.salaryMargin)}</span>
                                   </div>
                                   <p className="text-[11px] text-gray-400 mt-0.5">
                                     {Math.round(calc.details.markupRates[0] * 100)}%→{Math.round(calc.details.markupRates[3] * 100)}% on salaries (by tenure)
@@ -1374,10 +1374,10 @@ export default function PricingCalculatorPage() {
                                 </div>
                               )}
                               {calc.totals.additionalsFees > 0 && (
-                                <div className="pt-2 border-t border-gray-100">
+                                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
                                   <div className="flex justify-between text-[13px]">
-                                    <span className="text-gray-600">Additionals Fee</span>
-                                    <span className="font-medium text-gray-900">{formatCurrency(calc.totals.additionalsFees)}</span>
+                                    <span className="text-gray-600 dark:text-gray-400">Additionals Fee</span>
+                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(calc.totals.additionalsFees)}</span>
                                   </div>
                                   <p className="text-[11px] text-gray-400 mt-0.5">
                                     {Math.round(calc.details.additionalsFeeRate * 100)}% on {formatCurrency(calc.details.additionalsBase)}
@@ -1385,10 +1385,10 @@ export default function PricingCalculatorPage() {
                                 </div>
                               )}
                               {calc.totals.assetsFees > 0 && (
-                                <div className="pt-2 border-t border-gray-100">
+                                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
                                   <div className="flex justify-between text-[13px]">
-                                    <span className="text-gray-600">Assets Fee</span>
-                                    <span className="font-medium text-gray-900">{formatCurrency(calc.totals.assetsFees)}</span>
+                                    <span className="text-gray-600 dark:text-gray-400">Assets Fee</span>
+                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(calc.totals.assetsFees)}</span>
                                   </div>
                                   <p className="text-[11px] text-gray-400 mt-0.5">
                                     {Math.round(calc.details.assetsFeeRate * 100)}% on {formatCurrency(calc.details.assetsBase)}
@@ -1402,8 +1402,8 @@ export default function PricingCalculatorPage() {
                           {s.key === 'eor' && calc.details && (
                             <div className="space-y-2">
                               <div className="flex justify-between text-[13px]">
-                                <span className="text-gray-600">Monthly EOR Fees</span>
-                                <span className="font-medium text-gray-900">{formatCurrency(calc.totals.monthlyFees)}</span>
+                                <span className="text-gray-600 dark:text-gray-400">Monthly EOR Fees</span>
+                                <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(calc.totals.monthlyFees)}</span>
                               </div>
                               <p className="text-[11px] text-gray-400">
                                 {formatCurrency(calc.details.monthlyFeePerPerson)}/mo × {calc.details.totalEmployees} employee{calc.details.totalEmployees !== 1 ? 's' : ''} × {years * 12} months
@@ -1416,18 +1416,18 @@ export default function PricingCalculatorPage() {
                             <div className="space-y-2">
                               <div>
                                 <div className="flex justify-between text-[13px]">
-                                  <span className="text-gray-600">Monthly Retainer</span>
-                                  <span className="font-medium text-gray-900">{formatCurrency(calc.details.retainerTotal)}</span>
+                                  <span className="text-gray-600 dark:text-gray-400">Monthly Retainer</span>
+                                  <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(calc.details.retainerTotal)}</span>
                                 </div>
                                 <p className="text-[11px] text-gray-400 mt-0.5">
                                   {formatCurrency(calc.details.retainerMonthly)}/mo × {years * 12} months
                                 </p>
                               </div>
                               {calc.details.regularHires > 0 && (
-                                <div className="pt-2 border-t border-gray-100">
+                                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
                                   <div className="flex justify-between text-[13px]">
-                                    <span className="text-gray-600">Regular Placements</span>
-                                    <span className="font-medium text-gray-900">{formatCurrency(calc.details.regularFee)}</span>
+                                    <span className="text-gray-600 dark:text-gray-400">Regular Placements</span>
+                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(calc.details.regularFee)}</span>
                                   </div>
                                   <p className="text-[11px] text-gray-400 mt-0.5">
                                     {Math.round(calc.details.regularFeeRate * 100)}% on {formatCurrency(calc.details.regularSalary)} ({calc.details.regularHires} hire{calc.details.regularHires !== 1 ? 's' : ''})
@@ -1435,10 +1435,10 @@ export default function PricingCalculatorPage() {
                                 </div>
                               )}
                               {calc.details.csuiteHires > 0 && (
-                                <div className="pt-2 border-t border-gray-100">
+                                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
                                   <div className="flex justify-between text-[13px]">
-                                    <span className="text-gray-600">C-Suite Placements</span>
-                                    <span className="font-medium text-gray-900">{formatCurrency(calc.details.csuiteFee)}</span>
+                                    <span className="text-gray-600 dark:text-gray-400">C-Suite Placements</span>
+                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(calc.details.csuiteFee)}</span>
                                   </div>
                                   <p className="text-[11px] text-gray-400 mt-0.5">
                                     {Math.round(calc.details.csuiteFeeRate * 100)}% on {formatCurrency(calc.details.csuiteSalary)} ({calc.details.csuiteHires} hire{calc.details.csuiteHires !== 1 ? 's' : ''})
@@ -1454,8 +1454,8 @@ export default function PricingCalculatorPage() {
                               {calc.details.regularHires > 0 && (
                                 <div>
                                   <div className="flex justify-between text-[13px]">
-                                    <span className="text-gray-600">Regular Placements</span>
-                                    <span className="font-medium text-gray-900">{formatCurrency(calc.details.regularFee)}</span>
+                                    <span className="text-gray-600 dark:text-gray-400">Regular Placements</span>
+                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(calc.details.regularFee)}</span>
                                   </div>
                                   <p className="text-[11px] text-gray-400 mt-0.5">
                                     {Math.round(calc.details.regularFeeRate * 100)}% on {formatCurrency(calc.details.regularSalary)} ({calc.details.regularHires} hire{calc.details.regularHires !== 1 ? 's' : ''})
@@ -1463,10 +1463,10 @@ export default function PricingCalculatorPage() {
                                 </div>
                               )}
                               {calc.details.csuiteHires > 0 && (
-                                <div className={calc.details.regularHires > 0 ? 'pt-2 border-t border-gray-100' : ''}>
+                                <div className={calc.details.regularHires > 0 ? 'pt-2 border-t border-gray-100 dark:border-gray-700' : ''}>
                                   <div className="flex justify-between text-[13px]">
-                                    <span className="text-gray-600">C-Suite Placements</span>
-                                    <span className="font-medium text-gray-900">{formatCurrency(calc.details.csuiteFee)}</span>
+                                    <span className="text-gray-600 dark:text-gray-400">C-Suite Placements</span>
+                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(calc.details.csuiteFee)}</span>
                                   </div>
                                   <p className="text-[11px] text-gray-400 mt-0.5">
                                     {Math.round(calc.details.csuiteFeeRate * 100)}% on {formatCurrency(calc.details.csuiteSalary)} ({calc.details.csuiteHires} hire{calc.details.csuiteHires !== 1 ? 's' : ''})
@@ -1478,15 +1478,15 @@ export default function PricingCalculatorPage() {
                         </div>
 
                         {/* Features */}
-                        <div className="px-5 py-4 border-b border-gray-100">
-                          <div className="text-[11px] text-gray-500 uppercase tracking-wide mb-2">Includes</div>
+                        <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+                          <div className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Includes</div>
                           <div className="space-y-1">
                             {features
                               .filter((feature) => serviceFeatures[s.key as keyof typeof serviceFeatures]?.[feature.name])
                               .map((feature) => (
                                 <div key={feature.name} className="flex items-center gap-2 text-[12px]">
                                   <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-                                  <span className="text-gray-700">{feature.name}</span>
+                                  <span className="text-gray-700 dark:text-gray-300">{feature.name}</span>
                                 </div>
                               ))}
                           </div>

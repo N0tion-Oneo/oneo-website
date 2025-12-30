@@ -148,10 +148,10 @@ export default function BlogPostPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <Navbar />
         <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
         </div>
       </div>
     )
@@ -160,18 +160,18 @@ export default function BlogPostPage() {
   // Error/Not found state
   if (error || !post) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <Navbar />
         <div className="max-w-3xl mx-auto px-6 py-16">
           <div className="text-center">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h1 className="text-[24px] font-semibold text-gray-900 mb-2">Article Not Found</h1>
-            <p className="text-[15px] text-gray-500 mb-6">
+            <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h1 className="text-[24px] font-semibold text-gray-900 dark:text-gray-100 mb-2">Article Not Found</h1>
+            <p className="text-[15px] text-gray-500 dark:text-gray-400 mb-6">
               The article you're looking for doesn't exist or has been removed.
             </p>
             <Link
               to="/blog"
-              className="inline-flex items-center gap-2 text-[14px] text-gray-600 hover:text-gray-900"
+              className="inline-flex items-center gap-2 text-[14px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Blog
@@ -183,7 +183,7 @@ export default function BlogPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <SEO
         title={post.meta_title || undefined}
         description={post.meta_description || undefined}
@@ -204,9 +204,9 @@ export default function BlogPostPage() {
 
       {/* Preview Banner */}
       {isPreview && (
-        <div className="bg-amber-50 border-b border-amber-100">
+        <div className="bg-amber-50 dark:bg-amber-900/30 border-b border-amber-100 dark:border-amber-800">
           <div className="max-w-5xl mx-auto px-6 py-2">
-            <div className="flex items-center justify-center gap-2 text-[13px] text-amber-700">
+            <div className="flex items-center justify-center gap-2 text-[13px] text-amber-700 dark:text-amber-400">
               <Eye className="w-4 h-4" />
               <span>Preview Mode</span>
             </div>
@@ -314,7 +314,7 @@ export default function BlogPostPage() {
           {headers.length > 0 && (
             <aside className="hidden lg:block w-64 flex-shrink-0">
               <div className="sticky top-24">
-                <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-4">
+                <h3 className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">
                   On this page
                 </h3>
                 <nav className="space-y-1">
@@ -322,7 +322,7 @@ export default function BlogPostPage() {
                     <a
                       key={header.id}
                       href={`#${header.id}`}
-                      className={`block text-[13px] text-gray-500 hover:text-gray-900 transition-colors py-1 ${
+                      className={`block text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors py-1 ${
                         header.level === 3 ? 'pl-4' : ''
                       }`}
                     >
@@ -339,8 +339,8 @@ export default function BlogPostPage() {
           <article className="flex-1 min-w-0">
             {/* Mobile Table of Contents */}
             {headers.length > 0 && (
-              <div className="lg:hidden mb-8 p-4 bg-gray-50 rounded-lg">
-                <h3 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              <div className="lg:hidden mb-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <h3 className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
                   Contents
                 </h3>
                 <nav className="space-y-1">
@@ -348,7 +348,7 @@ export default function BlogPostPage() {
                     <a
                       key={header.id}
                       href={`#${header.id}`}
-                      className="block text-[13px] text-gray-600 hover:text-gray-900 py-0.5"
+                      className="block text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 py-0.5"
                     >
                       {header.text}
                     </a>
@@ -361,12 +361,12 @@ export default function BlogPostPage() {
 
             {/* Tags */}
             {post.tags && post.tags.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap mt-10 pt-8 border-t border-gray-100">
+              <div className="flex items-center gap-2 flex-wrap mt-10 pt-8 border-t border-gray-100 dark:border-gray-700">
                 {post.tags.map((tag) => (
                   <Link
                     key={tag}
                     to={`/blog?tag=${encodeURIComponent(tag)}`}
-                    className="px-3 py-1 text-[12px] bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors"
+                    className="px-3 py-1 text-[12px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
                     {tag}
                   </Link>
@@ -376,7 +376,7 @@ export default function BlogPostPage() {
 
             {/* FAQ Section */}
             {post.faqs && post.faqs.length > 0 && (
-              <div className="mt-12 pt-8 border-t border-gray-100">
+              <div className="mt-12 pt-8 border-t border-gray-100 dark:border-gray-700">
                 <FAQWidget faqs={post.faqs} includeSchema={true} />
               </div>
             )}
@@ -387,9 +387,9 @@ export default function BlogPostPage() {
 
       {/* Related Articles */}
       {relatedPosts.length > 0 && (
-        <div className="border-t border-gray-100 bg-gray-50">
+        <div className="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
           <div className="max-w-5xl mx-auto px-6 py-12">
-            <h3 className="text-[13px] font-semibold text-gray-400 uppercase tracking-wider mb-6">
+            <h3 className="text-[13px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-6">
               Related Articles
             </h3>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -397,10 +397,10 @@ export default function BlogPostPage() {
                 <Link
                   key={relatedPost.id}
                   to={`/blog/${relatedPost.slug}`}
-                  className="p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
+                  className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm dark:hover:shadow-gray-900/40 transition-all"
                 >
-                  <p className="text-[14px] font-medium text-gray-900 line-clamp-2">{relatedPost.title}</p>
-                  <p className="text-[12px] text-gray-500 mt-1 line-clamp-2">{relatedPost.excerpt}</p>
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100 line-clamp-2">{relatedPost.title}</p>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{relatedPost.excerpt}</p>
                 </Link>
               ))}
             </div>
@@ -409,17 +409,17 @@ export default function BlogPostPage() {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 py-8">
+      <footer className="border-t border-gray-100 dark:border-gray-700 py-8 bg-white dark:bg-gray-900">
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <Link
               to="/blog"
-              className="inline-flex items-center gap-2 text-[13px] text-gray-500 hover:text-gray-900 transition-colors"
+              className="inline-flex items-center gap-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Blog
             </Link>
-            <p className="text-[13px] text-gray-400">
+            <p className="text-[13px] text-gray-400 dark:text-gray-500">
               © {new Date().getFullYear()} {seoDefaults.companyName}. All rights reserved.
             </p>
           </div>

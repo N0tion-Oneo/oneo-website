@@ -148,7 +148,7 @@ export default function SettingsLayout() {
     <div className="flex h-full -mx-6 -mt-6">
       {/* Settings Secondary Sidebar */}
       <aside
-        className={`flex-shrink-0 border-r border-gray-200 bg-gray-50/50 transition-all duration-200 ${
+        className={`flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 transition-all duration-200 ${
           isCollapsed ? 'w-16' : 'w-56'
         }`}
       >
@@ -158,7 +158,7 @@ export default function SettingsLayout() {
             {!isCollapsed && (
               <Link
                 to="/dashboard"
-                className="inline-flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900"
+                className="inline-flex items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Back
@@ -166,7 +166,7 @@ export default function SettingsLayout() {
             )}
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+              className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
               title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {isCollapsed ? (
@@ -182,7 +182,7 @@ export default function SettingsLayout() {
             {sections.map((section) => (
               <div key={section.title}>
                 {!isCollapsed && (
-                  <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2 px-3">
+                  <h3 className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 px-3">
                     {section.title}
                   </h3>
                 )}
@@ -195,13 +195,13 @@ export default function SettingsLayout() {
                         isCollapsed ? 'justify-center' : ''
                       } ${
                         isActive(item.href)
-                          ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                          : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                          ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm dark:shadow-gray-900/20 border border-gray-200 dark:border-gray-700'
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100'
                       }`}
                     >
                       <span
                         className={
-                          isActive(item.href) ? 'text-gray-700' : 'text-gray-400'
+                          isActive(item.href) ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'
                         }
                       >
                         {item.icon}
@@ -210,7 +210,7 @@ export default function SettingsLayout() {
 
                       {/* Tooltip for collapsed state */}
                       {isCollapsed && (
-                        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-[12px] rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-[12px] rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
                           {item.name}
                         </div>
                       )}

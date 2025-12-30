@@ -4,8 +4,8 @@ export default function IntegrationsPage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Integrations</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Integrations</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Connect external services to automate your workflow
         </p>
       </div>

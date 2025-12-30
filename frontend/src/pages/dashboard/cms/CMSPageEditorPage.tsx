@@ -162,10 +162,10 @@ export default function CMSPageEditorPage() {
   // Access check
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to edit CMS pages.
         </p>
       </div>
@@ -184,12 +184,12 @@ export default function CMSPageEditorPage() {
   // Error state
   if (!isNew && pageError) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Page not found</p>
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Page not found</p>
         <Link
           to="/dashboard/cms/pages"
-          className="text-[13px] text-gray-500 hover:text-gray-700 underline"
+          className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline"
         >
           Back to pages
         </Link>
@@ -203,22 +203,22 @@ export default function CMSPageEditorPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 -mx-6 px-6 py-3">
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 -mx-6 px-6 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               to="/dashboard/cms/pages"
-              className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700"
+              className="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
             </Link>
-            <div className="h-4 w-px bg-gray-200" />
-            <h1 className="text-[16px] font-medium text-gray-900">
+            <div className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
+            <h1 className="text-[16px] font-medium text-gray-900 dark:text-gray-100">
               {isNew ? 'New Page' : 'Edit Page'}
             </h1>
             {hasChanges && (
-              <span className="text-[11px] text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+              <span className="text-[11px] text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 px-2 py-0.5 rounded">
                 Unsaved changes
               </span>
             )}
@@ -229,7 +229,7 @@ export default function CMSPageEditorPage() {
             <select
               value={formData.status}
               onChange={(e) => handleChange('status', e.target.value)}
-              className="px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+              className="px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -243,8 +243,8 @@ export default function CMSPageEditorPage() {
               onClick={() => setShowSettings(!showSettings)}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] border rounded-md transition-colors ${
                 showSettings
-                  ? 'border-gray-300 bg-gray-100 text-gray-700'
-                  : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                  ? 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
               <Settings2 className="w-4 h-4" />
@@ -256,7 +256,7 @@ export default function CMSPageEditorPage() {
               <Link
                 to={`/${page.slug}`}
                 target="_blank"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] border border-gray-200 text-gray-500 rounded-md hover:bg-gray-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 <Eye className="w-4 h-4" />
                 Preview
@@ -267,7 +267,7 @@ export default function CMSPageEditorPage() {
             <button
               onClick={handleSubmit}
               disabled={isSaving}
-              className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -290,7 +290,7 @@ export default function CMSPageEditorPage() {
             placeholder="Page Title"
             value={formData.title}
             onChange={(e) => handleTitleChange(e.target.value)}
-            className="w-full text-[28px] font-semibold text-gray-900 placeholder-gray-300 border-0 focus:outline-none focus:ring-0 mb-4"
+            className="w-full text-[28px] font-semibold text-gray-900 dark:text-gray-100 placeholder-gray-300 dark:placeholder-gray-600 bg-transparent border-0 focus:outline-none focus:ring-0 mb-4"
           />
 
           {/* Excerpt */}
@@ -299,7 +299,7 @@ export default function CMSPageEditorPage() {
             value={formData.excerpt}
             onChange={(e) => handleChange('excerpt', e.target.value)}
             rows={2}
-            className="w-full text-[14px] text-gray-600 placeholder-gray-400 border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-300 mb-4 resize-none"
+            className="w-full text-[14px] text-gray-600 dark:text-gray-400 placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 mb-4 resize-none"
           />
 
           {/* Block Editor - key ensures fresh instance for each page */}
@@ -317,34 +317,34 @@ export default function CMSPageEditorPage() {
         {/* Settings Sidebar */}
         {showSettings && (
           <div className="w-80 flex-shrink-0">
-            <div className="bg-white border border-gray-200 rounded-lg p-4 sticky top-20">
-              <h3 className="text-[14px] font-medium text-gray-900 mb-4">Page Settings</h3>
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sticky top-20">
+              <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-4">Page Settings</h3>
 
               {/* Slug */}
               <div className="mb-4">
-                <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                   URL Slug
                 </label>
                 <div className="flex items-center">
-                  <span className="text-[12px] text-gray-500 mr-1">/</span>
+                  <span className="text-[12px] text-gray-500 dark:text-gray-400 mr-1">/</span>
                   <input
                     type="text"
                     value={formData.slug}
                     onChange={(e) => handleChange('slug', e.target.value)}
-                    className="flex-1 px-2 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    className="flex-1 px-2 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
                   />
                 </div>
               </div>
 
               {/* Page Type */}
               <div className="mb-4">
-                <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Page Type
                 </label>
                 <select
                   value={formData.page_type}
                   onChange={(e) => handleChange('page_type', e.target.value)}
-                  className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  className="w-full px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
                 >
                   {TYPE_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -361,32 +361,32 @@ export default function CMSPageEditorPage() {
                     type="checkbox"
                     checked={formData.show_in_navigation}
                     onChange={(e) => handleChange('show_in_navigation', e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:focus:ring-gray-400"
                   />
-                  <span className="text-[12px] text-gray-700">Show in navigation</span>
+                  <span className="text-[12px] text-gray-700 dark:text-gray-300">Show in navigation</span>
                 </label>
               </div>
 
               {formData.show_in_navigation && (
                 <div className="mb-4">
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Navigation Order
                   </label>
                   <input
                     type="number"
                     value={formData.navigation_order}
                     onChange={(e) => handleChange('navigation_order', parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
                   />
                 </div>
               )}
 
               {/* SEO Section */}
-              <div className="border-t border-gray-200 mt-4 pt-4">
-                <h4 className="text-[12px] font-medium text-gray-900 mb-3">SEO</h4>
+              <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4">
+                <h4 className="text-[12px] font-medium text-gray-900 dark:text-gray-100 mb-3">SEO</h4>
 
                 <div className="mb-4">
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Meta Title
                   </label>
                   <input
@@ -395,15 +395,15 @@ export default function CMSPageEditorPage() {
                     onChange={(e) => handleChange('meta_title', e.target.value)}
                     placeholder={formData.title || 'Page title'}
                     maxLength={60}
-                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
                   />
-                  <span className="text-[10px] text-gray-400 mt-1">
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
                     {(formData.meta_title || formData.title).length}/60 · "{seoDefaults.titleSuffix}" added automatically
                   </span>
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1">
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Meta Description
                   </label>
                   <textarea
@@ -412,9 +412,9 @@ export default function CMSPageEditorPage() {
                     placeholder={formData.excerpt || 'Page description for search engines'}
                     maxLength={160}
                     rows={3}
-                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 resize-none"
+                    className="w-full px-3 py-1.5 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 resize-none"
                   />
-                  <span className="text-[10px] text-gray-400 mt-1">
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
                     {(formData.meta_description || formData.excerpt).length}/160
                   </span>
                 </div>
@@ -422,9 +422,9 @@ export default function CMSPageEditorPage() {
 
               {/* Page Info (for existing pages) */}
               {!isNew && page && (
-                <div className="border-t border-gray-200 mt-4 pt-4">
-                  <h4 className="text-[12px] font-medium text-gray-900 mb-3">Info</h4>
-                  <div className="space-y-2 text-[11px] text-gray-500">
+                <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4">
+                  <h4 className="text-[12px] font-medium text-gray-900 dark:text-gray-100 mb-3">Info</h4>
+                  <div className="space-y-2 text-[11px] text-gray-500 dark:text-gray-400">
                     <p>
                       Created: {new Date(page.created_at).toLocaleString()}
                       {page.created_by_name && ` by ${page.created_by_name}`}

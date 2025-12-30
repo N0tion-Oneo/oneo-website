@@ -16,22 +16,22 @@ export default function EditJobPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+        <Loader2 className="w-6 h-6 text-gray-400 dark:text-gray-500 animate-spin" />
       </div>
     )
   }
 
   if (error || !job) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-        <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-1">Job not found</p>
-        <p className="text-[13px] text-gray-500 mb-4">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+        <Briefcase className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">Job not found</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
           This job may have been deleted or you don't have access to it
         </p>
         <button
           onClick={() => navigate('/dashboard/jobs')}
-          className="inline-flex items-center gap-2 text-[13px] font-medium text-gray-900 hover:text-gray-700"
+          className="inline-flex items-center gap-2 text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Jobs
@@ -46,17 +46,17 @@ export default function EditJobPage() {
       <div className="mb-6">
         <button
           onClick={() => navigate('/dashboard/jobs')}
-          className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700 mb-3"
+          className="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 mb-3"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Jobs
         </button>
-        <h1 className="text-[20px] font-semibold text-gray-900">Edit Job</h1>
-        <p className="text-[13px] text-gray-500 mt-0.5">{job.title}</p>
+        <h1 className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">Edit Job</h1>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">{job.title}</p>
       </div>
 
       {/* Form */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
         <JobForm job={job} companyId={job.company.id} onSuccess={handleSuccess} />
       </div>
     </div>

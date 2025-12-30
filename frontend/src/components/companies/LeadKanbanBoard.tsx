@@ -148,16 +148,16 @@ function LeadCard({ lead, dragHandleProps, onClick }: LeadCardProps) {
       cold_outreach: 'bg-orange-100 text-orange-700',
       event: 'bg-pink-100 text-pink-700',
       website: 'bg-cyan-100 text-cyan-700',
-      other: 'bg-gray-100 text-gray-700',
+      other: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
     }
-    return colors[source] || 'bg-gray-100 text-gray-700'
+    return colors[source] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
   }
 
   return (
     <div
       {...dragHandleProps}
       onClick={handleCardClick}
-      className="bg-white border border-gray-200 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md p-3 shadow-sm dark:shadow-gray-900/20 hover:shadow-md transition-shadow cursor-pointer"
     >
       {/* Card Header */}
       <div className="flex items-start justify-between mb-2">
@@ -167,33 +167,33 @@ function LeadCard({ lead, dragHandleProps, onClick }: LeadCardProps) {
             <User className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] font-medium text-gray-900 hover:text-gray-700 truncate">
+            <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300 truncate">
               {lead.name}
             </p>
           </div>
         </div>
-        <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
+        <GripVertical className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
       </div>
 
       {/* Card Body */}
       <div className="space-y-1.5 mb-2">
         {/* Company */}
         {lead.company_name && lead.company_name !== 'Not provided' && (
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
             <Building2 className="w-3 h-3 flex-shrink-0" />
             <span className="truncate">{lead.company_name}</span>
           </div>
         )}
 
         {/* Email */}
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
           <Mail className="w-3 h-3 flex-shrink-0" />
           <span className="truncate">{lead.email}</span>
         </div>
 
         {/* Phone */}
         {lead.phone && (
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
             <Phone className="w-3 h-3 flex-shrink-0" />
             <span className="truncate">{lead.phone}</span>
           </div>
@@ -201,7 +201,7 @@ function LeadCard({ lead, dragHandleProps, onClick }: LeadCardProps) {
 
         {/* Job Title */}
         {lead.job_title && (
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
             <Briefcase className="w-3 h-3 flex-shrink-0" />
             <span className="truncate">{lead.job_title}</span>
           </div>
@@ -209,7 +209,7 @@ function LeadCard({ lead, dragHandleProps, onClick }: LeadCardProps) {
 
         {/* Created Date */}
         {lead.created_at && (
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
             <Calendar className="w-3 h-3 flex-shrink-0" />
             <span>Added {formatDate(lead.created_at)}</span>
           </div>
@@ -225,25 +225,25 @@ function LeadCard({ lead, dragHandleProps, onClick }: LeadCardProps) {
 
       {/* Assigned To */}
       {lead.assigned_to && lead.assigned_to.length > 0 && (
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-1.5">
             <div className="flex -space-x-1">
               {lead.assigned_to.slice(0, 3).map((user) => (
                 <div
                   key={user.id}
                   title={user.full_name}
-                  className="w-5 h-5 rounded-full border border-white bg-gray-200 flex items-center justify-center text-[8px] font-medium text-gray-600"
+                  className="w-5 h-5 rounded-full border border-white dark:border-gray-900 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[8px] font-medium text-gray-600 dark:text-gray-400"
                 >
                   {user.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                 </div>
               ))}
               {lead.assigned_to.length > 3 && (
-                <div className="w-5 h-5 rounded-full border border-white bg-gray-300 flex items-center justify-center text-[8px] font-medium text-gray-600">
+                <div className="w-5 h-5 rounded-full border border-white dark:border-gray-900 bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-[8px] font-medium text-gray-600 dark:text-gray-400">
                   +{lead.assigned_to.length - 3}
                 </div>
               )}
             </div>
-            <span className="text-[10px] text-gray-500">
+            <span className="text-[10px] text-gray-500 dark:text-gray-400">
               {lead.assigned_to.length === 1
                 ? lead.assigned_to[0]?.full_name
                 : `${lead.assigned_to.length} assigned`}

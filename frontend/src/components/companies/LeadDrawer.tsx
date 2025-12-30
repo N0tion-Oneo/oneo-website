@@ -117,9 +117,9 @@ function getSourceBadgeColor(source: string): string {
     outbound: 'bg-blue-100 text-blue-700',
     event: 'bg-orange-100 text-orange-700',
     linkedin: 'bg-cyan-100 text-cyan-700',
-    other: 'bg-gray-100 text-gray-600',
+    other: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
   }
-  return colors[source] || 'bg-gray-100 text-gray-600'
+  return colors[source] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
 }
 
 function getCompanySizeLabel(size: string | null): string {
@@ -181,9 +181,9 @@ function getActivityColor(activityType: string): string {
     case 'assigned':
       return 'bg-orange-100 text-orange-600'
     case 'created':
-      return 'bg-gray-100 text-gray-600'
+      return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
     default:
-      return 'bg-gray-100 text-gray-600'
+      return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
   }
 }
 
@@ -195,7 +195,7 @@ function ActivityTimelineEntry({ activity }: { activity: LeadActivity }) {
     switch (activity.activity_type) {
       case 'stage_changed':
         return (
-          <div className="flex items-center gap-2 text-[13px] text-gray-700">
+          <div className="flex items-center gap-2 text-[13px] text-gray-700 dark:text-gray-300">
             {activity.previous_stage_name && activity.previous_stage_color && (
               <>
                 <span
@@ -207,7 +207,7 @@ function ActivityTimelineEntry({ activity }: { activity: LeadActivity }) {
                 >
                   {activity.previous_stage_name}
                 </span>
-                <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                <ArrowRight className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
               </>
             )}
             {activity.new_stage_name && activity.new_stage_color && (
@@ -227,11 +227,11 @@ function ActivityTimelineEntry({ activity }: { activity: LeadActivity }) {
       case 'call_logged':
       case 'email_sent':
         return activity.content && (
-          <p className="text-[13px] text-gray-600 mt-1 whitespace-pre-wrap">{activity.content}</p>
+          <p className="text-[13px] text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap">{activity.content}</p>
         )
       default:
         return activity.content && (
-          <p className="text-[13px] text-gray-600 mt-1">{activity.content}</p>
+          <p className="text-[13px] text-gray-600 dark:text-gray-400 mt-1">{activity.content}</p>
         )
     }
   }
@@ -243,15 +243,15 @@ function ActivityTimelineEntry({ activity }: { activity: LeadActivity }) {
       </div>
       <div className="pb-4">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-medium text-gray-900">
+          <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100">
             {activity.activity_type_display}
           </span>
-          <span className="text-[12px] text-gray-400">
+          <span className="text-[12px] text-gray-400 dark:text-gray-500">
             {formatDateTime(activity.created_at)}
           </span>
         </div>
         {activity.performer_name && (
-          <p className="text-[12px] text-gray-500">by {activity.performer_name}</p>
+          <p className="text-[12px] text-gray-500 dark:text-gray-400">by {activity.performer_name}</p>
         )}
         {renderActivityContent()}
       </div>
@@ -545,7 +545,7 @@ export default function LeadDrawer({
         {!lead.is_converted && (
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
           >
             <Trash2 className="w-3.5 h-3.5" />
             Delete
@@ -581,14 +581,14 @@ export default function LeadDrawer({
           </button>
 
           {isStageDropdownOpen && (
-            <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
+            <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 z-10 py-1">
               {stages.map((stage) => (
                 <button
                   key={stage.id}
                   onClick={() => handleStageChange(stage.id)}
                   disabled={lead.onboarding_stage?.id === stage.id}
-                  className={`w-full text-left px-3 py-2 text-[12px] hover:bg-gray-50 ${
-                    lead.onboarding_stage?.id === stage.id ? 'bg-gray-50 font-medium' : ''
+                  className={`w-full text-left px-3 py-2 text-[12px] hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                    lead.onboarding_stage?.id === stage.id ? 'bg-gray-50 dark:bg-gray-800 font-medium' : ''
                   }`}
                 >
                   <span
@@ -641,8 +641,8 @@ export default function LeadDrawer({
     return (
       <>
         <div className="fixed inset-0 bg-black/30 z-[200]" onClick={onClose} />
-        <div className="fixed inset-y-0 right-0 w-1/2 min-w-[640px] bg-white shadow-xl z-[201] flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        <div className="fixed inset-y-0 right-0 w-1/2 min-w-[640px] bg-white dark:bg-gray-900 shadow-xl z-[201] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
         </div>
       </>
     )
@@ -765,7 +765,7 @@ function OverviewPanel({
     <div className="p-6 space-y-6">
       {/* Assigned To */}
       <div>
-        <h3 className="text-[13px] font-medium text-gray-900 mb-2">Assigned To</h3>
+        <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100 mb-2">Assigned To</h3>
         <AssignedSelect
           selected={lead.assigned_to as AssignedUser[]}
           onChange={handleAssignedChange}
@@ -775,29 +775,29 @@ function OverviewPanel({
 
       {/* Contact Information */}
       <div>
-        <h3 className="text-[13px] font-medium text-gray-900 mb-2">Contact Information</h3>
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+        <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100 mb-2">Contact Information</h3>
+        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
           <a
             href={`mailto:${lead.email}`}
-            className="flex items-center gap-2 text-[13px] text-gray-700 hover:text-gray-900"
+            className="flex items-center gap-2 text-[13px] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
           >
-            <Mail className="w-4 h-4 text-gray-400" />
+            <Mail className="w-4 h-4 text-gray-400 dark:text-gray-500" />
             {lead.email}
-            <ExternalLink className="w-3 h-3 ml-auto text-gray-400" />
+            <ExternalLink className="w-3 h-3 ml-auto text-gray-400 dark:text-gray-500" />
           </a>
           {lead.phone && (
             <a
               href={`tel:${lead.phone}`}
-              className="flex items-center gap-2 text-[13px] text-gray-700 hover:text-gray-900"
+              className="flex items-center gap-2 text-[13px] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
             >
-              <Phone className="w-4 h-4 text-gray-400" />
+              <Phone className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               {lead.phone}
-              <ExternalLink className="w-3 h-3 ml-auto text-gray-400" />
+              <ExternalLink className="w-3 h-3 ml-auto text-gray-400 dark:text-gray-500" />
             </a>
           )}
           {lead.job_title && (
-            <div className="flex items-center gap-2 text-[13px] text-gray-600">
-              <Briefcase className="w-4 h-4 text-gray-400" />
+            <div className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400">
+              <Briefcase className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               {lead.job_title}
             </div>
           )}
@@ -806,10 +806,10 @@ function OverviewPanel({
 
       {/* Company Information */}
       <div>
-        <h3 className="text-[13px] font-medium text-gray-900 mb-2">Company Information</h3>
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
-          <div className="flex items-center gap-2 text-[13px] text-gray-900 font-medium">
-            <Building2 className="w-4 h-4 text-gray-400" />
+        <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100 mb-2">Company Information</h3>
+        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+          <div className="flex items-center gap-2 text-[13px] text-gray-900 dark:text-gray-100 font-medium">
+            <Building2 className="w-4 h-4 text-gray-400 dark:text-gray-500" />
             {lead.company_name}
           </div>
           {lead.company_website && (
@@ -819,19 +819,19 @@ function OverviewPanel({
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-[13px] text-blue-600 hover:text-blue-800"
             >
-              <Globe className="w-4 h-4 text-gray-400" />
+              <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               {lead.company_website}
               <ExternalLink className="w-3 h-3 ml-auto" />
             </a>
           )}
-          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200">
+          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200 dark:border-gray-700">
             <div>
-              <p className="text-[11px] text-gray-500 uppercase tracking-wide">Company Size</p>
-              <p className="text-[13px] text-gray-900 mt-0.5">{getCompanySizeLabel(lead.company_size)}</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Company Size</p>
+              <p className="text-[13px] text-gray-900 dark:text-gray-100 mt-0.5">{getCompanySizeLabel(lead.company_size)}</p>
             </div>
             <div>
-              <p className="text-[11px] text-gray-500 uppercase tracking-wide">Industry</p>
-              <p className="text-[13px] text-gray-900 mt-0.5">{lead.industry_name || 'Not specified'}</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Industry</p>
+              <p className="text-[13px] text-gray-900 dark:text-gray-100 mt-0.5">{lead.industry_name || 'Not specified'}</p>
             </div>
           </div>
         </div>
@@ -840,14 +840,14 @@ function OverviewPanel({
       {/* Admin Status (for inbound leads) */}
       {lead.source === 'inbound' && (
         <div>
-          <h3 className="text-[13px] font-medium text-gray-900 mb-2">Admin Status</h3>
+          <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100 mb-2">Admin Status</h3>
           <div className="flex gap-3">
             <button
               onClick={handleToggleRead}
               className={`flex items-center gap-2 px-3 py-2 text-[12px] font-medium rounded-lg border transition-colors ${
                 lead.is_read
                   ? 'bg-green-50 border-green-200 text-green-700'
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
               {lead.is_read ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -858,7 +858,7 @@ function OverviewPanel({
               className={`flex items-center gap-2 px-3 py-2 text-[12px] font-medium rounded-lg border transition-colors ${
                 lead.is_replied
                   ? 'bg-blue-50 border-blue-200 text-blue-700'
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
               {lead.is_replied ? <CheckCircle className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
@@ -871,9 +871,9 @@ function OverviewPanel({
       {/* Notes */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-[13px] font-medium text-gray-900">Notes</h3>
+          <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100">Notes</h3>
           {!isEditingNotes && (
-            <button onClick={() => setIsEditingNotes(true)} className="text-gray-400 hover:text-gray-600">
+            <button onClick={() => setIsEditingNotes(true)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
               <Edit className="w-3.5 h-3.5" />
             </button>
           )}
@@ -884,7 +884,7 @@ function OverviewPanel({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 text-[13px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full px-3 py-2 text-[13px] border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               placeholder="Add notes about this lead..."
             />
             <div className="flex gap-2">
@@ -900,18 +900,18 @@ function OverviewPanel({
                   setNotes(lead.notes || '')
                   setIsEditingNotes(false)
                 }}
-                className="px-3 py-1.5 text-[12px] font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                className="px-3 py-1.5 text-[12px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 Cancel
               </button>
             </div>
           </div>
         ) : (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
             {lead.notes ? (
-              <p className="text-[13px] text-gray-700 whitespace-pre-wrap">{lead.notes}</p>
+              <p className="text-[13px] text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{lead.notes}</p>
             ) : (
-              <p className="text-[13px] text-gray-400 italic">No notes yet</p>
+              <p className="text-[13px] text-gray-400 dark:text-gray-500 italic">No notes yet</p>
             )}
           </div>
         )}
@@ -920,7 +920,7 @@ function OverviewPanel({
       {/* Conversion Info */}
       {lead.is_converted && (
         <div>
-          <h3 className="text-[13px] font-medium text-gray-900 mb-2">Conversion</h3>
+          <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100 mb-2">Conversion</h3>
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
             <div className="flex items-center gap-2 text-green-700">
               <CheckCircle className="w-5 h-5" />
@@ -942,15 +942,15 @@ function OverviewPanel({
 
       {/* Timeline */}
       <div>
-        <h3 className="text-[13px] font-medium text-gray-900 mb-2">Timeline</h3>
-        <div className="space-y-2 text-[13px] text-gray-600">
+        <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100 mb-2">Timeline</h3>
+        <div className="space-y-2 text-[13px] text-gray-600 dark:text-gray-400">
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-400" />
+            <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
             Created {formatDateTime(lead.created_at)}
-            {lead.created_by && <span className="text-gray-400">by {lead.created_by.name}</span>}
+            {lead.created_by && <span className="text-gray-400 dark:text-gray-500">by {lead.created_by.name}</span>}
           </div>
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-gray-400" />
+            <Clock className="w-4 h-4 text-gray-400 dark:text-gray-500" />
             Last updated {formatDateTime(lead.updated_at)}
           </div>
         </div>
@@ -977,7 +977,7 @@ function ActivityPanel({
     <div className="p-6 space-y-6">
       {/* Add Activity Button */}
       <div className="flex items-center justify-between">
-        <h3 className="text-[13px] font-medium text-gray-900">Activity Log</h3>
+        <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100">Activity Log</h3>
         <button
           onClick={() => setShowAddActivityModal(true)}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800"
@@ -990,21 +990,21 @@ function ActivityPanel({
       {/* Scheduled Meetings */}
       {(bookingsLoading || bookings.length > 0) && (
         <div>
-          <h4 className="text-[12px] font-medium text-gray-500 uppercase tracking-wide mb-2">Scheduled Meetings</h4>
+          <h4 className="text-[12px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Scheduled Meetings</h4>
           {bookingsLoading ? (
             <div className="flex items-center justify-center py-4">
-              <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+              <Loader2 className="w-5 h-5 animate-spin text-gray-400 dark:text-gray-500" />
             </div>
           ) : (
             <div className="space-y-2">
               {bookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg"
+                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
                 >
                   <div>
-                    <p className="text-[13px] font-medium text-gray-900">{booking.meeting_type_name}</p>
-                    <p className="text-[12px] text-gray-500">{formatDateTime(booking.scheduled_at)}</p>
+                    <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{booking.meeting_type_name}</p>
+                    <p className="text-[12px] text-gray-500 dark:text-gray-400">{formatDateTime(booking.scheduled_at)}</p>
                   </div>
                   <span className={`px-2 py-0.5 text-[11px] font-medium rounded ${
                     booking.status === 'completed' ? 'bg-green-100 text-green-700' :
@@ -1024,15 +1024,15 @@ function ActivityPanel({
       {/* Activity Timeline */}
       {activitiesLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          <Loader2 className="w-5 h-5 animate-spin text-gray-400 dark:text-gray-500" />
         </div>
       ) : activities.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 border border-gray-200 rounded-lg">
+        <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
           <History className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-          <p className="text-[13px] text-gray-500">No activity recorded yet</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">No activity recorded yet</p>
           <button
             onClick={() => setShowAddActivityModal(true)}
-            className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-gray-900"
+            className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             <Plus className="w-4 h-4" />
             Add first note
@@ -1040,7 +1040,7 @@ function ActivityPanel({
         </div>
       ) : (
         <div className="relative">
-          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
+          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-600" />
           <div className="space-y-4">
             {activities.map((activity) => (
               <ActivityTimelineEntry key={activity.id} activity={activity} />
@@ -1062,7 +1062,7 @@ function InvitationsPanel({
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-[13px] font-medium text-gray-900">Client Invitations</h3>
+        <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100">Client Invitations</h3>
         <button
           onClick={onSendInvitation}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800"
@@ -1073,12 +1073,12 @@ function InvitationsPanel({
       </div>
 
       {lead.invitations.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 border border-gray-200 rounded-lg">
+        <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
           <Send className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-          <p className="text-[13px] text-gray-500">No invitations sent yet</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">No invitations sent yet</p>
           <button
             onClick={onSendInvitation}
-            className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-gray-900"
+            className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             <Send className="w-4 h-4" />
             Send first invitation
@@ -1093,27 +1093,27 @@ function InvitationsPanel({
                 invitation.used_at
                   ? 'bg-green-50 border-green-200'
                   : invitation.is_expired
-                  ? 'bg-gray-50 border-gray-200'
+                  ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
                   : 'bg-blue-50 border-blue-200'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[13px] font-medium text-gray-900">{invitation.email}</p>
-                  <p className="text-[12px] text-gray-500">Sent {formatDateTime(invitation.created_at)}</p>
+                  <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{invitation.email}</p>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400">Sent {formatDateTime(invitation.created_at)}</p>
                 </div>
                 <span className={`px-2 py-0.5 text-[11px] font-medium rounded ${
                   invitation.used_at
                     ? 'bg-green-100 text-green-700'
                     : invitation.is_expired
-                    ? 'bg-gray-100 text-gray-600'
+                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                     : 'bg-blue-100 text-blue-700'
                 }`}>
                   {invitation.used_at ? 'Used' : invitation.is_expired ? 'Expired' : 'Pending'}
                 </span>
               </div>
               {!invitation.used_at && (
-                <p className="mt-2 text-[12px] text-gray-500">
+                <p className="mt-2 text-[12px] text-gray-500 dark:text-gray-400">
                   {invitation.is_expired ? 'Expired' : `Expires ${formatDateTime(invitation.expires_at)}`}
                 </p>
               )}
@@ -1143,15 +1143,15 @@ function DeleteConfirmModal({
   return (
     <>
       <div className="fixed inset-0 z-[300] bg-black/50" onClick={onClose} />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[301] w-full max-w-md bg-white rounded-lg shadow-xl p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Lead</h3>
-        <p className="text-[13px] text-gray-600 mb-6">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[301] w-full max-w-md bg-white dark:bg-gray-900 rounded-lg shadow-xl p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Delete Lead</h3>
+        <p className="text-[13px] text-gray-600 dark:text-gray-400 mb-6">
           Are you sure you want to delete <strong>{leadName}</strong>? This action cannot be undone.
         </p>
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-[13px] font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            className="px-4 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
           >
             Cancel
           </button>
@@ -1210,12 +1210,12 @@ function InvitationModal({
   return (
     <>
       <div className="fixed inset-0 z-[300] bg-black/50" onClick={onClose} />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[301] w-full max-w-lg bg-white rounded-lg shadow-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[301] w-full max-w-lg bg-white dark:bg-gray-900 rounded-lg shadow-xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {createdInvitationUrl ? 'Invitation Sent' : 'Send Client Invitation'}
           </h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 rounded">
+          <button onClick={onClose} className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 rounded">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -1232,14 +1232,14 @@ function InvitationModal({
               </div>
 
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Signup Link</label>
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Signup Link</label>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded text-[13px] text-gray-700 overflow-x-auto">
+                  <code className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-[13px] text-gray-700 dark:text-gray-300 overflow-x-auto">
                     {createdInvitationUrl}
                   </code>
                   <button
                     onClick={() => onCopyUrl(createdInvitationUrl)}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                    className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                   >
                     {copiedInviteUrl ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
                   </button>
@@ -1257,29 +1257,29 @@ function InvitationModal({
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-[13px] text-gray-600">
+              <p className="text-[13px] text-gray-600 dark:text-gray-400">
                 Send a client invitation to <strong>{lead.email}</strong>.
               </p>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                 <div className="grid grid-cols-2 gap-2 text-[13px]">
                   <div>
-                    <span className="text-gray-500">Name:</span>{' '}
-                    <span className="text-gray-900">{lead.name}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Name:</span>{' '}
+                    <span className="text-gray-900 dark:text-gray-100">{lead.name}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500">Company:</span>{' '}
-                    <span className="text-gray-900">{lead.company_name}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Company:</span>{' '}
+                    <span className="text-gray-900 dark:text-gray-100">{lead.company_name}</span>
                   </div>
                 </div>
               </div>
 
               {/* Contract Offer Toggle */}
-              <div className="border-t border-gray-200 pt-4">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowContractOffer(!showContractOffer)}
-                  className="flex items-center gap-2 text-[14px] font-medium text-gray-700 hover:text-gray-900"
+                  className="flex items-center gap-2 text-[14px] font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
                 >
                   <FileText className="w-4 h-4" />
                   Pre-negotiated Contract Terms
@@ -1287,7 +1287,7 @@ function InvitationModal({
                 </button>
 
                 {showContractOffer && (
-                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-4">
+                  <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg space-y-4">
                     <div className="flex gap-4">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -1314,40 +1314,40 @@ function InvitationModal({
                     <div className="grid grid-cols-3 gap-3">
                       {serviceType === 'retained' && (
                         <div>
-                          <label className="block text-[12px] font-medium text-gray-700 mb-1">Monthly Retainer</label>
+                          <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">Monthly Retainer</label>
                           <div className="relative">
-                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[13px] text-gray-500">R</span>
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[13px] text-gray-500 dark:text-gray-400">R</span>
                             <input
                               type="number"
                               value={monthlyRetainer}
                               onChange={(e) => setMonthlyRetainer(e.target.value)}
-                              className="w-full h-9 pl-6 pr-2 text-[13px] border border-gray-300 rounded-md"
+                              className="w-full h-9 pl-6 pr-2 text-[13px] border border-gray-300 dark:border-gray-600 rounded-md"
                             />
                           </div>
                         </div>
                       )}
                       <div>
-                        <label className="block text-[12px] font-medium text-gray-700 mb-1">Placement Fee</label>
+                        <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">Placement Fee</label>
                         <div className="relative">
                           <input
                             type="number"
                             value={placementFee}
                             onChange={(e) => setPlacementFee(e.target.value)}
-                            className="w-full h-9 px-2.5 pr-7 text-[13px] border border-gray-300 rounded-md"
+                            className="w-full h-9 px-2.5 pr-7 text-[13px] border border-gray-300 dark:border-gray-600 rounded-md"
                           />
-                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[13px] text-gray-500">%</span>
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[13px] text-gray-500 dark:text-gray-400">%</span>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[12px] font-medium text-gray-700 mb-1">C-Suite Fee</label>
+                        <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1">C-Suite Fee</label>
                         <div className="relative">
                           <input
                             type="number"
                             value={csuitePlacementFee}
                             onChange={(e) => setCsuitePlacementFee(e.target.value)}
-                            className="w-full h-9 px-2.5 pr-7 text-[13px] border border-gray-300 rounded-md"
+                            className="w-full h-9 px-2.5 pr-7 text-[13px] border border-gray-300 dark:border-gray-600 rounded-md"
                           />
-                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[13px] text-gray-500">%</span>
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[13px] text-gray-500 dark:text-gray-400">%</span>
                         </div>
                       </div>
                     </div>
@@ -1366,7 +1366,7 @@ function InvitationModal({
                 <button
                   onClick={onClose}
                   disabled={isCreatingInvitation}
-                  className="px-4 py-2 text-[13px] font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  className="px-4 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
                 >
                   Cancel
                 </button>
@@ -1406,11 +1406,11 @@ function AddActivityModal({
   return (
     <>
       <div className="fixed inset-0 z-[300] bg-black/50" onClick={onClose} />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[301] w-full max-w-md bg-white rounded-lg shadow-xl p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Activity</h3>
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[301] w-full max-w-md bg-white dark:bg-gray-900 rounded-lg shadow-xl p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Add Activity</h3>
 
         <div className="mb-4">
-          <label className="block text-[13px] font-medium text-gray-700 mb-2">Type</label>
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
           <div className="flex gap-2">
             {(['note_added', 'call_logged', 'email_sent'] as const).map((type) => {
               const icons = { note_added: StickyNote, call_logged: PhoneCall, email_sent: Mail }
@@ -1426,7 +1426,7 @@ function AddActivityModal({
                   key={type}
                   onClick={() => setActivityType(type)}
                   className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-[13px] font-medium rounded-lg border ${
-                    activityType === type ? colors[type] : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                    activityType === type ? colors[type] : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -1438,14 +1438,14 @@ function AddActivityModal({
         </div>
 
         <div className="mb-6">
-          <label className="block text-[13px] font-medium text-gray-700 mb-2">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
             {activityType === 'note_added' ? 'Note' : activityType === 'call_logged' ? 'Call Summary' : 'Email Summary'}
           </label>
           <textarea
             value={activityContent}
             onChange={(e) => setActivityContent(e.target.value)}
             rows={4}
-            className="w-full px-3 py-2 text-[13px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900"
+            className="w-full px-3 py-2 text-[13px] border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-900"
             placeholder="Add content..."
           />
         </div>
@@ -1453,7 +1453,7 @@ function AddActivityModal({
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-[13px] font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            className="px-4 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
           >
             Cancel
           </button>

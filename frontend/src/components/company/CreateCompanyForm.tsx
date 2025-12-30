@@ -72,15 +72,15 @@ function ServiceTypeCard({ type, selected, onSelect }: ServiceTypeCardProps) {
       className={`relative flex flex-col p-5 rounded-lg border-2 text-left transition-all
         ${
           selected
-            ? 'border-gray-900 bg-gray-50 ring-1 ring-gray-900'
-            : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+            ? 'border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-gray-800 ring-1 ring-gray-900 dark:ring-gray-100'
+            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
         }
       `}
     >
       {/* Selected indicator */}
       {selected && (
-        <div className="absolute top-3 right-3 w-5 h-5 bg-gray-900 rounded-full flex items-center justify-center">
-          <Check className="w-3 h-3 text-white" />
+        <div className="absolute top-3 right-3 w-5 h-5 bg-gray-900 dark:bg-gray-100 rounded-full flex items-center justify-center">
+          <Check className="w-3 h-3 text-white dark:text-gray-900" />
         </div>
       )}
 
@@ -88,26 +88,26 @@ function ServiceTypeCard({ type, selected, onSelect }: ServiceTypeCardProps) {
       <div className="flex items-center gap-3 mb-3">
         <div
           className={`w-10 h-10 rounded-lg flex items-center justify-center
-          ${isHeadhunting ? 'bg-blue-100' : 'bg-purple-100'}
+          ${isHeadhunting ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'}
         `}
         >
-          <Icon className={`w-5 h-5 ${isHeadhunting ? 'text-blue-600' : 'text-purple-600'}`} />
+          <Icon className={`w-5 h-5 ${isHeadhunting ? 'text-blue-600 dark:text-blue-400' : 'text-purple-600 dark:text-purple-400'}`} />
         </div>
         <div>
-          <h3 className="text-[15px] font-semibold text-gray-900">{title}</h3>
-          <p className="text-[12px] text-gray-500">{tagline}</p>
+          <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
+          <p className="text-[12px] text-gray-500 dark:text-gray-400">{tagline}</p>
         </div>
       </div>
 
       {/* Description */}
-      <p className="text-[13px] text-gray-600 mb-3">{description}</p>
+      <p className="text-[13px] text-gray-600 dark:text-gray-400 mb-3">{description}</p>
 
       {/* Features */}
       <ul className="space-y-1.5 mb-4">
         {features.map((feature, idx) => (
-          <li key={idx} className="flex items-center gap-2 text-[12px] text-gray-600">
+          <li key={idx} className="flex items-center gap-2 text-[12px] text-gray-600 dark:text-gray-400">
             <Check
-              className={`w-3.5 h-3.5 ${isHeadhunting ? 'text-blue-500' : 'text-purple-500'}`}
+              className={`w-3.5 h-3.5 ${isHeadhunting ? 'text-blue-500 dark:text-blue-400' : 'text-purple-500 dark:text-purple-400'}`}
             />
             {feature}
           </li>
@@ -115,8 +115,8 @@ function ServiceTypeCard({ type, selected, onSelect }: ServiceTypeCardProps) {
       </ul>
 
       {/* Pricing */}
-      <div className="mt-auto pt-3 border-t border-gray-200">
-        <p className="text-[13px] font-medium text-gray-900">{pricing}</p>
+      <div className="mt-auto pt-3 border-t border-gray-200 dark:border-gray-700">
+        <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{pricing}</p>
       </div>
     </button>
   )
@@ -195,27 +195,27 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-8 max-w-2xl mx-auto">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 max-w-2xl mx-auto">
       <div className="text-center mb-6">
-        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Building2 className="w-6 h-6 text-gray-600" />
+        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Building2 className="w-6 h-6 text-gray-600 dark:text-gray-400" />
         </div>
-        <h2 className="text-[18px] font-semibold text-gray-900">Create Your Company</h2>
-        <p className="text-[14px] text-gray-500 mt-1">
+        <h2 className="text-[18px] font-semibold text-gray-900 dark:text-gray-100">Create Your Company</h2>
+        <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-1">
           Set up your company profile and choose your recruitment package
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {createError && (
-          <div className="px-3 py-2.5 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-[13px] text-red-600">{createError}</p>
+          <div className="px-3 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+            <p className="text-[13px] text-red-600 dark:text-red-400">{createError}</p>
           </div>
         )}
 
         {/* Service Type Selection */}
         <div>
-          <label className="block text-[13px] font-medium text-gray-700 mb-3">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-3">
             Select Your Package <span className="text-red-500">*</span>
           </label>
           <Controller
@@ -237,17 +237,17 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
             )}
           />
           {errors.service_type && (
-            <p className="mt-2 text-[12px] text-red-500">{errors.service_type.message}</p>
+            <p className="mt-2 text-[12px] text-red-500 dark:text-red-400">{errors.service_type.message}</p>
           )}
         </div>
 
         {/* Company Details */}
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-[14px] font-medium text-gray-900 mb-4">Company Details</h3>
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-4">Company Details</h3>
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label htmlFor="name" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Company name <span className="text-red-500">*</span>
               </label>
               <input
@@ -255,20 +255,20 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
                 id="name"
                 type="text"
                 placeholder="Acme Inc."
-                className={`w-full h-10 px-3 text-[14px] border rounded-md bg-white transition-colors
+                className={`w-full h-10 px-3 text-[14px] border rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors
                   ${
                     errors.name
-                      ? 'border-red-300 focus:border-red-400 focus:ring-1 focus:ring-red-400'
-                      : 'border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900'
+                      ? 'border-red-300 dark:border-red-700 focus:border-red-400 dark:focus:border-red-600 focus:ring-1 focus:ring-red-400 dark:focus:ring-red-600'
+                      : 'border-gray-300 dark:border-gray-600 focus:border-gray-900 dark:focus:border-gray-100 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-100'
                   } outline-none`}
               />
-              {errors.name && <p className="mt-1 text-[12px] text-red-500">{errors.name.message}</p>}
+              {errors.name && <p className="mt-1 text-[12px] text-red-500 dark:text-red-400">{errors.name.message}</p>}
             </div>
 
             <div>
               <label
                 htmlFor="tagline"
-                className="block text-[13px] font-medium text-gray-700 mb-1.5"
+                className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"
               >
                 Tagline
               </label>
@@ -277,15 +277,15 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
                 id="tagline"
                 type="text"
                 placeholder="A short description of your company"
-                className={`w-full h-10 px-3 text-[14px] border rounded-md bg-white transition-colors
+                className={`w-full h-10 px-3 text-[14px] border rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors
                   ${
                     errors.tagline
-                      ? 'border-red-300 focus:border-red-400 focus:ring-1 focus:ring-red-400'
-                      : 'border-gray-300 focus:border-gray-900 focus:ring-1 focus:ring-gray-900'
+                      ? 'border-red-300 dark:border-red-700 focus:border-red-400 dark:focus:border-red-600 focus:ring-1 focus:ring-red-400 dark:focus:ring-red-600'
+                      : 'border-gray-300 dark:border-gray-600 focus:border-gray-900 dark:focus:border-gray-100 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-100'
                   } outline-none`}
               />
               {errors.tagline && (
-                <p className="mt-1 text-[12px] text-red-500">{errors.tagline.message}</p>
+                <p className="mt-1 text-[12px] text-red-500 dark:text-red-400">{errors.tagline.message}</p>
               )}
             </div>
 
@@ -294,7 +294,7 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
               <div>
                 <label
                   htmlFor="headquarters_country"
-                  className="block text-[13px] font-medium text-gray-700 mb-1.5"
+                  className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"
                 >
                   Country
                 </label>
@@ -307,7 +307,7 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
                       handleCountryChange(value)
                     }}
                     disabled={countriesLoading}
-                    className="w-full h-10 px-3 pr-8 text-[14px] border border-gray-300 rounded-md bg-white transition-colors focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none appearance-none cursor-pointer disabled:opacity-50"
+                    className="w-full h-10 px-3 pr-8 text-[14px] border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors focus:border-gray-900 dark:focus:border-gray-100 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-100 outline-none appearance-none cursor-pointer disabled:opacity-50"
                   >
                     <option value="">Select country</option>
                     {countries.map((country) => (
@@ -316,7 +316,7 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
                 </div>
               </div>
 
@@ -324,7 +324,7 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
               <div>
                 <label
                   htmlFor="headquarters_city"
-                  className="block text-[13px] font-medium text-gray-700 mb-1.5"
+                  className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"
                 >
                   City
                 </label>
@@ -341,7 +341,7 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
                           field.onChange(value)
                         }}
                         disabled={!selectedCountryId || citiesLoading}
-                        className="w-full h-10 px-3 pr-8 text-[14px] border border-gray-300 rounded-md bg-white transition-colors focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none appearance-none cursor-pointer disabled:opacity-50 disabled:bg-gray-50"
+                        className="w-full h-10 px-3 pr-8 text-[14px] border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors focus:border-gray-900 dark:focus:border-gray-100 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-100 outline-none appearance-none cursor-pointer disabled:opacity-50 disabled:bg-gray-50 dark:disabled:bg-gray-800"
                       >
                         <option value="">
                           {!selectedCountryId ? 'Select country first' : 'Select city'}
@@ -352,7 +352,7 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
                           </option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
                     </div>
                   )}
                 />
@@ -363,7 +363,7 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
 
         {/* Terms & Conditions Section */}
         {selectedServiceType && (
-          <div className="border-t border-gray-200 pt-6">
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
             <TermsSection
               newType={selectedServiceType}
               selectedSlug={selectedTermsSlug}
@@ -372,7 +372,7 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
               onAgreeChange={handleAgreeChange}
             />
             {errors.terms_agreed && (
-              <p className="mt-2 text-[12px] text-red-500">{errors.terms_agreed.message}</p>
+              <p className="mt-2 text-[12px] text-red-500 dark:text-red-400">{errors.terms_agreed.message}</p>
             )}
           </div>
         )}
@@ -380,7 +380,7 @@ export default function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps)
         <button
           type="submit"
           disabled={isCreating || !termsAgreed}
-          className="w-full h-10 bg-gray-900 text-white text-[14px] font-medium rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full h-10 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[14px] font-medium rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isCreating ? 'Creating...' : 'Create Company'}
         </button>

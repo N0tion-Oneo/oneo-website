@@ -82,10 +82,10 @@ export default function GlossaryTermPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <Navbar />
         <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
         </div>
       </div>
     )
@@ -94,18 +94,18 @@ export default function GlossaryTermPage() {
   // Error/Not found state
   if (error || !term) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <Navbar />
         <div className="max-w-3xl mx-auto px-6 py-16">
           <div className="text-center">
-            <Book className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h1 className="text-[24px] font-semibold text-gray-900 mb-2">Term Not Found</h1>
-            <p className="text-[15px] text-gray-500 mb-6">
+            <Book className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h1 className="text-[24px] font-semibold text-gray-900 dark:text-gray-100 mb-2">Term Not Found</h1>
+            <p className="text-[15px] text-gray-500 dark:text-gray-400 mb-6">
               The term you're looking for doesn't exist or has been removed.
             </p>
             <Link
               to="/glossary"
-              className="inline-flex items-center gap-2 text-[14px] text-gray-600 hover:text-gray-900"
+              className="inline-flex items-center gap-2 text-[14px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Glossary
@@ -117,7 +117,7 @@ export default function GlossaryTermPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <SEO
         title={term.meta_title || undefined}
         description={term.meta_description || undefined}
@@ -130,9 +130,9 @@ export default function GlossaryTermPage() {
 
       {/* Preview Banner */}
       {isPreview && (
-        <div className="bg-amber-50 border-b border-amber-100">
+        <div className="bg-amber-50 dark:bg-amber-900/30 border-b border-amber-100 dark:border-amber-800">
           <div className="max-w-5xl mx-auto px-6 py-2">
-            <div className="flex items-center justify-center gap-2 text-[13px] text-amber-700">
+            <div className="flex items-center justify-center gap-2 text-[13px] text-amber-700 dark:text-amber-400">
               <Eye className="w-4 h-4" />
               <span>Preview Mode</span>
             </div>
@@ -141,26 +141,26 @@ export default function GlossaryTermPage() {
       )}
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-emerald-50 to-white border-b border-gray-100">
+      <div className="bg-gradient-to-b from-emerald-50 dark:from-emerald-900/20 to-white dark:to-gray-900 border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-4xl mx-auto px-6 py-16 md:py-20">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-[13px] text-gray-500 mb-6">
-            <Link to="/glossary" className="hover:text-gray-700 transition-colors">
+          <div className="flex items-center gap-2 text-[13px] text-gray-500 dark:text-gray-400 mb-6">
+            <Link to="/glossary" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
               Glossary
             </Link>
             <span>/</span>
-            <span className="text-gray-900">{term.title}</span>
+            <span className="text-gray-900 dark:text-gray-100">{term.title}</span>
           </div>
 
           <div className="flex items-start gap-4 mb-6">
-            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Book className="w-6 h-6 text-emerald-600" />
+            <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Book className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <span className="text-[12px] font-medium text-emerald-600 uppercase tracking-wider">
+              <span className="text-[12px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                 Definition
               </span>
-              <h1 className="text-[36px] md:text-[44px] font-bold text-gray-900 leading-tight">
+              <h1 className="text-[36px] md:text-[44px] font-bold text-gray-900 dark:text-gray-100 leading-tight">
                 {term.title}
               </h1>
             </div>
@@ -168,8 +168,8 @@ export default function GlossaryTermPage() {
 
           {/* Short Definition */}
           {term.definition_plain && (
-            <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-              <p className="text-[17px] text-gray-700 leading-relaxed italic">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+              <p className="text-[17px] text-gray-700 dark:text-gray-300 leading-relaxed italic">
                 "{term.definition_plain}"
               </p>
             </div>
@@ -177,24 +177,24 @@ export default function GlossaryTermPage() {
 
           {/* Share Links */}
           <div className="flex items-center gap-1">
-            <span className="text-[13px] text-gray-500 mr-2">Share:</span>
+            <span className="text-[13px] text-gray-500 dark:text-gray-400 mr-2">Share:</span>
             <button
               onClick={shareOnTwitter}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="Share on Twitter"
             >
               <Twitter className="w-4 h-4" />
             </button>
             <button
               onClick={shareOnLinkedIn}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="Share on LinkedIn"
             >
               <Linkedin className="w-4 h-4" />
             </button>
             <button
               onClick={copyLink}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="Copy link"
             >
               {copied ? <Check className="w-4 h-4 text-green-500" /> : <LinkIcon className="w-4 h-4" />}
@@ -207,15 +207,15 @@ export default function GlossaryTermPage() {
       <div className="max-w-4xl mx-auto px-6 py-12">
         {/* Full Definition */}
         {term.content && term.content.blocks && term.content.blocks.length > 0 && (
-          <article className="prose prose-gray max-w-none mb-12">
+          <article className="prose prose-gray dark:prose-invert max-w-none mb-12">
             <BlockRenderer content={term.content} />
           </article>
         )}
 
         {/* Related Terms */}
         {term.related_terms && term.related_terms.length > 0 && (
-          <div className="mb-12 pt-8 border-t border-gray-100">
-            <h3 className="text-[13px] font-semibold text-gray-400 uppercase tracking-wider mb-4">
+          <div className="mb-12 pt-8 border-t border-gray-100 dark:border-gray-700">
+            <h3 className="text-[13px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">
               Related Terms
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -223,7 +223,7 @@ export default function GlossaryTermPage() {
                 <Link
                   key={relatedTerm.slug}
                   to={`/glossary/${relatedTerm.slug}`}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 text-gray-700 text-[14px] font-medium rounded-lg border border-gray-200 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 transition-all"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[14px] font-medium rounded-lg border border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all"
                 >
                   {relatedTerm.title}
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -235,16 +235,16 @@ export default function GlossaryTermPage() {
 
         {/* FAQ Section */}
         {term.faqs && term.faqs.length > 0 && (
-          <div className="mb-12 pt-8 border-t border-gray-100">
+          <div className="mb-12 pt-8 border-t border-gray-100 dark:border-gray-700">
             <FAQWidget faqs={term.faqs} includeSchema={true} />
           </div>
         )}
 
         {/* Back to Glossary */}
-        <div className="pt-8 border-t border-gray-100">
+        <div className="pt-8 border-t border-gray-100 dark:border-gray-700">
           <Link
             to="/glossary"
-            className="inline-flex items-center gap-2 text-[14px] text-gray-500 hover:text-gray-900 transition-colors"
+            className="inline-flex items-center gap-2 text-[14px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Glossary
@@ -253,9 +253,9 @@ export default function GlossaryTermPage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 py-8">
+      <footer className="border-t border-gray-100 dark:border-gray-700 py-8 bg-white dark:bg-gray-900">
         <div className="max-w-4xl mx-auto px-6">
-          <p className="text-[13px] text-gray-400 text-center">
+          <p className="text-[13px] text-gray-400 dark:text-gray-500 text-center">
             © {new Date().getFullYear()} {seoDefaults.companyName}. All rights reserved.
           </p>
         </div>

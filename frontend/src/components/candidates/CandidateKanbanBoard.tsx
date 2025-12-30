@@ -119,7 +119,7 @@ function CandidateCard({ candidate, dragHandleProps, onClick }: CandidateCardPro
     <div
       {...dragHandleProps}
       onClick={handleCardClick}
-      className="bg-white border border-gray-200 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md p-3 shadow-sm dark:shadow-gray-900/20 hover:shadow-md transition-shadow cursor-pointer"
     >
       {/* Card Header */}
       <div className="flex items-start justify-between mb-2">
@@ -129,7 +129,7 @@ function CandidateCard({ candidate, dragHandleProps, onClick }: CandidateCardPro
             {candidate.initials || '--'}
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] font-medium text-gray-900 hover:text-gray-700 truncate">
+            <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300 truncate">
               {candidate.full_name || 'No name'}
             </p>
           </div>
@@ -141,7 +141,7 @@ function CandidateCard({ candidate, dragHandleProps, onClick }: CandidateCardPro
       <div className="space-y-1.5 mb-2">
         {/* Professional Title */}
         {candidate.professional_title && (
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
             <Briefcase className="w-3 h-3 flex-shrink-0" />
             <span className="truncate">{candidate.professional_title}</span>
           </div>
@@ -149,7 +149,7 @@ function CandidateCard({ candidate, dragHandleProps, onClick }: CandidateCardPro
 
         {/* Location */}
         {(candidate.location || candidate.city || candidate.country) && (
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
             <MapPin className="w-3 h-3 flex-shrink-0" />
             <span className="truncate">
               {candidate.location || [candidate.city, candidate.country].filter(Boolean).join(', ')}
@@ -160,7 +160,7 @@ function CandidateCard({ candidate, dragHandleProps, onClick }: CandidateCardPro
 
       {/* Profile Completeness */}
       <div className="flex items-center gap-2 mb-2">
-        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+        <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full ${
               candidate.profile_completeness >= 70
@@ -172,24 +172,24 @@ function CandidateCard({ candidate, dragHandleProps, onClick }: CandidateCardPro
             style={{ width: `${candidate.profile_completeness}%` }}
           />
         </div>
-        <span className="text-[10px] text-gray-500">{candidate.profile_completeness}%</span>
+        <span className="text-[10px] text-gray-500 dark:text-gray-400">{candidate.profile_completeness}%</span>
       </div>
 
       {/* Assigned To */}
       {candidate.assigned_to && candidate.assigned_to.length > 0 && (
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
           <div className="flex -space-x-1">
             {candidate.assigned_to.slice(0, 3).map((user) => (
               <div
                 key={user.id}
                 title={user.full_name}
-                className="w-5 h-5 rounded-full border border-white bg-gray-200 flex items-center justify-center text-[8px] font-medium text-gray-600"
+                className="w-5 h-5 rounded-full border border-white dark:border-gray-900 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[8px] font-medium text-gray-600 dark:text-gray-400"
               >
                 {user.first_name?.[0]}{user.last_name?.[0]}
               </div>
             ))}
             {candidate.assigned_to.length > 3 && (
-              <div className="w-5 h-5 rounded-full border border-white bg-gray-300 flex items-center justify-center text-[8px] font-medium text-gray-600">
+              <div className="w-5 h-5 rounded-full border border-white dark:border-gray-900 bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-[8px] font-medium text-gray-600 dark:text-gray-400">
                 +{candidate.assigned_to.length - 3}
               </div>
             )}

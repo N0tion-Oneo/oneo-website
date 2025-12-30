@@ -48,7 +48,7 @@ export default function LeadForm({
       <div>
         <label
           htmlFor="lead-name"
-          className="block text-[13px] font-medium text-gray-700 mb-1"
+          className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
           Full Name <span className="text-red-500">*</span>
         </label>
@@ -61,7 +61,7 @@ export default function LeadForm({
           onChange={handleChange}
           placeholder="John Smith"
           required
-          className="w-full px-3 py-2 text-[14px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+          className="w-full px-3 py-2 text-[14px] border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
         />
       </div>
 
@@ -69,7 +69,7 @@ export default function LeadForm({
       <div>
         <label
           htmlFor="lead-email"
-          className="block text-[13px] font-medium text-gray-700 mb-1"
+          className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
           Email <span className="text-red-500">*</span>
         </label>
@@ -81,7 +81,7 @@ export default function LeadForm({
           onChange={handleChange}
           placeholder="john@company.com"
           required
-          className="w-full px-3 py-2 text-[14px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+          className="w-full px-3 py-2 text-[14px] border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
         />
       </div>
 
@@ -89,7 +89,7 @@ export default function LeadForm({
       <div>
         <label
           htmlFor="lead-company"
-          className="block text-[13px] font-medium text-gray-700 mb-1"
+          className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
           Company Name <span className="text-red-500">*</span>
         </label>
@@ -101,7 +101,7 @@ export default function LeadForm({
           onChange={handleChange}
           placeholder="Acme Corp"
           required
-          className="w-full px-3 py-2 text-[14px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+          className="w-full px-3 py-2 text-[14px] border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
         />
       </div>
 
@@ -109,7 +109,7 @@ export default function LeadForm({
       <div>
         <label
           htmlFor="lead-phone"
-          className="block text-[13px] font-medium text-gray-700 mb-1"
+          className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
           Phone <span className="text-red-500">*</span>
         </label>
@@ -121,11 +121,11 @@ export default function LeadForm({
           onChange={handleChange}
           placeholder="+27 12 345 6789"
           required
-          className="w-full px-3 py-2 text-[14px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+          className="w-full px-3 py-2 text-[14px] border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
         />
       </div>
 
-      {error && <p className="text-[12px] text-red-600">{error}</p>}
+      {error && <p className="text-[12px] text-red-600 dark:text-red-400">{error}</p>}
     </div>
   )
 }

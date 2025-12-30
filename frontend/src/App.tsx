@@ -4,6 +4,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { SEOProvider } from '@/contexts/SEOContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ProtectedRoute, PublicRoute } from '@/components/auth';
 import { BrandingProvider } from '@/components/branding';
 import {
@@ -124,14 +125,15 @@ function JobApplicationsRedirect() {
 
 function App() {
   return (
-    <BrandingProvider>
-      <SEOProvider>
-        <AuthProvider>
-          <SubscriptionProvider>
-          <ToastProvider>
-          <GoogleAnalytics />
-          <ScrollToTop />
-        <Routes>
+    <ThemeProvider>
+      <BrandingProvider>
+        <SEOProvider>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <ToastProvider>
+                <GoogleAnalytics />
+                <ScrollToTop />
+                <Routes>
         {/* Home page - accessible to all */}
         <Route path="/" element={<HomePage />} />
 
@@ -325,12 +327,13 @@ function App() {
 
         {/* 404 - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-          </ToastProvider>
-          </SubscriptionProvider>
-        </AuthProvider>
-      </SEOProvider>
-    </BrandingProvider>
+                </Routes>
+              </ToastProvider>
+            </SubscriptionProvider>
+          </AuthProvider>
+        </SEOProvider>
+      </BrandingProvider>
+    </ThemeProvider>
   );
 }
 

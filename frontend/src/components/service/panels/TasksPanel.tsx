@@ -92,9 +92,9 @@ export function TasksPanel({ entityType, entityId, tasks, onRefresh }: TasksPane
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100">
+      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-medium text-gray-900">Tasks</h3>
+          <h3 className="font-medium text-gray-900 dark:text-gray-100">Tasks</h3>
           <button
             onClick={() => {
               setEditingTask(null)
@@ -108,7 +108,7 @@ export function TasksPanel({ entityType, entityId, tasks, onRefresh }: TasksPane
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
           <FilterTab
             active={filter === 'active'}
             onClick={() => setFilter('active')}
@@ -145,7 +145,7 @@ export function TasksPanel({ entityType, entityId, tasks, onRefresh }: TasksPane
       <div className="flex-1 overflow-y-auto p-4">
         {sortedTasks.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
               {filter === 'active' && 'No active tasks'}
               {filter === 'completed' && 'No completed tasks'}
               {filter === 'overdue' && 'No overdue tasks'}
@@ -213,8 +213,8 @@ function FilterTab({
       onClick={onClick}
       className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
         active
-          ? 'bg-white text-gray-900 shadow-sm'
-          : 'text-gray-600 hover:text-gray-900'
+          ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm dark:shadow-gray-900/20'
+          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
       }`}
     >
       {icon}
@@ -225,10 +225,10 @@ function FilterTab({
             active
               ? variant === 'danger'
                 ? 'bg-red-100 text-red-700'
-                : 'bg-gray-100 text-gray-600'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
               : variant === 'danger'
               ? 'bg-red-100 text-red-600'
-              : 'bg-gray-200 text-gray-500'
+              : 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400'
           }`}
         >
           {count}

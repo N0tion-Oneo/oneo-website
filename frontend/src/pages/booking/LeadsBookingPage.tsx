@@ -107,10 +107,10 @@ export default function LeadsBookingPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gray-50">
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">Loading availability...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading availability...</p>
         </div>
       </div>
     )
@@ -119,13 +119,13 @@ export default function LeadsBookingPage() {
   // Error state
   if (error || !availability) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-red-600" />
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-500" />
           </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Unable to Load</h1>
-          <p className="text-gray-500">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Unable to Load</h1>
+          <p className="text-gray-500 dark:text-gray-400">
             {error || 'Could not load availability. Please try again later.'}
           </p>
         </div>
@@ -138,46 +138,46 @@ export default function LeadsBookingPage() {
   // Success state
   if (step === 'success' && bookingResult) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-lg border border-gray-200 p-8 text-center">
-          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10 text-green-600" />
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-8 text-center">
+          <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-500" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">You're all set!</h1>
-          <p className="text-gray-500 mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">You're all set!</h1>
+          <p className="text-gray-500 dark:text-gray-400 mb-8">
             {bookingResult.confirmation_message || 'Your meeting has been scheduled successfully.'}
           </p>
 
-          <div className="bg-gray-50 rounded-xl p-5 text-left space-y-4">
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-5 text-left space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-gray-600" />
+              <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Date</p>
-                <p className="font-medium text-gray-900">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">
                   {format(parseISO(bookingResult.scheduled_at), 'EEEE, MMMM d, yyyy')}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-gray-600" />
+              <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Time</p>
-                <p className="font-medium text-gray-900">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Time</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">
                   {format(parseISO(bookingResult.scheduled_at), 'h:mm a')} ({meeting_type.duration_minutes} min)
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 flex items-center justify-center">
                 {getLocationIcon(meeting_type.location_type)}
               </div>
               <div>
-                <p className="text-sm text-gray-500">Location</p>
-                <p className="font-medium text-gray-900">{getLocationLabel(meeting_type.location_type)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Location</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{getLocationLabel(meeting_type.location_type)}</p>
               </div>
             </div>
           </div>
@@ -191,7 +191,7 @@ export default function LeadsBookingPage() {
   }
 
   return (
-    <div className="fixed inset-0 flex bg-white">
+    <div className="fixed inset-0 flex bg-white dark:bg-gray-900">
       {/* Left Panel - Meeting Info */}
       <div className="hidden lg:flex lg:w-[420px] xl:w-[480px] flex-col bg-gray-900 text-white relative overflow-hidden">
         {/* Background decoration */}
@@ -279,18 +279,18 @@ export default function LeadsBookingPage() {
       </div>
 
       {/* Right Panel - Booking Form */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden bg-gray-50">
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-800">
         {/* Mobile Header */}
-        <div className="lg:hidden flex-shrink-0 bg-white border-b border-gray-200 px-4 py-4">
+        <div className="lg:hidden flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-4">
           <div className="flex items-center gap-3 mb-4">
             {branding?.logo_url ? (
               <img src={branding.logo_url} alt={branding.company_name} className="h-6" />
             ) : (
               <>
-                <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">O</span>
+                <div className="w-8 h-8 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">
+                  <span className="text-white dark:text-gray-900 font-bold text-sm">O</span>
                 </div>
-                <span className="font-semibold text-gray-900">{branding?.company_name || 'Oneo'}</span>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">{branding?.company_name || 'Oneo'}</span>
               </>
             )}
           </div>
@@ -302,13 +302,13 @@ export default function LeadsBookingPage() {
                 className="w-10 h-10 rounded-full object-cover"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                 <User className="w-5 h-5 text-gray-400" />
               </div>
             )}
             <div>
-              <p className="font-medium text-gray-900">{meeting_type.name}</p>
-              <p className="text-sm text-gray-500">
+              <p className="font-medium text-gray-900 dark:text-gray-100">{meeting_type.name}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {meeting_type.duration_minutes} min · {getLocationLabel(meeting_type.location_type)}
               </p>
             </div>
@@ -320,9 +320,9 @@ export default function LeadsBookingPage() {
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
             {step === 'slots' && (
               <>
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Select a date & time</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Select a date & time</h2>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-6">
                   <SlotPicker
                     slots={availability.available_slots}
                     selected={selectedSlot}
@@ -331,19 +331,19 @@ export default function LeadsBookingPage() {
                     timezone={availability.timezone}
                   />
 
-                  <div className="mt-6 pt-6 border-t border-gray-100">
+                  <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
                     <button
                       type="button"
                       onClick={() => setStep('form')}
                       disabled={!selectedSlot}
-                      className="w-full py-3 px-4 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="w-full py-3 px-4 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Continue
                     </button>
                   </div>
 
                   {selectedSlot && (
-                    <p className="text-center text-sm text-gray-500 mt-4">
+                    <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
                       {format(parseISO(selectedSlot), 'EEEE, MMMM d')} at{' '}
                       {format(parseISO(selectedSlot), 'h:mm a')}
                     </p>
@@ -355,11 +355,11 @@ export default function LeadsBookingPage() {
             {step === 'form' && (
               <>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">Enter your details</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Enter your details</h2>
                   <button
                     type="button"
                     onClick={() => setStep('slots')}
-                    className="text-sm text-gray-500 hover:text-gray-700"
+                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                   >
                     Change time
                   </button>
@@ -367,24 +367,24 @@ export default function LeadsBookingPage() {
 
                 {/* Selected time summary */}
                 {selectedSlot && (
-                  <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <Calendar className="w-6 h-6 text-gray-600" />
+                  <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                      <Calendar className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">
                         {format(parseISO(selectedSlot), 'EEEE, MMMM d, yyyy')}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {format(parseISO(selectedSlot), 'h:mm a')} · {meeting_type.duration_minutes} min
                       </p>
                     </div>
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-5">
+                <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-6 space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Name *
                     </label>
                     <input
@@ -393,13 +393,13 @@ export default function LeadsBookingPage() {
                       value={formData.attendee_name}
                       onChange={handleFormChange}
                       required
-                      className="w-full px-4 py-3 text-[15px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      className="w-full px-4 py-3 text-[15px] border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                       placeholder="Your full name"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Email *
                     </label>
                     <input
@@ -408,13 +408,13 @@ export default function LeadsBookingPage() {
                       value={formData.attendee_email}
                       onChange={handleFormChange}
                       required
-                      className="w-full px-4 py-3 text-[15px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      className="w-full px-4 py-3 text-[15px] border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                       placeholder="you@company.com"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Phone *
                     </label>
                     <input
@@ -423,13 +423,13 @@ export default function LeadsBookingPage() {
                       value={formData.attendee_phone}
                       onChange={handleFormChange}
                       required
-                      className="w-full px-4 py-3 text-[15px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      className="w-full px-4 py-3 text-[15px] border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                       placeholder="+27 XX XXX XXXX"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Company *
                     </label>
                     <div className="relative">
@@ -442,16 +442,16 @@ export default function LeadsBookingPage() {
                         value={formData.attendee_company}
                         onChange={handleFormChange}
                         required
-                        className="w-full pl-12 pr-4 py-3 text-[15px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        className="w-full pl-12 pr-4 py-3 text-[15px] border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                         placeholder="Your company name"
                       />
                     </div>
                   </div>
 
                   {createError && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-red-700">{createError}</span>
+                      <span className="text-sm text-red-700 dark:text-red-400">{createError}</span>
                     </div>
                   )}
 
@@ -459,7 +459,7 @@ export default function LeadsBookingPage() {
                     <button
                       type="submit"
                       disabled={isCreating}
-                      className="w-full py-3.5 px-4 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-3.5 px-4 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                     >
                       {isCreating ? (
                         <>

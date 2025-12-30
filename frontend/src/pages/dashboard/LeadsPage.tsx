@@ -132,10 +132,10 @@ export default function LeadsPage() {
   // Check if user has admin/recruiter access
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to view this page.
         </p>
       </div>
@@ -348,19 +348,19 @@ export default function LeadsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">All Leads</h1>
-          <p className="text-[13px] text-gray-500 mt-0.5">
+          <h1 className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">All Leads</h1>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
             {count} lead{count !== 1 ? 's' : ''} found
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Page Size Selector */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[12px] text-gray-500">Show:</span>
+            <span className="text-[12px] text-gray-500 dark:text-gray-400">Show:</span>
             <select
               value={pageSize}
               onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-              className="px-2 py-1 text-[12px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+              className="px-2 py-1 text-[12px] border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
             >
               {PAGE_SIZE_OPTIONS.map(size => (
                 <option key={size} value={size}>{size}</option>
@@ -368,11 +368,11 @@ export default function LeadsPage() {
             </select>
           </div>
           {/* View Toggle */}
-          <div className="flex border border-gray-200 rounded-md overflow-hidden">
+          <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
             <button
               onClick={() => setViewMode('table')}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] transition-colors ${
-                viewMode === 'table' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'
+                viewMode === 'table' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
               title="Table view"
             >
@@ -380,8 +380,8 @@ export default function LeadsPage() {
             </button>
             <button
               onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] border-l border-gray-200 transition-colors ${
-                viewMode === 'kanban' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] border-l border-gray-200 dark:border-gray-700 transition-colors ${
+                viewMode === 'kanban' ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
               title="Kanban view"
             >
@@ -392,13 +392,13 @@ export default function LeadsPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-3 py-1.5 text-[13px] border rounded-md transition-colors ${
-              showFilters ? 'border-gray-300 bg-gray-50 text-gray-700' : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+              showFilters ? 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             Filters
             {activeFilterCount > 0 && (
-              <span className="bg-gray-900 text-white text-[11px] px-1.5 py-0.5 rounded-full">
+              <span className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-[11px] px-1.5 py-0.5 rounded-full">
                 {activeFilterCount}
               </span>
             )}
@@ -406,7 +406,7 @@ export default function LeadsPage() {
           {/* Create Lead Button */}
           <button
             onClick={() => setShowCreateLeadModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Create Lead
@@ -432,12 +432,12 @@ export default function LeadsPage() {
           {/* Active Filters Count */}
           {activeFilterCount > 0 && (
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-[12px] text-gray-500">
+              <span className="text-[12px] text-gray-500 dark:text-gray-400">
                 {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''} applied
               </span>
               <button
                 onClick={handleClearFilters}
-                className="text-[12px] text-gray-500 hover:text-gray-700 underline"
+                className="text-[12px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline"
               >
                 Clear all
               </button>
@@ -447,29 +447,29 @@ export default function LeadsPage() {
           {/* Loading State */}
           {isLoading && (
             <div className="text-center py-12">
-              <p className="text-[14px] text-gray-500">Loading leads...</p>
+              <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading leads...</p>
             </div>
           )}
 
           {/* Error State */}
           {error && (
             <div className="text-center py-12">
-              <p className="text-[14px] text-red-500">{error}</p>
+              <p className="text-[14px] text-red-500 dark:text-red-400">{error}</p>
             </div>
           )}
 
           {/* Empty State */}
           {!isLoading && !error && leads.length === 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-              <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-[15px] text-gray-700 mb-1">No leads found</p>
-              <p className="text-[13px] text-gray-500">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+              <Users className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No leads found</p>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
                 {activeFilterCount > 0 || filters.search ? 'Try adjusting your filters' : 'No leads have been created yet'}
               </p>
               {activeFilterCount > 0 && (
                 <button
                   onClick={handleClearFilters}
-                  className="mt-4 text-[13px] text-gray-600 hover:text-gray-900 underline"
+                  className="mt-4 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
                 >
                   Clear all filters
                 </button>
@@ -479,19 +479,19 @@ export default function LeadsPage() {
 
           {/* Table View */}
           {viewMode === 'table' && !isLoading && !error && leads.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     {table.getHeaderGroups().map(headerGroup => (
-                      <tr key={headerGroup.id} className="border-b border-gray-200 bg-gray-50">
+                      <tr key={headerGroup.id} className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                         {headerGroup.headers.map(header => {
                           const isPinnedLeft = header.id === 'select' || header.id === 'name'
                           return (
                             <th
                               key={header.id}
-                              className={`px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap ${
-                                isPinnedLeft ? 'sticky z-20 bg-gray-50' : ''
+                              className={`px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap ${
+                                isPinnedLeft ? 'sticky z-20 bg-gray-50 dark:bg-gray-800' : ''
                               }`}
                               style={{
                                 width: header.getSize(),
@@ -501,7 +501,7 @@ export default function LeadsPage() {
                               {header.isPlaceholder ? null : (
                                 <div
                                   className={`flex items-center gap-1 ${
-                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700' : ''
+                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300' : ''
                                   }`}
                                   onClick={header.column.getToggleSortingHandler()}
                                 >
@@ -524,11 +524,11 @@ export default function LeadsPage() {
                       </tr>
                     ))}
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {table.getRowModel().rows.map(row => (
                       <tr
                         key={row.id}
-                        className="hover:bg-gray-50 cursor-pointer"
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
                         onClick={() => setSelectedLeadId(row.original.id)}
                       >
                         {row.getVisibleCells().map(cell => {
@@ -538,7 +538,7 @@ export default function LeadsPage() {
                             <td
                               key={cell.id}
                               className={`px-3 py-2.5 whitespace-nowrap ${
-                                isPinnedLeft ? 'sticky z-10 bg-white' : ''
+                                isPinnedLeft ? 'sticky z-10 bg-white dark:bg-gray-900' : ''
                               }`}
                               style={{
                                 width: cell.column.getSize(),
@@ -570,14 +570,14 @@ export default function LeadsPage() {
           {/* Pagination */}
           {!isLoading && !error && totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
-              <p className="text-[13px] text-gray-500">
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
                 Page {page} of {totalPages} ({count} total)
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={!hasPrevious}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Previous
@@ -585,7 +585,7 @@ export default function LeadsPage() {
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={!hasNext}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                   <ChevronRight className="w-4 h-4" />

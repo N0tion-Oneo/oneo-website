@@ -129,7 +129,7 @@ function CompanyCard({ company, dragHandleProps, onClick }: CompanyCardProps) {
     <div
       {...dragHandleProps}
       onClick={handleCardClick}
-      className="bg-white border border-gray-200 rounded-md p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md p-3 shadow-sm dark:shadow-gray-900/20 hover:shadow-md transition-shadow cursor-pointer"
     >
       {/* Card Header */}
       <div className="flex items-start justify-between mb-2">
@@ -139,7 +139,7 @@ function CompanyCard({ company, dragHandleProps, onClick }: CompanyCardProps) {
             <img
               src={getMediaUrl(company.logo)}
               alt={company.name}
-              className="w-8 h-8 rounded-full object-cover bg-gray-100 flex-shrink-0"
+              className="w-8 h-8 rounded-full object-cover bg-gray-100 dark:bg-gray-700 flex-shrink-0"
             />
           ) : (
             <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center text-white text-[10px] font-medium flex-shrink-0">
@@ -147,19 +147,19 @@ function CompanyCard({ company, dragHandleProps, onClick }: CompanyCardProps) {
             </div>
           )}
           <div className="min-w-0">
-            <p className="text-[13px] font-medium text-gray-900 hover:text-gray-700 truncate">
+            <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300 truncate">
               {company.name}
             </p>
           </div>
         </div>
-        <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
+        <GripVertical className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
       </div>
 
       {/* Card Body */}
       <div className="space-y-1.5 mb-2">
         {/* Industry */}
         {company.industry && (
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
             <Building2 className="w-3 h-3 flex-shrink-0" />
             <span className="truncate">{company.industry.name}</span>
           </div>
@@ -167,21 +167,21 @@ function CompanyCard({ company, dragHandleProps, onClick }: CompanyCardProps) {
 
         {/* Location */}
         {company.headquarters_location && (
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
             <MapPin className="w-3 h-3 flex-shrink-0" />
             <span className="truncate">{company.headquarters_location}</span>
           </div>
         )}
 
         {/* Jobs */}
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
           <Briefcase className="w-3 h-3 flex-shrink-0" />
           <span>{company.jobs_total} job{company.jobs_total !== 1 ? 's' : ''}</span>
         </div>
 
         {/* Created Date */}
         {company.created_at && (
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
             <Calendar className="w-3 h-3 flex-shrink-0" />
             <span>Added {formatDate(company.created_at)}</span>
           </div>
@@ -193,8 +193,8 @@ function CompanyCard({ company, dragHandleProps, onClick }: CompanyCardProps) {
         <span
           className={`inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded ${
             company.is_published
-              ? 'bg-green-100 text-green-700'
-              : 'bg-gray-100 text-gray-600'
+              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
           }`}
         >
           {company.is_published ? 'Published' : 'Draft'}
@@ -203,19 +203,19 @@ function CompanyCard({ company, dragHandleProps, onClick }: CompanyCardProps) {
 
       {/* Assigned To */}
       {company.assigned_to && company.assigned_to.length > 0 && (
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
           <div className="flex -space-x-1">
             {company.assigned_to.slice(0, 3).map((user) => (
               <div
                 key={user.id}
                 title={user.full_name}
-                className="w-5 h-5 rounded-full border border-white bg-gray-200 flex items-center justify-center text-[8px] font-medium text-gray-600"
+                className="w-5 h-5 rounded-full border border-white dark:border-gray-900 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[8px] font-medium text-gray-600 dark:text-gray-400"
               >
                 {user.first_name?.[0]}{user.last_name?.[0]}
               </div>
             ))}
             {company.assigned_to.length > 3 && (
-              <div className="w-5 h-5 rounded-full border border-white bg-gray-300 flex items-center justify-center text-[8px] font-medium text-gray-600">
+              <div className="w-5 h-5 rounded-full border border-white dark:border-gray-900 bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-[8px] font-medium text-gray-600 dark:text-gray-400">
                 +{company.assigned_to.length - 3}
               </div>
             )}

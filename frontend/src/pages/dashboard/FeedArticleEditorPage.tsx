@@ -88,9 +88,9 @@ export default function FeedArticleEditorPage() {
   if (!canCreatePost) {
     return (
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-          <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-          <p className="text-[13px] text-gray-500">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+          <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">
             You do not have permission to create articles.
           </p>
         </div>
@@ -101,24 +101,24 @@ export default function FeedArticleEditorPage() {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-gray-50 -mx-4 px-4 py-4 mb-6 border-b border-gray-200">
+      <div className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 -mx-4 px-4 py-4 mb-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               to="/dashboard/feed"
-              className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700"
+              className="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Feed
             </Link>
-            <div className="h-4 w-px bg-gray-200" />
-            <h1 className="text-[16px] font-medium text-gray-900">New Article</h1>
+            <div className="h-4 w-px bg-gray-200 dark:bg-gray-600" />
+            <h1 className="text-[16px] font-medium text-gray-900 dark:text-gray-100">New Article</h1>
           </div>
 
           <button
             onClick={handleSubmit}
             disabled={isPending}
-            className="flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -131,11 +131,11 @@ export default function FeedArticleEditorPage() {
       </div>
 
       {/* Editor Area */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
         {/* Featured Image */}
         <div className="mb-6">
           {featuredImagePreview ? (
-            <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
+            <div className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
               <img
                 src={featuredImagePreview}
                 alt="Featured"
@@ -152,9 +152,9 @@ export default function FeedArticleEditorPage() {
               </button>
             </div>
           ) : (
-            <label className="flex flex-col items-center justify-center h-48 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition-colors">
+            <label className="flex flex-col items-center justify-center h-48 bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
               <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
-              <span className="text-[14px] text-gray-500">Add a cover image</span>
+              <span className="text-[14px] text-gray-500 dark:text-gray-400">Add a cover image</span>
               <span className="text-[12px] text-gray-400 mt-1">Optional but recommended</span>
               <input
                 type="file"
@@ -172,7 +172,7 @@ export default function FeedArticleEditorPage() {
           placeholder="Article Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full text-[28px] font-semibold text-gray-900 placeholder-gray-300 border-0 focus:outline-none focus:ring-0 mb-6"
+          className="w-full text-[28px] font-semibold text-gray-900 dark:text-gray-100 placeholder-gray-300 dark:placeholder-gray-600 bg-transparent border-0 focus:outline-none focus:ring-0 mb-6"
         />
 
         {/* Block Editor */}

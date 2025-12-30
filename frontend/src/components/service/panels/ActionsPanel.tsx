@@ -96,18 +96,18 @@ function ActionCard({
             <Icon className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[14px] font-medium text-gray-900">{title}</p>
-            <p className="text-[12px] text-gray-500">
+            <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">{title}</p>
+            <p className="text-[12px] text-gray-500 dark:text-gray-400">
               {isDisabled ? disabledReason : description}
             </p>
           </div>
         </div>
         {!isDisabled && (
-          isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />
+          isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400 dark:text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-400 dark:text-gray-500" />
         )}
       </button>
       {isExpanded && !isDisabled && (
-        <div className="p-4 border-t border-gray-200 bg-white">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           {children}
         </div>
       )}
@@ -239,7 +239,7 @@ function OfferSection({
           <button
             onClick={() => setIsEditing(false)}
             disabled={isProcessing}
-            className="flex-1 px-4 py-2.5 text-[14px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 text-[14px] font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
           >
             Cancel
           </button>
@@ -299,27 +299,27 @@ function OfferSection({
       )}
 
       {/* Offer Details */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg divide-y divide-gray-100">
+      <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-100 dark:divide-gray-800">
         <div className="p-3">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Annual Salary</p>
-          <p className="text-[16px] font-semibold text-gray-900">
+          <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Annual Salary</p>
+          <p className="text-[16px] font-semibold text-gray-900 dark:text-gray-100">
             {formatSalary(displayOffer?.annual_salary, displayOffer?.currency)}
           </p>
         </div>
 
         <div className="p-3">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Start Date</p>
-          <p className="text-[13px] text-gray-900">{formatDisplayDate(displayOffer?.start_date)}</p>
+          <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Start Date</p>
+          <p className="text-[13px] text-gray-900 dark:text-gray-100">{formatDisplayDate(displayOffer?.start_date)}</p>
         </div>
 
         {benefits.length > 0 && (
           <div className="p-3">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Benefits</p>
+            <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Benefits</p>
             <div className="space-y-1">
               {benefits.map((benefit, idx) => (
                 <div key={idx} className="flex justify-between text-[12px]">
-                  <span className="text-gray-700">{benefit.name}</span>
-                  <span className="text-gray-500">{currencySymbol}{benefit.annual_cost?.toLocaleString()}/yr</span>
+                  <span className="text-gray-700 dark:text-gray-300">{benefit.name}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{currencySymbol}{benefit.annual_cost?.toLocaleString()}/yr</span>
                 </div>
               ))}
             </div>
@@ -328,29 +328,29 @@ function OfferSection({
 
         {equity && equity.shares && equity.shares > 0 && (
           <div className="p-3">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Equity</p>
+            <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Equity</p>
             <div className="grid grid-cols-3 gap-2 text-[12px]">
               <div>
-                <p className="text-gray-500">Shares</p>
-                <p className="text-gray-900 font-medium">{equity.shares.toLocaleString()}</p>
+                <p className="text-gray-500 dark:text-gray-400">Shares</p>
+                <p className="text-gray-900 dark:text-gray-100 font-medium">{equity.shares.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-gray-500">Value</p>
-                <p className="text-gray-900 font-medium">{currencySymbol}{equity.share_value?.toLocaleString()}</p>
+                <p className="text-gray-500 dark:text-gray-400">Value</p>
+                <p className="text-gray-900 dark:text-gray-100 font-medium">{currencySymbol}{equity.share_value?.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-gray-500">Vesting</p>
-                <p className="text-gray-900 font-medium">{equity.vesting_years}y</p>
+                <p className="text-gray-500 dark:text-gray-400">Vesting</p>
+                <p className="text-gray-900 dark:text-gray-100 font-medium">{equity.vesting_years}y</p>
               </div>
             </div>
           </div>
         )}
 
         {totals.totalCost > 0 && (
-          <div className="p-3 bg-gray-100">
+          <div className="p-3 bg-gray-100 dark:bg-gray-700">
             <div className="flex justify-between items-center">
-              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Total Cost (Y1)</p>
-              <p className="text-[14px] font-semibold text-gray-900">
+              <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Cost (Y1)</p>
+              <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
                 {currencySymbol}{totals.totalCost.toLocaleString()}
               </p>
             </div>
@@ -412,13 +412,13 @@ function RejectSection({
       )}
 
       <div>
-        <label className="block text-[13px] font-medium text-gray-700 mb-1">
+        <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
           Rejection Reason <span className="text-red-500">*</span>
         </label>
         <select
           value={rejectionReason}
           onChange={(e) => setRejectionReason(e.target.value as RejectionReason)}
-          className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
         >
           <option value="">Select a reason...</option>
           {Object.entries(RejectionReasonLabels).map(([value, label]) => (
@@ -428,14 +428,14 @@ function RejectSection({
       </div>
 
       <div>
-        <label className="block text-[13px] font-medium text-gray-700 mb-1">
+        <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
           Feedback (optional)
         </label>
         <textarea
           value={rejectionFeedback}
           onChange={(e) => setRejectionFeedback(e.target.value)}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-200 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-[14px] focus:outline-none focus:ring-2 focus:ring-gray-900"
           placeholder="Additional notes about the rejection..."
         />
       </div>
@@ -516,16 +516,16 @@ function ReplacementSection({
 
         {/* Admin review controls */}
         {isPending && (
-          <div className="space-y-3 pt-2 border-t border-gray-200">
-            <p className="text-[12px] font-medium text-gray-600">Admin Review</p>
+          <div className="space-y-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+            <p className="text-[12px] font-medium text-gray-600 dark:text-gray-400">Admin Review</p>
 
             <div>
-              <label className="block text-[12px] text-gray-500 mb-1">Review Notes (optional)</label>
+              <label className="block text-[12px] text-gray-500 dark:text-gray-400 mb-1">Review Notes (optional)</label>
               <textarea
                 value={reviewNotes}
                 onChange={(e) => setReviewNotes(e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-200 rounded-md text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900"
                 placeholder="Add notes for the review..."
               />
             </div>
@@ -562,12 +562,12 @@ function ReplacementSection({
   return (
     <>
       <div className="space-y-4">
-        <p className="text-[13px] text-gray-600">
+        <p className="text-[13px] text-gray-600 dark:text-gray-400">
           If the placed candidate leaves within the guarantee period, you can request a free replacement.
         </p>
         <button
           onClick={() => setShowModal(true)}
-          className="w-full px-4 py-2.5 text-[14px] font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+          className="w-full px-4 py-2.5 text-[14px] font-medium text-gray-700 dark:text-gray-300 border border-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           Request Replacement
         </button>
@@ -597,7 +597,7 @@ export function ActionsPanel({ applicationId, application, onRefresh }: ActionsP
 
   if (!application) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500">
+      <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
         Loading application...
       </div>
     )
@@ -632,11 +632,11 @@ export function ActionsPanel({ applicationId, application, onRefresh }: ActionsP
     <div className="h-full overflow-y-auto p-4">
       <div className="space-y-3">
         {/* Current Status Banner */}
-        <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg mb-4">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
+        <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mb-4">
+          <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
             Current Status
           </p>
-          <p className="text-[14px] font-medium text-gray-900 capitalize">
+          <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100 capitalize">
             {status.replace(/_/g, ' ')}
           </p>
         </div>

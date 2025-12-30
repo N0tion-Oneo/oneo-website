@@ -45,7 +45,7 @@ export const CONFIG = {
 
 // Feature flags
 export const FEATURES = {
-  ENABLE_DARK_MODE: false,
+  ENABLE_DARK_MODE: true,
   ENABLE_NOTIFICATIONS: true,
   ENABLE_ANALYTICS: true,
   ENABLE_ERROR_TRACKING: false, // Sentry, etc.

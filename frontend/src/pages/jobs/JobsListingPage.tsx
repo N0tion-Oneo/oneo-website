@@ -90,31 +90,31 @@ export default function JobsListingPage() {
     filters.search
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <SEO />
       <Navbar />
 
       <main className="max-w-5xl mx-auto px-6 py-10">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-[26px] font-semibold text-gray-900">Job Board</h1>
-          <p className="text-[15px] text-gray-500 mt-1">
+          <h1 className="text-[26px] font-semibold text-gray-900 dark:text-gray-100">Job Board</h1>
+          <p className="text-[15px] text-gray-500 dark:text-gray-400 mt-1">
             Find your next opportunity from top companies
           </p>
         </div>
 
         {/* Filters */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
           {/* Search Bar */}
           <div className="mb-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 placeholder="Search jobs, companies, or keywords..."
                 value={filters.search || ''}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 text-[14px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -122,7 +122,7 @@ export default function JobsListingPage() {
           {/* Filter Dropdowns */}
           <div className="grid md:grid-cols-6 gap-3">
             <div>
-              <label className="block text-[11px] font-medium text-gray-500 mb-1">
+              <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Experience
               </label>
               <select
@@ -130,7 +130,7 @@ export default function JobsListingPage() {
                 onChange={(e) =>
                   handleFilterChange('seniority', e.target.value as Seniority)
                 }
-                className="w-full px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All levels</option>
                 {seniorityOptions.map((opt) => (
@@ -142,13 +142,13 @@ export default function JobsListingPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-gray-500 mb-1">
+              <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Job Type
               </label>
               <select
                 value={filters.job_type || ''}
                 onChange={(e) => handleFilterChange('job_type', e.target.value as JobType)}
-                className="w-full px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All types</option>
                 {jobTypeOptions.map((opt) => (
@@ -160,7 +160,7 @@ export default function JobsListingPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-gray-500 mb-1">
+              <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Work Mode
               </label>
               <select
@@ -168,7 +168,7 @@ export default function JobsListingPage() {
                 onChange={(e) =>
                   handleFilterChange('work_mode', e.target.value as WorkMode)
                 }
-                className="w-full px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All modes</option>
                 {workModeOptions.map((opt) => (
@@ -180,7 +180,7 @@ export default function JobsListingPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-gray-500 mb-1">
+              <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Department
               </label>
               <select
@@ -188,7 +188,7 @@ export default function JobsListingPage() {
                 onChange={(e) =>
                   handleFilterChange('department', e.target.value as Department)
                 }
-                className="w-full px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All departments</option>
                 {departmentOptions.map((opt) => (
@@ -200,13 +200,13 @@ export default function JobsListingPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-gray-500 mb-1">
+              <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Location
               </label>
               <select
                 value={filters.country || ''}
                 onChange={(e) => handleFilterChange('country', e.target.value)}
-                className="w-full px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               >
                 <option value="">All locations</option>
                 {countries.map((country) => (
@@ -218,13 +218,13 @@ export default function JobsListingPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-gray-500 mb-1">
+              <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">
                 Sort by
               </label>
               <select
                 value={filters.sort || '-published_at'}
                 onChange={(e) => handleFilterChange('sort', e.target.value)}
-                className="w-full px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
               >
                 {sortOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -237,13 +237,13 @@ export default function JobsListingPage() {
 
           {/* Clear Filters */}
           {hasActiveFilters && (
-            <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
-              <span className="text-[12px] text-gray-500">
+            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+              <span className="text-[12px] text-gray-500 dark:text-gray-400">
                 {jobs.length} job{jobs.length !== 1 ? 's' : ''} matching your filters
               </span>
               <button
                 onClick={clearFilters}
-                className="flex items-center gap-1 text-[12px] font-medium text-gray-500 hover:text-gray-700"
+                className="flex items-center gap-1 text-[12px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 <X className="w-3 h-3" />
                 Clear filters
@@ -254,7 +254,7 @@ export default function JobsListingPage() {
 
         {/* Results Count */}
         {!hasActiveFilters && (
-          <div className="text-[13px] text-gray-500 mb-4">
+          <div className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
             {jobs.length} job{jobs.length !== 1 ? 's' : ''} available
           </div>
         )}
@@ -262,7 +262,7 @@ export default function JobsListingPage() {
         {/* Loading State */}
         {isLoading && (
           <div className="text-center py-12">
-            <p className="text-[14px] text-gray-500">Loading jobs...</p>
+            <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading jobs...</p>
           </div>
         )}
 
@@ -275,10 +275,10 @@ export default function JobsListingPage() {
 
         {/* Empty State */}
         {!isLoading && !error && jobs.length === 0 && (
-          <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
-            <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-[15px] text-gray-700 mb-1">No jobs found</p>
-            <p className="text-[13px] text-gray-500">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <Briefcase className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No jobs found</p>
+            <p className="text-[13px] text-gray-500 dark:text-gray-400">
               {hasActiveFilters
                 ? 'Try adjusting your filters'
                 : 'Check back later for new opportunities'}

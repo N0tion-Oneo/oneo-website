@@ -54,7 +54,7 @@ function MeetingTypeCard({
   return (
     <Link
       to={`/meet/${bookingSlug}/${meetingType.slug}`}
-      className="block bg-white border border-gray-200 rounded-lg p-5 hover:border-gray-300 hover:shadow-sm transition-all"
+      className="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm dark:hover:shadow-gray-900/40 transition-all"
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
@@ -62,15 +62,15 @@ function MeetingTypeCard({
             className="w-2 h-2 rounded-full mb-3"
             style={{ backgroundColor: meetingType.color }}
           />
-          <h3 className="text-[16px] font-medium text-gray-900 mb-1">
+          <h3 className="text-[16px] font-medium text-gray-900 dark:text-gray-100 mb-1">
             {meetingType.name}
           </h3>
           {meetingType.description && (
-            <p className="text-[13px] text-gray-500 line-clamp-2 mb-3">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">
               {meetingType.description}
             </p>
           )}
-          <div className="flex items-center gap-4 text-[13px] text-gray-500">
+          <div className="flex items-center gap-4 text-[13px] text-gray-500 dark:text-gray-400">
             <span className="flex items-center gap-1.5">
               <Clock className="w-4 h-4" />
               {meetingType.duration_minutes} min
@@ -117,10 +117,10 @@ function RecruiterBookingFormWrapper({
   // Show loading while we check the category
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">Loading...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading...</p>
         </div>
       </div>
     )
@@ -168,10 +168,10 @@ function RecruiterBookingList({ bookingSlug }: { bookingSlug: string }) {
 
   if (isLoading || (isEmbed && onboardingType && pageData?.meeting_types.length)) {
     return (
-      <div className={isEmbed ? 'flex items-center justify-center py-12' : 'min-h-screen bg-gray-50 flex items-center justify-center'}>
+      <div className={isEmbed ? 'flex items-center justify-center py-12' : 'min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center'}>
         <div className="text-center">
           <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto mb-3" />
-          <p className="text-sm text-gray-500">{isEmbed ? 'Loading calendar...' : 'Loading...'}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{isEmbed ? 'Loading calendar...' : 'Loading...'}</p>
         </div>
       </div>
     )
@@ -179,13 +179,13 @@ function RecruiterBookingList({ bookingSlug }: { bookingSlug: string }) {
 
   if (error || !pageData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-red-600" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-500" />
           </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Page Not Found</h1>
-          <p className="text-gray-500">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Page Not Found</h1>
+          <p className="text-gray-500 dark:text-gray-400">
             This booking page doesn't exist or is no longer available.
           </p>
         </div>
@@ -198,9 +198,9 @@ function RecruiterBookingList({ bookingSlug }: { bookingSlug: string }) {
     return (
       <div className="flex items-center justify-center py-12 px-4">
         <div className="text-center max-w-sm">
-          <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-base font-medium text-gray-900 mb-2">No booking calendar available</h2>
-          <p className="text-sm text-gray-500">
+          <Calendar className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h2 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-2">No booking calendar available</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             No meeting type has been configured for onboarding. Please contact your account manager directly.
           </p>
         </div>
@@ -209,10 +209,10 @@ function RecruiterBookingList({ bookingSlug }: { bookingSlug: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:py-12 px-4">
       <div className="max-w-lg mx-auto">
         {/* Recruiter Profile Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-6 mb-6 text-center">
           {pageData.user.avatar ? (
             <img
               src={pageData.user.avatar}
@@ -220,18 +220,18 @@ function RecruiterBookingList({ bookingSlug }: { bookingSlug: string }) {
               className="w-20 h-20 rounded-full object-cover mx-auto mb-4"
             />
           ) : (
-            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-4">
               <User className="w-10 h-10 text-gray-400" />
             </div>
           )}
-          <h1 className="text-xl font-semibold text-gray-900">{pageData.user.name}</h1>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{pageData.user.name}</h1>
           {pageData.user.professional_title && (
-            <p className="text-[14px] text-gray-500 mt-1">
+            <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-1">
               {pageData.user.professional_title}
             </p>
           )}
           {pageData.user.bio && (
-            <p className="text-[13px] text-gray-500 mt-3 max-w-sm mx-auto">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-3 max-w-sm mx-auto">
               {pageData.user.bio}
             </p>
           )}
@@ -239,13 +239,13 @@ function RecruiterBookingList({ bookingSlug }: { bookingSlug: string }) {
 
         {/* Meeting Types */}
         <div className="space-y-3">
-          <h2 className="text-[14px] font-medium text-gray-700 px-1">
+          <h2 className="text-[14px] font-medium text-gray-700 dark:text-gray-300 px-1">
             Select a meeting type
           </h2>
           {pageData.meeting_types.length === 0 ? (
-            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-              <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-              <p className="text-[14px] text-gray-500">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 text-center">
+              <Calendar className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              <p className="text-[14px] text-gray-500 dark:text-gray-400">
                 No meeting types available at this time.
               </p>
             </div>
@@ -355,10 +355,10 @@ function RecruiterBookingForm({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">Loading availability...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading availability...</p>
         </div>
       </div>
     )
@@ -366,18 +366,18 @@ function RecruiterBookingForm({
 
   if (error || !availability) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-red-600" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-500" />
           </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Unable to Load</h1>
-          <p className="text-gray-500">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Unable to Load</h1>
+          <p className="text-gray-500 dark:text-gray-400">
             {error || 'Could not load availability. Please try again later.'}
           </p>
           <Link
             to={`/meet/${bookingSlug}`}
-            className="inline-flex items-center gap-2 mt-6 text-[14px] text-gray-600 hover:text-gray-900"
+            className="inline-flex items-center gap-2 mt-6 text-[14px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to meeting types
@@ -392,39 +392,39 @@ function RecruiterBookingForm({
   // Success state
   if (step === 'success' && bookingResult) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-8 h-8 text-green-600" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-500" />
           </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Booking Confirmed!</h1>
-          <p className="text-gray-500 mb-6">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Booking Confirmed!</h1>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">
             {bookingResult.confirmation_message ||
               `Your ${meeting_type.name} has been scheduled successfully.`}
           </p>
 
-          <div className="bg-gray-50 rounded-lg p-4 text-left space-y-3">
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-left space-y-3">
             <div className="flex items-center gap-3">
               <Calendar className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-700">
+              <span className="text-gray-700 dark:text-gray-300">
                 {format(parseISO(bookingResult.scheduled_at), 'EEEE, MMMM d, yyyy')}
               </span>
             </div>
             <div className="flex items-center gap-3">
               <Clock className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-700">
+              <span className="text-gray-700 dark:text-gray-300">
                 {format(parseISO(bookingResult.scheduled_at), 'h:mm a')} (
                 {meeting_type.duration_minutes} minutes)
               </span>
             </div>
             <div className="flex items-center gap-3">
               {getLocationIcon(meeting_type.location_type)}
-              <span className="text-gray-700">{meeting_type.location_type_display}</span>
+              <span className="text-gray-700 dark:text-gray-300">{meeting_type.location_type_display}</span>
             </div>
           </div>
 
           {bookingResult.redirect_url && (
-            <p className="text-sm text-gray-500 mt-6">Redirecting you shortly...</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-6">Redirecting you shortly...</p>
           )}
         </div>
       </div>
@@ -432,13 +432,13 @@ function RecruiterBookingForm({
   }
 
   return (
-    <div className={`${isEmbed ? 'bg-white' : 'min-h-screen bg-gray-50 py-8 sm:py-12'} px-4`}>
+    <div className={`${isEmbed ? 'bg-white dark:bg-gray-900' : 'min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:py-12'} px-4`}>
       <div className={`${isEmbed ? '' : 'max-w-3xl'} mx-auto`}>
         {/* Back link - hidden in embed mode or when hideNav is set */}
         {!isEmbed && !hideNav && (
           <Link
             to={`/meet/${bookingSlug}`}
-            className="inline-flex items-center gap-2 mb-6 text-[14px] text-gray-600 hover:text-gray-900"
+            className="inline-flex items-center gap-2 mb-6 text-[14px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to meeting types
@@ -446,7 +446,7 @@ function RecruiterBookingForm({
         )}
 
         {/* Meeting Type Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <div className="flex items-start gap-4">
             {meeting_type.owner_avatar ? (
               <img
@@ -455,28 +455,28 @@ function RecruiterBookingForm({
                 className="w-14 h-14 rounded-full object-cover"
               />
             ) : (
-              <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                 <User className="w-7 h-7 text-gray-400" />
               </div>
             )}
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">{meeting_type.name}</h1>
-              <p className="text-[14px] text-gray-500 mt-0.5">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{meeting_type.name}</h1>
+              <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-0.5">
                 with {meeting_type.owner_name}
               </p>
             </div>
           </div>
 
           {meeting_type.description && (
-            <p className="text-[14px] text-gray-600 mt-4">{meeting_type.description}</p>
+            <p className="text-[14px] text-gray-600 dark:text-gray-400 mt-4">{meeting_type.description}</p>
           )}
 
-          <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-6">
-            <span className="flex items-center gap-2 text-[14px] text-gray-500">
+          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center gap-6">
+            <span className="flex items-center gap-2 text-[14px] text-gray-500 dark:text-gray-400">
               <Clock className="w-4 h-4" />
               {meeting_type.duration_minutes} minutes
             </span>
-            <span className="flex items-center gap-2 text-[14px] text-gray-500">
+            <span className="flex items-center gap-2 text-[14px] text-gray-500 dark:text-gray-400">
               {getLocationIcon(meeting_type.location_type)}
               {meeting_type.location_type_display}
             </span>
@@ -485,8 +485,8 @@ function RecruiterBookingForm({
 
         {/* Step: Select Time Slot */}
         {step === 'slots' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Select a time</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Select a time</h2>
 
             <SlotPicker
               slots={availability.available_slots}
@@ -502,14 +502,14 @@ function RecruiterBookingForm({
                 type="button"
                 onClick={handleContinueFromSlots}
                 disabled={!selectedSlot}
-                className="w-full py-3 px-4 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-3 px-4 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Continue
               </button>
             </div>
 
             {selectedSlot && (
-              <p className="text-center text-sm text-gray-500 mt-3">
+              <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-3">
                 Selected: {format(parseISO(selectedSlot), 'EEEE, MMMM d')} at{' '}
                 {format(parseISO(selectedSlot), 'h:mm a')}
               </p>
@@ -519,22 +519,22 @@ function RecruiterBookingForm({
 
         {/* Step: Enter Details */}
         {step === 'form' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Enter your details</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Enter your details</h2>
               <button
                 type="button"
                 onClick={() => setStep('slots')}
-                className="text-[14px] text-gray-600 hover:text-gray-900"
+                className="text-[14px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
               >
                 Change time
               </button>
             </div>
 
             {selectedSlot && (
-              <div className="bg-gray-50 rounded-lg p-3 mb-6 flex items-center gap-3">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-6 flex items-center gap-3">
                 <Calendar className="w-5 h-5 text-gray-400" />
-                <span className="text-[14px] text-gray-700">
+                <span className="text-[14px] text-gray-700 dark:text-gray-300">
                   {format(parseISO(selectedSlot), 'EEEE, MMMM d, yyyy')} at{' '}
                   {format(parseISO(selectedSlot), 'h:mm a')}
                 </span>
@@ -543,7 +543,7 @@ function RecruiterBookingForm({
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Name *
                 </label>
                 <input
@@ -552,13 +552,13 @@ function RecruiterBookingForm({
                   value={formData.attendee_name}
                   onChange={handleFormChange}
                   required
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                   placeholder="Your full name"
                 />
               </div>
 
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Email *
                 </label>
                 <input
@@ -567,13 +567,13 @@ function RecruiterBookingForm({
                   value={formData.attendee_email}
                   onChange={handleFormChange}
                   required
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                   placeholder="you@example.com"
                 />
               </div>
 
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Phone *
                 </label>
                 <input
@@ -582,7 +582,7 @@ function RecruiterBookingForm({
                   value={formData.attendee_phone}
                   onChange={handleFormChange}
                   required
-                  className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                   placeholder="+27 XX XXX XXXX"
                 />
               </div>
@@ -590,7 +590,7 @@ function RecruiterBookingForm({
               {/* Only show company field for leads meetings */}
               {meeting_type.category === 'leads' && (
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Company
                   </label>
                   <input
@@ -598,16 +598,16 @@ function RecruiterBookingForm({
                     name="attendee_company"
                     value={formData.attendee_company}
                     onChange={handleFormChange}
-                    className="w-full px-3 py-2 text-[14px] border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2 text-[14px] border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent"
                     placeholder="Your company name"
                   />
                 </div>
               )}
 
               {createError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-2">
                   <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-red-700">{createError}</span>
+                  <span className="text-sm text-red-700 dark:text-red-400">{createError}</span>
                 </div>
               )}
 
@@ -615,7 +615,7 @@ function RecruiterBookingForm({
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="w-full py-3 px-4 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                 >
                   {isCreating ? (
                     <>
@@ -633,30 +633,30 @@ function RecruiterBookingForm({
 
         {/* Step: Confirm (for authenticated users) */}
         {step === 'confirm' && user && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Confirm your booking</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Confirm your booking</h2>
               <button
                 type="button"
                 onClick={() => setStep('slots')}
-                className="text-[14px] text-gray-600 hover:text-gray-900"
+                className="text-[14px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
               >
                 Change time
               </button>
             </div>
 
             {selectedSlot && (
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
                 <div className="flex items-center gap-3 mb-3">
                   <Calendar className="w-5 h-5 text-gray-400" />
-                  <span className="text-[14px] text-gray-700">
+                  <span className="text-[14px] text-gray-700 dark:text-gray-300">
                     {format(parseISO(selectedSlot), 'EEEE, MMMM d, yyyy')} at{' '}
                     {format(parseISO(selectedSlot), 'h:mm a')}
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-gray-400" />
-                  <span className="text-[14px] text-gray-700">
+                  <span className="text-[14px] text-gray-700 dark:text-gray-300">
                     {meeting_type.duration_minutes} minutes
                   </span>
                 </div>
@@ -664,8 +664,8 @@ function RecruiterBookingForm({
             )}
 
             {/* Show user's details */}
-            <div className="border border-gray-200 rounded-lg p-4 mb-6">
-              <p className="text-[12px] font-medium text-gray-500 uppercase tracking-wide mb-3">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
+              <p className="text-[12px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
                 Booking as
               </p>
               <div className="flex items-center gap-3">
@@ -676,23 +676,23 @@ function RecruiterBookingForm({
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                     <User className="w-5 h-5 text-gray-400" />
                   </div>
                 )}
                 <div>
-                  <p className="text-[14px] font-medium text-gray-900">
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">
                     {user.first_name} {user.last_name}
                   </p>
-                  <p className="text-[13px] text-gray-500">{user.email}</p>
+                  <p className="text-[13px] text-gray-500 dark:text-gray-400">{user.email}</p>
                 </div>
               </div>
             </div>
 
             {createError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 mb-4">
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-2 mb-4">
                 <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <span className="text-sm text-red-700">{createError}</span>
+                <span className="text-sm text-red-700 dark:text-red-400">{createError}</span>
               </div>
             )}
 
@@ -700,7 +700,7 @@ function RecruiterBookingForm({
               type="button"
               onClick={() => handleSubmit()}
               disabled={isCreating}
-              className="w-full py-3 px-4 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {isCreating ? (
                 <>

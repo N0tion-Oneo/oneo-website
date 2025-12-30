@@ -61,10 +61,10 @@ export default function CompanyProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-gray-900 mx-auto" />
-          <p className="text-[14px] text-gray-500 mt-3">Loading company...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 dark:border-gray-700 border-t-gray-900 dark:border-t-gray-100 mx-auto" />
+          <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-3">Loading company...</p>
         </div>
       </div>
     )
@@ -72,13 +72,13 @@ export default function CompanyProfilePage() {
 
   if (error || !company) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Navbar />
         <main className="max-w-5xl mx-auto px-6 py-12">
           <div className="text-center">
-            <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-[15px] text-gray-700 mb-1">Company not found</p>
-            <Link to="/companies" className="text-[14px] text-gray-900 underline">
+            <Building2 className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">Company not found</p>
+            <Link to="/companies" className="text-[14px] text-gray-900 dark:text-gray-100 underline">
               Back to directory
             </Link>
           </div>
@@ -88,7 +88,7 @@ export default function CompanyProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <SEO
         contentData={companySeoData ? { company: companySeoData } : undefined}
         ogImage={company.logo || undefined}
@@ -99,32 +99,32 @@ export default function CompanyProfilePage() {
         {/* Back link */}
         <Link
           to="/companies"
-          className="inline-flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900 mb-6"
+          className="inline-flex items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to directory
         </Link>
 
         {/* Company Header */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
           <div className="flex items-start gap-5">
             {company.logo ? (
               <img
                 src={company.logo}
                 alt={company.name}
-                className="w-20 h-20 rounded-xl object-cover border border-gray-100"
+                className="w-20 h-20 rounded-xl object-cover border border-gray-100 dark:border-gray-700"
               />
             ) : (
-              <div className="w-20 h-20 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Building2 className="w-8 h-8 text-gray-400" />
+              <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-8 h-8 text-gray-400 dark:text-gray-500" />
               </div>
             )}
             <div className="flex-1">
-              <h1 className="text-[24px] font-semibold text-gray-900">{company.name}</h1>
+              <h1 className="text-[24px] font-semibold text-gray-900 dark:text-gray-100">{company.name}</h1>
               {company.tagline && (
-                <p className="text-[15px] text-gray-600 mt-1">{company.tagline}</p>
+                <p className="text-[15px] text-gray-600 dark:text-gray-400 mt-1">{company.tagline}</p>
               )}
-              <div className="mt-3 flex flex-wrap gap-4 text-[13px] text-gray-500">
+              <div className="mt-3 flex flex-wrap gap-4 text-[13px] text-gray-500 dark:text-gray-400">
                 {company.headquarters_location && (
                   <span className="flex items-center gap-1.5">
                     <MapPin className="w-4 h-4" />
@@ -157,7 +157,7 @@ export default function CompanyProfilePage() {
                     href={company.website_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <Globe className="w-4 h-4" />
                     Website
@@ -168,7 +168,7 @@ export default function CompanyProfilePage() {
                     href={company.linkedin_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <Linkedin className="w-4 h-4" />
                     LinkedIn
@@ -178,7 +178,7 @@ export default function CompanyProfilePage() {
             </div>
             {/* Funding Stage Badge */}
             {company.funding_stage && (
-              <span className="px-3 py-1.5 text-[12px] font-medium bg-green-50 text-green-700 rounded-full">
+              <span className="px-3 py-1.5 text-[12px] font-medium bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
                 {getFundingStageLabel(company.funding_stage)}
               </span>
             )}
@@ -187,18 +187,18 @@ export default function CompanyProfilePage() {
 
         {/* About */}
         {company.description && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <h2 className="text-[16px] font-semibold text-gray-900 mb-3">About</h2>
-            <p className="text-[14px] text-gray-600 whitespace-pre-line">{company.description}</p>
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+            <h2 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100 mb-3">About</h2>
+            <p className="text-[14px] text-gray-600 dark:text-gray-400 whitespace-pre-line">{company.description}</p>
           </div>
         )}
 
         {/* Culture & Values */}
         {(company.culture_description || (company.values && company.values.length > 0)) && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <h2 className="text-[16px] font-semibold text-gray-900 mb-4">Culture & Values</h2>
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+            <h2 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100 mb-4">Culture & Values</h2>
             {company.culture_description && (
-              <p className="text-[14px] text-gray-600 whitespace-pre-line mb-4">
+              <p className="text-[14px] text-gray-600 dark:text-gray-400 whitespace-pre-line mb-4">
                 {company.culture_description}
               </p>
             )}
@@ -207,9 +207,9 @@ export default function CompanyProfilePage() {
                 {company.values.map((value, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-700 rounded-full text-[13px]"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-[13px]"
                   >
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" />
                     {value}
                   </span>
                 ))}
@@ -220,19 +220,19 @@ export default function CompanyProfilePage() {
 
         {/* Benefits */}
         {company.benefits && company.benefits.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <h2 className="text-[16px] font-semibold text-gray-900 mb-4">Benefits & Perks</h2>
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+            <h2 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100 mb-4">Benefits & Perks</h2>
             <div className="grid md:grid-cols-2 gap-6">
               {company.benefits.map((category, index) => (
                 <div key={index}>
-                  <h3 className="text-[14px] font-medium text-gray-800 mb-2">{category.category}</h3>
+                  <h3 className="text-[14px] font-medium text-gray-800 dark:text-gray-200 mb-2">{category.category}</h3>
                   <ul className="space-y-1">
                     {category.items.map((item, itemIndex) => (
                       <li
                         key={itemIndex}
-                        className="text-[13px] text-gray-600 flex items-start gap-2"
+                        className="text-[13px] text-gray-600 dark:text-gray-400 flex items-start gap-2"
                       >
-                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400 flex-shrink-0 mt-0.5" />
                         {item}
                       </li>
                     ))}
@@ -245,13 +245,13 @@ export default function CompanyProfilePage() {
 
         {/* Tech Stack */}
         {company.tech_stack && company.tech_stack.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <h2 className="text-[16px] font-semibold text-gray-900 mb-3">Tech Stack</h2>
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+            <h2 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100 mb-3">Tech Stack</h2>
             <div className="flex flex-wrap gap-2">
               {company.tech_stack.map((tech, index) => (
                 <span
                   key={index}
-                  className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-[13px]"
+                  className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-[13px]"
                 >
                   {tech}
                 </span>
@@ -262,9 +262,9 @@ export default function CompanyProfilePage() {
 
         {/* Remote Work Policy */}
         {company.remote_work_policy && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <h2 className="text-[16px] font-semibold text-gray-900 mb-3">Remote Work Policy</h2>
-            <p className="text-[14px] text-gray-600 whitespace-pre-line">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+            <h2 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100 mb-3">Remote Work Policy</h2>
+            <p className="text-[14px] text-gray-600 dark:text-gray-400 whitespace-pre-line">
               {company.remote_work_policy}
             </p>
           </div>
@@ -272,9 +272,9 @@ export default function CompanyProfilePage() {
 
         {/* Interview Process */}
         {company.interview_process && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <h2 className="text-[16px] font-semibold text-gray-900 mb-3">Interview Process</h2>
-            <p className="text-[14px] text-gray-600 whitespace-pre-line">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+            <h2 className="text-[16px] font-semibold text-gray-900 dark:text-gray-100 mb-3">Interview Process</h2>
+            <p className="text-[14px] text-gray-600 dark:text-gray-400 whitespace-pre-line">
               {company.interview_process}
             </p>
           </div>

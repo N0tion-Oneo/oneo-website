@@ -85,9 +85,9 @@ export default function CMSCaseStudiesPage() {
 
   const getStatusBadge = (status: ContentStatus) => {
     const styles: Record<ContentStatus, string> = {
-      [ContentStatus.DRAFT]: 'bg-yellow-100 text-yellow-700',
-      [ContentStatus.PUBLISHED]: 'bg-green-100 text-green-700',
-      [ContentStatus.ARCHIVED]: 'bg-gray-100 text-gray-600',
+      [ContentStatus.DRAFT]: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+      [ContentStatus.PUBLISHED]: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+      [ContentStatus.ARCHIVED]: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
     }
     return (
       <span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${styles[status]}`}>
@@ -99,10 +99,10 @@ export default function CMSCaseStudiesPage() {
   // Access check
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
         <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-        <p className="text-[15px] text-gray-700 mb-2">Access Denied</p>
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-2">Access Denied</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">
           You do not have permission to manage case studies.
         </p>
       </div>
@@ -114,14 +114,14 @@ export default function CMSCaseStudiesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[20px] font-semibold text-gray-900">Case Studies</h1>
-          <p className="text-[13px] text-gray-500 mt-0.5">
+          <h1 className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">Case Studies</h1>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
             Showcase successful hiring stories and client testimonials
           </p>
         </div>
         <Link
           to="/dashboard/cms/case-studies/new"
-          className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
         >
           <Plus className="w-4 h-4" />
           New Case Study
@@ -138,7 +138,7 @@ export default function CMSCaseStudiesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search case studies..."
-            className="w-full pl-10 pr-4 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+            className="w-full pl-10 pr-4 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
           />
         </div>
 
@@ -146,7 +146,7 @@ export default function CMSCaseStudiesPage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+          className="px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
         >
           {STATUS_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -159,7 +159,7 @@ export default function CMSCaseStudiesPage() {
         <select
           value={industryFilter}
           onChange={(e) => setIndustryFilter(e.target.value)}
-          className="px-3 py-2 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+          className="px-3 py-2 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
         >
           <option value="">All Industries</option>
           {industries.map((ind) => (
@@ -174,8 +174,8 @@ export default function CMSCaseStudiesPage() {
           onClick={() => setFeaturedFilter(featuredFilter === true ? undefined : true)}
           className={`flex items-center gap-1.5 px-3 py-2 text-[13px] border rounded-md transition-colors ${
             featuredFilter === true
-              ? 'border-yellow-300 bg-yellow-50 text-yellow-700'
-              : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+              ? 'border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400'
+              : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
           }`}
         >
           <Star className="w-4 h-4" />
@@ -186,7 +186,7 @@ export default function CMSCaseStudiesPage() {
       {/* Loading State */}
       {isLoading && (
         <div className="text-center py-12">
-          <p className="text-[14px] text-gray-500">Loading case studies...</p>
+          <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading case studies...</p>
         </div>
       )}
 
@@ -199,10 +199,10 @@ export default function CMSCaseStudiesPage() {
 
       {/* Empty State */}
       {!isLoading && !error && filteredStudies.length === 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-          <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-[15px] text-gray-700 mb-1">No case studies found</p>
-          <p className="text-[13px] text-gray-500 mb-4">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
+          <Building2 className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No case studies found</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
             {search || statusFilter || industryFilter || featuredFilter
               ? 'Try adjusting your filters'
               : 'Create your first case study'}
@@ -210,7 +210,7 @@ export default function CMSCaseStudiesPage() {
           {!search && !statusFilter && !industryFilter && !featuredFilter && (
             <Link
               to="/dashboard/cms/case-studies/new"
-              className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800"
+              className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
             >
               <Plus className="w-4 h-4" />
               Create Case Study
@@ -225,11 +225,11 @@ export default function CMSCaseStudiesPage() {
           {filteredStudies.map((study) => (
             <div
               key={study.id}
-              className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md dark:hover:shadow-gray-900/40 transition-shadow"
             >
               {/* Featured Image */}
               {study.featured_image ? (
-                <div className="aspect-video bg-gray-100">
+                <div className="aspect-video bg-gray-100 dark:bg-gray-800">
                   <img
                     src={study.featured_image}
                     alt={study.title}
@@ -237,8 +237,8 @@ export default function CMSCaseStudiesPage() {
                   />
                 </div>
               ) : (
-                <div className="aspect-video bg-gray-100 flex items-center justify-center">
-                  <Building2 className="w-8 h-8 text-gray-300" />
+                <div className="aspect-video bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Building2 className="w-8 h-8 text-gray-300 dark:text-gray-600" />
                 </div>
               )}
 
@@ -246,7 +246,7 @@ export default function CMSCaseStudiesPage() {
                 {/* Status & Featured */}
                 <div className="flex items-center gap-2 mb-2">
                   {study.industry && (
-                    <span className="text-[11px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                    <span className="text-[11px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">
                       {study.industry}
                     </span>
                   )}
@@ -259,7 +259,7 @@ export default function CMSCaseStudiesPage() {
                 </div>
 
                 {/* Title */}
-                <h3 className="text-[14px] font-medium text-gray-900 mb-1 line-clamp-2">
+                <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-1 line-clamp-2">
                   {study.title}
                 </h3>
 
@@ -272,21 +272,21 @@ export default function CMSCaseStudiesPage() {
                       className="w-5 h-5 object-contain"
                     />
                   )}
-                  <span className="text-[12px] text-gray-500">{study.client_name}</span>
+                  <span className="text-[12px] text-gray-500 dark:text-gray-400">{study.client_name}</span>
                 </div>
 
                 {/* Excerpt */}
                 {study.excerpt && (
-                  <p className="text-[12px] text-gray-500 line-clamp-2 mb-3">
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">
                     {study.excerpt}
                   </p>
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+                <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
                   <Link
                     to={`/dashboard/cms/case-studies/${study.id}`}
-                    className="flex items-center gap-1 px-3 py-1.5 text-[12px] text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
+                    className="flex items-center gap-1 px-3 py-1.5 text-[12px] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                     Edit
@@ -294,7 +294,7 @@ export default function CMSCaseStudiesPage() {
                   <Link
                     to={`/case-studies/${study.slug}`}
                     target="_blank"
-                    className="flex items-center gap-1 px-3 py-1.5 text-[12px] text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
+                    className="flex items-center gap-1 px-3 py-1.5 text-[12px] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     View
@@ -302,7 +302,7 @@ export default function CMSCaseStudiesPage() {
                   <button
                     onClick={() => handleDelete(study)}
                     disabled={deleteMutation.isPending}
-                    className="flex items-center gap-1 px-3 py-1.5 text-[12px] text-red-500 hover:bg-red-50 rounded-md transition-colors ml-auto"
+                    className="flex items-center gap-1 px-3 py-1.5 text-[12px] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors ml-auto"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

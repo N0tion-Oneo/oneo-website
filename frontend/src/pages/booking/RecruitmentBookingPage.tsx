@@ -134,10 +134,10 @@ export default function RecruitmentBookingPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gray-50">
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">Loading availability...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading availability...</p>
         </div>
       </div>
     )
@@ -146,13 +146,13 @@ export default function RecruitmentBookingPage() {
   // Error state
   if (error || !availability) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-red-600" />
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-500" />
           </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Unable to Load</h1>
-          <p className="text-gray-500">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Unable to Load</h1>
+          <p className="text-gray-500 dark:text-gray-400">
             {error || 'Could not load availability. Please try again later.'}
           </p>
         </div>
@@ -165,47 +165,47 @@ export default function RecruitmentBookingPage() {
   // Success state
   if (step === 'success' && bookingResult) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-100 p-8 text-center">
-          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10 text-green-600" />
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-gray-900/40 border border-gray-100 dark:border-gray-700 p-8 text-center">
+          <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-500" />
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Interview Scheduled!</h1>
-          <p className="text-gray-500 mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Interview Scheduled!</h1>
+          <p className="text-gray-500 dark:text-gray-400 mb-8">
             {bookingResult.confirmation_message || "You're all set. We look forward to speaking with you."}
           </p>
 
-          <div className="bg-gray-50 rounded-xl p-5 text-left space-y-4">
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-5 text-left space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-gray-600" />
+              <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Date</p>
-                <p className="font-medium text-gray-900">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Date</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">
                   {format(parseISO(bookingResult.scheduled_at), 'EEEE, MMMM d, yyyy')}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-gray-600" />
+              <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Time</p>
-                <p className="font-medium text-gray-900">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Time</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">
                   {format(parseISO(bookingResult.scheduled_at), 'h:mm a')} ({meeting_type.duration_minutes} min)
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 flex items-center justify-center">
                 {getLocationIcon(meeting_type.location_type)}
               </div>
               <div>
-                <p className="text-sm text-gray-500">Location</p>
-                <p className="font-medium text-gray-900">{getLocationLabel(meeting_type.location_type)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Location</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{getLocationLabel(meeting_type.location_type)}</p>
               </div>
             </div>
           </div>
@@ -215,7 +215,7 @@ export default function RecruitmentBookingPage() {
           </p>
 
           {bookingResult.redirect_url && (
-            <p className="text-sm text-gray-500 mt-4">Redirecting you shortly...</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">Redirecting you shortly...</p>
           )}
         </div>
       </div>
@@ -223,7 +223,7 @@ export default function RecruitmentBookingPage() {
   }
 
   return (
-    <div className="fixed inset-0 flex bg-white">
+    <div className="fixed inset-0 flex bg-white dark:bg-gray-900">
       {/* Left Panel - Professional, Interview-focused */}
       <div className="hidden lg:flex lg:w-[420px] xl:w-[480px] flex-col bg-slate-900 text-white relative overflow-hidden">
         {/* Content */}
@@ -335,7 +335,7 @@ export default function RecruitmentBookingPage() {
       </div>
 
       {/* Right Panel - Booking Form */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden bg-gray-50">
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-800">
         {/* Mobile Header */}
         <div className="lg:hidden flex-shrink-0 bg-slate-900 text-white px-4 py-5">
           <div className="flex items-center gap-3 mb-4">
@@ -372,10 +372,10 @@ export default function RecruitmentBookingPage() {
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
             {step === 'slots' && (
               <>
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Select a time</h2>
-                <p className="text-gray-500 mb-6">Choose a time that works best for your interview.</p>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Select a time</h2>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">Choose a time that works best for your interview.</p>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-6">
                   <SlotPicker
                     slots={availability.available_slots}
                     selected={selectedSlot}
@@ -384,19 +384,19 @@ export default function RecruitmentBookingPage() {
                     timezone={availability.timezone}
                   />
 
-                  <div className="mt-6 pt-6 border-t border-gray-100">
+                  <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
                     <button
                       type="button"
                       onClick={handleContinueFromSlots}
                       disabled={!selectedSlot}
-                      className="w-full py-3.5 px-4 bg-slate-900 text-white font-medium rounded-xl hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="w-full py-3.5 px-4 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-medium rounded-xl hover:bg-slate-800 dark:hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Continue
                     </button>
                   </div>
 
                   {selectedSlot && (
-                    <p className="text-center text-sm text-gray-500 mt-4">
+                    <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
                       {format(parseISO(selectedSlot), 'EEEE, MMMM d')} at{' '}
                       {format(parseISO(selectedSlot), 'h:mm a')}
                     </p>
@@ -409,13 +409,13 @@ export default function RecruitmentBookingPage() {
               <>
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Your details</h2>
-                    <p className="text-gray-500 text-sm mt-1">We'll send your interview confirmation here.</p>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Your details</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">We'll send your interview confirmation here.</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setStep('slots')}
-                    className="text-sm text-slate-600 hover:text-slate-900"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   >
                     Change time
                   </button>
@@ -423,24 +423,24 @@ export default function RecruitmentBookingPage() {
 
                 {/* Selected time summary */}
                 {selectedSlot && (
-                  <div className="bg-slate-50 rounded-xl p-4 mb-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center">
-                      <Calendar className="w-6 h-6 text-slate-600" />
+                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 mb-6 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-600 flex items-center justify-center">
+                      <Calendar className="w-6 h-6 text-slate-600 dark:text-slate-300" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">
                         {format(parseISO(selectedSlot), 'EEEE, MMMM d, yyyy')}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {format(parseISO(selectedSlot), 'h:mm a')} · {meeting_type.duration_minutes} min
                       </p>
                     </div>
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
+                <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-6 space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Full name
                     </label>
                     <input
@@ -449,13 +449,13 @@ export default function RecruitmentBookingPage() {
                       value={formData.attendee_name}
                       onChange={handleFormChange}
                       required
-                      className="w-full px-4 py-3 text-[15px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                      className="w-full px-4 py-3 text-[15px] border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 focus:border-transparent"
                       placeholder="John Smith"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Email address
                     </label>
                     <input
@@ -464,13 +464,13 @@ export default function RecruitmentBookingPage() {
                       value={formData.attendee_email}
                       onChange={handleFormChange}
                       required
-                      className="w-full px-4 py-3 text-[15px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                      className="w-full px-4 py-3 text-[15px] border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 focus:border-transparent"
                       placeholder="john@email.com"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Phone number
                     </label>
                     <input
@@ -479,15 +479,15 @@ export default function RecruitmentBookingPage() {
                       value={formData.attendee_phone}
                       onChange={handleFormChange}
                       required
-                      className="w-full px-4 py-3 text-[15px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                      className="w-full px-4 py-3 text-[15px] border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 focus:border-transparent"
                       placeholder="+27 XX XXX XXXX"
                     />
                   </div>
 
                   {createError && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-red-700">{createError}</span>
+                      <span className="text-sm text-red-700 dark:text-red-400">{createError}</span>
                     </div>
                   )}
 
@@ -495,7 +495,7 @@ export default function RecruitmentBookingPage() {
                     <button
                       type="submit"
                       disabled={isCreating}
-                      className="w-full py-3.5 px-4 bg-slate-900 text-white font-medium rounded-xl hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-3.5 px-4 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-medium rounded-xl hover:bg-slate-800 dark:hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                     >
                       {isCreating ? (
                         <>
@@ -516,36 +516,36 @@ export default function RecruitmentBookingPage() {
               <>
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Confirm your interview</h2>
-                    <p className="text-gray-500 text-sm mt-1">Review the details below.</p>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Confirm your interview</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Review the details below.</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setStep('slots')}
-                    className="text-sm text-slate-600 hover:text-slate-900"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   >
                     Change time
                   </button>
                 </div>
 
                 {selectedSlot && (
-                  <div className="bg-slate-50 rounded-xl p-4 mb-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center">
-                      <Calendar className="w-6 h-6 text-slate-600" />
+                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 mb-6 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-600 flex items-center justify-center">
+                      <Calendar className="w-6 h-6 text-slate-600 dark:text-slate-300" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">
                         {format(parseISO(selectedSlot), 'EEEE, MMMM d, yyyy')}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {format(parseISO(selectedSlot), 'h:mm a')} · {meeting_type.duration_minutes} min
                       </p>
                     </div>
                   </div>
                 )}
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm dark:shadow-gray-900/40 border border-gray-200 dark:border-gray-700 p-6">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
                     Booking as
                   </p>
                   <div className="flex items-center gap-4 mb-6">
@@ -556,22 +556,22 @@ export default function RecruitmentBookingPage() {
                         className="w-12 h-12 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                         <User className="w-6 h-6 text-gray-400" />
                       </div>
                     )}
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">
                         {user.first_name} {user.last_name}
                       </p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                     </div>
                   </div>
 
                   {createError && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 mb-4">
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3 mb-4">
                       <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-red-700">{createError}</span>
+                      <span className="text-sm text-red-700 dark:text-red-400">{createError}</span>
                     </div>
                   )}
 
@@ -579,7 +579,7 @@ export default function RecruitmentBookingPage() {
                     type="button"
                     onClick={() => handleSubmit()}
                     disabled={isCreating}
-                    className="w-full py-3.5 px-4 bg-slate-900 text-white font-medium rounded-xl hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3.5 px-4 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-medium rounded-xl hover:bg-slate-800 dark:hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                   >
                     {isCreating ? (
                       <>
