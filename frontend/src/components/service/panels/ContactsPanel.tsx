@@ -9,13 +9,13 @@ interface ContactsPanelProps {
 function getRoleBadge(role: string) {
   switch (role) {
     case 'admin':
-      return { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Admin' }
+      return { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700', label: 'Admin' }
     case 'hiring_manager':
-      return { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Hiring Manager' }
+      return { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700', label: 'Hiring Manager' }
     case 'viewer':
-      return { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Viewer' }
+      return { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', label: 'Viewer' }
     default:
-      return { bg: 'bg-gray-100', text: 'text-gray-600', label: role }
+      return { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', label: role }
   }
 }
 
@@ -25,7 +25,7 @@ export function ContactsPanel({ companyId }: ContactsPanelProps) {
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100" />
       </div>
     )
   }
@@ -34,8 +34,8 @@ export function ContactsPanel({ companyId }: ContactsPanelProps) {
     return (
       <div className="h-full overflow-y-auto p-4">
         <div className="text-center py-8">
-          <User className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">No contacts found</p>
+          <User className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-500 dark:text-gray-400 text-sm">No contacts found</p>
         </div>
       </div>
     )
@@ -48,19 +48,19 @@ export function ContactsPanel({ companyId }: ContactsPanelProps) {
         return (
           <div
             key={user.id}
-            className="p-3 bg-white border border-gray-200 rounded-lg"
+            className="p-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg"
           >
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {user.user_avatar ? (
                   <img src={user.user_avatar} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <User className="w-5 h-5 text-gray-500" />
+                  <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="font-medium text-sm text-gray-900 truncate">
+                  <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
                     {user.user_first_name && user.user_last_name
                       ? `${user.user_first_name} ${user.user_last_name}`
                       : user.user_email}
@@ -71,14 +71,14 @@ export function ContactsPanel({ companyId }: ContactsPanelProps) {
                 </div>
 
                 {user.job_title && (
-                  <p className="text-xs text-gray-500 mt-0.5">{user.job_title}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{user.job_title}</p>
                 )}
 
                 <div className="mt-2 space-y-1">
                   {user.user_email && (
                     <a
                       href={`mailto:${user.user_email}`}
-                      className="flex items-center gap-2 text-xs text-gray-600 hover:text-blue-600"
+                      className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600"
                     >
                       <Mail className="w-3 h-3" />
                       {user.user_email}
@@ -87,7 +87,7 @@ export function ContactsPanel({ companyId }: ContactsPanelProps) {
                   {user.user_phone && (
                     <a
                       href={`tel:${user.user_phone}`}
-                      className="flex items-center gap-2 text-xs text-gray-600 hover:text-blue-600"
+                      className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600"
                     >
                       <Phone className="w-3 h-3" />
                       {user.user_phone}
@@ -95,7 +95,7 @@ export function ContactsPanel({ companyId }: ContactsPanelProps) {
                   )}
                 </div>
 
-                <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 dark:text-gray-500">
                   {user.joined_at && (
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />

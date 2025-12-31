@@ -498,7 +498,7 @@ def list_all_jobs(request):
     jobs = Job.objects.select_related(
         'company', 'company__industry', 'location_city', 'location_country', 'created_by'
     ).prefetch_related(
-        'required_skills', 'technologies'
+        'required_skills', 'technologies', 'assigned_recruiters'
     ).order_by('-created_at')
 
     # Clients can only see their company's jobs

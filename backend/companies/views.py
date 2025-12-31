@@ -1085,6 +1085,11 @@ def list_all_companies(request):
     Admin/Recruiter only.
     Includes job counts per status.
     """
+    from jobs.models import Job
+    from django.db.models import Prefetch
+    from subscriptions.models import Subscription, SubscriptionServiceType, CompanyPricing
+    from django.core.paginator import Paginator, EmptyPage
+
     if request.user.role not in [UserRole.ADMIN, UserRole.RECRUITER]:
         return Response(
             {'error': 'Permission denied'},
@@ -1105,8 +1110,42 @@ def list_all_companies(request):
     if is_published is not None:
         companies = companies.filter(is_published=is_published.lower() == 'true')
 
+    # Filter by industry
+    industry = request.query_params.get('industry')
+    if industry:
+        companies = companies.filter(industry__id=industry)
+
+    # Filter by company size
+    company_size = request.query_params.get('company_size')
+    if company_size:
+        companies = companies.filter(company_size=company_size)
+
+    # Filter by has_jobs
+    has_jobs = request.query_params.get('has_jobs')
+    if has_jobs == 'true':
+        companies = companies.filter(jobs__isnull=False).distinct()
+    elif has_jobs == 'false':
+        companies = companies.filter(jobs__isnull=True)
+
+    # Filter by created date range
+    created_after = request.query_params.get('created_after')
+    if created_after:
+        companies = companies.filter(created_at__date__gte=created_after)
+
+    created_before = request.query_params.get('created_before')
+    if created_before:
+        companies = companies.filter(created_at__date__lte=created_before)
+
+    # Ordering
+    ordering = request.query_params.get('ordering', '-created_at')
+    valid_orderings = ['created_at', '-created_at', 'name', '-name', 'jobs_total', '-jobs_total']
+    # Note: jobs_total ordering happens after annotation
+
     # Annotate with job counts per status
-    companies = companies.select_related('industry').annotate(
+    companies = companies.select_related(
+        'industry',
+        'onboarding_stage',  # Fix N+1 for onboarding_stage
+    ).annotate(
         jobs_total=Count('jobs'),
         jobs_draft=Count(
             Case(When(jobs__status='draft', then=1), output_field=IntegerField())
@@ -1122,18 +1161,51 @@ def list_all_companies(request):
         ),
     )
 
-    # Prefetch jobs for each company (applications_count is already a field on Job model)
-    from jobs.models import Job
-    from django.db.models import Prefetch
+    # Apply ordering (after annotation so jobs_total works)
+    if ordering in valid_orderings:
+        companies = companies.order_by(ordering)
 
+    # Prefetch related data to avoid N+1 queries
     jobs_queryset = Job.objects.order_by('-created_at')
+    subscriptions_queryset = Subscription.objects.filter(
+        service_type__in=[SubscriptionServiceType.RETAINED, SubscriptionServiceType.HEADHUNTING]
+    ).order_by('-created_at')
 
     companies = companies.prefetch_related(
-        Prefetch('jobs', queryset=jobs_queryset, to_attr='prefetched_jobs')
+        Prefetch('jobs', queryset=jobs_queryset, to_attr='prefetched_jobs'),
+        'assigned_to',  # Fix N+1 for assigned_to ManyToMany
+        Prefetch(
+            'subscriptions',
+            queryset=subscriptions_queryset,
+            to_attr='prefetched_subscriptions'
+        ),
+        Prefetch(
+            'members',
+            queryset=CompanyUser.objects.filter(role='admin', is_active=True).select_related('user'),
+            to_attr='prefetched_admins'
+        ),
     )
 
-    serializer = CompanyAdminListSerializer(companies, many=True)
-    return Response(serializer.data)
+    # Pagination
+    page = int(request.query_params.get('page', 1))
+    page_size = min(int(request.query_params.get('page_size', 20)), 100)
+
+    paginator = Paginator(companies, page_size)
+    try:
+        page_obj = paginator.page(page)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    serializer = CompanyAdminListSerializer(page_obj.object_list, many=True)
+    return Response({
+        'results': serializer.data,
+        'count': paginator.count,
+        'page': page_obj.number,
+        'page_size': page_size,
+        'total_pages': paginator.num_pages,
+        'next': page_obj.has_next(),
+        'previous': page_obj.has_previous(),
+    })
 
 
 @api_view(['GET', 'PATCH'])

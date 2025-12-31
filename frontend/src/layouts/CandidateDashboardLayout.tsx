@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { usePublicBranding } from '@/hooks';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { SubscriptionBlockedOverlay } from '@/components/subscription';
@@ -16,8 +17,12 @@ interface NavItem {
 export default function CandidateDashboardLayout() {
   const { user, logout } = useAuth();
   const { branding } = usePublicBranding();
+  const { isDark } = useTheme();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Use dark logo if available and in dark mode
+  const logoUrl = isDark && branding?.logo_dark_url ? branding.logo_dark_url : branding?.logo_url;
 
   // Persist minimized state in localStorage
   const [isMinimized, setIsMinimized] = useState(() => {
@@ -319,10 +324,10 @@ export default function CandidateDashboardLayout() {
         <div className="h-14 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
           {!isMinimized && (
             <Link to="/" className="flex items-center">
-              {branding?.logo_url ? (
+              {logoUrl ? (
                 <img
-                  src={branding.logo_url}
-                  alt={branding.company_name || 'Logo'}
+                  src={logoUrl}
+                  alt={branding?.company_name || 'Logo'}
                   className="h-7 w-auto"
                 />
               ) : (

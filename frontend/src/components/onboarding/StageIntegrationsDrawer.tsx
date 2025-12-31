@@ -191,7 +191,7 @@ export function StageIntegrationsDrawer({ stage, onClose }: StageIntegrationsDra
                   )}
                   {stage.entity_type === 'lead' && (
                     <Link
-                      to={`/dashboard/leads?stage=${stage.id}`}
+                      to={`/dashboard/admin/leads?stage=${stage.id}`}
                       className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group"
                     >
                       <div className="flex items-center gap-3">

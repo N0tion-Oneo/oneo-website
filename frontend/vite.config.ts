@@ -21,6 +21,10 @@ export default defineConfig({
     },
   },
   server: {
+    watch: {
+      usePolling: true,
+      interval: 100,
+    },
     proxy: {
       // Proxy SEO files to Django backend
       // Matches: sitemap.xml, page-sitemap.xml, post-sitemap.xml, etc.

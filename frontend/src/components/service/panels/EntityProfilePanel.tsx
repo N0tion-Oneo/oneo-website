@@ -20,6 +20,8 @@ import {
   Users,
   Code,
   Tag,
+  Edit,
+  Plus,
 } from 'lucide-react'
 import type { OnboardingEntityType, ExperienceListItem, Experience } from '@/types'
 import { Link } from 'react-router-dom'
@@ -34,6 +36,10 @@ interface EntityProfilePanelProps {
   entityType: OnboardingEntityType
   entityId: string
   entity: Record<string, unknown> | undefined
+  // Interactive callbacks (optional - if not provided, shows read-only)
+  onToggleRead?: () => Promise<void>
+  onToggleReplied?: () => Promise<void>
+  onSaveNotes?: (notes: string) => Promise<void>
 }
 
 // ============================================================================
@@ -249,6 +255,34 @@ function CompanyProfile({ entity }: { entity: Record<string, unknown> }) {
         </div>
       </div>
 
+      {/* Quick Actions */}
+      <div className="flex flex-wrap gap-2">
+        <Link
+          to={`/dashboard/admin/companies/${company.id}`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
+        >
+          <Edit className="w-3.5 h-3.5" />
+          Edit
+        </Link>
+        {company.is_published && (
+          <Link
+            to={`/companies/${company.slug}`}
+            target="_blank"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            View Public
+          </Link>
+        )}
+        <Link
+          to={`/dashboard/admin/jobs/new?company=${company.id}`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Create Job
+        </Link>
+      </div>
+
       {/* Badges */}
       <div className="flex flex-wrap gap-2">
         {company.onboarding_stage && (
@@ -347,27 +381,6 @@ function CompanyProfile({ entity }: { entity: Record<string, unknown> }) {
         </CollapsibleSection>
       )}
 
-      {/* Assigned To */}
-      {company.assigned_to && company.assigned_to.length > 0 && (
-        <CollapsibleSection title="Assigned Recruiters" icon={<Users className="w-4 h-4" />} count={company.assigned_to.length}>
-          <div className="space-y-2">
-            {company.assigned_to.map((user) => (
-              <div key={user.id} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
-                  <User className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
-                    {user.first_name} {user.last_name}
-                  </p>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CollapsibleSection>
-      )}
-
       {/* Timeline */}
       <div className="flex items-center gap-2 text-[12px] text-gray-500 dark:text-gray-400 pt-2">
         <Calendar className="w-4 h-4" />
@@ -395,6 +408,7 @@ function CompanyProfile({ entity }: { entity: Record<string, unknown> }) {
 function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
   const candidate = entity as {
     id?: string
+    slug?: string
     full_name?: string
     first_name?: string
     last_name?: string
@@ -747,7 +761,7 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
       {/* View Full Profile Link */}
       <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
         <Link
-          to={`/dashboard/admin/candidates/${candidate.id}`}
+          to={`/dashboard/admin/candidates/${candidate.slug || candidate.id}`}
           className="flex items-center gap-2 text-[13px] text-blue-600 hover:text-blue-700"
         >
           <ExternalLink className="w-4 h-4" />
@@ -762,7 +776,20 @@ function CandidateProfile({ entity }: { entity: Record<string, unknown> }) {
 // Lead Profile
 // ============================================================================
 
-function LeadProfile({ entity }: { entity: Record<string, unknown> }) {
+function LeadProfile({
+  entity,
+  onToggleRead,
+  onToggleReplied,
+  onSaveNotes,
+}: {
+  entity: Record<string, unknown>
+  onToggleRead?: () => Promise<void>
+  onToggleReplied?: () => Promise<void>
+  onSaveNotes?: (notes: string) => Promise<void>
+}) {
+  const [isEditingNotes, setIsEditingNotes] = useState(false)
+  const [notesValue, setNotesValue] = useState('')
+  const [isSavingNotes, setIsSavingNotes] = useState(false)
   const lead = entity as {
     id?: string
     name?: string
@@ -858,20 +885,48 @@ function LeadProfile({ entity }: { entity: Record<string, unknown> }) {
 
       {/* Admin Status (for inbound leads) */}
       {lead.source === 'inbound' && (
-        <CollapsibleSection title="Admin Status" icon={<CheckCircle className="w-4 h-4" />}>
+        <CollapsibleSection title="Admin Status" icon={<CheckCircle className="w-4 h-4" />} defaultOpen>
           <div className="flex gap-3">
-            <div className={`flex items-center gap-2 px-3 py-2 text-[12px] font-medium rounded-lg border ${
-              lead.is_read ? 'bg-green-50 dark:bg-green-900/30 border-green-200 text-green-700' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
-            }`}>
-              {lead.is_read ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-              {lead.is_read ? 'Read' : 'Unread'}
-            </div>
-            <div className={`flex items-center gap-2 px-3 py-2 text-[12px] font-medium rounded-lg border ${
-              lead.is_replied ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 text-blue-700' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
-            }`}>
-              {lead.is_replied ? <CheckCircle className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
-              {lead.is_replied ? 'Replied' : 'Not Replied'}
-            </div>
+            {onToggleRead ? (
+              <button
+                onClick={onToggleRead}
+                className={`flex items-center gap-2 px-3 py-2 text-[12px] font-medium rounded-lg border transition-colors ${
+                  lead.is_read
+                    ? 'bg-green-50 dark:bg-green-900/30 border-green-200 text-green-700 hover:bg-green-100'
+                    : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                {lead.is_read ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                {lead.is_read ? 'Read' : 'Unread'}
+              </button>
+            ) : (
+              <div className={`flex items-center gap-2 px-3 py-2 text-[12px] font-medium rounded-lg border ${
+                lead.is_read ? 'bg-green-50 dark:bg-green-900/30 border-green-200 text-green-700' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
+              }`}>
+                {lead.is_read ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                {lead.is_read ? 'Read' : 'Unread'}
+              </div>
+            )}
+            {onToggleReplied ? (
+              <button
+                onClick={onToggleReplied}
+                className={`flex items-center gap-2 px-3 py-2 text-[12px] font-medium rounded-lg border transition-colors ${
+                  lead.is_replied
+                    ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 text-blue-700 hover:bg-blue-100'
+                    : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                {lead.is_replied ? <CheckCircle className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
+                {lead.is_replied ? 'Replied' : 'Not Replied'}
+              </button>
+            ) : (
+              <div className={`flex items-center gap-2 px-3 py-2 text-[12px] font-medium rounded-lg border ${
+                lead.is_replied ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 text-blue-700' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
+              }`}>
+                {lead.is_replied ? <CheckCircle className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
+                {lead.is_replied ? 'Replied' : 'Not Replied'}
+              </div>
+            )}
           </div>
         </CollapsibleSection>
       )}
@@ -883,33 +938,71 @@ function LeadProfile({ entity }: { entity: Record<string, unknown> }) {
         </CollapsibleSection>
       )}
 
-      {/* Notes */}
-      {lead.notes && (
-        <CollapsibleSection title="Notes" icon={<FileText className="w-4 h-4" />}>
-          <p className="text-[13px] text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{lead.notes}</p>
-        </CollapsibleSection>
-      )}
-
-      {/* Assigned To */}
-      {lead.assigned_to && lead.assigned_to.length > 0 && (
-        <CollapsibleSection title="Assigned To" icon={<Users className="w-4 h-4" />} count={lead.assigned_to.length}>
+      {/* Notes - Editable if callback provided */}
+      <CollapsibleSection title="Notes" icon={<FileText className="w-4 h-4" />} defaultOpen={!!lead.notes || !!onSaveNotes}>
+        {onSaveNotes ? (
           <div className="space-y-2">
-            {lead.assigned_to.map((user) => (
-              <div key={user.id} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
-                  <User className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            {isEditingNotes ? (
+              <>
+                <textarea
+                  value={notesValue}
+                  onChange={(e) => setNotesValue(e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 text-[13px] border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  placeholder="Add notes about this lead..."
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      setIsSavingNotes(true)
+                      try {
+                        await onSaveNotes(notesValue)
+                        setIsEditingNotes(false)
+                      } finally {
+                        setIsSavingNotes(false)
+                      }
+                    }}
+                    disabled={isSavingNotes}
+                    className="px-3 py-1.5 text-[12px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    {isSavingNotes ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setNotesValue(lead.notes || '')
+                      setIsEditingNotes(false)
+                    }}
+                    className="px-3 py-1.5 text-[12px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
-                    {user.full_name || `${user.first_name} ${user.last_name}`}
-                  </p>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
-                </div>
+              </>
+            ) : (
+              <div className="relative group">
+                {lead.notes ? (
+                  <p className="text-[13px] text-gray-700 dark:text-gray-300 whitespace-pre-wrap pr-8">{lead.notes}</p>
+                ) : (
+                  <p className="text-[13px] text-gray-400 dark:text-gray-500 italic">No notes yet</p>
+                )}
+                <button
+                  onClick={() => {
+                    setNotesValue(lead.notes || '')
+                    setIsEditingNotes(true)
+                  }}
+                  className="absolute top-0 right-0 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                </button>
               </div>
-            ))}
+            )}
           </div>
-        </CollapsibleSection>
-      )}
+        ) : lead.notes ? (
+          <p className="text-[13px] text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{lead.notes}</p>
+        ) : (
+          <p className="text-[13px] text-gray-400 dark:text-gray-500 italic">No notes</p>
+        )}
+      </CollapsibleSection>
 
       {/* Timeline */}
       <div className="flex items-center gap-2 text-[12px] text-gray-500 dark:text-gray-400 pt-2">
@@ -921,7 +1014,7 @@ function LeadProfile({ entity }: { entity: Record<string, unknown> }) {
       {!isTerminal && (
         <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
           <Link
-            to={`/dashboard/leads/${lead.id}`}
+            to={`/dashboard/admin/leads?selected=${lead.id}`}
             className="flex items-center gap-2 text-[13px] text-blue-600 hover:text-blue-700"
           >
             <ExternalLink className="w-4 h-4" />
@@ -937,7 +1030,14 @@ function LeadProfile({ entity }: { entity: Record<string, unknown> }) {
 // Main Component
 // ============================================================================
 
-export function EntityProfilePanel({ entityType, entityId: _entityId, entity }: EntityProfilePanelProps) {
+export function EntityProfilePanel({
+  entityType,
+  entityId: _entityId,
+  entity,
+  onToggleRead,
+  onToggleReplied,
+  onSaveNotes,
+}: EntityProfilePanelProps) {
   if (!entity) {
     return (
       <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
@@ -950,7 +1050,14 @@ export function EntityProfilePanel({ entityType, entityId: _entityId, entity }: 
     <div className="h-full overflow-y-auto p-4">
       {entityType === 'company' && <CompanyProfile entity={entity} />}
       {entityType === 'candidate' && <CandidateProfile entity={entity} />}
-      {entityType === 'lead' && <LeadProfile entity={entity} />}
+      {entityType === 'lead' && (
+        <LeadProfile
+          entity={entity}
+          onToggleRead={onToggleRead}
+          onToggleReplied={onToggleReplied}
+          onSaveNotes={onSaveNotes}
+        />
+      )}
     </div>
   )
 }

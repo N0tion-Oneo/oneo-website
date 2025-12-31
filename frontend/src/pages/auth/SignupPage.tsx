@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { usePublicBranding } from '@/hooks';
 import { AxiosError } from 'axios';
 
@@ -29,12 +30,14 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const { register: registerUser } = useAuth();
+  const { isDark } = useTheme();
   const { branding } = usePublicBranding();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const companyName = branding?.company_name || '';
+  const logoUrl = isDark && branding?.logo_dark_url ? branding.logo_dark_url : branding?.logo_url;
 
   const {
     register,
@@ -90,9 +93,9 @@ export default function SignupPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
       <header className="p-6">
         <Link to="/" className="flex items-center">
-          {branding?.logo_url ? (
+          {logoUrl ? (
             <img
-              src={branding.logo_url}
+              src={logoUrl}
               alt={companyName}
               className="h-8 w-auto"
             />

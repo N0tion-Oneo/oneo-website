@@ -1,27 +1,24 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import {
-  User,
-  Briefcase,
-  Activity,
-  CheckSquare,
-  Calendar,
-} from 'lucide-react'
 import { CandidateAdminListItem, ProfileSuggestionFieldType, AssignedUser } from '@/types'
 import { FocusMode } from '@/components/service'
-import { DrawerWithPanels, type PanelOption } from '@/components/common'
+import { DrawerWithPanels, badgeStyles } from '@/components/common'
 import { TasksPanel, TimelinePanel, ApplicationsPanel } from '@/components/service/panels'
 import api from '@/services/api'
 import { useAdminSuggestions, useTasks } from '@/hooks'
-import CandidateProfileCard from './CandidateProfileCard'
+import { EntityProfilePanel } from '@/components/service/panels/EntityProfilePanel'
 import CandidateActivityTab from './CandidateActivityTab'
 import AddToJobModal from './AddToJobModal'
+import ApplicationDrawer from '@/components/applications/ApplicationDrawer'
 import { SuggestionsPanel } from '@/components/suggestions'
+import { AssignedSelect } from '@/components/forms'
+import {
+  getEntityPanelOptions,
+  type EntityPanelType,
+} from '@/components/service/panelConfig'
 
 // =============================================================================
 // Types
 // =============================================================================
-
-type PanelType = 'profile' | 'applications' | 'activity' | 'tasks' | 'timeline'
 
 interface SuggestionPanelState {
   isOpen: boolean
@@ -49,10 +46,11 @@ export default function CandidatePreviewPanel({
   mode = 'admin',
 }: CandidatePreviewPanelProps) {
   const isClientMode = mode === 'client'
-  const [activePanel, setActivePanel] = useState<PanelType>('profile')
+  const [activePanel, setActivePanel] = useState<EntityPanelType>('profile')
   const viewRecordedRef = useRef<number | null>(null)
   const [showAddToJobModal, setShowAddToJobModal] = useState(false)
   const [applicationsRefreshKey, setApplicationsRefreshKey] = useState(0)
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null)
   const [suggestionPanel, setSuggestionPanel] = useState<SuggestionPanelState>({
     isOpen: false,
     fieldType: null,
@@ -96,56 +94,9 @@ export default function CandidatePreviewPanel({
     }
   }, [candidate, isClientMode])
 
-  // Handle adding a suggestion (opens the suggestions panel)
-  const handleAddSuggestion = useCallback(
-    (fieldType: ProfileSuggestionFieldType, fieldName: string, relatedObjectId?: string) => {
-      // Find related object label for better UX
-      let relatedObjectLabel: string | undefined
-      if (relatedObjectId && candidate) {
-        if (fieldType === 'experience') {
-          const exp = candidate.experiences?.find((e) => e.id === relatedObjectId)
-          if (exp) {
-            relatedObjectLabel = `${exp.job_title} at ${exp.company_name}`
-          }
-        } else if (fieldType === 'education') {
-          const edu = candidate.education?.find((e) => e.id === relatedObjectId)
-          if (edu) {
-            relatedObjectLabel = `${edu.degree} - ${edu.institution}`
-          }
-        }
-      }
-
-      setSuggestionPanel({
-        isOpen: true,
-        fieldType,
-        fieldName,
-        relatedObjectId,
-        relatedObjectLabel,
-      })
-    },
-    [candidate]
-  )
-
   const handleCloseSuggestionPanel = useCallback(() => {
     setSuggestionPanel({ isOpen: false, fieldType: null, fieldName: null })
   }, [])
-
-  // Handle assigned_to changes
-  const handleAssignedToChange = useCallback(
-    async (newAssigned: AssignedUser[]) => {
-      if (!candidate) return
-      try {
-        await api.patch(`/candidates/${candidate.slug}/`, {
-          assigned_to_ids: newAssigned.map((u) => u.id),
-        })
-        // Trigger parent to refresh data
-        onRefresh?.()
-      } catch (err) {
-        console.error('Failed to update assigned_to:', err)
-      }
-    },
-    [candidate, onRefresh]
-  )
 
   // Handle refresh
   const handleRefresh = () => {
@@ -153,24 +104,29 @@ export default function CandidatePreviewPanel({
     refetchTasks()
   }
 
-  // Build available panels
-  const buildAvailablePanels = (): PanelOption[] => {
-    const panels: PanelOption[] = [
-      { type: 'profile', label: 'Candidate Profile', icon: <User className="w-4 h-4" /> },
-      { type: 'applications', label: 'Applications', icon: <Briefcase className="w-4 h-4" /> },
-    ]
-
-    // Admin-only panels
-    if (!isClientMode) {
-      panels.push(
-        { type: 'activity', label: 'Activity Log', icon: <Activity className="w-4 h-4" /> },
-        { type: 'tasks', label: 'Tasks', icon: <CheckSquare className="w-4 h-4" /> },
-        { type: 'timeline', label: 'Timeline', icon: <Calendar className="w-4 h-4" /> }
-      )
+  // Handle assigned change
+  const handleAssignedChange = async (assignedTo: AssignedUser[]) => {
+    if (!candidate) return
+    try {
+      await api.patch(`/admin/candidates/${candidate.id}/`, {
+        assigned_to_ids: assignedTo.map((u) => u.id),
+      })
+      onRefresh?.()
+    } catch (err) {
+      console.error('Failed to update assigned:', err)
     }
-
-    return panels
   }
+
+  // Get available panels from shared config
+  // Filter out admin-only panels in client mode
+  const availablePanels = getEntityPanelOptions('candidate').filter((panel) => {
+    if (isClientMode) {
+      // Client mode only shows profile and applications
+      return panel.type === 'profile' || panel.type === 'applications'
+    }
+    // Admin mode shows all except meetings (not implemented in drawer)
+    return panel.type !== 'meetings'
+  })
 
   // Render panel content
   const renderPanel = (panelType: string) => {
@@ -185,23 +141,11 @@ export default function CandidatePreviewPanel({
     switch (panelType) {
       case 'profile':
         return (
-          <div className="h-full overflow-y-auto p-4">
-            <CandidateProfileCard
-              candidate={candidate}
-              experiences={candidate.experiences || []}
-              education={candidate.education || []}
-              variant="compact"
-              showAdminActions={true}
-              showContactInfo={true}
-              showProfileCompleteness={!isClientMode}
-              editLink={isClientMode ? undefined : `/dashboard/admin/candidates/${candidate.slug}`}
-              hideViewProfileLink={true}
-              enableSuggestions={!isClientMode}
-              suggestions={isClientMode ? [] : suggestions}
-              onAddSuggestion={isClientMode ? undefined : handleAddSuggestion}
-              onAssignedToChange={isClientMode ? undefined : handleAssignedToChange}
-            />
-          </div>
+          <EntityProfilePanel
+            entityType="candidate"
+            entityId={String(candidate.id)}
+            entity={candidate as unknown as Record<string, unknown>}
+          />
         )
 
       case 'applications':
@@ -211,6 +155,7 @@ export default function CandidatePreviewPanel({
             candidateId={candidate.id}
             mode={mode}
             onAddToJob={isClientMode ? undefined : () => setShowAddToJobModal(true)}
+            onApplicationClick={(appId) => setSelectedApplicationId(appId)}
           />
         )
 
@@ -249,10 +194,34 @@ export default function CandidatePreviewPanel({
   const pendingSuggestionsCount = suggestions.filter((s) => s.status === 'pending').length
   const statusBadge =
     !isClientMode && pendingSuggestionsCount > 0 ? (
-      <span className="px-2 py-0.5 text-[11px] font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
+      <span className={`${badgeStyles.base} ${badgeStyles.orange}`}>
         {pendingSuggestionsCount} pending suggestion{pendingSuggestionsCount !== 1 ? 's' : ''}
       </span>
     ) : undefined
+
+  // Avatar for header
+  const avatar = candidate ? (
+    <div className="w-10 h-10 bg-gray-900 dark:bg-gray-700 rounded-full flex items-center justify-center text-white text-[13px] font-medium flex-shrink-0">
+      {candidate.full_name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)}
+    </div>
+  ) : undefined
+
+  // Header with assigned selector (admin only)
+  const headerExtra = !isClientMode && candidate ? (
+    <div className="w-40">
+      <AssignedSelect
+        selected={candidate.assigned_to || []}
+        onChange={handleAssignedChange}
+        placeholder="Assign..."
+        compact
+      />
+    </div>
+  ) : undefined
 
   // Service Mode
   if (showServiceMode && candidate && !isClientMode) {
@@ -278,13 +247,15 @@ export default function CandidatePreviewPanel({
         title={candidate?.full_name || 'Candidate Details'}
         subtitle={candidate?.headline || undefined}
         isLoading={false}
+        avatar={avatar}
         statusBadge={statusBadge}
+        headerExtra={headerExtra}
         focusModeLabel="Service Mode"
         onEnterFocusMode={isClientMode ? undefined : () => setShowServiceMode(true)}
-        availablePanels={buildAvailablePanels()}
+        availablePanels={availablePanels}
         defaultPanel="profile"
         activePanel={activePanel}
-        onPanelChange={(panel) => setActivePanel(panel as PanelType)}
+        onPanelChange={(panel) => setActivePanel(panel as EntityPanelType)}
         renderPanel={renderPanel}
       />
 
@@ -321,6 +292,13 @@ export default function CandidatePreviewPanel({
           }}
         />
       )}
+
+      {/* Application Drawer for viewing application details inline */}
+      <ApplicationDrawer
+        applicationId={selectedApplicationId}
+        isOpen={!!selectedApplicationId}
+        onClose={() => setSelectedApplicationId(null)}
+      />
     </>
   )
 }

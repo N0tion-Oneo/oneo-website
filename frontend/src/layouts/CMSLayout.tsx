@@ -41,7 +41,7 @@ export default function CMSLayout() {
   if (!isAdmin) {
     return (
       <div className="flex items-center justify-center h-96">
-        <p className="text-gray-500">You don't have permission to access the CMS.</p>
+        <p className="text-gray-500 dark:text-gray-400">You don't have permission to access the CMS.</p>
       </div>
     )
   }
@@ -149,26 +149,26 @@ export default function CMSLayout() {
   return (
     <div className="flex h-full -mx-6 -mt-6">
       {/* CMS Secondary Sidebar */}
-      <aside className="w-56 flex-shrink-0 border-r border-gray-200 bg-gray-50/50">
+      <aside className="w-56 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
         <div className="sticky top-0 p-4 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
           {/* Back link */}
           <Link
             to="/dashboard"
-            className="inline-flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-900 mb-4"
+            className="inline-flex items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"
           >
             <ChevronLeft className="w-4 h-4" />
             Back to Dashboard
           </Link>
 
           {/* CMS Title */}
-          <h2 className="text-[13px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
+          <h2 className="text-[13px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
             Content Management
           </h2>
 
           {/* Navigation Sections */}
           {navigationSections.map((section, sectionIndex) => (
             <div key={section.title} className={sectionIndex > 0 ? 'mt-6' : ''}>
-              <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2 px-3">
+              <h3 className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 px-3">
                 {section.title}
               </h3>
               <nav className="space-y-1">
@@ -178,13 +178,13 @@ export default function CMSLayout() {
                     to={item.href}
                     className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium transition-colors ${
                       isActive(item.href)
-                        ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                        : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm dark:shadow-gray-900/20 border border-gray-200 dark:border-gray-600'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
                   >
                     <span
                       className={
-                        isActive(item.href) ? 'text-gray-700' : 'text-gray-400'
+                        isActive(item.href) ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'
                       }
                     >
                       {item.icon}

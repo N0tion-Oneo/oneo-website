@@ -1,22 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   X,
-  User,
-  CheckSquare,
-  Clock,
-  Calendar,
   Maximize2,
   Minimize2,
   ChevronDown,
   ChevronRight,
-  Building2,
-  Briefcase,
-  Users,
-  FileText,
-  Send,
-  GitBranch,
   Plus,
-  Zap,
+  Building2,
+  User,
+  Briefcase,
 } from 'lucide-react'
 import { useServiceCenter, useApplication } from '@/hooks'
 import type { OnboardingEntityType } from '@/types'
@@ -33,47 +25,18 @@ import { PipelinePanel } from './panels/PipelinePanel'
 import { JobDetailPanel } from './panels/JobDetailPanel'
 import { ActionsPanel } from './panels/ActionsPanel'
 import { AnswersPanel } from './panels/AnswersPanel'
-import { CandidateProfileCard } from '@/components/candidates'
 import ActivityTimeline from '@/components/applications/ActivityTimeline'
-
-// =============================================================================
-// Types
-// =============================================================================
-
-// All possible panel types across both modes
-type PanelType =
-  // Common panels
-  | 'profile'
-  | 'tasks'
-  | 'timeline'
-  | 'meetings'
-  // Company-specific
-  | 'jobs'
-  | 'contacts'
-  | 'billing'
-  // Candidate-specific
-  | 'applications'
-  // Lead-specific
-  | 'invitations'
-  // Application-specific
-  | 'pipeline'
-  | 'candidate'
-  | 'activity'
-  | 'job'
-  | 'actions'
-  | 'answers'
-
-interface Panel {
-  id: string
-  type: PanelType
-  title: string
-}
-
-interface PanelOption {
-  type: PanelType
-  label: string
-  icon: React.ReactNode
-}
+import ApplicationDrawer from '@/components/applications/ApplicationDrawer'
+import {
+  getEntityPanelOptions,
+  getApplicationPanelOptions,
+  getDefaultEntityPanels,
+  getDefaultApplicationPanels,
+  getPanelIcon,
+  type PanelType,
+  type Panel,
+  type PanelOption,
+} from './panelConfig'
 
 // Focus mode can be either entity-based or application-based
 type FocusModeTarget =
@@ -85,94 +48,21 @@ type FocusModeProps = FocusModeTarget & {
 }
 
 // =============================================================================
-// Panel Options Configuration
+// Panel Options Configuration (uses shared config)
 // =============================================================================
-
-const COMMON_ENTITY_PANELS: PanelOption[] = [
-  { type: 'profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
-  { type: 'tasks', label: 'Tasks & Follow-ups', icon: <CheckSquare className="w-4 h-4" /> },
-  { type: 'timeline', label: 'Timeline', icon: <Clock className="w-4 h-4" /> },
-  { type: 'meetings', label: 'Meetings', icon: <Calendar className="w-4 h-4" /> },
-]
-
-const COMPANY_PANELS: PanelOption[] = [
-  { type: 'jobs', label: 'Jobs', icon: <Briefcase className="w-4 h-4" /> },
-  { type: 'contacts', label: 'Contacts', icon: <Users className="w-4 h-4" /> },
-  { type: 'billing', label: 'Billing', icon: <FileText className="w-4 h-4" /> },
-]
-
-const CANDIDATE_PANELS: PanelOption[] = [
-  { type: 'applications', label: 'Applications', icon: <Briefcase className="w-4 h-4" /> },
-]
-
-const LEAD_PANELS: PanelOption[] = [
-  { type: 'invitations', label: 'Invitations', icon: <Send className="w-4 h-4" /> },
-]
-
-const APPLICATION_PANELS: PanelOption[] = [
-  { type: 'candidate', label: 'Candidate Profile', icon: <User className="w-4 h-4" /> },
-  { type: 'pipeline', label: 'Pipeline & Stages', icon: <GitBranch className="w-4 h-4" /> },
-  { type: 'actions', label: 'Actions', icon: <Zap className="w-4 h-4" /> },
-  { type: 'answers', label: 'Screening Answers', icon: <FileText className="w-4 h-4" /> },
-  { type: 'job', label: 'Job Details', icon: <Briefcase className="w-4 h-4" /> },
-  { type: 'activity', label: 'Activity Log', icon: <Clock className="w-4 h-4" /> },
-  { type: 'tasks', label: 'Tasks', icon: <CheckSquare className="w-4 h-4" /> },
-  { type: 'timeline', label: 'Timeline', icon: <Calendar className="w-4 h-4" /> },
-]
 
 function getPanelOptions(target: FocusModeTarget): PanelOption[] {
   if (target.mode === 'application') {
-    return APPLICATION_PANELS
+    return getApplicationPanelOptions()
   }
-
-  const entityType = target.entityType
-  switch (entityType) {
-    case 'company':
-      return [...COMMON_ENTITY_PANELS, ...COMPANY_PANELS]
-    case 'candidate':
-      return [...COMMON_ENTITY_PANELS, ...CANDIDATE_PANELS]
-    case 'lead':
-      return [...COMMON_ENTITY_PANELS, ...LEAD_PANELS]
-    default:
-      return COMMON_ENTITY_PANELS
-  }
+  return getEntityPanelOptions(target.entityType)
 }
 
 function getDefaultPanels(target: FocusModeTarget): Panel[] {
   if (target.mode === 'application') {
-    return [
-      { id: '1', type: 'candidate', title: 'Candidate Profile' },
-      { id: '2', type: 'pipeline', title: 'Pipeline & Stages' },
-      { id: '3', type: 'activity', title: 'Activity Log' },
-    ]
+    return getDefaultApplicationPanels()
   }
-
-  switch (target.entityType) {
-    case 'company':
-      return [
-        { id: '1', type: 'profile', title: 'Profile' },
-        { id: '2', type: 'jobs', title: 'Jobs' },
-        { id: '3', type: 'timeline', title: 'Timeline' },
-      ]
-    case 'candidate':
-      return [
-        { id: '1', type: 'profile', title: 'Profile' },
-        { id: '2', type: 'applications', title: 'Applications' },
-        { id: '3', type: 'timeline', title: 'Timeline' },
-      ]
-    case 'lead':
-      return [
-        { id: '1', type: 'profile', title: 'Profile' },
-        { id: '2', type: 'tasks', title: 'Tasks & Follow-ups' },
-        { id: '3', type: 'timeline', title: 'Timeline' },
-      ]
-    default:
-      return [
-        { id: '1', type: 'profile', title: 'Profile' },
-        { id: '2', type: 'tasks', title: 'Tasks & Follow-ups' },
-        { id: '3', type: 'timeline', title: 'Timeline' },
-      ]
-  }
+  return getDefaultEntityPanels(target.entityType)
 }
 
 // =============================================================================
@@ -353,6 +243,7 @@ export default function FocusMode(props: FocusModeProps) {
   const [panels, setPanels] = useState<Panel[]>(() => getDefaultPanels(target))
   const [maximizedPanel, setMaximizedPanel] = useState<string | null>(null)
   const [minimizedPanels, setMinimizedPanels] = useState<Set<string>>(new Set())
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null)
 
   // Data fetching for entity mode
   const serviceCenterQuery = useServiceCenter(
@@ -492,11 +383,6 @@ export default function FocusMode(props: FocusModeProps) {
 
   const displayInfo = getDisplayInfo()
 
-  // Get panel icon
-  const getPanelIcon = (type: PanelType) => {
-    return panelOptions.find((o) => o.type === type)?.icon || <User className="w-4 h-4" />
-  }
-
   // Render panel content
   const renderPanelContent = (panel: Panel) => {
     if (isLoading) {
@@ -518,19 +404,24 @@ export default function FocusMode(props: FocusModeProps) {
     // Application mode panels
     if (target.mode === 'application' && application) {
       switch (panel.type) {
-        case 'candidate':
-          return (
-            <div className="h-full overflow-y-auto p-4">
-              {application.candidate && (
-                <CandidateProfileCard
-                  candidate={application.candidate}
-                  experiences={application.candidate.experiences || []}
-                  education={application.candidate.education || []}
-                  coveringStatement={application.covering_statement}
-                  variant="compact"
-                  hideViewProfileLink={false}
-                />
-              )}
+        case 'profile':
+          return application.candidate ? (
+            <EntityProfilePanel
+              entityType="candidate"
+              entityId={String(application.candidate.id)}
+              entity={application.candidate as unknown as Record<string, unknown>}
+            />
+          ) : null
+        case 'company':
+          return application.job?.company ? (
+            <EntityProfilePanel
+              entityType="company"
+              entityId={String(application.job.company.id)}
+              entity={application.job.company as unknown as Record<string, unknown>}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+              No company information available
             </div>
           )
         case 'pipeline':
@@ -651,6 +542,7 @@ export default function FocusMode(props: FocusModeProps) {
           return (
             <ApplicationsPanel
               candidateId={target.entityId}
+              onApplicationClick={(appId) => setSelectedApplicationId(appId)}
             />
           )
         case 'invitations':
@@ -677,7 +569,7 @@ export default function FocusMode(props: FocusModeProps) {
       <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <div className="flex items-center gap-4">
           <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{modeLabel}</h1>
-          <span className="text-gray-300">|</span>
+          <span className="text-gray-300 dark:text-gray-600">|</span>
           <div className="flex items-center gap-2">
             {entityTypeIcons[displayInfo.type]}
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{displayInfo.name}</span>
@@ -687,20 +579,20 @@ export default function FocusMode(props: FocusModeProps) {
           </div>
           {displayInfo.subtitle && (
             <>
-              <span className="text-gray-300">|</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+              <span className="text-gray-300 dark:text-gray-600">|</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700">
                 {displayInfo.subtitle}
               </span>
             </>
           )}
           {displayInfo.healthScore !== undefined && displayInfo.healthScore !== null && (
             <>
-              <span className="text-gray-300">|</span>
+              <span className="text-gray-300 dark:text-gray-600">|</span>
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${
-                  displayInfo.healthScore >= 80 ? 'bg-green-100 text-green-700' :
-                  displayInfo.healthScore >= 50 ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-red-100 text-red-700'
+                  displayInfo.healthScore >= 80 ? 'bg-green-100 dark:bg-green-900/30 text-green-700' :
+                  displayInfo.healthScore >= 50 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700' :
+                  'bg-red-100 dark:bg-red-900/30 text-red-700'
                 }`}
               >
                 Health: {displayInfo.healthScore}%
@@ -791,6 +683,13 @@ export default function FocusMode(props: FocusModeProps) {
           </div>
         )}
       </div>
+
+      {/* Application Drawer for viewing application details inline */}
+      <ApplicationDrawer
+        applicationId={selectedApplicationId}
+        isOpen={!!selectedApplicationId}
+        onClose={() => setSelectedApplicationId(null)}
+      />
     </div>
   )
 }

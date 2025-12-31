@@ -1094,6 +1094,8 @@ export interface Application {
   is_replacement?: boolean
   replaced_application?: string | null
   replacement_request?: ReplacementRequest | null
+  // Assigned recruiters
+  assigned_recruiters?: ApplicationRecruiter[]
 }
 
 // Stage Feedback (threaded comments)

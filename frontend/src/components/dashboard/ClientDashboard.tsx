@@ -38,26 +38,26 @@ function ProfileCompletionBanner() {
   if (isLoading || !data || data.is_complete) return null
 
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
       <div className="flex items-start gap-3">
-        <Building2 className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <Building2 className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <h3 className="text-[14px] font-medium text-amber-800">
+          <h3 className="text-[14px] font-medium text-amber-800 dark:text-amber-200">
             Complete your company profile
           </h3>
-          <p className="text-[13px] text-amber-700 mt-1">
+          <p className="text-[13px] text-amber-700 dark:text-amber-300 mt-1">
             Your profile is {data.completion_percentage}% complete. A complete profile
             helps attract better candidates.
           </p>
-          <div className="mt-2 w-full bg-amber-200 rounded-full h-1.5">
+          <div className="mt-2 w-full bg-amber-200 dark:bg-amber-800 rounded-full h-1.5">
             <div
-              className="bg-amber-600 h-1.5 rounded-full transition-all"
+              className="bg-amber-600 dark:bg-amber-400 h-1.5 rounded-full transition-all"
               style={{ width: `${data.completion_percentage}%` }}
             />
           </div>
           <Link
             to="/dashboard/company"
-            className="inline-flex items-center gap-1 mt-3 text-[13px] font-medium text-amber-800 hover:text-amber-900"
+            className="inline-flex items-center gap-1 mt-3 text-[13px] font-medium text-amber-800 dark:text-amber-200 hover:text-amber-900 dark:hover:text-amber-100"
           >
             Complete profile <ArrowRightCircle className="w-3 h-3" />
           </Link>
@@ -89,16 +89,16 @@ function NewApplicationsSection() {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'applied':
-        return { color: 'bg-blue-100 text-blue-700', label: 'New' }
+        return { color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300', label: 'New' }
       case 'shortlisted':
-        return { color: 'bg-purple-100 text-purple-700', label: 'Shortlisted' }
+        return { color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300', label: 'Shortlisted' }
       default:
-        return { color: 'bg-gray-100 text-gray-700', label: status.replace('_', ' ') }
+        return { color: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300', label: status.replace('_', ' ') }
     }
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <SectionHeader
         title="New Applications"
         icon={Users}
@@ -117,25 +117,25 @@ function NewApplicationsSection() {
             return (
               <div
                 key={app.id}
-                className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded-md text-[12px]"
+                className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md text-[12px]"
               >
                 <span className={`px-1.5 py-0.5 rounded text-[10px] flex-shrink-0 ${statusConfig.color}`}>
                   {statusConfig.label}
                 </span>
                 <Link
                   to={`/dashboard/admin/candidates/${app.candidate_id}`}
-                  className="font-medium text-gray-900 hover:text-blue-600 truncate"
+                  className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 truncate"
                 >
                   {app.candidate_name}
                 </Link>
-                <span className="text-gray-400">for</span>
+                <span className="text-gray-400 dark:text-gray-500">for</span>
                 <Link
                   to={`/dashboard/jobs/${app.job_id}`}
-                  className="text-gray-600 hover:text-blue-600 truncate"
+                  className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 truncate"
                 >
                   {app.job_title}
                 </Link>
-                <span className="ml-auto text-gray-400 flex-shrink-0">{formatDate(app.applied_at)}</span>
+                <span className="ml-auto text-gray-400 dark:text-gray-500 flex-shrink-0">{formatDate(app.applied_at)}</span>
               </div>
             )
           })}
@@ -154,7 +154,7 @@ function PendingOffersSection() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
         <SectionHeader title="Pending Offers" icon={FileText} />
         <LoadingState />
       </div>
@@ -164,7 +164,7 @@ function PendingOffersSection() {
   if (totalPending === 0) return null
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <SectionHeader
         title="Pending Offers"
         icon={FileText}
@@ -176,23 +176,23 @@ function PendingOffersSection() {
         {offers.map((offer) => (
           <div
             key={offer.id}
-            className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded-md text-[12px]"
+            className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md text-[12px]"
           >
             <Link
               to={`/dashboard/admin/candidates/${offer.candidate_id}`}
-              className="font-medium text-gray-900 hover:text-blue-600 truncate"
+              className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 truncate"
             >
               {offer.candidate_name}
             </Link>
-            <span className="text-gray-400">·</span>
+            <span className="text-gray-400 dark:text-gray-500">·</span>
             <Link
               to={`/dashboard/jobs/${offer.job_id}`}
-              className="text-gray-500 hover:text-blue-600 truncate"
+              className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 truncate"
             >
               {offer.job_title}
             </Link>
             <span className={`ml-auto px-1.5 py-0.5 rounded text-[10px] ${
-              offer.days_pending > 5 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+              offer.days_pending > 5 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
             }`}>
               {offer.days_pending}d pending
             </span>
@@ -212,7 +212,7 @@ function HiringMetricsSection() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
         <SectionHeader title="Hiring Metrics" icon={TrendingUp} />
         <LoadingState />
       </div>
@@ -227,50 +227,50 @@ function HiringMetricsSection() {
     {
       label: 'Total Applications',
       value: metrics.total_applications,
-      color: 'text-gray-900',
+      color: 'text-gray-900 dark:text-gray-100',
     },
     {
       label: 'Offer Acceptance',
       value: metrics.offer_acceptance_rate ? `${metrics.offer_acceptance_rate}%` : '-',
-      color: metrics.offer_acceptance_rate && metrics.offer_acceptance_rate >= 70 ? 'text-green-600' : 'text-amber-600',
+      color: metrics.offer_acceptance_rate && metrics.offer_acceptance_rate >= 70 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400',
     },
     {
       label: 'Avg. Time to Hire',
       value: metrics.time_to_hire_days ? `${metrics.time_to_hire_days}d` : '-',
-      color: 'text-gray-900',
+      color: 'text-gray-900 dark:text-gray-100',
     },
     {
       label: 'Shortlist Rate',
       value: metrics.shortlist_rate ? `${metrics.shortlist_rate}%` : '-',
-      color: 'text-gray-900',
+      color: 'text-gray-900 dark:text-gray-100',
     },
   ]
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <SectionHeader title="Hiring Metrics" icon={TrendingUp} />
 
       <div className="grid grid-cols-2 gap-3">
         {statCards.map((stat) => (
-          <div key={stat.label} className="text-center p-2 bg-gray-50 rounded-md">
+          <div key={stat.label} className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
             <p className={`text-[18px] font-semibold ${stat.color}`}>{stat.value}</p>
-            <p className="text-[11px] text-gray-500">{stat.label}</p>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">{stat.label}</p>
           </div>
         ))}
       </div>
 
-      <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-3 gap-2 text-center text-[11px]">
+      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 grid grid-cols-3 gap-2 text-center text-[11px]">
         <div>
-          <p className="font-medium text-gray-900">{metrics.offers_made}</p>
-          <p className="text-gray-500">Offers Made</p>
+          <p className="font-medium text-gray-900 dark:text-gray-100">{metrics.offers_made}</p>
+          <p className="text-gray-500 dark:text-gray-400">Offers Made</p>
         </div>
         <div>
-          <p className="font-medium text-green-600">{metrics.offers_accepted}</p>
-          <p className="text-gray-500">Accepted</p>
+          <p className="font-medium text-green-600 dark:text-green-400">{metrics.offers_accepted}</p>
+          <p className="text-gray-500 dark:text-gray-400">Accepted</p>
         </div>
         <div>
-          <p className="font-medium text-red-600">{metrics.offers_declined}</p>
-          <p className="text-gray-500">Declined</p>
+          <p className="font-medium text-red-600 dark:text-red-400">{metrics.offers_declined}</p>
+          <p className="text-gray-500 dark:text-gray-400">Declined</p>
         </div>
       </div>
     </div>
@@ -287,7 +287,7 @@ function AssignedRecruiterSection() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
         <SectionHeader title="Your Recruiter" icon={Users} />
         <LoadingState />
       </div>
@@ -297,7 +297,7 @@ function AssignedRecruiterSection() {
   if (assignedUsers.length === 0) return null
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <SectionHeader title="Your Recruiter" icon={Users} />
       <SchedulingCard
         assignedUsers={assignedUsers}
@@ -333,19 +333,19 @@ export default function ClientDashboard() {
     <div className="space-y-6">
       {/* Welcome */}
       <div>
-        <h1 className="text-[22px] font-semibold text-gray-900">Dashboard</h1>
-        <p className="text-[14px] text-gray-500 mt-1">
+        <h1 className="text-[22px] font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
+        <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-1">
           Welcome back, {user?.first_name}. Here's your hiring overview.
         </p>
       </div>
 
       {/* Verification Notice */}
       {!user?.is_verified && (
-        <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-md flex items-center justify-between">
-          <p className="text-[13px] text-amber-800">
+        <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md flex items-center justify-between">
+          <p className="text-[13px] text-amber-800 dark:text-amber-200">
             Please verify your email to access all features
           </p>
-          <button className="text-[13px] font-medium text-amber-800 hover:underline">
+          <button className="text-[13px] font-medium text-amber-800 dark:text-amber-200 hover:underline">
             Resend email
           </button>
         </div>

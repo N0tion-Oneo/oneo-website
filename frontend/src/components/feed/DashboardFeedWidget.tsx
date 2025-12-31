@@ -39,10 +39,10 @@ function CompactFeedItem({ post }: { post: FeedPostListItem }) {
   return (
     <Link
       to={getPostLink()}
-      className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors group"
+      className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
     >
       {/* Company Logo */}
-      <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+      <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
         {companyLogo ? (
           <img src={companyLogo} alt={post.company?.name} className="w-full h-full object-cover" />
         ) : (
@@ -51,8 +51,8 @@ function CompactFeedItem({ post }: { post: FeedPostListItem }) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] text-gray-700 truncate group-hover:text-gray-900">
-          <span className="font-medium text-gray-900">{post.company?.name}</span>
+        <p className="text-[13px] text-gray-700 dark:text-gray-300 truncate group-hover:text-gray-900 dark:group-hover:text-gray-100">
+          <span className="font-medium text-gray-900 dark:text-gray-100">{post.company?.name}</span>
           {' · '}
           {post.title || post.content.slice(0, 50)}
         </p>
@@ -60,7 +60,7 @@ function CompactFeedItem({ post }: { post: FeedPostListItem }) {
 
       <div className="flex items-center gap-2 flex-shrink-0">
         <TypeIcon className={`w-3.5 h-3.5 ${typeColor}`} />
-        <span className="text-[11px] text-gray-400">{timeAgo}</span>
+        <span className="text-[11px] text-gray-400 dark:text-gray-500">{timeAgo}</span>
       </div>
     </Link>
   )
@@ -70,13 +70,13 @@ export default function DashboardFeedWidget({ limit = 5 }: DashboardFeedWidgetPr
   const { posts, isLoading, error } = useFeedSummary({ limit })
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <h2 className="text-[14px] font-semibold text-gray-900">Latest Updates</h2>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+        <h2 className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">Latest Updates</h2>
         <Link
           to="/dashboard/feed"
-          className="text-[12px] text-gray-500 hover:text-gray-900 transition-colors"
+          className="text-[12px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
         >
           See all →
         </Link>
@@ -84,17 +84,17 @@ export default function DashboardFeedWidget({ limit = 5 }: DashboardFeedWidgetPr
 
       {/* Content */}
       {error ? (
-        <div className="p-4 text-[13px] text-red-600">{error}</div>
+        <div className="p-4 text-[13px] text-red-600 dark:text-red-400">{error}</div>
       ) : isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          <Loader2 className="w-5 h-5 animate-spin text-gray-400 dark:text-gray-500" />
         </div>
       ) : posts.length === 0 ? (
         <div className="py-8 text-center">
-          <p className="text-[13px] text-gray-500">No updates yet</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">No updates yet</p>
         </div>
       ) : (
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-gray-100 dark:divide-gray-800">
           {posts.map((post) => (
             <CompactFeedItem key={post.id} post={post} />
           ))}

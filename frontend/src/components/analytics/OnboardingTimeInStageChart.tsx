@@ -14,9 +14,9 @@ export function OnboardingTimeInStageChart({
 }: OnboardingTimeInStageChartProps) {
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="h-6 w-48 bg-gray-100 rounded animate-pulse mb-4" />
-        <div className="h-[300px] bg-gray-50 rounded animate-pulse" />
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div className="h-6 w-48 bg-gray-100 dark:bg-gray-700 rounded animate-pulse mb-4" />
+        <div className="h-[300px] bg-gray-50 dark:bg-gray-800 rounded animate-pulse" />
       </div>
     )
   }
@@ -27,16 +27,16 @@ export function OnboardingTimeInStageChart({
   const filteredData = data.filter((d) => d.avg_days !== null && !d.is_terminal)
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <h3 className="text-[14px] font-medium text-gray-900 mb-1">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+      <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-1">
         Average Time in Stage
       </h3>
-      <p className="text-[12px] text-gray-500 mb-4">
+      <p className="text-[12px] text-gray-500 dark:text-gray-400 mb-4">
         How long {entityLabel.toLowerCase()}s spend in each onboarding stage
       </p>
 
       {filteredData.length === 0 ? (
-        <div className="h-[250px] flex items-center justify-center text-gray-500 text-[13px]">
+        <div className="h-[250px] flex items-center justify-center text-gray-500 dark:text-gray-400 text-[13px]">
           Not enough transition data yet
         </div>
       ) : (
@@ -91,8 +91,8 @@ export function OnboardingTimeInStageChart({
           </ResponsiveContainer>
 
           {/* Sample size info */}
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <p className="text-[11px] text-gray-500">
+          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
               Based on {filteredData.reduce((acc, d) => acc + d.sample_size, 0)} stage transitions
             </p>
           </div>

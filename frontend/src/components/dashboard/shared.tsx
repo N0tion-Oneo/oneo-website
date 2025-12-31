@@ -43,10 +43,10 @@ export function SectionHeader({
   return (
     <div className="flex items-center justify-between mb-3">
       <div className="flex items-center gap-2">
-        <Icon className="w-4 h-4 text-gray-500" />
-        <h3 className="text-[14px] font-medium text-gray-900">{title}</h3>
+        <Icon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+        <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100">{title}</h3>
         {count !== undefined && (
-          <span className="text-[12px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+          <span className="text-[12px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
             {count}
           </span>
         )}
@@ -56,7 +56,7 @@ export function SectionHeader({
         {viewAllLink && (
           <Link
             to={viewAllLink}
-            className="text-[12px] text-gray-500 hover:text-gray-700 flex items-center gap-0.5"
+            className="text-[12px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center gap-0.5"
           >
             View all <ChevronRight className="w-3 h-3" />
           </Link>
@@ -68,14 +68,14 @@ export function SectionHeader({
 
 export function EmptyState({ message }: { message: string }) {
   return (
-    <div className="py-6 text-center text-[13px] text-gray-400">{message}</div>
+    <div className="py-6 text-center text-[13px] text-gray-400 dark:text-gray-500">{message}</div>
   )
 }
 
 export function LoadingState() {
   return (
     <div className="py-6 flex justify-center">
-      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-400" />
+      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-400 dark:border-gray-500" />
     </div>
   )
 }
@@ -97,30 +97,30 @@ export function TodaysInterviewsSection() {
   const getStatusBadge = (status: string, isPast: boolean) => {
     if (status === 'completed') {
       return (
-        <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded">
+        <span className="text-[10px] px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
           Completed
         </span>
       )
     }
     if (status === 'no_show') {
       return (
-        <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-700 rounded">No Show</span>
+        <span className="text-[10px] px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded">No Show</span>
       )
     }
     if (isPast) {
       return (
-        <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded">
+        <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">
           Pending
         </span>
       )
     }
     return (
-      <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">Upcoming</span>
+      <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">Upcoming</span>
     )
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <SectionHeader
         title="Today's Interviews"
         icon={Users}
@@ -136,7 +136,7 @@ export function TodaysInterviewsSection() {
         <div className="overflow-x-auto">
           <table className="w-full text-[12px]">
             <thead>
-              <tr className="text-left text-gray-500 border-b border-gray-100">
+              <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
                 <th className="pb-2 font-medium">Time</th>
                 <th className="pb-2 font-medium">Candidate</th>
                 <th className="pb-2 font-medium">Job</th>
@@ -144,27 +144,27 @@ export function TodaysInterviewsSection() {
                 <th className="pb-2 font-medium">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
               {interviews.map((interview) => (
                 <tr key={interview.id} className={interview.is_past ? 'opacity-60' : ''}>
-                  <td className="py-2 font-medium">{formatTime(interview.scheduled_at)}</td>
+                  <td className="py-2 font-medium text-gray-900 dark:text-gray-100">{formatTime(interview.scheduled_at)}</td>
                   <td className="py-2">
                     <Link
                       to={`/dashboard/candidates/${interview.candidate_id}`}
-                      className="text-gray-900 hover:text-blue-600"
+                      className="text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400"
                     >
                       {interview.candidate_name}
                     </Link>
                   </td>
-                  <td className="py-2 text-gray-600">
-                    <Link to={`/dashboard/jobs/${interview.job_id}`} className="hover:text-blue-600">
+                  <td className="py-2 text-gray-600 dark:text-gray-400">
+                    <Link to={`/dashboard/jobs/${interview.job_id}`} className="hover:text-blue-600 dark:hover:text-blue-400">
                       {interview.job_title}
                     </Link>
                     {interview.company_name && (
-                      <span className="text-gray-400"> · {interview.company_name}</span>
+                      <span className="text-gray-400 dark:text-gray-500"> · {interview.company_name}</span>
                     )}
                   </td>
-                  <td className="py-2 text-gray-600">{interview.stage_name}</td>
+                  <td className="py-2 text-gray-600 dark:text-gray-400">{interview.stage_name}</td>
                   <td className="py-2">{getStatusBadge(interview.status, interview.is_past)}</td>
                 </tr>
               ))}
@@ -184,7 +184,7 @@ export function PipelineOverviewSection() {
   const { data, isLoading } = usePipelineOverview()
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <SectionHeader title="Pipeline Overview" icon={Briefcase} viewAllLink="/dashboard/jobs" />
 
       {isLoading ? (
@@ -195,19 +195,19 @@ export function PipelineOverviewSection() {
         <>
           {/* Summary Stats */}
           <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="text-center p-2 bg-gray-50 rounded-md">
-              <p className="text-[20px] font-semibold text-gray-900">{data.summary.total_jobs}</p>
-              <p className="text-[11px] text-gray-500">Active Jobs</p>
+            <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
+              <p className="text-[20px] font-semibold text-gray-900 dark:text-gray-100">{data.summary.total_jobs}</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">Active Jobs</p>
             </div>
-            <div className="text-center p-2 bg-blue-50 rounded-md">
-              <p className="text-[20px] font-semibold text-blue-600">{data.summary.open_positions}</p>
-              <p className="text-[11px] text-gray-500">Open Positions</p>
+            <div className="text-center p-2 bg-blue-50 dark:bg-blue-900/30 rounded-md">
+              <p className="text-[20px] font-semibold text-blue-600 dark:text-blue-400">{data.summary.open_positions}</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">Open Positions</p>
             </div>
-            <div className="text-center p-2 bg-amber-50 rounded-md">
-              <p className="text-[20px] font-semibold text-amber-600">
+            <div className="text-center p-2 bg-amber-50 dark:bg-amber-900/30 rounded-md">
+              <p className="text-[20px] font-semibold text-amber-600 dark:text-amber-400">
                 {data.summary.offers_pending}
               </p>
-              <p className="text-[11px] text-gray-500">Offers Pending</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">Offers Pending</p>
             </div>
           </div>
 
@@ -215,7 +215,7 @@ export function PipelineOverviewSection() {
           <div className="overflow-x-auto">
             <table className="w-full text-[11px]">
               <thead>
-                <tr className="text-left text-gray-500 border-b border-gray-100">
+                <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
                   <th className="pb-2 font-medium">Job</th>
                   <th className="pb-2 font-medium text-center">Applied</th>
                   <th className="pb-2 font-medium text-center">Shortlisted</th>
@@ -224,45 +224,45 @@ export function PipelineOverviewSection() {
                   <th className="pb-2 font-medium text-center">Hired</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                 {data.jobs.slice(0, 10).map((job) => (
                   <tr key={job.job_id}>
                     <td className="py-2">
                       <Link
                         to={`/dashboard/jobs/${job.job_id}`}
-                        className="text-gray-900 hover:text-blue-600 font-medium"
+                        className="text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 font-medium"
                       >
                         {job.job_title}
                       </Link>
                       {job.company_name && (
-                        <span className="text-gray-400 ml-1">· {job.company_name}</span>
+                        <span className="text-gray-400 dark:text-gray-500 ml-1">· {job.company_name}</span>
                       )}
-                      <span className="text-gray-400 ml-1">
+                      <span className="text-gray-400 dark:text-gray-500 ml-1">
                         ({job.hired_count}/{job.positions_to_fill})
                       </span>
                     </td>
                     <td className="py-2 text-center">
-                      <span className="px-1.5 py-0.5 bg-gray-100 rounded">
+                      <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded">
                         {job.status_counts.applied}
                       </span>
                     </td>
                     <td className="py-2 text-center">
-                      <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
+                      <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">
                         {job.status_counts.shortlisted}
                       </span>
                     </td>
                     <td className="py-2 text-center">
-                      <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded">
+                      <span className="px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded">
                         {job.status_counts.in_progress}
                       </span>
                     </td>
                     <td className="py-2 text-center">
-                      <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded">
+                      <span className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">
                         {job.status_counts.offer_made}
                       </span>
                     </td>
                     <td className="py-2 text-center">
-                      <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded">
+                      <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
                         {job.status_counts.offer_accepted}
                       </span>
                     </td>
@@ -290,19 +290,19 @@ export function CandidatesAttentionSection() {
       key: 'not_contacted' as const,
       label: 'No Contact',
       count: data?.not_contacted_count || 0,
-      color: 'text-red-600',
+      color: 'text-red-600 dark:text-red-400',
     },
     {
       key: 'stuck' as const,
       label: 'Stuck',
       count: data?.stuck_in_stage_count || 0,
-      color: 'text-amber-600',
+      color: 'text-amber-600 dark:text-amber-400',
     },
     {
       key: 'prep' as const,
       label: 'Interview Prep',
       count: data?.needs_interview_prep_count || 0,
-      color: 'text-blue-600',
+      color: 'text-blue-600 dark:text-blue-400',
     },
   ]
 
@@ -321,7 +321,7 @@ export function CandidatesAttentionSection() {
   const items = getItems()
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <SectionHeader
         title="Needs Attention"
         icon={AlertCircle}
@@ -329,7 +329,7 @@ export function CandidatesAttentionSection() {
       />
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-3 border-b border-gray-100">
+      <div className="flex gap-1 mb-3 border-b border-gray-100 dark:border-gray-800">
         {tabs.map((tab) => (
           <button
             key={tab.key}
@@ -337,7 +337,7 @@ export function CandidatesAttentionSection() {
             className={`px-3 py-1.5 text-[12px] font-medium border-b-2 -mb-px ${
               activeTab === tab.key
                 ? `${tab.color} border-current`
-                : 'text-gray-500 border-transparent hover:text-gray-700'
+                : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             {tab.label} ({tab.count})
@@ -354,16 +354,16 @@ export function CandidatesAttentionSection() {
           {items.map((candidate) => (
             <div
               key={candidate.id}
-              className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md"
+              className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
             >
               <div className="flex-1 min-w-0">
                 <Link
                   to={`/dashboard/admin/candidates/${candidate.id}`}
-                  className="text-[13px] font-medium text-gray-900 hover:text-blue-600"
+                  className="text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400"
                 >
                   {candidate.name}
                 </Link>
-                <p className="text-[11px] text-gray-500">
+                <p className="text-[11px] text-gray-500 dark:text-gray-400">
                   {activeTab === 'not_contacted' && (
                     <>Last contact {candidate.days_since_contact} days ago</>
                   )}
@@ -386,7 +386,7 @@ export function CandidatesAttentionSection() {
                   )}
                 </p>
               </div>
-              <ChevronRight className="w-4 h-4 text-gray-300" />
+              <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
             </div>
           ))}
         </div>
@@ -505,7 +505,7 @@ export function RecentActivitySection() {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <SectionHeader title="Recent Activity" icon={Clock} />
 
       {isLoading ? (
@@ -517,29 +517,29 @@ export function RecentActivitySection() {
           {activities.map((activity, idx) => (
             <div
               key={idx}
-              className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded-md text-[12px]"
+              className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md text-[12px]"
             >
               <span className="flex-shrink-0">{getActivityIcon(activity.type, activity.activity_type)}</span>
-              <span className="text-gray-400 flex-shrink-0">{formatTime(activity.created_at)}</span>
+              <span className="text-gray-400 dark:text-gray-500 flex-shrink-0">{formatTime(activity.created_at)}</span>
               <Link
                 to={`/dashboard/admin/candidates/${activity.candidate_id}`}
-                className="font-medium text-gray-900 hover:text-blue-600 truncate"
+                className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 truncate"
               >
                 {activity.candidate_name}
               </Link>
-              <span className="text-gray-500 truncate">{getActivityDescription(activity)}</span>
+              <span className="text-gray-500 dark:text-gray-400 truncate">{getActivityDescription(activity)}</span>
               {activity.job_title && (
                 <>
-                  <span className="text-gray-300">·</span>
+                  <span className="text-gray-300 dark:text-gray-600">·</span>
                   <Link
                     to={`/dashboard/jobs/${activity.job_id}`}
-                    className="text-gray-400 hover:text-blue-600 truncate"
+                    className="text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 truncate"
                   >
                     {activity.job_title}
                   </Link>
                 </>
               )}
-              <span className="ml-auto text-gray-400 flex-shrink-0 truncate max-w-[80px]">
+              <span className="ml-auto text-gray-400 dark:text-gray-500 flex-shrink-0 truncate max-w-[80px]">
                 {activity.performed_by}
               </span>
             </div>

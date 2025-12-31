@@ -238,6 +238,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
     interview_stages = serializers.SerializerMethodField()
     questions = serializers.SerializerMethodField()
     answers = serializers.SerializerMethodField()
+    assigned_recruiters = serializers.SerializerMethodField()
     # Replacement fields
     is_replacement = serializers.BooleanField(read_only=True)
     replacement_request = serializers.SerializerMethodField()
@@ -283,6 +284,8 @@ class ApplicationSerializer(serializers.ModelSerializer):
             # Replacement fields
             'is_replacement',
             'replacement_request',
+            # Assigned recruiters
+            'assigned_recruiters',
         ]
         read_only_fields = ['id', 'applied_at', 'shortlisted_at', 'last_status_change']
 
@@ -344,6 +347,20 @@ class ApplicationSerializer(serializers.ModelSerializer):
                 'created_at': answer.created_at.isoformat(),
             })
         return result
+
+    def get_assigned_recruiters(self, obj):
+        """Return assigned recruiters for this application."""
+        recruiters = obj.assigned_recruiters.all()
+        return [
+            {
+                'id': r.id,
+                'email': r.email,
+                'first_name': r.first_name,
+                'last_name': r.last_name,
+                'full_name': r.get_full_name() or r.email,
+            }
+            for r in recruiters
+        ]
 
 
 class ApplicationCreateSerializer(serializers.ModelSerializer):

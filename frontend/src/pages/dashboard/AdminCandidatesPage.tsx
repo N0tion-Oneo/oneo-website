@@ -4,13 +4,13 @@ import { Link } from 'react-router-dom'
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
   createColumnHelper,
   ColumnDef,
   SortingState,
   RowSelectionState,
   ColumnSizingState,
 } from '@tanstack/react-table'
+import { DataTable } from '@/components/common/DataTable'
 import { useAllCandidates, useCompanyCandidates, useAssignedUpdate, useMyCompany, useCompanyFeatures } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole, Seniority, WorkPreference, ProfileVisibility, Currency } from '@/types'
@@ -40,12 +40,7 @@ import {
   Pencil,
   Mail,
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
   SlidersHorizontal,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
   FileText,
   Briefcase,
   GraduationCap,
@@ -539,7 +534,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
               const experiences = getValue() || []
               if (experiences.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
               return (
-                <div className="py-0.5 space-y-1.5 max-h-[120px] overflow-y-auto">
+                <div className="py-0.5 space-y-1.5">
                   {experiences.map((exp: ExperienceListItem) => {
                     const duration = calculateDuration(exp.start_date, exp.end_date, exp.is_current)
                     return (
@@ -605,7 +600,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
             {
               id: 'exp_technologies',
               header: 'Technologies',
-              size: 400,
+              size: 1000,
               cell: ({ getValue }) => {
                 const techs = getValue()
                 if (techs.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
@@ -632,7 +627,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
             {
               id: 'exp_skills',
               header: 'Skills',
-              size: 400,
+              size: 1000,
               cell: ({ getValue }) => {
                 const skills = getValue()
                 if (skills.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
@@ -1047,39 +1042,6 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
             totalCount={count}
           />
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="text-center py-12">
-              <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading candidates...</p>
-            </div>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <div className="text-center py-12">
-              <p className="text-[14px] text-red-500 dark:text-red-400">{error}</p>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!isLoading && !error && candidates.length === 0 && (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
-              <User className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No candidates found</p>
-              <p className="text-[13px] text-gray-500 dark:text-gray-400">
-                {activeFilterCount > 0 ? 'Try adjusting your filters' : 'No candidates have registered yet'}
-              </p>
-              {activeFilterCount > 0 && (
-                <button
-                  onClick={handleClearFilters}
-                  className="mt-4 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
-                >
-                  Clear all filters
-                </button>
-              )}
-            </div>
-          )}
-
           {/* Kanban View */}
           {!isLoading && !error && localCandidates.length > 0 && viewMode === 'kanban' && (
             <CandidateKanbanBoard
@@ -1090,139 +1052,46 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           )}
 
           {/* Table View */}
-          {!isLoading && !error && localCandidates.length > 0 && viewMode === 'table' && (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-max border-collapse">
-                  <thead>
-                    {table.getHeaderGroups().map((headerGroup, groupIndex) => (
-                      <tr
-                        key={headerGroup.id}
-                        className={`border-b border-gray-200 dark:border-gray-700 ${
-                          groupIndex === 0 && table.getHeaderGroups().length > 1
-                            ? 'bg-gray-100 dark:bg-gray-700'
-                            : 'bg-gray-50 dark:bg-gray-800'
-                        }`}
-                      >
-                        {headerGroup.headers.map(header => {
-                          const isGroupHeader = header.colSpan > 1
-                          const isPinnedLeft = header.id === 'select' || header.id === 'full_name'
-                          const isPinnedRight = header.id === 'actions'
-                          return (
-                            <th
-                              key={header.id}
-                              colSpan={header.colSpan}
-                              className={`px-3 text-left text-[11px] font-medium uppercase tracking-wider whitespace-nowrap relative group ${
-                                isGroupHeader
-                                  ? 'py-1.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 text-center'
-                                  : 'py-2.5 text-gray-500 dark:text-gray-400'
-                              } ${isPinnedLeft ? 'sticky z-20 bg-gray-50 dark:bg-gray-800' : ''} ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50 dark:bg-gray-800' : ''}`}
-                              style={{
-                                width: header.colSpan === 1 ? header.getSize() : undefined,
-                                left: header.id === 'select' ? 0 : header.id === 'full_name' ? 40 : undefined,
-                              }}
-                            >
-                              {header.isPlaceholder ? null : (
-                                <div
-                                  className={`flex items-center gap-1 ${
-                                    isGroupHeader ? 'justify-center' : ''
-                                  } ${
-                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300' : ''
-                                  }`}
-                                  onClick={header.column.getToggleSortingHandler()}
-                                >
-                                  {flexRender(header.column.columnDef.header, header.getContext())}
-                                  {header.column.getCanSort() && (
-                                    <span className="ml-0.5">
-                                      {{
-                                        asc: <ArrowUp className="w-3 h-3" />,
-                                        desc: <ArrowDown className="w-3 h-3" />,
-                                      }[header.column.getIsSorted() as string] ?? (
-                                        <ArrowUpDown className="w-3 h-3 opacity-40" />
-                                      )}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                              {/* Resize handle */}
-                              {header.column.getCanResize() && (
-                                <div
-                                  onMouseDown={header.getResizeHandler()}
-                                  onTouchStart={header.getResizeHandler()}
-                                  className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none ${
-                                    header.column.getIsResizing()
-                                      ? 'bg-blue-500'
-                                      : 'bg-transparent hover:bg-gray-300 dark:hover:bg-gray-600'
-                                  }`}
-                                />
-                              )}
-                            </th>
-                          )
-                        })}
-                      </tr>
-                    ))}
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {table.getRowModel().rows.map(row => (
-                      <tr
-                        key={row.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                        onClick={() => {
-                          setOpenActionsMenu(null)
-                          setMenuPosition(null)
-                          setPreviewCandidate(row.original)
-                        }}
-                      >
-                        {row.getVisibleCells().map(cell => {
-                          const colId = cell.column.id
-                          const isPinnedLeft = colId === 'select' || colId === 'full_name'
-                          const isPinnedRight = colId === 'actions'
-                          return (
-                            <td
-                              key={cell.id}
-                              className={`px-3 py-2.5 whitespace-nowrap ${isPinnedLeft ? 'sticky z-10 bg-white dark:bg-gray-800' : ''} ${isPinnedRight ? 'sticky right-0 z-[100] bg-white dark:bg-gray-800' : ''}`}
-                              style={{
-                                width: cell.column.getSize(),
-                                left: colId === 'select' ? 0 : colId === 'full_name' ? 40 : undefined,
-                              }}
-                            >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Pagination (Table View Only) */}
-          {!isLoading && !error && totalPages > 1 && viewMode === 'table' && (
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-[13px] text-gray-500 dark:text-gray-400">
-                Page {page} of {totalPages} ({count} total)
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPage(page - 1)}
-                  disabled={!hasPrevious}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Previous
-                </button>
-                <button
-                  onClick={() => setPage(page + 1)}
-                  disabled={!hasNext}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+          {viewMode === 'table' && (
+            <DataTable
+              table={table}
+              onRowClick={(candidate) => {
+                setOpenActionsMenu(null)
+                setMenuPosition(null)
+                setPreviewCandidate(candidate)
+              }}
+              stickyColumns={{ left: ['select', 'full_name'], right: ['actions'] }}
+              enableColumnResizing
+              isLoading={isLoading}
+              loadingMessage="Loading candidates..."
+              error={error}
+              emptyState={{
+                icon: <User className="w-12 h-12 text-gray-300 dark:text-gray-600" />,
+                title: 'No candidates found',
+                description: activeFilterCount > 0
+                  ? 'Try adjusting your filters'
+                  : 'No candidates have registered yet',
+                action: activeFilterCount > 0 ? (
+                  <button
+                    onClick={handleClearFilters}
+                    className="text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
+                  >
+                    Clear all filters
+                  </button>
+                ) : undefined,
+              }}
+              pagination={{
+                page,
+                totalPages,
+                totalCount: count,
+                hasNext,
+                hasPrevious,
+                onPageChange: setPage,
+                pageSizeOptions: PAGE_SIZE_OPTIONS,
+                pageSize,
+                onPageSizeChange: handlePageSizeChange,
+              }}
+            />
           )}
         </div>
       </div>

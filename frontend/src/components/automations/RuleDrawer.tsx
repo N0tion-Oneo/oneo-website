@@ -152,11 +152,11 @@ const getFieldIcon = (field: ModelField) => {
 }
 
 const getFieldBadgeColor = (field: ModelField) => {
-  if (field.is_relation) return 'bg-purple-100 text-purple-700'
-  if (field.choices && field.choices.length > 0) return 'bg-blue-100 text-blue-700'
-  if (field.type === 'BooleanField') return 'bg-green-100 text-green-700'
-  if (field.type === 'DateField' || field.type === 'DateTimeField') return 'bg-orange-100 text-orange-700'
-  return 'bg-gray-100 text-gray-700'
+  if (field.is_relation) return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30'
+  if (field.choices && field.choices.length > 0) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30'
+  if (field.type === 'BooleanField') return 'bg-green-100 text-green-700 dark:bg-green-900/30'
+  if (field.type === 'DateField' || field.type === 'DateTimeField') return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30'
+  return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
 }
 
 // =============================================================================
@@ -186,7 +186,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
           onClick={() => onChange('true')}
           disabled={disabled}
           className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-            stringValue === 'true' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            stringValue === 'true' ? 'bg-green-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           True
@@ -196,7 +196,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
           onClick={() => onChange('false')}
           disabled={disabled}
           className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-            stringValue === 'false' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            stringValue === 'false' ? 'bg-red-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           False
@@ -210,7 +210,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
     if (isMultiSelect) {
       return (
         <div className={`relative ${className}`}>
-          <div className="flex flex-wrap gap-1 min-h-[38px] p-2 border border-gray-300 rounded-lg bg-white">
+          <div className="flex flex-wrap gap-1 min-h-[38px] p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
             {arrayValue.length === 0 ? (
               <span className="text-[13px] text-gray-400">Select values...</span>
             ) : (
@@ -219,13 +219,13 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
                 return (
                   <span
                     key={val}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[12px]"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-[12px]"
                   >
                     {choice?.label || val}
                     <button
                       type="button"
                       onClick={() => onChange(arrayValue.filter(v => v !== val))}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                     >
                       ×
                     </button>
@@ -242,7 +242,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
               }
             }}
             disabled={disabled}
-            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
           >
             <option value="">Add value...</option>
             {field.choices.filter(c => !arrayValue.includes(c.value)).map((choice) => (
@@ -259,7 +259,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
         value={stringValue}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+        className={`px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
       >
         <option value="">Select value</option>
         {field.choices.map((choice) => (
@@ -276,7 +276,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
         value={stringValue}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+        className={`px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
       />
     )
   }
@@ -288,7 +288,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
         value={stringValue}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+        className={`px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
       />
     )
   }
@@ -302,7 +302,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
         disabled={disabled}
         placeholder={placeholder}
         step={field.type === 'IntegerField' ? '1' : 'any'}
-        className={`px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+        className={`px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
       />
     )
   }
@@ -314,7 +314,7 @@ function SmartValueInput({ field, value, onChange, placeholder, className = '', 
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       placeholder={placeholder}
-      className={`px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+      className={`px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
     />
   )
 }
@@ -342,7 +342,7 @@ function VariablePicker({ fields, onSelect, buttonClassName = '' }: VariablePick
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded ${buttonClassName}`}
+        className={`flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${buttonClassName}`}
       >
         <Variable className="w-3 h-3" />
         Insert Variable
@@ -350,8 +350,8 @@ function VariablePicker({ fields, onSelect, buttonClassName = '' }: VariablePick
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-64 overflow-hidden">
-            <div className="p-2 border-b border-gray-100">
+          <div className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 z-20 max-h-64 overflow-hidden">
+            <div className="p-2 border-b border-gray-100 dark:border-gray-700">
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -359,14 +359,14 @@ function VariablePicker({ fields, onSelect, buttonClassName = '' }: VariablePick
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search fields..."
-                  className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   autoFocus
                 />
               </div>
             </div>
             <div className="overflow-y-auto max-h-48">
               {filteredFields.length === 0 ? (
-                <div className="p-3 text-[13px] text-gray-500 text-center">No fields found</div>
+                <div className="p-3 text-[13px] text-gray-500 dark:text-gray-400 text-center">No fields found</div>
               ) : (
                 filteredFields.map((field) => (
                   <button
@@ -377,13 +377,13 @@ function VariablePicker({ fields, onSelect, buttonClassName = '' }: VariablePick
                       setIsOpen(false)
                       setSearch('')
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-[13px] hover:bg-gray-50"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-[13px] hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
                     <span className={`p-1 rounded ${getFieldBadgeColor(field)}`}>
                       {getFieldIcon(field)}
                     </span>
-                    <span className="flex-1 truncate">{field.verbose_name}</span>
-                    <code className="text-[11px] text-gray-400">{`{{${field.name}}}`}</code>
+                    <span className="flex-1 truncate text-gray-900 dark:text-gray-100">{field.verbose_name}</span>
+                    <code className="text-[11px] text-gray-400 dark:text-gray-500">{`{{${field.name}}}`}</code>
                   </button>
                 ))
               )}
@@ -424,7 +424,7 @@ function FieldSelector({ fields, value, onChange, placeholder = 'Select field', 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+        className={`px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent ${className} ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
       >
         <option value="">{placeholder}</option>
         {fields.map((field) => (
@@ -440,8 +440,8 @@ function FieldSelector({ fields, value, onChange, placeholder = 'Select field', 
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-lg text-[13px] text-left ${
-          disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : 'hover:border-gray-400'
+        className={`w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] text-left bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${
+          disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : 'hover:border-gray-400 dark:hover:border-gray-500'
         }`}
       >
         {selectedField ? (
@@ -454,13 +454,13 @@ function FieldSelector({ fields, value, onChange, placeholder = 'Select field', 
         ) : (
           <span className="text-gray-400">{placeholder}</span>
         )}
-        <ChevronDown className="w-4 h-4 text-gray-400" />
+        <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />
       </button>
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-64 overflow-hidden">
-            <div className="p-2 border-b border-gray-100">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 z-20 max-h-64 overflow-hidden">
+            <div className="p-2 border-b border-gray-100 dark:border-gray-700">
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -468,14 +468,14 @@ function FieldSelector({ fields, value, onChange, placeholder = 'Select field', 
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search fields..."
-                  className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   autoFocus
                 />
               </div>
             </div>
             <div className="overflow-y-auto max-h-48">
               {filteredFields.length === 0 ? (
-                <div className="p-3 text-[13px] text-gray-500 text-center">No fields found</div>
+                <div className="p-3 text-[13px] text-gray-500 dark:text-gray-400 text-center">No fields found</div>
               ) : (
                 filteredFields.map((field) => (
                   <button
@@ -486,17 +486,17 @@ function FieldSelector({ fields, value, onChange, placeholder = 'Select field', 
                       setIsOpen(false)
                       setSearch('')
                     }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-[13px] hover:bg-gray-50 ${
-                      value === field.name ? 'bg-gray-50' : ''
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-[13px] hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                      value === field.name ? 'bg-gray-50 dark:bg-gray-800' : ''
                     }`}
                   >
                     <span className={`p-1 rounded ${getFieldBadgeColor(field)}`}>
                       {getFieldIcon(field)}
                     </span>
-                    <span className="flex-1">{field.verbose_name}</span>
-                    {field.is_relation && <span className="text-[11px] text-purple-600">FK</span>}
+                    <span className="flex-1 text-gray-900 dark:text-gray-100">{field.verbose_name}</span>
+                    {field.is_relation && <span className="text-[11px] text-purple-600 dark:text-purple-400">FK</span>}
                     {field.choices && field.choices.length > 0 && (
-                      <span className="text-[11px] text-blue-600">{field.choices.length} options</span>
+                      <span className="text-[11px] text-blue-600 dark:text-blue-400">{field.choices.length} options</span>
                     )}
                   </button>
                 ))
@@ -688,8 +688,8 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
   if (isLoading && !isNew) {
     return (
       <>
-        <div className="fixed inset-0 bg-black/30 z-[200]" onClick={onClose} />
-        <div className="fixed inset-y-0 right-0 w-1/2 min-w-[640px] max-w-2xl bg-white shadow-xl z-[201] flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/30 dark:bg-black/50 z-[200]" onClick={onClose} />
+        <div className="fixed inset-y-0 right-0 w-1/2 min-w-[640px] max-w-2xl bg-white dark:bg-gray-900 shadow-xl dark:shadow-gray-900/50 z-[201] flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
         </div>
       </>
@@ -700,11 +700,11 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
   if (!isNew && !rule && !isLoading) {
     return (
       <>
-        <div className="fixed inset-0 bg-black/30 z-[200]" onClick={onClose} />
-        <div className="fixed inset-y-0 right-0 w-1/2 min-w-[640px] max-w-2xl bg-white shadow-xl z-[201] flex flex-col items-center justify-center gap-4 p-6">
+        <div className="fixed inset-0 bg-black/30 dark:bg-black/50 z-[200]" onClick={onClose} />
+        <div className="fixed inset-y-0 right-0 w-1/2 min-w-[640px] max-w-2xl bg-white dark:bg-gray-900 shadow-xl dark:shadow-gray-900/50 z-[201] flex flex-col items-center justify-center gap-4 p-6">
           <AlertCircle className="w-12 h-12 text-red-500" />
-          <p className="text-[13px] text-gray-600">Rule not found</p>
-          <button onClick={onClose} className="text-[13px] text-gray-500 hover:text-gray-700">
+          <p className="text-[13px] text-gray-600 dark:text-gray-400">Rule not found</p>
+          <button onClick={onClose} className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
             Close
           </button>
         </div>
@@ -715,32 +715,32 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/30 z-[200]" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/30 dark:bg-black/50 z-[200]" onClick={onClose} />
 
       {/* Drawer */}
-      <div className="fixed inset-y-0 right-0 w-1/2 min-w-[640px] max-w-2xl bg-white shadow-xl z-[201] flex flex-col">
+      <div className="fixed inset-y-0 right-0 w-1/2 min-w-[640px] max-w-2xl bg-white dark:bg-gray-900 shadow-xl dark:shadow-gray-900/50 z-[201] flex flex-col">
         {/* Header */}
-        <div className="flex-shrink-0 bg-gray-50 border-b border-gray-200 px-6 py-4">
+        <div className="flex-shrink-0 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1">
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full text-[16px] font-semibold bg-transparent border-none focus:outline-none focus:ring-0 p-0 placeholder:text-gray-400"
+                className="w-full text-[16px] font-semibold bg-transparent border-none focus:outline-none focus:ring-0 p-0 placeholder:text-gray-400 text-gray-900 dark:text-gray-100"
                 placeholder="Rule name"
               />
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full text-[13px] text-gray-500 bg-transparent border-none focus:outline-none focus:ring-0 p-0 mt-1 placeholder:text-gray-400"
+                className="w-full text-[13px] text-gray-500 dark:text-gray-400 bg-transparent border-none focus:outline-none focus:ring-0 p-0 mt-1 placeholder:text-gray-400"
                 placeholder="Add a description..."
               />
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -760,8 +760,8 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                     isActive
                       ? 'bg-gray-900 text-white'
                       : isPast
-                      ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                      : 'text-gray-600 hover:bg-gray-100'
+                      ? 'bg-green-50 dark:bg-green-900/30 text-green-700 hover:bg-green-100 dark:hover:bg-green-900/40'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                 >
                   <StepIcon className="w-4 h-4" />
@@ -778,11 +778,11 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
           {currentStep === 'trigger' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-[14px] font-semibold text-gray-900 mb-4">When should this rule trigger?</h3>
+                <h3 className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 mb-4">When should this rule trigger?</h3>
 
                 {/* Event Type Selector */}
                 <div className="mb-4">
-                  <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Event Type</label>
+                  <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Event Type</label>
                   <select
                     value={triggerType}
                     onChange={(e) => {
@@ -796,7 +796,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                         setTriggerConditions([])
                       }
                     }}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   >
                     <optgroup label="Model Events">
                       <option value="model_created">Record Created</option>
@@ -818,14 +818,14 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                 {/* Model Selector - only for model-based triggers */}
                 {isModelRequired(triggerType) && (
                   <div className="mb-4">
-                    <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Model</label>
+                    <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Model</label>
                     <select
                       value={triggerModel}
                       onChange={(e) => {
                         setTriggerModel(e.target.value)
                         setTriggerConditions([])
                       }}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                     >
                       <option value="">Select a model</option>
                       {models.map((model) => (
@@ -838,20 +838,20 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                 {/* Signal/Action Selector - only for non-model triggers */}
                 {!isModelRequired(triggerType) && (
                   <div className="mb-4">
-                    <label className="block text-[12px] font-medium text-gray-700 mb-1.5">
+                    <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       {triggerType === 'signal' ? 'Signal Name' : triggerType === 'view_action' ? 'Action Name' : 'Trigger Name'}
                     </label>
                     <select
                       value={signalName}
                       onChange={(e) => setSignalName(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                     >
                       <option value="">Select a {triggerType === 'signal' ? 'signal' : triggerType === 'view_action' ? 'action' : 'trigger'}...</option>
                       {SIGNAL_OPTIONS.filter(opt => opt.type === triggerType).map((option) => (
                         <option key={option.value} value={option.value}>{option.label}</option>
                       ))}
                     </select>
-                    <p className="mt-1.5 text-[11px] text-gray-500">
+                    <p className="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400">
                       {triggerType === 'signal' && 'Triggered by Django signals (password reset, email verification, etc.)'}
                       {triggerType === 'view_action' && 'Triggered when specific view actions occur (booking link sent, etc.)'}
                       {triggerType === 'manual' && 'Triggered manually via the admin broadcast feature'}
@@ -862,19 +862,19 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
 
               {/* Schedule Configuration for time-based triggers */}
               {triggerType === 'scheduled' && triggerModel && (
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 space-y-4">
-                  <div className="flex items-center gap-2 text-[13px] font-medium text-blue-900">
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 space-y-4">
+                  <div className="flex items-center gap-2 text-[13px] font-medium text-blue-900 dark:text-blue-100">
                     <Calendar className="w-4 h-4" />
                     <span>Schedule Configuration</span>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Date/Time Field</label>
+                      <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date/Time Field</label>
                       <select
                         value={scheduleConfig.datetime_field}
                         onChange={(e) => setScheduleConfig({ ...scheduleConfig, datetime_field: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900"
                       >
                         <option value="">Select field</option>
                         {modelFields
@@ -886,22 +886,22 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Hours</label>
+                      <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Hours</label>
                       <input
                         type="number"
                         min="1"
                         max="720"
                         value={scheduleConfig.offset_hours}
                         onChange={(e) => setScheduleConfig({ ...scheduleConfig, offset_hours: parseInt(e.target.value) || 24 })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900"
                       />
                     </div>
                     <div>
-                      <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Timing</label>
+                      <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Timing</label>
                       <select
                         value={scheduleConfig.offset_type}
                         onChange={(e) => setScheduleConfig({ ...scheduleConfig, offset_type: e.target.value as 'before' | 'after' })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900"
                       >
                         <option value="before">Before</option>
                         <option value="after">After</option>
@@ -910,7 +910,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                   </div>
 
                   {scheduleConfig.datetime_field && (
-                    <div className="text-[12px] text-blue-700 bg-blue-100 px-3 py-2 rounded">
+                    <div className="text-[12px] text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 px-3 py-2 rounded">
                       This rule will trigger <strong>{scheduleConfig.offset_hours} hours {scheduleConfig.offset_type}</strong> the{' '}
                       <strong>{modelFields.find(f => f.name === scheduleConfig.datetime_field)?.verbose_name || scheduleConfig.datetime_field}</strong>
                     </div>
@@ -920,8 +920,8 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
 
               {/* Summary box for model-based triggers */}
               {isModelRequired(triggerType) && triggerModel && triggerType !== 'scheduled' && (
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex items-center gap-2 text-[13px] text-gray-700">
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-2 text-[13px] text-gray-700 dark:text-gray-300">
                     <Zap className="w-4 h-4 text-amber-500" />
                     <span>This rule will run when a <strong>{selectedModel?.display_name}</strong> is <strong>{triggerLabels[triggerType]?.toLowerCase()}</strong></span>
                   </div>
@@ -930,8 +930,8 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
 
               {/* Summary box for non-model triggers */}
               {!isModelRequired(triggerType) && signalName && (
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex items-center gap-2 text-[13px] text-gray-700">
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-2 text-[13px] text-gray-700 dark:text-gray-300">
                     <Zap className="w-4 h-4 text-amber-500" />
                     <span>
                       This rule will run when <strong>{SIGNAL_OPTIONS.find(o => o.value === signalName)?.label || signalName}</strong>
@@ -949,19 +949,19 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
           {currentStep === 'conditions' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-[14px] font-semibold text-gray-900 mb-2">Filter conditions</h3>
-                <p className="text-[13px] text-gray-500 mb-4">Optional: Only run when these conditions are met</p>
+                <h3 className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 mb-2">Filter conditions</h3>
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">Optional: Only run when these conditions are met</p>
 
                 {!isModelRequired(triggerType) ? (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-[13px] text-blue-700">
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-[13px] text-blue-700 dark:text-blue-300">
                       Conditions are not available for {triggerType === 'signal' ? 'Django Signal' : triggerType === 'view_action' ? 'View Action' : 'Manual'} triggers.
                       These triggers run based on the signal/action name only.
                     </p>
                   </div>
                 ) : !triggerModel ? (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-[13px] text-amber-700">Please select a trigger model first</p>
+                  <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <p className="text-[13px] text-amber-700 dark:text-amber-300">Please select a trigger model first</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -972,7 +972,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                         !!(conditionField?.choices && conditionField.choices.length > 0)
                       )
                       return (
-                        <div key={index} className="flex items-center gap-2 p-3 bg-white rounded-lg border border-gray-200">
+                        <div key={index} className="flex items-center gap-2 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
                           <FieldSelector
                             fields={modelFields}
                             value={condition.field}
@@ -984,7 +984,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                           <select
                             value={condition.operator}
                             onChange={(e) => updateCondition(index, { operator: e.target.value as TriggerCondition['operator'] })}
-                            className="px-3 py-2 border border-gray-300 rounded-lg text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           >
                             {Object.entries(operators).map(([value, label]) => (
                               <option key={value} value={value}>{label}</option>
@@ -1012,7 +1012,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
 
                     <button
                       onClick={addCondition}
-                      className="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                       Add Condition
@@ -1027,7 +1027,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
           {currentStep === 'action' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-[14px] font-semibold text-gray-900 mb-4">What should happen?</h3>
+                <h3 className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 mb-4">What should happen?</h3>
 
                 {/* Action Type Cards */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
@@ -1048,13 +1048,13 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                         else if (type === 'create_activity') setActionConfig({ activity_type: 'note', content_template: '' })
                       }}
                       className={`flex items-center gap-3 p-4 border rounded-lg transition-colors ${
-                        actionType === type ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300 bg-white'
+                        actionType === type ? 'border-gray-900 dark:border-gray-100 bg-gray-50 dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-900'
                       }`}
                     >
-                      <Icon className="w-5 h-5 text-gray-600" />
+                      <Icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                       <div className="text-left">
-                        <div className="text-[13px] font-medium text-gray-900">{label}</div>
-                        <div className="text-[11px] text-gray-500">{desc}</div>
+                        <div className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{label}</div>
+                        <div className="text-[11px] text-gray-500 dark:text-gray-400">{desc}</div>
                       </div>
                     </button>
                   ))}
@@ -1064,21 +1064,21 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                 {actionType === 'send_webhook' && (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Webhook URL</label>
+                      <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Webhook URL</label>
                       <input
                         type="url"
                         value={(actionConfig as { url?: string }).url || ''}
                         onChange={(e) => setActionConfig({ ...actionConfig, url: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                         placeholder="https://example.com/webhook"
                       />
                     </div>
                     <div>
-                      <label className="block text-[12px] font-medium text-gray-700 mb-1.5">HTTP Method</label>
+                      <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">HTTP Method</label>
                       <select
                         value={(actionConfig as { method?: string }).method || 'POST'}
                         onChange={(e) => setActionConfig({ ...actionConfig, method: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                       >
                         <option value="POST">POST</option>
                         <option value="PUT">PUT</option>
@@ -1087,7 +1087,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[12px] font-medium text-gray-700">Payload Template (JSON)</label>
+                        <label className="text-[12px] font-medium text-gray-700 dark:text-gray-300">Payload Template (JSON)</label>
                         <VariablePicker
                           fields={modelFields}
                           onSelect={(variable) => {
@@ -1110,7 +1110,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                             // Allow invalid JSON while typing
                           }
                         }}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent font-mono"
+                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent font-mono"
                         rows={6}
                         placeholder={'{\n  "event": "{{trigger_type}}",\n  "data": "{{object}}"\n}'}
                       />
@@ -1126,7 +1126,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                   return (
                     <div className="space-y-4">
                       {/* Template Mode Toggle */}
-                      <div className="flex rounded-lg border border-gray-200 p-1 bg-gray-50">
+                      <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 p-1 bg-gray-50 dark:bg-gray-800">
                         <button
                           type="button"
                           onClick={() => setActionConfig({
@@ -1135,7 +1135,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                             notification_template: undefined,
                           })}
                           className={`flex-1 px-3 py-2 text-[13px] font-medium rounded-md transition-colors ${
-                            !useTemplate ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                            !useTemplate ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                           }`}
                         >
                           Custom Template
@@ -1149,7 +1149,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                             body_template: undefined,
                           })}
                           className={`flex-1 px-3 py-2 text-[13px] font-medium rounded-md transition-colors ${
-                            useTemplate ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                            useTemplate ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                           }`}
                         >
                           Use Saved Template
@@ -1160,14 +1160,14 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                         <>
                           {/* Template Selector */}
                           <div>
-                            <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Notification Template</label>
+                            <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Notification Template</label>
                             {isLoadingTemplates ? (
-                              <div className="flex items-center gap-2 text-[13px] text-gray-500 py-2">
+                              <div className="flex items-center gap-2 text-[13px] text-gray-500 dark:text-gray-400 py-2">
                                 <Loader2 className="w-4 h-4 animate-spin" />
                                 Loading templates...
                               </div>
                             ) : notificationTemplates.length === 0 ? (
-                              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-[13px] text-amber-700">
+                              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-[13px] text-amber-700 dark:text-amber-300">
                                 No notification templates found. Create templates in the Notifications section.
                               </div>
                             ) : (
@@ -1183,7 +1183,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                                     recipient_type: template?.recipient_type || (actionConfig as { recipient_type?: string }).recipient_type,
                                   })
                                 }}
-                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                               >
                                 <option value="">Select a template...</option>
                                 {notificationTemplates.map((template) => (
@@ -1197,10 +1197,10 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
 
                           {/* Template Preview */}
                           {selectedTemplate && (
-                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                              <div className="text-[12px] font-medium text-blue-700 mb-1">Selected Template</div>
-                              <div className="text-[13px] text-blue-900">{selectedTemplate.name}</div>
-                              <div className="text-[11px] text-blue-600 mt-1">
+                            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                              <div className="text-[12px] font-medium text-blue-700 dark:text-blue-300 mb-1">Selected Template</div>
+                              <div className="text-[13px] text-blue-900 dark:text-blue-100">{selectedTemplate.name}</div>
+                              <div className="text-[11px] text-blue-600 dark:text-blue-400 mt-1">
                                 Type: {selectedTemplate.template_type} · Channel: {selectedTemplate.default_channel} · Recipient: {selectedTemplate.recipient_type}
                               </div>
                             </div>
@@ -1209,11 +1209,11 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                           {/* Override Options */}
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Channel Override</label>
+                              <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Channel Override</label>
                               <select
                                 value={(actionConfig as { channel?: string }).channel || selectedTemplate?.default_channel || 'email'}
                                 onChange={(e) => setActionConfig({ ...actionConfig, channel: e.target.value })}
-                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                               >
                                 <option value="email">Email</option>
                                 <option value="in_app">In-App</option>
@@ -1221,11 +1221,11 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                               </select>
                             </div>
                             <div>
-                              <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Recipient Override</label>
+                              <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Recipient Override</label>
                               <select
                                 value={(actionConfig as { recipient_type?: string }).recipient_type || selectedTemplate?.recipient_type || 'recruiter'}
                                 onChange={(e) => setActionConfig({ ...actionConfig, recipient_type: e.target.value })}
-                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                               >
                                 {Object.entries(AutomationRecipientTypeGroups).map(([group, types]) => (
                                   <optgroup key={group} label={group}>
@@ -1245,11 +1245,11 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                           {/* Inline Template Mode */}
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Channel</label>
+                              <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Channel</label>
                               <select
                                 value={(actionConfig as { channel?: string }).channel || 'email'}
                                 onChange={(e) => setActionConfig({ ...actionConfig, channel: e.target.value })}
-                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                               >
                                 <option value="email">Email</option>
                                 <option value="in_app">In-App</option>
@@ -1257,11 +1257,11 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                               </select>
                             </div>
                             <div>
-                              <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Send To</label>
+                              <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Send To</label>
                               <select
                                 value={(actionConfig as { recipient_type?: string }).recipient_type || 'assigned_user'}
                                 onChange={(e) => setActionConfig({ ...actionConfig, recipient_type: e.target.value })}
-                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                               >
                                 {Object.entries(AutomationRecipientTypeGroups).map(([group, types]) => (
                                   <optgroup key={group} label={group}>
@@ -1277,7 +1277,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                           </div>
                           <div>
                             <div className="flex items-center justify-between mb-1.5">
-                              <label className="text-[12px] font-medium text-gray-700">Notification Title</label>
+                              <label className="text-[12px] font-medium text-gray-700 dark:text-gray-300">Notification Title</label>
                               <VariablePicker
                                 fields={modelFields}
                                 onSelect={(variable) => {
@@ -1290,13 +1290,13 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                               type="text"
                               value={(actionConfig as { title_template?: string }).title_template || ''}
                               onChange={(e) => setActionConfig({ ...actionConfig, title_template: e.target.value })}
-                              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                              className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                               placeholder="New lead: {{name}}"
                             />
                           </div>
                           <div>
                             <div className="flex items-center justify-between mb-1.5">
-                              <label className="text-[12px] font-medium text-gray-700">Notification Body</label>
+                              <label className="text-[12px] font-medium text-gray-700 dark:text-gray-300">Notification Body</label>
                               <VariablePicker
                                 fields={modelFields}
                                 onSelect={(variable) => {
@@ -1308,7 +1308,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                             <textarea
                               value={(actionConfig as { body_template?: string }).body_template || ''}
                               onChange={(e) => setActionConfig({ ...actionConfig, body_template: e.target.value })}
-                              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                              className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                               rows={4}
                               placeholder="A new lead has been created: {{name}} from {{company_name}}"
                             />
@@ -1339,11 +1339,11 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Target Record</label>
+                          <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Target Record</label>
                           <select
                             value={(actionConfig as { target?: string }).target || 'self'}
                             onChange={(e) => setActionConfig({ ...actionConfig, target: e.target.value, related_model: '', relation_field: '', field: '', value: '' })}
-                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           >
                             <option value="self">Same record (trigger model)</option>
                             <option value="related" disabled={hasNoRelations}>Related record {hasNoRelations ? '(no FK relations)' : ''}</option>
@@ -1351,14 +1351,14 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                         </div>
                         {isRelatedTarget && (
                           <div>
-                            <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Related Record (via FK)</label>
+                            <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Related Record (via FK)</label>
                             <select
                               value={(actionConfig as { related_model?: string }).related_model || ''}
                               onChange={(e) => {
                                 const selectedRelation = availableRelatedModels.find(r => r.modelKey === e.target.value)
                                 setActionConfig({ ...actionConfig, related_model: e.target.value, relation_field: selectedRelation?.fieldName || '', field: '', value: '' })
                               }}
-                              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                              className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                             >
                               <option value="">Select related model</option>
                               {availableRelatedModels.map((relation) => (
@@ -1370,7 +1370,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Field to Update</label>
+                          <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Field to Update</label>
                           <FieldSelector
                             fields={targetModelFields}
                             value={(actionConfig as { field?: string }).field || ''}
@@ -1382,11 +1382,11 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                           />
                         </div>
                         <div>
-                          <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Value Type</label>
+                          <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Value Type</label>
                           <select
                             value={valueType}
                             onChange={(e) => setActionConfig({ ...actionConfig, value_type: e.target.value, value: '' })}
-                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           >
                             <option value="static">Static value</option>
                             <option value="template">Template (with variables)</option>
@@ -1396,7 +1396,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                       </div>
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className="text-[12px] font-medium text-gray-700">{valueType === 'copy_field' ? 'Source Field' : 'New Value'}</label>
+                          <label className="text-[12px] font-medium text-gray-700 dark:text-gray-300">{valueType === 'copy_field' ? 'Source Field' : 'New Value'}</label>
                           {valueType === 'template' && (
                             <VariablePicker
                               fields={modelFields}
@@ -1429,7 +1429,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                             type="text"
                             value={(actionConfig as { value?: string }).value || ''}
                             onChange={(e) => setActionConfig({ ...actionConfig, value: e.target.value })}
-                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                             placeholder={valueType === 'template' ? 'Processed by {{assigned_to}}' : 'Enter value'}
                           />
                         )}
@@ -1441,11 +1441,11 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                 {actionType === 'create_activity' && (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-[12px] font-medium text-gray-700 mb-1.5">Activity Type</label>
+                      <label className="block text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Activity Type</label>
                       <select
                         value={(actionConfig as { activity_type?: string }).activity_type || 'note'}
                         onChange={(e) => setActionConfig({ ...actionConfig, activity_type: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                       >
                         <option value="note">Note</option>
                         <option value="status_change">Status Change</option>
@@ -1457,7 +1457,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[12px] font-medium text-gray-700">Activity Content</label>
+                        <label className="text-[12px] font-medium text-gray-700 dark:text-gray-300">Activity Content</label>
                         <VariablePicker
                           fields={modelFields}
                           onSelect={(variable) => {
@@ -1469,7 +1469,7 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                       <textarea
                         value={(actionConfig as { content_template?: string }).content_template || ''}
                         onChange={(e) => setActionConfig({ ...actionConfig, content_template: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-[13px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                         rows={4}
                         placeholder="Lead stage changed from {{old_stage}} to {{new_stage}}"
                       />
@@ -1485,12 +1485,12 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
             <div className="space-y-6">
               {/* Summary Cards */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 mb-2">
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 dark:text-gray-400 mb-2">
                     <Zap className="w-4 h-4" />
                     Trigger
                   </div>
-                  <p className="text-[13px] text-gray-900">
+                  <p className="text-[13px] text-gray-900 dark:text-gray-100">
                     {isModelRequired(triggerType) ? (
                       <>
                         {selectedModel?.display_name || 'Not selected'} - {triggerLabels[triggerType]}
@@ -1502,13 +1502,13 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                     )}
                   </p>
                 </div>
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 mb-2">
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 dark:text-gray-400 mb-2">
                     <Filter className="w-4 h-4" />
                     Conditions
                   </div>
                   {triggerConditions.length === 0 ? (
-                    <p className="text-[13px] text-gray-500 italic">No conditions (runs for all records)</p>
+                    <p className="text-[13px] text-gray-500 dark:text-gray-400 italic">No conditions (runs for all records)</p>
                   ) : (
                     <div className="space-y-1.5">
                       {triggerConditions.map((condition, index) => {
@@ -1529,14 +1529,14 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                         }
                         return (
                           <div key={index} className="flex items-center gap-1.5 text-[12px]">
-                            <span className="font-medium text-gray-700">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">
                               {conditionField?.verbose_name || condition.field}
                             </span>
-                            <span className="text-gray-500">
+                            <span className="text-gray-500 dark:text-gray-400">
                               {operatorLabels[condition.operator] || condition.operator}
                             </span>
                             {!['is_empty', 'is_not_empty'].includes(condition.operator) && (
-                              <span className="font-medium text-gray-900">
+                              <span className="font-medium text-gray-900 dark:text-gray-100">
                                 {Array.isArray(condition.value) ? condition.value.join(', ') : condition.value || '(empty)'}
                               </span>
                             )}
@@ -1546,8 +1546,8 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                     </div>
                   )}
                 </div>
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 col-span-2">
-                  <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 mb-2">
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 col-span-2">
+                  <div className="flex items-center gap-2 text-[12px] font-medium text-gray-500 dark:text-gray-400 mb-2">
                     <Play className="w-4 h-4" />
                     Action
                   </div>
@@ -1555,16 +1555,16 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                   {actionType === 'send_webhook' && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[11px] font-medium rounded">
+                        <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[11px] font-medium rounded">
                           {(actionConfig as { method?: string }).method || 'POST'}
                         </span>
-                        <span className="text-[13px] text-gray-900 font-mono truncate">
+                        <span className="text-[13px] text-gray-900 dark:text-gray-100 font-mono truncate">
                           {(actionConfig as { url?: string }).url || '(no URL configured)'}
                         </span>
                       </div>
                       {(actionConfig as { payload_template?: object }).payload_template &&
                        Object.keys((actionConfig as { payload_template?: object }).payload_template || {}).length > 0 && (
-                        <div className="mt-2 p-2 bg-gray-100 rounded text-[11px] font-mono text-gray-600 max-h-20 overflow-auto">
+                        <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded text-[11px] font-mono text-gray-600 dark:text-gray-300 max-h-20 overflow-auto">
                           {JSON.stringify((actionConfig as { payload_template?: object }).payload_template, null, 2)}
                         </div>
                       )}
@@ -1593,26 +1593,26 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                     return (
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[11px] font-medium rounded">
+                          <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-[11px] font-medium rounded">
                             {channelLabels[channel] || channel}
                           </span>
-                          <span className="text-[12px] text-gray-500">→</span>
-                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[11px] font-medium rounded">
+                          <span className="text-[12px] text-gray-500 dark:text-gray-400">→</span>
+                          <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-[11px] font-medium rounded">
                             {AutomationRecipientTypes[recipientType as keyof typeof AutomationRecipientTypes] || recipientType}
                           </span>
                         </div>
                         {isTemplateMode ? (
-                          <div className="p-2 bg-blue-50 border border-blue-200 rounded">
-                            <div className="text-[11px] text-blue-600 font-medium">Using Template</div>
+                          <div className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                            <div className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">Using Template</div>
                             {selectedTemplate ? (
-                              <div className="text-[13px] text-blue-900">{selectedTemplate.name}</div>
+                              <div className="text-[13px] text-blue-900 dark:text-blue-100">{selectedTemplate.name}</div>
                             ) : isLoadingTemplates ? (
-                              <div className="flex items-center gap-2 text-[13px] text-blue-700">
+                              <div className="flex items-center gap-2 text-[13px] text-blue-700 dark:text-blue-300">
                                 <Loader2 className="w-3 h-3 animate-spin" />
                                 Loading...
                               </div>
                             ) : (
-                              <div className="text-[13px] text-amber-700">
+                              <div className="text-[13px] text-amber-700 dark:text-amber-300">
                                 Template not found
                               </div>
                             )}
@@ -1620,14 +1620,14 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                         ) : (
                           <div className="space-y-1">
                             <div>
-                              <span className="text-[11px] text-gray-500">Title: </span>
-                              <span className="text-[12px] text-gray-900">
+                              <span className="text-[11px] text-gray-500 dark:text-gray-400">Title: </span>
+                              <span className="text-[12px] text-gray-900 dark:text-gray-100">
                                 {(actionConfig as { title_template?: string }).title_template || <span className="italic text-gray-400">(no title)</span>}
                               </span>
                             </div>
                             <div>
-                              <span className="text-[11px] text-gray-500">Body: </span>
-                              <span className="text-[12px] text-gray-700 line-clamp-2">
+                              <span className="text-[11px] text-gray-500 dark:text-gray-400">Body: </span>
+                              <span className="text-[12px] text-gray-700 dark:text-gray-300 line-clamp-2">
                                 {(actionConfig as { body_template?: string }).body_template || <span className="italic text-gray-400">(no body)</span>}
                               </span>
                             </div>
@@ -1648,16 +1648,16 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                     return (
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[11px] font-medium rounded">
+                          <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[11px] font-medium rounded">
                             {target === 'self' ? 'Same Record' : `Related: ${relatedModel?.split('.')[1] || relatedModel}`}
                           </span>
                         </div>
                         <div className="text-[13px]">
-                          <span className="font-medium text-gray-700">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">
                             {targetField?.verbose_name || field || '(no field selected)'}
                           </span>
-                          <span className="text-gray-500 mx-1">←</span>
-                          <span className="text-gray-900">
+                          <span className="text-gray-500 dark:text-gray-400 mx-1">←</span>
+                          <span className="text-gray-900 dark:text-gray-100">
                             {valueType === 'copy_field' ? (
                               <span className="font-mono text-blue-600">{`{{${value}}}`}</span>
                             ) : valueType === 'template' ? (
@@ -1674,12 +1674,12 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
                   {actionType === 'create_activity' && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[11px] font-medium rounded capitalize">
+                        <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-[11px] font-medium rounded capitalize">
                           {(actionConfig as { activity_type?: string }).activity_type || 'note'}
                         </span>
                       </div>
                       {(actionConfig as { content_template?: string }).content_template && (
-                        <div className="text-[12px] text-gray-700 line-clamp-2">
+                        <div className="text-[12px] text-gray-700 dark:text-gray-300 line-clamp-2">
                           {(actionConfig as { content_template?: string }).content_template}
                         </div>
                       )}
@@ -1689,10 +1689,10 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
               </div>
 
               {/* Active Toggle */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 <div>
-                  <h4 className="text-[13px] font-medium text-gray-900">Rule Status</h4>
-                  <p className="text-[12px] text-gray-500 mt-0.5">Enable this rule to start running it</p>
+                  <h4 className="text-[13px] font-medium text-gray-900 dark:text-gray-100">Rule Status</h4>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5">Enable this rule to start running it</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -1721,20 +1721,20 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
 
               {/* Execution Stats */}
               {!isNew && rule && rule.total_executions > 0 && (
-                <div className="p-4 bg-white rounded-lg border border-gray-200">
-                  <h4 className="text-[13px] font-semibold text-gray-900 mb-3">Execution Stats</h4>
+                <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <h4 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 mb-3">Execution Stats</h4>
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="text-xl font-semibold text-gray-900">{rule.total_executions}</div>
-                      <div className="text-[11px] text-gray-500 font-medium">Total Runs</div>
+                    <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">{rule.total_executions}</div>
+                      <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Total Runs</div>
                     </div>
-                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <div className="text-center p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
                       <div className="text-xl font-semibold text-green-600">{rule.total_success}</div>
-                      <div className="text-[11px] text-gray-500 font-medium">Successful</div>
+                      <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Successful</div>
                     </div>
-                    <div className="text-center p-3 bg-red-50 rounded-lg">
+                    <div className="text-center p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
                       <div className="text-xl font-semibold text-red-600">{rule.total_failed}</div>
-                      <div className="text-[11px] text-gray-500 font-medium">Failed</div>
+                      <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Failed</div>
                     </div>
                   </div>
                 </div>
@@ -1749,12 +1749,12 @@ export default function RuleDrawer({ ruleId, onClose, onSaved }: RuleDrawerProps
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 border-t border-gray-200 px-6 py-4 bg-gray-50 flex items-center justify-between">
+        <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
           <div>
             {canGoPrev ? (
               <button
                 onClick={goToPrevStep}
-                className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Previous

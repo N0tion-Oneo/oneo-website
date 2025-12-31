@@ -1,13 +1,14 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
   createColumnHelper,
   ColumnDef,
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table'
+import { DataTable } from '@/components/common/DataTable'
 import { useLeads } from '@/hooks/useLeads'
 import type { Lead } from '@/hooks/useLeads'
 import { useAuth } from '@/contexts/AuthContext'
@@ -24,17 +25,12 @@ import CreateLeadModal from '@/components/companies/CreateLeadModal'
 import LeadDrawer from '@/components/companies/LeadDrawer'
 import {
   AlertCircle,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
   Plus,
   Users,
   LayoutList,
   Columns3,
   Mail,
   Phone,
-  ChevronLeft,
-  ChevronRight,
   SlidersHorizontal,
 } from 'lucide-react'
 
@@ -80,15 +76,23 @@ const columnHelper = createColumnHelper<Lead>()
 
 export default function LeadsPage() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [viewMode, setViewMode] = useState<ViewMode>('table')
-  const [filters, setFilters] = useState<LeadFilters>(defaultFilters)
+  const [filters, setFilters] = useState<LeadFilters>(() => {
+    // Initialize filters from URL params
+    const stageParam = searchParams.get('stage')
+    return stageParam ? { ...defaultFilters, stage: stageParam } : defaultFilters
+  })
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [showFilters, setShowFilters] = useState(false)
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [showCreateLeadModal, setShowCreateLeadModal] = useState(false)
-  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(() => {
+    // Initialize selected lead from URL param
+    return searchParams.get('selected')
+  })
 
   // Convert TanStack sorting to API ordering param
   const ordering = useMemo(() => {
@@ -128,6 +132,16 @@ export default function LeadsPage() {
       setLocalLeads(leads)
     }
   }, [leads])
+
+  // Sync selectedLeadId when URL param changes
+  const selectedParamProcessed = useRef(false)
+  useEffect(() => {
+    const selected = searchParams.get('selected')
+    if (selected && !selectedParamProcessed.current) {
+      selectedParamProcessed.current = true
+      setSelectedLeadId(selected)
+    }
+  }, [searchParams])
 
   // Check if user has admin/recruiter access
   if (!user || ![UserRole.ADMIN, UserRole.RECRUITER].includes(user.role)) {
@@ -444,117 +458,42 @@ export default function LeadsPage() {
             </div>
           )}
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="text-center py-12">
-              <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading leads...</p>
-            </div>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <div className="text-center py-12">
-              <p className="text-[14px] text-red-500 dark:text-red-400">{error}</p>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!isLoading && !error && leads.length === 0 && (
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
-              <Users className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No leads found</p>
-              <p className="text-[13px] text-gray-500 dark:text-gray-400">
-                {activeFilterCount > 0 || filters.search ? 'Try adjusting your filters' : 'No leads have been created yet'}
-              </p>
-              {activeFilterCount > 0 && (
-                <button
-                  onClick={handleClearFilters}
-                  className="mt-4 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
-                >
-                  Clear all filters
-                </button>
-              )}
-            </div>
-          )}
-
           {/* Table View */}
-          {viewMode === 'table' && !isLoading && !error && leads.length > 0 && (
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    {table.getHeaderGroups().map(headerGroup => (
-                      <tr key={headerGroup.id} className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                        {headerGroup.headers.map(header => {
-                          const isPinnedLeft = header.id === 'select' || header.id === 'name'
-                          return (
-                            <th
-                              key={header.id}
-                              className={`px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap ${
-                                isPinnedLeft ? 'sticky z-20 bg-gray-50 dark:bg-gray-800' : ''
-                              }`}
-                              style={{
-                                width: header.getSize(),
-                                left: header.id === 'select' ? 0 : header.id === 'name' ? 40 : undefined,
-                              }}
-                            >
-                              {header.isPlaceholder ? null : (
-                                <div
-                                  className={`flex items-center gap-1 ${
-                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300' : ''
-                                  }`}
-                                  onClick={header.column.getToggleSortingHandler()}
-                                >
-                                  {flexRender(header.column.columnDef.header, header.getContext())}
-                                  {header.column.getCanSort() && (
-                                    <span className="ml-0.5">
-                                      {{
-                                        asc: <ArrowUp className="w-3 h-3" />,
-                                        desc: <ArrowDown className="w-3 h-3" />,
-                                      }[header.column.getIsSorted() as string] ?? (
-                                        <ArrowUpDown className="w-3 h-3 opacity-40" />
-                                      )}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </th>
-                          )
-                        })}
-                      </tr>
-                    ))}
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {table.getRowModel().rows.map(row => (
-                      <tr
-                        key={row.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
-                        onClick={() => setSelectedLeadId(row.original.id)}
-                      >
-                        {row.getVisibleCells().map(cell => {
-                          const colId = cell.column.id
-                          const isPinnedLeft = colId === 'select' || colId === 'name'
-                          return (
-                            <td
-                              key={cell.id}
-                              className={`px-3 py-2.5 whitespace-nowrap ${
-                                isPinnedLeft ? 'sticky z-10 bg-white dark:bg-gray-900' : ''
-                              }`}
-                              style={{
-                                width: cell.column.getSize(),
-                                left: colId === 'select' ? 0 : colId === 'name' ? 40 : undefined,
-                              }}
-                            >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+          {viewMode === 'table' && (
+            <DataTable
+              table={table}
+              onRowClick={(lead) => setSelectedLeadId(lead.id)}
+              stickyColumns={{ left: ['select', 'name'] }}
+              isLoading={isLoading}
+              loadingMessage="Loading leads..."
+              error={error}
+              emptyState={{
+                icon: <Users className="w-12 h-12 text-gray-300 dark:text-gray-600" />,
+                title: 'No leads found',
+                description: activeFilterCount > 0 || filters.search
+                  ? 'Try adjusting your filters'
+                  : 'No leads have been created yet',
+                action: activeFilterCount > 0 ? (
+                  <button
+                    onClick={handleClearFilters}
+                    className="text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
+                  >
+                    Clear all filters
+                  </button>
+                ) : undefined,
+              }}
+              pagination={{
+                page,
+                totalPages,
+                totalCount: count,
+                hasNext,
+                hasPrevious,
+                onPageChange: setPage,
+                pageSizeOptions: PAGE_SIZE_OPTIONS,
+                pageSize,
+                onPageSizeChange: handlePageSizeChange,
+              }}
+            />
           )}
 
           {/* Kanban View */}
@@ -565,33 +504,6 @@ export default function LeadsPage() {
               onStageChange={refetch}
               onLeadClick={(lead) => setSelectedLeadId(lead.id)}
             />
-          )}
-
-          {/* Pagination */}
-          {!isLoading && !error && totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-[13px] text-gray-500 dark:text-gray-400">
-                Page {page} of {totalPages} ({count} total)
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPage(page - 1)}
-                  disabled={!hasPrevious}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Previous
-                </button>
-                <button
-                  onClick={() => setPage(page + 1)}
-                  disabled={!hasNext}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
           )}
         </div>
       </div>

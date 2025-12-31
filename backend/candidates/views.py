@@ -362,7 +362,7 @@ def list_all_candidates(request):
         )
 
     candidates = CandidateProfile.objects.select_related(
-        'user', 'city_rel', 'country_rel'
+        'user', 'city_rel', 'country_rel', 'onboarding_stage'
     ).prefetch_related(
         'industries',
         'experiences',
@@ -370,6 +370,7 @@ def list_all_candidates(request):
         'experiences__skills',
         'experiences__technologies',
         'education',
+        'assigned_to',
     )
 
     # Filter by seniority
@@ -562,7 +563,7 @@ def list_company_candidates(request):
         )
 
     candidates = candidates.select_related(
-        'user', 'city_rel', 'country_rel'
+        'user', 'city_rel', 'country_rel', 'onboarding_stage'
     ).prefetch_related(
         'industries',
         'experiences',
@@ -570,6 +571,7 @@ def list_company_candidates(request):
         'experiences__skills',
         'experiences__technologies',
         'education',
+        'assigned_to',
     )
 
     # Filter by seniority

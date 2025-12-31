@@ -36,13 +36,13 @@ interface TimelineEntryProps {
 
 // Source badge colors
 const sourceBadgeColors: Record<TimelineSource, string> = {
-  lead_activity: 'bg-purple-100 text-purple-700',
-  onboarding_history: 'bg-blue-100 text-blue-700',
-  activity_log: 'bg-green-100 text-green-700',
-  candidate_activity: 'bg-orange-100 text-orange-700',
-  booking: 'bg-pink-100 text-pink-700',
-  stage_feedback: 'bg-yellow-100 text-yellow-700',
-  task: 'bg-teal-100 text-teal-700',
+  lead_activity: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700',
+  onboarding_history: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700',
+  activity_log: 'bg-green-100 dark:bg-green-900/30 text-green-700',
+  candidate_activity: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700',
+  booking: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700',
+  stage_feedback: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700',
+  task: 'bg-teal-100 dark:bg-teal-900/30 text-teal-700',
 }
 
 const sourceLabels: Record<TimelineSource, string> = {
@@ -103,48 +103,48 @@ const activityIcons: Record<string, React.ComponentType<{ className?: string }>>
 
 // Activity type colors for icon backgrounds
 const activityColors: Record<string, string> = {
-  note: 'bg-gray-100 text-gray-600',
-  call: 'bg-green-100 text-green-600',
-  meeting_scheduled: 'bg-blue-100 text-blue-600',
-  meeting_completed: 'bg-green-100 text-green-600',
-  meeting_cancelled: 'bg-red-100 text-red-600',
-  meeting_pending: 'bg-yellow-100 text-yellow-600',
-  email: 'bg-purple-100 text-purple-600',
-  invitation: 'bg-indigo-100 text-indigo-600',
-  stage_change: 'bg-blue-100 text-blue-600',
-  application: 'bg-blue-100 text-blue-600',
-  shortlist: 'bg-yellow-100 text-yellow-600',
-  offer: 'bg-green-100 text-green-600',
-  offer_accepted: 'bg-green-100 text-green-600',
-  rejection: 'bg-red-100 text-red-600',
-  profile_update: 'bg-gray-100 text-gray-600',
-  document: 'bg-orange-100 text-orange-600',
-  login: 'bg-gray-100 text-gray-500',
-  logged_in: 'bg-gray-100 text-gray-500',
-  assignment: 'bg-purple-100 text-purple-600',
-  conversion: 'bg-green-100 text-green-600',
-  created: 'bg-blue-100 text-blue-600',
-  feedback: 'bg-yellow-100 text-yellow-600',
-  task_completed: 'bg-teal-100 text-teal-600',
+  note: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
+  call: 'bg-green-100 dark:bg-green-900/30 text-green-600',
+  meeting_scheduled: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
+  meeting_completed: 'bg-green-100 dark:bg-green-900/30 text-green-600',
+  meeting_cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-600',
+  meeting_pending: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600',
+  email: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600',
+  invitation: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600',
+  stage_change: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
+  application: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
+  shortlist: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600',
+  offer: 'bg-green-100 dark:bg-green-900/30 text-green-600',
+  offer_accepted: 'bg-green-100 dark:bg-green-900/30 text-green-600',
+  rejection: 'bg-red-100 dark:bg-red-900/30 text-red-600',
+  profile_update: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
+  document: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600',
+  login: 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400',
+  logged_in: 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400',
+  assignment: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600',
+  conversion: 'bg-green-100 dark:bg-green-900/30 text-green-600',
+  created: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
+  feedback: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600',
+  task_completed: 'bg-teal-100 dark:bg-teal-900/30 text-teal-600',
   // Additional activity types
-  booking_link_sent: 'bg-blue-100 text-blue-600',
-  interview_booked: 'bg-green-100 text-green-600',
-  interview_scheduled: 'bg-blue-100 text-blue-600',
-  interview_rescheduled: 'bg-amber-100 text-amber-600',
-  interview_cancelled: 'bg-red-100 text-red-600',
-  assessment_assigned: 'bg-blue-100 text-blue-600',
-  assessment_submitted: 'bg-green-100 text-green-600',
-  stage_completed: 'bg-green-100 text-green-600',
-  stage_reopened: 'bg-amber-100 text-amber-600',
+  booking_link_sent: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
+  interview_booked: 'bg-green-100 dark:bg-green-900/30 text-green-600',
+  interview_scheduled: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
+  interview_rescheduled: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600',
+  interview_cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-600',
+  assessment_assigned: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
+  assessment_submitted: 'bg-green-100 dark:bg-green-900/30 text-green-600',
+  stage_completed: 'bg-green-100 dark:bg-green-900/30 text-green-600',
+  stage_reopened: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600',
   // Experience and education
-  experience_added: 'bg-indigo-100 text-indigo-600',
-  experience_updated: 'bg-indigo-100 text-indigo-600',
-  education_added: 'bg-amber-100 text-amber-600',
-  education_updated: 'bg-amber-100 text-amber-600',
+  experience_added: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600',
+  experience_updated: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600',
+  education_added: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600',
+  education_updated: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600',
   // Views (normalized by backend)
-  view: 'bg-gray-50 text-gray-400',
-  profile_viewed: 'bg-purple-100 text-purple-600',
-  job_viewed: 'bg-purple-100 text-purple-600',
+  view: 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500',
+  profile_viewed: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600',
+  job_viewed: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600',
 }
 
 // Format a value for display (handles arrays, nulls, etc.)
@@ -173,7 +173,7 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
       const recommendation = metadata.recommendation as string
 
       return (
-        <div className="mt-2 p-2.5 bg-green-50 border border-green-100 rounded-md space-y-2">
+        <div className="mt-2 p-2.5 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-md space-y-2">
           {/* Stage completed badge */}
           <div className="flex items-center gap-2">
             <CheckCircle className="w-3.5 h-3.5 text-green-600" />
@@ -184,7 +184,7 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
           {score && (
             <div className="flex items-center gap-2">
               <Star className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-[12px] text-gray-700">
+              <span className="text-[12px] text-gray-700 dark:text-gray-300">
                 <span className="font-medium">Score:</span> {score}/10
               </span>
             </div>
@@ -192,12 +192,12 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
           {recommendation && (
             <div className="flex items-center gap-2">
               <CheckCircle className="w-3.5 h-3.5 text-green-600" />
-              <span className="text-[12px] text-gray-700">
+              <span className="text-[12px] text-gray-700 dark:text-gray-300">
                 <span className="font-medium">Recommendation:</span> {recommendation}
               </span>
             </div>
           )}
-          {feedback && <p className="text-[12px] text-gray-600 whitespace-pre-wrap">{feedback}</p>}
+          {feedback && <p className="text-[12px] text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{feedback}</p>}
         </div>
       )
     }
@@ -206,12 +206,12 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     if (action === 'reopened') {
       const prevStatus = metadata.previous_status as string
       return (
-        <div className="mt-2 p-2.5 bg-amber-50 border border-amber-100 rounded-md">
+        <div className="mt-2 p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-md">
           <div className="flex items-center gap-2">
             <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
             <span className="text-[12px] text-amber-700">
               <span className="font-medium">{stageName}</span> reopened
-              {prevStatus && <span className="text-gray-500"> (was: {prevStatus})</span>}
+              {prevStatus && <span className="text-gray-500 dark:text-gray-400"> (was: {prevStatus})</span>}
             </span>
           </div>
         </div>
@@ -222,7 +222,7 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     if (action === 'assessment_assigned') {
       const deadline = metadata.deadline as string
       return (
-        <div className="mt-2 p-2.5 bg-blue-50 border border-blue-100 rounded-md">
+        <div className="mt-2 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md">
           <div className="flex items-center gap-2">
             <ClipboardCheck className="w-3.5 h-3.5 text-blue-600" />
             <span className="text-[12px] text-blue-700">
@@ -232,7 +232,7 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
           {deadline && (
             <div className="flex items-center gap-2 mt-1.5">
               <Clock className="w-3.5 h-3.5 text-blue-600" />
-              <span className="text-[12px] text-gray-700">
+              <span className="text-[12px] text-gray-700 dark:text-gray-300">
                 Due: {format(parseISO(deadline), 'MMM d, yyyy h:mm a')}
               </span>
             </div>
@@ -244,15 +244,15 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     // Default stage change: From → To badges
     if (fromStage && toStage) {
       return (
-        <div className="mt-2 p-2.5 bg-blue-50 border border-blue-100 rounded-md">
+        <div className="mt-2 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md">
           <div className="flex items-center gap-2">
             <ArrowRight className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2 py-0.5 text-[11px] font-medium bg-gray-200 text-gray-700 rounded">
+              <span className="px-2 py-0.5 text-[11px] font-medium bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded">
                 {fromStage}
               </span>
               <ArrowRight className="w-3 h-3 text-gray-400" />
-              <span className="px-2 py-0.5 text-[11px] font-medium bg-blue-200 text-blue-800 rounded">
+              <span className="px-2 py-0.5 text-[11px] font-medium bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded">
                 {toStage}
               </span>
             </div>
@@ -264,10 +264,10 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     // Just moved to a stage (no from stage)
     if (toStage) {
       return (
-        <div className="mt-2 p-2.5 bg-blue-50 border border-blue-100 rounded-md">
+        <div className="mt-2 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md">
           <div className="flex items-center gap-2">
             <ArrowRight className="w-3.5 h-3.5 text-blue-600" />
-            <span className="text-[12px] text-gray-700">
+            <span className="text-[12px] text-gray-700 dark:text-gray-300">
               Moved to <span className="font-medium text-blue-700">{toStage}</span>
             </span>
           </div>
@@ -281,20 +281,20 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     const changes = metadata.changes as Array<{ field: string; label: string; old: unknown; new: unknown }>
     if (changes.length > 0) {
       return (
-        <div className="mt-2 p-2.5 bg-blue-50 border border-blue-100 rounded-md">
+        <div className="mt-2 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md">
           <div className="space-y-2">
             {changes.slice(0, 3).map((change, index) => (
               <div key={index} className="text-[12px]">
-                <span className="font-medium text-gray-700">{change.label}:</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">{change.label}:</span>
                 <div className="flex items-center gap-2 mt-0.5 pl-2">
-                  <span className="text-gray-500 line-through">{formatChangeValue(change.old)}</span>
+                  <span className="text-gray-500 dark:text-gray-400 line-through">{formatChangeValue(change.old)}</span>
                   <ArrowRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-900">{formatChangeValue(change.new)}</span>
+                  <span className="text-gray-900 dark:text-gray-100">{formatChangeValue(change.new)}</span>
                 </div>
               </div>
             ))}
             {changes.length > 3 && (
-              <p className="text-[11px] text-gray-500">+{changes.length - 3} more changes</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">+{changes.length - 3} more changes</p>
             )}
           </div>
         </div>
@@ -309,11 +309,11 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     const recommendation = metadata.recommendation as string
 
     return (
-      <div className="mt-2 p-2.5 bg-green-50 border border-green-100 rounded-md space-y-1.5">
+      <div className="mt-2 p-2.5 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-md space-y-1.5">
         {score && (
           <div className="flex items-center gap-2">
             <Star className="w-3.5 h-3.5 text-amber-500" />
-            <span className="text-[12px] text-gray-700">
+            <span className="text-[12px] text-gray-700 dark:text-gray-300">
               <span className="font-medium">Score:</span> {score}/10
             </span>
           </div>
@@ -321,12 +321,12 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
         {recommendation && (
           <div className="flex items-center gap-2">
             <CheckCircle className="w-3.5 h-3.5 text-green-600" />
-            <span className="text-[12px] text-gray-700">
+            <span className="text-[12px] text-gray-700 dark:text-gray-300">
               <span className="font-medium">Recommendation:</span> {recommendation}
             </span>
           </div>
         )}
-        {feedback && <p className="text-[12px] text-gray-600 whitespace-pre-wrap">{feedback}</p>}
+        {feedback && <p className="text-[12px] text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{feedback}</p>}
       </div>
     )
   }
@@ -338,11 +338,11 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     const isUsed = metadata.is_used as boolean
 
     return (
-      <div className="mt-2 p-2.5 bg-blue-50 border border-blue-100 rounded-md space-y-1.5">
+      <div className="mt-2 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md space-y-1.5">
         {expiresAt && (
           <div className="flex items-center gap-2">
             <Clock className="w-3.5 h-3.5 text-blue-600" />
-            <span className="text-[12px] text-gray-700">
+            <span className="text-[12px] text-gray-700 dark:text-gray-300">
               Expires {format(parseISO(expiresAt), 'MMM d, yyyy h:mm a')}
             </span>
           </div>
@@ -395,11 +395,11 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     if (!scheduledAt && !meetingLink && !location && !interviewerName) return null
 
     return (
-      <div className="mt-2 p-2.5 bg-green-50 border border-green-100 rounded-md space-y-1.5">
+      <div className="mt-2 p-2.5 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-md space-y-1.5">
         {scheduledAt && (
           <div className="flex items-center gap-2">
             <Calendar className="w-3.5 h-3.5 text-green-600" />
-            <span className="text-[12px] text-gray-700">
+            <span className="text-[12px] text-gray-700 dark:text-gray-300">
               {format(parseISO(scheduledAt), 'EEE, MMM d, yyyy h:mm a')}
               {durationMinutes && ` (${durationMinutes} min)`}
             </span>
@@ -408,13 +408,13 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
         {interviewerName && (
           <div className="flex items-center gap-2">
             <Users className="w-3.5 h-3.5 text-green-600" />
-            <span className="text-[12px] text-gray-700">with {interviewerName}</span>
+            <span className="text-[12px] text-gray-700 dark:text-gray-300">with {interviewerName}</span>
           </div>
         )}
         {isInPerson && location && (
           <div className="flex items-center gap-2">
             <MapPin className="w-3.5 h-3.5 text-green-600" />
-            <span className="text-[12px] text-gray-700">{location}</span>
+            <span className="text-[12px] text-gray-700 dark:text-gray-300">{location}</span>
           </div>
         )}
         {!isInPerson && meetingLink && (
@@ -441,12 +441,12 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     const reason = metadata.reason as string
 
     return (
-      <div className="mt-2 p-2.5 bg-amber-50 border border-amber-100 rounded-md space-y-1.5">
+      <div className="mt-2 p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-md space-y-1.5">
         {oldTime && newTime && (
           <div className="flex items-center gap-2">
             <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
-            <span className="text-[12px] text-gray-700">
-              <span className="line-through text-gray-400">
+            <span className="text-[12px] text-gray-700 dark:text-gray-300">
+              <span className="line-through text-gray-400 dark:text-gray-500">
                 {format(parseISO(oldTime), 'EEE, MMM d h:mm a')}
               </span>
               {' → '}
@@ -457,7 +457,7 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
         {reason && (
           <div className="flex items-start gap-2">
             <FileText className="w-3.5 h-3.5 text-amber-600 mt-0.5" />
-            <span className="text-[12px] text-gray-600">Reason: {reason}</span>
+            <span className="text-[12px] text-gray-600 dark:text-gray-400">Reason: {reason}</span>
           </div>
         )}
       </div>
@@ -472,10 +472,10 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
 
     if (salary) {
       return (
-        <div className="mt-2 p-2.5 bg-green-50 border border-green-100 rounded-md">
+        <div className="mt-2 p-2.5 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-md">
           <div className="flex items-center gap-2">
             <Briefcase className="w-3.5 h-3.5 text-green-600" />
-            <span className="text-[12px] text-gray-700">
+            <span className="text-[12px] text-gray-700 dark:text-gray-300">
               <span className="font-medium">Annual Salary:</span> {String(currency)}{' '}
               {Number(salary).toLocaleString()}
             </span>
@@ -490,13 +490,13 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     const reason = metadata.rejection_reason as string | undefined
     const feedback = metadata.rejection_feedback as string | undefined
     return (
-      <div className="mt-2 p-2.5 bg-red-50 border border-red-100 rounded-md space-y-1">
+      <div className="mt-2 p-2.5 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-md space-y-1">
         {reason && (
-          <p className="text-[12px] text-gray-700">
+          <p className="text-[12px] text-gray-700 dark:text-gray-300">
             <span className="font-medium">Reason:</span> {reason.replace(/_/g, ' ')}
           </p>
         )}
-        {feedback && <p className="text-[12px] text-gray-600">{feedback}</p>}
+        {feedback && <p className="text-[12px] text-gray-600 dark:text-gray-400">{feedback}</p>}
       </div>
     )
   }
@@ -509,7 +509,7 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
 
     if (changes.length > 0) {
       return (
-        <div className="mt-2 p-2.5 bg-indigo-50 border border-indigo-100 rounded-md">
+        <div className="mt-2 p-2.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-md">
           {jobTitle && company && (
             <p className="text-[12px] font-medium text-indigo-700 mb-2">
               {jobTitle} at {company}
@@ -518,16 +518,16 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
           <div className="space-y-2">
             {changes.slice(0, 3).map((change, index) => (
               <div key={index} className="text-[12px]">
-                <span className="font-medium text-gray-700">{change.label}:</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">{change.label}:</span>
                 <div className="flex items-center gap-2 mt-0.5 pl-2">
-                  <span className="text-gray-500 line-through">{formatChangeValue(change.old)}</span>
+                  <span className="text-gray-500 dark:text-gray-400 line-through">{formatChangeValue(change.old)}</span>
                   <ArrowRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-900">{formatChangeValue(change.new)}</span>
+                  <span className="text-gray-900 dark:text-gray-100">{formatChangeValue(change.new)}</span>
                 </div>
               </div>
             ))}
             {changes.length > 3 && (
-              <p className="text-[11px] text-gray-500">+{changes.length - 3} more changes</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">+{changes.length - 3} more changes</p>
             )}
           </div>
         </div>
@@ -543,7 +543,7 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
 
     if (changes.length > 0) {
       return (
-        <div className="mt-2 p-2.5 bg-amber-50 border border-amber-100 rounded-md">
+        <div className="mt-2 p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-md">
           {degree && institution && (
             <p className="text-[12px] font-medium text-amber-700 mb-2">
               {degree} at {institution}
@@ -552,16 +552,16 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
           <div className="space-y-2">
             {changes.slice(0, 3).map((change, index) => (
               <div key={index} className="text-[12px]">
-                <span className="font-medium text-gray-700">{change.label}:</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">{change.label}:</span>
                 <div className="flex items-center gap-2 mt-0.5 pl-2">
-                  <span className="text-gray-500 line-through">{formatChangeValue(change.old)}</span>
+                  <span className="text-gray-500 dark:text-gray-400 line-through">{formatChangeValue(change.old)}</span>
                   <ArrowRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-900">{formatChangeValue(change.new)}</span>
+                  <span className="text-gray-900 dark:text-gray-100">{formatChangeValue(change.new)}</span>
                 </div>
               </div>
             ))}
             {changes.length > 3 && (
-              <p className="text-[11px] text-gray-500">+{changes.length - 3} more changes</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">+{changes.length - 3} more changes</p>
             )}
           </div>
         </div>
@@ -575,12 +575,12 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     const companyName = metadata.company_name as string | undefined
 
     return (
-      <div className="mt-2 p-2.5 bg-blue-50 border border-blue-100 rounded-md">
+      <div className="mt-2 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md">
         <div className="flex items-center gap-2">
           <Briefcase className="w-3.5 h-3.5 text-blue-600" />
-          <span className="text-[12px] text-gray-700">
+          <span className="text-[12px] text-gray-700 dark:text-gray-300">
             <span className="font-medium">{jobTitle}</span>
-            {companyName && <span className="text-gray-500"> at {companyName}</span>}
+            {companyName && <span className="text-gray-500 dark:text-gray-400"> at {companyName}</span>}
           </span>
         </div>
       </div>
@@ -592,10 +592,10 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     const jobTitle = metadata.job_title as string
 
     return (
-      <div className="mt-2 p-2.5 bg-yellow-50 border border-yellow-100 rounded-md">
+      <div className="mt-2 p-2.5 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800 rounded-md">
         <div className="flex items-center gap-2">
           <Star className="w-3.5 h-3.5 text-yellow-600" />
-          <span className="text-[12px] text-gray-700">
+          <span className="text-[12px] text-gray-700 dark:text-gray-300">
             Shortlisted for <span className="font-medium">{jobTitle}</span>
           </span>
         </div>
@@ -610,14 +610,14 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
     const filename = metadata.filename as string | undefined
 
     return (
-      <div className="mt-2 p-2.5 bg-green-50 border border-green-100 rounded-md space-y-1.5">
+      <div className="mt-2 p-2.5 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-md space-y-1.5">
         {filename && (
           <div className="flex items-center gap-2">
             <Upload className="w-3.5 h-3.5 text-green-600" />
-            <span className="text-[12px] text-gray-700">{filename}</span>
+            <span className="text-[12px] text-gray-700 dark:text-gray-300">{filename}</span>
           </div>
         )}
-        <div className="flex items-center gap-3 text-[12px] text-gray-600">
+        <div className="flex items-center gap-3 text-[12px] text-gray-600 dark:text-gray-400">
           {expCount > 0 && (
             <span className="flex items-center gap-1">
               <Briefcase className="w-3 h-3" />
@@ -662,11 +662,11 @@ export function TimelineEntry({ entry, isCompact = false }: TimelineEntryProps) 
           <Icon className="w-3 h-3" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-700 truncate">{entry.title}</p>
+          <p className="text-xs text-gray-700 dark:text-gray-300 truncate">{entry.title}</p>
           <div className="flex items-center gap-2">
-            <p className="text-xs text-gray-400">{formattedTime}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">{formattedTime}</p>
             {displayJobTitle && (
-              <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 rounded truncate max-w-[100px]">
+              <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 rounded truncate max-w-[100px]">
                 {displayJobTitle}
               </span>
             )}
@@ -677,7 +677,7 @@ export function TimelineEntry({ entry, isCompact = false }: TimelineEntryProps) 
   }
 
   return (
-    <div className="flex gap-3 py-3 border-b border-gray-100 last:border-0">
+    <div className="flex gap-3 py-3 border-b border-gray-100 dark:border-gray-800 last:border-0">
       {/* Icon */}
       <div className={`p-2 rounded-lg ${iconColor} flex-shrink-0 h-fit`}>
         <Icon className="w-4 h-4" />
@@ -687,25 +687,25 @@ export function TimelineEntry({ entry, isCompact = false }: TimelineEntryProps) 
       <div className="flex-1 min-w-0">
         {/* Header */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-sm text-gray-900">{entry.title}</span>
+          <span className="font-medium text-sm text-gray-900 dark:text-gray-100">{entry.title}</span>
           <span className={`text-xs px-1.5 py-0.5 rounded ${sourceBadge}`}>{sourceLabel}</span>
           {/* Job badge - show related job if from activity_log or has job context */}
           {displayJobTitle && entry.source !== 'candidate_activity' && (
-            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 rounded">
+            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 rounded">
               {displayJobTitle}
             </span>
           )}
         </div>
 
         {/* Content */}
-        {entry.content && <p className="mt-1 text-sm text-gray-600 whitespace-pre-wrap">{entry.content}</p>}
+        {entry.content && <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{entry.content}</p>}
 
         {/* Rich metadata display */}
         {richMetadata}
 
         {/* Simple metadata fallback (duration, meeting type - stage changes now handled in rich metadata) */}
         {!richMetadata && entry.metadata && Object.keys(entry.metadata).length > 0 && (
-          <div className="mt-2 text-xs text-gray-500 flex flex-wrap items-center gap-3">
+          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-3">
             {Boolean(entry.metadata.duration_minutes) && (
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
@@ -720,7 +720,7 @@ export function TimelineEntry({ entry, isCompact = false }: TimelineEntryProps) 
             )}
             {/* Onboarding stage info */}
             {entry.source === 'onboarding_history' && Boolean(entry.metadata.stage_name) && (
-              <span className="px-2 py-0.5 text-[11px] font-medium bg-blue-100 text-blue-700 rounded">
+              <span className="px-2 py-0.5 text-[11px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 rounded">
                 {String(entry.metadata.stage_name)}
               </span>
             )}
@@ -728,7 +728,7 @@ export function TimelineEntry({ entry, isCompact = false }: TimelineEntryProps) 
         )}
 
         {/* Footer */}
-        <div className="mt-2 flex items-center gap-3 text-xs text-gray-400">
+        <div className="mt-2 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
           <span title={fullDate}>{formattedTime}</span>
           {entry.performed_by && (
             <span className="flex items-center gap-1">

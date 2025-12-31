@@ -4,12 +4,12 @@ import { Link, useSearchParams } from 'react-router-dom'
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
   createColumnHelper,
   ColumnDef,
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table'
+import { DataTable } from '@/components/common/DataTable'
 import { useAllJobs, useCompanyJobs, useJobStatus, useDeleteJob, useUpdateJob } from '@/hooks/useJobs'
 import { useAssignedUpdate, useMyCompany } from '@/hooks'
 import { useAuth } from '@/contexts/AuthContext'
@@ -28,12 +28,7 @@ import {
   Eye,
   Edit,
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
   SlidersHorizontal,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
   Building2,
   Plus,
   MoreVertical,
@@ -708,147 +703,41 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
             totalCount={count}
           />
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="text-center py-12">
-              <p className="text-[14px] text-gray-500 dark:text-gray-400">Loading jobs...</p>
-            </div>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <div className="text-center py-12">
-              <p className="text-[14px] text-red-500">{error}</p>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!isLoading && !error && jobs.length === 0 && (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
-              <Briefcase className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <p className="text-[15px] text-gray-700 dark:text-gray-300 mb-1">No jobs found</p>
-              <p className="text-[13px] text-gray-500 dark:text-gray-400">
-                {activeFilterCount > 0 || filters.search ? 'Try adjusting your filters' : 'No jobs have been created yet'}
-              </p>
-              {activeFilterCount > 0 && (
+          {/* Table */}
+          <DataTable
+            table={table}
+            onRowClick={(job) => handleOpenDrawer(job.id)}
+            stickyColumns={{ left: ['select', 'title'], right: ['actions'] }}
+            isLoading={isLoading}
+            loadingMessage="Loading jobs..."
+            error={error}
+            emptyState={{
+              icon: <Briefcase className="w-12 h-12 text-gray-300 dark:text-gray-600" />,
+              title: 'No jobs found',
+              description: activeFilterCount > 0 || filters.search
+                ? 'Try adjusting your filters'
+                : 'No jobs have been created yet',
+              action: activeFilterCount > 0 ? (
                 <button
                   onClick={handleClearFilters}
-                  className="mt-4 text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
+                  className="text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
                 >
                   Clear all filters
                 </button>
-              )}
-            </div>
-          )}
-
-          {/* Table */}
-          {!isLoading && !error && jobs.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    {table.getHeaderGroups().map(headerGroup => (
-                      <tr key={headerGroup.id} className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                        {headerGroup.headers.map(header => {
-                          const isPinnedLeft = header.id === 'select' || header.id === 'title'
-                          const isPinnedRight = header.id === 'actions'
-                          return (
-                            <th
-                              key={header.id}
-                              className={`px-3 py-2.5 text-left text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap ${
-                                isPinnedLeft ? 'sticky z-20 bg-gray-50 dark:bg-gray-800' : ''
-                              } ${isPinnedRight ? 'sticky right-0 z-20 bg-gray-50 dark:bg-gray-800' : ''}`}
-                              style={{
-                                width: header.getSize(),
-                                left: header.id === 'select' ? 0 : header.id === 'title' ? 40 : undefined,
-                              }}
-                            >
-                              {header.isPlaceholder ? null : (
-                                <div
-                                  className={`flex items-center gap-1 ${
-                                    header.column.getCanSort() ? 'cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300' : ''
-                                  }`}
-                                  onClick={header.column.getToggleSortingHandler()}
-                                >
-                                  {flexRender(header.column.columnDef.header, header.getContext())}
-                                  {header.column.getCanSort() && (
-                                    <span className="ml-0.5">
-                                      {{
-                                        asc: <ArrowUp className="w-3 h-3" />,
-                                        desc: <ArrowDown className="w-3 h-3" />,
-                                      }[header.column.getIsSorted() as string] ?? (
-                                        <ArrowUpDown className="w-3 h-3 opacity-40" />
-                                      )}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </th>
-                          )
-                        })}
-                      </tr>
-                    ))}
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {table.getRowModel().rows.map(row => (
-                      <tr
-                        key={row.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                        onClick={() => handleOpenDrawer(row.original.id)}
-                      >
-                        {row.getVisibleCells().map(cell => {
-                          const colId = cell.column.id
-                          const isPinnedLeft = colId === 'select' || colId === 'title'
-                          const isPinnedRight = colId === 'actions'
-                          return (
-                            <td
-                              key={cell.id}
-                              className={`px-3 py-2.5 whitespace-nowrap ${
-                                isPinnedLeft ? 'sticky z-10 bg-white dark:bg-gray-800' : ''
-                              } ${isPinnedRight ? 'sticky right-0 z-10 bg-white dark:bg-gray-800' : ''}`}
-                              style={{
-                                width: cell.column.getSize(),
-                                left: colId === 'select' ? 0 : colId === 'title' ? 40 : undefined,
-                              }}
-                            >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {!isLoading && !error && totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-[13px] text-gray-500 dark:text-gray-400">
-                Page {page} of {totalPages} ({count} total)
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPage(page - 1)}
-                  disabled={!hasPrevious}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Previous
-                </button>
-                <button
-                  onClick={() => setPage(page + 1)}
-                  disabled={!hasNext}
-                  className="flex items-center gap-1 px-3 py-1.5 text-[13px] border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
-                >
-                  Next
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
+              ) : undefined,
+            }}
+            pagination={{
+              page,
+              totalPages,
+              totalCount: count,
+              hasNext,
+              hasPrevious,
+              onPageChange: setPage,
+              pageSizeOptions: PAGE_SIZE_OPTIONS,
+              pageSize,
+              onPageSizeChange: handlePageSizeChange,
+            }}
+          />
         </div>
       </div>
 

@@ -157,20 +157,20 @@ class CompanyAdminListSerializer(serializers.ModelSerializer):
 
     def get_subscription(self, obj):
         """Return active subscription info if exists."""
-        from subscriptions.models import Subscription, SubscriptionServiceType
-        # Get the most recent active or paused subscription for retained/headhunting
-        subscription = Subscription.objects.filter(
-            company=obj,
-            service_type__in=[SubscriptionServiceType.RETAINED, SubscriptionServiceType.HEADHUNTING]
-        ).order_by('-created_at').first()
+        # Use prefetched data if available to avoid N+1
+        prefetched_subscriptions = getattr(obj, 'prefetched_subscriptions', None)
+        if prefetched_subscriptions is not None:
+            subscription = prefetched_subscriptions[0] if prefetched_subscriptions else None
+        else:
+            # Fallback for non-list views
+            from subscriptions.models import Subscription, SubscriptionServiceType
+            subscription = Subscription.objects.filter(
+                company=obj,
+                service_type__in=[SubscriptionServiceType.RETAINED, SubscriptionServiceType.HEADHUNTING]
+            ).order_by('-created_at').first()
 
         if not subscription:
             return None
-
-        # Get billing mode from most recent invoice, if any
-        from subscriptions.models import Invoice
-        latest_invoice = Invoice.objects.filter(subscription=subscription).order_by('-created_at').first()
-        billing_mode = latest_invoice.billing_mode if latest_invoice else 'in_system'
 
         return {
             'id': str(subscription.id),
@@ -179,16 +179,21 @@ class CompanyAdminListSerializer(serializers.ModelSerializer):
             'contract_start_date': subscription.contract_start_date.isoformat() if subscription.contract_start_date else None,
             'contract_end_date': subscription.contract_end_date.isoformat() if subscription.contract_end_date else None,
             'auto_renew': subscription.auto_renew,
-            'billing_mode': billing_mode,
             'days_until_renewal': subscription.days_until_renewal,
         }
 
     def get_primary_contact(self, obj):
         """Return the primary contact (first admin) for the company."""
-        admin_user = obj.members.filter(
-            role='admin',
-            is_active=True
-        ).select_related('user').first()
+        # Use prefetched data if available to avoid N+1
+        prefetched_admins = getattr(obj, 'prefetched_admins', None)
+        if prefetched_admins is not None:
+            admin_user = prefetched_admins[0] if prefetched_admins else None
+        else:
+            # Fallback for non-list views
+            admin_user = obj.members.filter(
+                role='admin',
+                is_active=True
+            ).select_related('user').first()
 
         if not admin_user:
             return None
@@ -202,6 +207,9 @@ class CompanyAdminListSerializer(serializers.ModelSerializer):
 
     def get_pricing(self, obj):
         """Return company pricing info. Returns None if no custom pricing set."""
+        # Note: Pricing is typically not needed in list views for performance
+        # This is kept for detail views but will cause N+1 in list views
+        # Consider removing from list serializer if performance is critical
         from subscriptions.models import CompanyPricing
         try:
             pricing = CompanyPricing.objects.get(company=obj)

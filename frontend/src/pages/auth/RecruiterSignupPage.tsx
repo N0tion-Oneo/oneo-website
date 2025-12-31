@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTheme } from '@/contexts/ThemeContext'
 import { usePublicBranding } from '@/hooks'
 import api, { setTokens } from '@/services/api'
 import { AxiosError } from 'axios'
@@ -38,6 +39,7 @@ export default function RecruiterSignupPage() {
   const { token } = useParams<{ token: string }>()
   const { updateUser } = useAuth()
   const { branding } = usePublicBranding()
+  const { isDark } = useTheme()
   const navigate = useNavigate()
   const [serverError, setServerError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
@@ -46,6 +48,7 @@ export default function RecruiterSignupPage() {
   const [invitationEmail, setInvitationEmail] = useState('')
 
   const brandName = branding?.company_name || ''
+  const logoUrl = isDark && branding?.logo_dark_url ? branding.logo_dark_url : branding?.logo_url
 
   const {
     register,
@@ -184,8 +187,8 @@ export default function RecruiterSignupPage() {
       <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
         <header className="p-6">
           <Link to="/" className="flex items-center">
-            {branding?.logo_url ? (
-              <img src={branding.logo_url} alt={brandName} className="h-8 w-auto" />
+            {logoUrl ? (
+              <img src={logoUrl} alt={brandName} className="h-8 w-auto" />
             ) : (
               <span className="text-xl font-semibold text-gray-900 dark:text-gray-100">{brandName}</span>
             )}
@@ -230,8 +233,8 @@ export default function RecruiterSignupPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
       <header className="p-6">
         <Link to="/" className="flex items-center">
-          {branding?.logo_url ? (
-            <img src={branding.logo_url} alt={brandName} className="h-8 w-auto" />
+          {logoUrl ? (
+            <img src={logoUrl} alt={brandName} className="h-8 w-auto" />
           ) : (
             <span className="text-xl font-semibold text-gray-900 dark:text-gray-100">{brandName}</span>
           )}

@@ -24,9 +24,9 @@ export function TrendChart({
 }: TrendChartProps) {
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="h-4 bg-gray-200 rounded w-40 mb-6 animate-pulse" />
-        <div className="h-64 bg-gray-100 rounded animate-pulse" />
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-6 animate-pulse" />
+        <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
       </div>
     )
   }
@@ -41,11 +41,11 @@ export function TrendChart({
   }))
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <h3 className="text-[14px] font-medium text-gray-900 mb-6">{title}</h3>
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+      <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-6">{title}</h3>
 
       {data.length === 0 ? (
-        <div className="h-64 flex items-center justify-center text-[13px] text-gray-500">
+        <div className="h-64 flex items-center justify-center text-[13px] text-gray-500 dark:text-gray-400">
           No data available for this period
         </div>
       ) : (

@@ -4,27 +4,13 @@
  */
 
 import { useState, useEffect, useRef, ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 import {
   X,
-  Building2,
-  User,
-  Mail,
-  Phone,
-  Globe,
-  Briefcase,
-  Calendar,
-  Clock,
-  Edit,
-  Trash2,
   Send,
   Trophy,
   XCircle,
-  ExternalLink,
-  MessageSquare,
   CheckCircle,
   AlertCircle,
-  ChevronRight,
   ChevronDown,
   History,
   Loader2,
@@ -36,13 +22,16 @@ import {
   FileText,
   Copy,
   Check,
+  Mail,
+  Trash2,
+  User,
 } from 'lucide-react'
-import { DrawerWithPanels, type PanelOption } from '@/components/common'
+import { DrawerWithPanels, ActionRail, ActionRailButton, stageDropdownStyles, zIndexLayers } from '@/components/common'
 import { FocusMode } from '@/components/service'
+import { EntityProfilePanel } from '@/components/service/panels/EntityProfilePanel'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   useLead,
-  useUpdateLead,
   useUpdateLeadStage,
   useDeleteLead,
   useLeadActivities,
@@ -50,16 +39,15 @@ import {
   type LeadActivity,
 } from '@/hooks/useLeads'
 import { getOnboardingStages } from '@/services/api'
-import { AssignedSelect } from '@/components/forms'
 import type { OnboardingStage, AssignedUser } from '@/types'
+import { AssignedSelect } from '@/components/forms'
 import { useCreateInvitation } from '@/hooks/useInvitations'
+import { useUpdateLead } from '@/hooks/useLeads'
 import api from '@/services/api'
-
-// =============================================================================
-// Types
-// =============================================================================
-
-type PanelType = 'overview' | 'activity' | 'invitations'
+import {
+  getEntityPanelOptions,
+  type EntityPanelType,
+} from '@/components/service/panelConfig'
 
 interface LeadBooking {
   id: string
@@ -79,14 +67,6 @@ export interface LeadDrawerProps {
 // =============================================================================
 // Helper Functions
 // =============================================================================
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
 
 function formatDateTime(dateString: string): string {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -120,11 +100,6 @@ function getSourceBadgeColor(source: string): string {
     other: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
   }
   return colors[source] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-}
-
-function getCompanySizeLabel(size: string | null): string {
-  if (!size) return 'Not specified'
-  return size.replace('_', '-') + ' employees'
 }
 
 // =============================================================================
@@ -271,7 +246,7 @@ export default function LeadDrawer({
 }: LeadDrawerProps) {
   const { user } = useAuth()
   const { lead, isLoading, refetch } = useLead(leadId)
-  const { updateLead, isUpdating } = useUpdateLead()
+  const { updateLead } = useUpdateLead()
   const { updateStage, isUpdating: isUpdatingStage } = useUpdateLeadStage()
   const { deleteLead, isDeleting } = useDeleteLead()
   const { activities, isLoading: activitiesLoading, refetch: refetchActivities } = useLeadActivities(leadId)
@@ -279,9 +254,12 @@ export default function LeadDrawer({
   const { createInvitation, isCreating: isCreatingInvitation, error: invitationError } = useCreateInvitation()
 
   const [stages, setStages] = useState<OnboardingStage[]>([])
-  const [activePanel, setActivePanel] = useState<PanelType>('overview')
-  const [isEditingNotes, setIsEditingNotes] = useState(false)
-  const [notes, setNotes] = useState('')
+  const [activePanel, setActivePanel] = useState<EntityPanelType>('profile')
+
+  // Get available panels from shared config (filter out meetings and tasks - not implemented in lead drawer)
+  const availablePanels = getEntityPanelOptions('lead').filter(
+    (panel) => panel.type !== 'meetings' && panel.type !== 'tasks' && panel.type !== 'timeline'
+  )
   const [bookings, setBookings] = useState<LeadBooking[]>([])
   const [bookingsLoading, setBookingsLoading] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -323,13 +301,6 @@ export default function LeadDrawer({
       .catch((err) => console.error('Failed to fetch stages:', err))
   }, [])
 
-  // Initialize notes when lead loads
-  useEffect(() => {
-    if (lead) {
-      setNotes(lead.notes || '')
-    }
-  }, [lead])
-
   // Fetch bookings for this lead
   useEffect(() => {
     if (lead?.id) {
@@ -353,14 +324,17 @@ export default function LeadDrawer({
     }
   }
 
-  const handleSaveNotes = async () => {
+  // Entity profile panel handlers
+  const handleAssignedChange = async (assignedTo: AssignedUser[]) => {
     if (!lead) return
     try {
-      await updateLead(lead.id, { notes })
-      setIsEditingNotes(false)
+      await api.patch(`/companies/leads/${lead.id}/update/`, {
+        assigned_to_ids: assignedTo.map((u) => u.id),
+      })
       refetch()
+      onRefresh?.()
     } catch (err) {
-      console.error('Failed to save notes:', err)
+      console.error('Failed to update assigned:', err)
     }
   }
 
@@ -383,6 +357,16 @@ export default function LeadDrawer({
       onRefresh?.()
     } catch (err) {
       console.error('Failed to toggle replied status:', err)
+    }
+  }
+
+  const handleSaveNotes = async (notes: string) => {
+    if (!lead) return
+    try {
+      await updateLead(lead.id, { notes })
+      refetch()
+    } catch (err) {
+      console.error('Failed to save notes:', err)
     }
   }
 
@@ -464,19 +448,6 @@ export default function LeadDrawer({
     }
   }
 
-  const handleAssignedChange = async (assignedTo: AssignedUser[]) => {
-    if (!lead) return
-    try {
-      await api.patch(`/companies/leads/${lead.id}/update/`, {
-        assigned_to_ids: assignedTo.map((u) => u.id),
-      })
-      refetch()
-      onRefresh?.()
-    } catch (err) {
-      console.error('Failed to update assigned:', err)
-    }
-  }
-
   const handleAddActivity = async () => {
     if (!lead || !activityContent.trim()) return
     try {
@@ -489,70 +460,83 @@ export default function LeadDrawer({
     }
   }
 
-  // Build available panels
-  const buildAvailablePanels = (): PanelOption[] => {
-    return [
-      { type: 'overview', label: 'Overview', icon: <User className="w-4 h-4" /> },
-      { type: 'activity', label: 'Activity', icon: <History className="w-4 h-4" />, count: activities.length },
-      { type: 'invitations', label: 'Invitations', icon: <Send className="w-4 h-4" />, count: lead?.invitations?.length },
-    ]
-  }
+  // Add activity count to the activity panel option
+  const panelsWithCounts = availablePanels.map((panel) => {
+    if (panel.type === 'activity') {
+      return { ...panel, count: activities.length }
+    }
+    if (panel.type === 'invitations') {
+      return { ...panel, count: lead?.invitations?.length }
+    }
+    return panel
+  })
 
-  // Render quick actions
-  const renderQuickActions = (): ReactNode => {
+  // Render action rail
+  const renderActionRail = (): ReactNode => {
     if (!lead) return null
     const isTerminal = lead.onboarding_stage?.slug === 'won' || lead.onboarding_stage?.slug === 'lost'
 
-    return (
-      <>
-        {user?.booking_slug && (
-          <Link
-            to={`/meet/${user.booking_slug}?name=${encodeURIComponent(lead.name)}&email=${encodeURIComponent(lead.email)}&phone=${encodeURIComponent(lead.phone || '')}&company=${encodeURIComponent(lead.company_name)}`}
-            target="_blank"
-            className="inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200"
-          >
-            <Video className="w-3.5 h-3.5" />
-            Schedule Meeting
-          </Link>
-        )}
-        {!isTerminal && (
-          <>
-            <button
-              onClick={() => setShowConvertConfirm(true)}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
-            >
-              <Send className="w-3.5 h-3.5" />
-              Send Invitation
-            </button>
-            <button
-              onClick={handleMarkWon}
-              disabled={isUpdatingStage}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200"
-            >
-              <Trophy className="w-3.5 h-3.5" />
-              Won
-            </button>
-            <button
-              onClick={handleMarkLost}
-              disabled={isUpdatingStage}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200"
-            >
-              <XCircle className="w-3.5 h-3.5" />
-              Lost
-            </button>
-          </>
-        )}
-        {!lead.is_converted && (
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            Delete
-          </button>
-        )}
-      </>
-    )
+    // Build flat array of buttons
+    const buttons: ReactNode[] = []
+
+    if (user?.booking_slug) {
+      buttons.push(
+        <ActionRailButton
+          key="meeting"
+          icon={<Video className="w-4 h-4" />}
+          label="Schedule Meeting"
+          description="Book a video call"
+          onClick={() => window.open(`/meet/${user.booking_slug}?name=${encodeURIComponent(lead.name)}&email=${encodeURIComponent(lead.email)}&phone=${encodeURIComponent(lead.phone || '')}&company=${encodeURIComponent(lead.company_name)}`, '_blank')}
+          variant="info"
+        />
+      )
+    }
+
+    if (!isTerminal) {
+      buttons.push(
+        <ActionRailButton
+          key="invite"
+          icon={<Send className="w-4 h-4" />}
+          label="Send Invitation"
+          description="Invite to client portal"
+          onClick={() => setShowConvertConfirm(true)}
+          variant="success"
+        />,
+        <ActionRailButton
+          key="won"
+          icon={<Trophy className="w-4 h-4" />}
+          label="Mark Won"
+          description="Close as successful"
+          onClick={handleMarkWon}
+          disabled={isUpdatingStage}
+          variant="success"
+        />,
+        <ActionRailButton
+          key="lost"
+          icon={<XCircle className="w-4 h-4" />}
+          label="Mark Lost"
+          description="Close as unsuccessful"
+          onClick={handleMarkLost}
+          disabled={isUpdatingStage}
+          variant="warning"
+        />
+      )
+    }
+
+    if (!lead.is_converted) {
+      buttons.push(
+        <ActionRailButton
+          key="delete"
+          icon={<Trash2 className="w-4 h-4" />}
+          label="Delete Lead"
+          description="Remove permanently"
+          onClick={() => setShowDeleteConfirm(true)}
+          variant="danger"
+        />
+      )
+    }
+
+    return <ActionRail>{buttons}</ActionRail>
   }
 
   // Render status badge with stage dropdown
@@ -568,7 +552,7 @@ export default function LeadDrawer({
           <button
             onClick={() => setIsStageDropdownOpen(!isStageDropdownOpen)}
             disabled={isUpdatingStage}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium rounded cursor-pointer hover:opacity-80 transition-opacity"
+            className={`${stageDropdownStyles.trigger} ${isUpdatingStage ? stageDropdownStyles.triggerDisabled : ''}`}
             style={lead.onboarding_stage ? {
               backgroundColor: `${lead.onboarding_stage.color}20`,
               color: lead.onboarding_stage.color,
@@ -581,23 +565,24 @@ export default function LeadDrawer({
           </button>
 
           {isStageDropdownOpen && (
-            <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 z-10 py-1">
-              {stages.map((stage) => (
-                <button
-                  key={stage.id}
-                  onClick={() => handleStageChange(stage.id)}
-                  disabled={lead.onboarding_stage?.id === stage.id}
-                  className={`w-full text-left px-3 py-2 text-[12px] hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                    lead.onboarding_stage?.id === stage.id ? 'bg-gray-50 dark:bg-gray-800 font-medium' : ''
-                  }`}
-                >
-                  <span
-                    className="inline-block w-2 h-2 rounded-full mr-2"
-                    style={{ backgroundColor: stage.color }}
-                  />
-                  {stage.name}
-                </button>
-              ))}
+            <div className={stageDropdownStyles.dropdown} style={{ zIndex: zIndexLayers.stageDropdown }}>
+              {stages.map((stage) => {
+                const isActive = lead.onboarding_stage?.id === stage.id
+                return (
+                  <button
+                    key={stage.id}
+                    onClick={() => handleStageChange(stage.id)}
+                    disabled={isActive}
+                    className={`${stageDropdownStyles.menuItem} ${isActive ? stageDropdownStyles.menuItemActive : ''}`}
+                  >
+                    <span
+                      className={stageDropdownStyles.stageDot}
+                      style={{ backgroundColor: stage.color }}
+                    />
+                    {stage.name}
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>
@@ -622,8 +607,17 @@ export default function LeadDrawer({
     if (!lead) return null
 
     switch (panelType) {
-      case 'overview':
-        return <OverviewPanel lead={lead} {...{ notes, setNotes, isEditingNotes, setIsEditingNotes, handleSaveNotes, isUpdating, handleAssignedChange, handleToggleRead, handleToggleReplied }} />
+      case 'profile':
+        return (
+          <EntityProfilePanel
+            entityType="lead"
+            entityId={leadId}
+            entity={lead as unknown as Record<string, unknown>}
+            onToggleRead={handleToggleRead}
+            onToggleReplied={handleToggleReplied}
+            onSaveNotes={handleSaveNotes}
+          />
+        )
 
       case 'activity':
         return <ActivityPanel {...{ lead, activities, activitiesLoading, bookings, bookingsLoading, setShowAddActivityModal }} />
@@ -661,6 +655,30 @@ export default function LeadDrawer({
     )
   }
 
+  // Avatar for header
+  const avatar = (
+    <div className="w-10 h-10 bg-gray-900 dark:bg-gray-700 rounded-full flex items-center justify-center text-white text-[13px] font-medium flex-shrink-0">
+      {lead.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)}
+    </div>
+  )
+
+  // Header with assigned selector
+  const headerExtra = (
+    <div className="w-40">
+      <AssignedSelect
+        selected={(lead.assigned_to as unknown as AssignedUser[]) || []}
+        onChange={handleAssignedChange}
+        placeholder="Assign..."
+        compact
+      />
+    </div>
+  )
+
   return (
     <DrawerWithPanels
       isOpen={true}
@@ -668,14 +686,16 @@ export default function LeadDrawer({
       title={lead.name}
       subtitle={`${lead.company_name}${lead.job_title ? ` · ${lead.job_title}` : ''}`}
       isLoading={false}
+      avatar={avatar}
       statusBadge={renderStatusBadge()}
+      headerExtra={headerExtra}
       focusModeLabel="Service Mode"
       onEnterFocusMode={() => setShowServiceMode(true)}
-      quickActions={renderQuickActions()}
-      availablePanels={buildAvailablePanels()}
-      defaultPanel="overview"
+      actionRail={renderActionRail()}
+      availablePanels={panelsWithCounts}
+      defaultPanel="profile"
       activePanel={activePanel}
-      onPanelChange={(panel) => setActivePanel(panel as PanelType)}
+      onPanelChange={(panel) => setActivePanel(panel as EntityPanelType)}
       renderPanel={renderPanel}
       modals={
         <>
@@ -737,227 +757,6 @@ export default function LeadDrawer({
 // =============================================================================
 // Panel Components
 // =============================================================================
-
-function OverviewPanel({
-  lead,
-  notes,
-  setNotes,
-  isEditingNotes,
-  setIsEditingNotes,
-  handleSaveNotes,
-  isUpdating,
-  handleAssignedChange,
-  handleToggleRead,
-  handleToggleReplied,
-}: {
-  lead: NonNullable<ReturnType<typeof useLead>['lead']>
-  notes: string
-  setNotes: (notes: string) => void
-  isEditingNotes: boolean
-  setIsEditingNotes: (editing: boolean) => void
-  handleSaveNotes: () => Promise<void>
-  isUpdating: boolean
-  handleAssignedChange: (assigned: AssignedUser[]) => Promise<void>
-  handleToggleRead: () => Promise<void>
-  handleToggleReplied: () => Promise<void>
-}) {
-  return (
-    <div className="p-6 space-y-6">
-      {/* Assigned To */}
-      <div>
-        <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100 mb-2">Assigned To</h3>
-        <AssignedSelect
-          selected={lead.assigned_to as AssignedUser[]}
-          onChange={handleAssignedChange}
-          placeholder="Assign team member..."
-        />
-      </div>
-
-      {/* Contact Information */}
-      <div>
-        <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100 mb-2">Contact Information</h3>
-        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
-          <a
-            href={`mailto:${lead.email}`}
-            className="flex items-center gap-2 text-[13px] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-          >
-            <Mail className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-            {lead.email}
-            <ExternalLink className="w-3 h-3 ml-auto text-gray-400 dark:text-gray-500" />
-          </a>
-          {lead.phone && (
-            <a
-              href={`tel:${lead.phone}`}
-              className="flex items-center gap-2 text-[13px] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-            >
-              <Phone className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-              {lead.phone}
-              <ExternalLink className="w-3 h-3 ml-auto text-gray-400 dark:text-gray-500" />
-            </a>
-          )}
-          {lead.job_title && (
-            <div className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-gray-400">
-              <Briefcase className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-              {lead.job_title}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Company Information */}
-      <div>
-        <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100 mb-2">Company Information</h3>
-        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
-          <div className="flex items-center gap-2 text-[13px] text-gray-900 dark:text-gray-100 font-medium">
-            <Building2 className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-            {lead.company_name}
-          </div>
-          {lead.company_website && (
-            <a
-              href={lead.company_website.startsWith('http') ? lead.company_website : `https://${lead.company_website}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-[13px] text-blue-600 hover:text-blue-800"
-            >
-              <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-              {lead.company_website}
-              <ExternalLink className="w-3 h-3 ml-auto" />
-            </a>
-          )}
-          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200 dark:border-gray-700">
-            <div>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Company Size</p>
-              <p className="text-[13px] text-gray-900 dark:text-gray-100 mt-0.5">{getCompanySizeLabel(lead.company_size)}</p>
-            </div>
-            <div>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Industry</p>
-              <p className="text-[13px] text-gray-900 dark:text-gray-100 mt-0.5">{lead.industry_name || 'Not specified'}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Admin Status (for inbound leads) */}
-      {lead.source === 'inbound' && (
-        <div>
-          <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100 mb-2">Admin Status</h3>
-          <div className="flex gap-3">
-            <button
-              onClick={handleToggleRead}
-              className={`flex items-center gap-2 px-3 py-2 text-[12px] font-medium rounded-lg border transition-colors ${
-                lead.is_read
-                  ? 'bg-green-50 border-green-200 text-green-700'
-                  : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-              }`}
-            >
-              {lead.is_read ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-              {lead.is_read ? 'Read' : 'Unread'}
-            </button>
-            <button
-              onClick={handleToggleReplied}
-              className={`flex items-center gap-2 px-3 py-2 text-[12px] font-medium rounded-lg border transition-colors ${
-                lead.is_replied
-                  ? 'bg-blue-50 border-blue-200 text-blue-700'
-                  : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-              }`}
-            >
-              {lead.is_replied ? <CheckCircle className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
-              {lead.is_replied ? 'Replied' : 'Not Replied'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Notes */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100">Notes</h3>
-          {!isEditingNotes && (
-            <button onClick={() => setIsEditingNotes(true)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400">
-              <Edit className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-        {isEditingNotes ? (
-          <div className="space-y-2">
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={4}
-              className="w-full px-3 py-2 text-[13px] border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              placeholder="Add notes about this lead..."
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleSaveNotes}
-                disabled={isUpdating}
-                className="px-3 py-1.5 text-[12px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:opacity-50"
-              >
-                {isUpdating ? 'Saving...' : 'Save'}
-              </button>
-              <button
-                onClick={() => {
-                  setNotes(lead.notes || '')
-                  setIsEditingNotes(false)
-                }}
-                className="px-3 py-1.5 text-[12px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-            {lead.notes ? (
-              <p className="text-[13px] text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{lead.notes}</p>
-            ) : (
-              <p className="text-[13px] text-gray-400 dark:text-gray-500 italic">No notes yet</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Conversion Info */}
-      {lead.is_converted && (
-        <div>
-          <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100 mb-2">Conversion</h3>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
-            <div className="flex items-center gap-2 text-green-700">
-              <CheckCircle className="w-5 h-5" />
-              <span className="font-medium text-[13px]">Converted on {formatDate(lead.converted_at!)}</span>
-            </div>
-            {lead.converted_to_company && (
-              <Link
-                to={`/dashboard/admin/companies/${lead.converted_to_company.id}`}
-                className="flex items-center gap-2 text-[13px] text-green-700 hover:text-green-800"
-              >
-                <Building2 className="w-4 h-4" />
-                {lead.converted_to_company.name}
-                <ChevronRight className="w-4 h-4 ml-auto" />
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Timeline */}
-      <div>
-        <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100 mb-2">Timeline</h3>
-        <div className="space-y-2 text-[13px] text-gray-600 dark:text-gray-400">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-            Created {formatDateTime(lead.created_at)}
-            {lead.created_by && <span className="text-gray-400 dark:text-gray-500">by {lead.created_by.name}</span>}
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-            Last updated {formatDateTime(lead.updated_at)}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function ActivityPanel({
   activities,

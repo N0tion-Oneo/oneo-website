@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'react'
 import {
   X,
-  User,
-  Clock,
-  Calendar,
   Maximize2,
   Minimize2,
   ChevronDown,
 } from 'lucide-react'
 import { useApplication, useStageInstances, useCancelStage, useCompleteStage } from '@/hooks'
-import { CandidateProfileCard } from '@/components/candidates'
+import { EntityProfilePanel } from '@/components/service/panels/EntityProfilePanel'
 import ActivityTimeline from './ActivityTimeline'
 import FullPipelineTimeline from './FullPipelineTimeline'
 import ScheduleInterviewModal from './ScheduleInterviewModal'
 import AssignAssessmentModal from './AssignAssessmentModal'
+import {
+  getApplicationPanelOptions,
+  getDefaultApplicationPanels,
+  getPanelIcon,
+  type ApplicationPanelType,
+  type Panel,
+} from '@/components/service/panelConfig'
 import { ApplicationStatus } from '@/types'
 import type { ApplicationStageInstance } from '@/types'
 
@@ -24,19 +28,7 @@ interface InterviewModeViewProps {
   onMoveToStage?: (applicationId: string, stageOrder: number) => void
 }
 
-type PanelType = 'candidate' | 'pipeline' | 'activity'
-
-interface Panel {
-  id: string
-  type: PanelType
-  title: string
-}
-
-const PANEL_OPTIONS: { type: PanelType; label: string; icon: React.ReactNode }[] = [
-  { type: 'candidate', label: 'Candidate Profile', icon: <User className="w-4 h-4" /> },
-  { type: 'pipeline', label: 'Pipeline & Stages', icon: <Calendar className="w-4 h-4" /> },
-  { type: 'activity', label: 'Activity Log', icon: <Clock className="w-4 h-4" /> },
-]
+const PANEL_OPTIONS = getApplicationPanelOptions()
 
 const getStatusColor = (status: ApplicationStatus) => {
   const colors = {
@@ -74,7 +66,7 @@ function PanelHeader({
 }: {
   title: string
   icon: React.ReactNode
-  onChangePanel: (type: PanelType) => void
+  onChangePanel: (type: ApplicationPanelType) => void
   onMaximize?: () => void
   isMaximized?: boolean
 }) {
@@ -103,7 +95,7 @@ function PanelHeader({
                 <button
                   key={option.type}
                   onClick={() => {
-                    onChangePanel(option.type)
+                    onChangePanel(option.type as ApplicationPanelType)
                     setIsDropdownOpen(false)
                   }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -139,11 +131,7 @@ export default function InterviewModeView({
   onClose,
   onShortlist,
 }: InterviewModeViewProps) {
-  const [panels, setPanels] = useState<Panel[]>([
-    { id: '1', type: 'candidate', title: 'Candidate Profile' },
-    { id: '2', type: 'pipeline', title: 'Pipeline & Stages' },
-    { id: '3', type: 'activity', title: 'Activity Log' },
-  ])
+  const [panels, setPanels] = useState<Panel[]>(() => getDefaultApplicationPanels())
   const [maximizedPanel, setMaximizedPanel] = useState<string | null>(null)
 
   const { application, isLoading } = useApplication(applicationId)
@@ -193,7 +181,7 @@ export default function InterviewModeView({
     }
   }
 
-  const handlePanelTypeChange = (panelId: string, newType: PanelType) => {
+  const handlePanelTypeChange = (panelId: string, newType: ApplicationPanelType) => {
     setPanels((prev) =>
       prev.map((p) =>
         p.id === panelId
@@ -232,18 +220,24 @@ export default function InterviewModeView({
     }
 
     switch (panel.type) {
-      case 'candidate':
-        // Reuse the existing CandidateProfileCard component
+      case 'profile':
         return (
-          <div className="h-full overflow-y-auto p-4">
-            <CandidateProfileCard
-              candidate={application.candidate}
-              experiences={application.candidate.experiences || []}
-              education={application.candidate.education || []}
-              coveringStatement={application.covering_statement}
-              variant="compact"
-              hideViewProfileLink={false}
-            />
+          <EntityProfilePanel
+            entityType="candidate"
+            entityId={String(application.candidate.id)}
+            entity={application.candidate as unknown as Record<string, unknown>}
+          />
+        )
+      case 'company':
+        return application.job?.company ? (
+          <EntityProfilePanel
+            entityType="company"
+            entityId={String(application.job.company.id)}
+            entity={application.job.company as unknown as Record<string, unknown>}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-32 text-gray-500">
+            No company information available
           </div>
         )
       case 'pipeline':
@@ -290,10 +284,6 @@ export default function InterviewModeView({
       default:
         return null
     }
-  }
-
-  const getPanelIcon = (type: PanelType) => {
-    return PANEL_OPTIONS.find((o) => o.type === type)?.icon || <User className="w-4 h-4" />
   }
 
   return (

@@ -45,7 +45,7 @@ function TimeFilterSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value as TimeFilter)}
-      className="text-[12px] px-2 py-1 border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-gray-400"
+      className="text-[12px] px-2 py-1 border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-400"
     >
       <option value="24h">Last 24 hours</option>
       <option value="7d">Last 7 days</option>
@@ -83,7 +83,7 @@ function TodaysBookingsSection() {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <SectionHeader
         title="Today's Bookings"
         icon={Calendar}
@@ -100,24 +100,24 @@ function TodaysBookingsSection() {
           {/* Upcoming */}
           {upcoming.length > 0 && (
             <div>
-              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-2">
+              <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
                 Upcoming
               </p>
               <div className="space-y-1">
                 {upcoming.map((booking) => (
                   <div
                     key={booking.id}
-                    className="flex items-center gap-2 px-2 py-1.5 bg-blue-50 border border-blue-100 rounded-md text-[12px]"
+                    className="flex items-center gap-2 px-2 py-1.5 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-md text-[12px]"
                   >
-                    <span className="text-blue-600 flex-shrink-0">{getLocationIcon(booking.location_type)}</span>
-                    <span className="font-medium text-blue-700">{formatTime(booking.scheduled_at)}</span>
-                    <span className="text-gray-700 truncate">{booking.attendee_name}</span>
-                    <span className="text-gray-400">·</span>
-                    <span className="text-gray-500 truncate">{booking.meeting_type_name}</span>
+                    <span className="text-blue-600 dark:text-blue-400 flex-shrink-0">{getLocationIcon(booking.location_type)}</span>
+                    <span className="font-medium text-blue-700 dark:text-blue-300">{formatTime(booking.scheduled_at)}</span>
+                    <span className="text-gray-700 dark:text-gray-200 truncate">{booking.attendee_name}</span>
+                    <span className="text-gray-400 dark:text-gray-500">·</span>
+                    <span className="text-gray-500 dark:text-gray-400 truncate">{booking.meeting_type_name}</span>
                     {booking.organizer_name && (
                       <>
-                        <span className="text-gray-400">·</span>
-                        <span className="text-gray-400 truncate">{booking.organizer_name}</span>
+                        <span className="text-gray-400 dark:text-gray-500">·</span>
+                        <span className="text-gray-400 dark:text-gray-500 truncate">{booking.organizer_name}</span>
                       </>
                     )}
                     {booking.join_link && (
@@ -125,14 +125,14 @@ function TodaysBookingsSection() {
                         href={booking.join_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="ml-auto flex-shrink-0 text-blue-600 hover:text-blue-800"
+                        className="ml-auto flex-shrink-0 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                         title="Join Meeting"
                       >
                         <Video className="w-3.5 h-3.5" />
                       </a>
                     )}
                     {booking.location && !booking.join_link && (
-                      <span className="ml-auto flex-shrink-0 text-gray-400 truncate max-w-[120px]" title={booking.location}>
+                      <span className="ml-auto flex-shrink-0 text-gray-400 dark:text-gray-500 truncate max-w-[120px]" title={booking.location}>
                         {booking.location}
                       </span>
                     )}
@@ -145,24 +145,24 @@ function TodaysBookingsSection() {
           {/* Past */}
           {past.length > 0 && (
             <div>
-              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-2">
+              <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
                 Earlier Today
               </p>
               <div className="space-y-1">
                 {past.map((booking) => (
                   <div
                     key={booking.id}
-                    className="flex items-center gap-2 px-2 py-1.5 bg-gray-50 border border-gray-100 rounded-md text-[12px] opacity-60"
+                    className="flex items-center gap-2 px-2 py-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-md text-[12px] opacity-60"
                   >
-                    <span className="text-gray-400 flex-shrink-0">{getLocationIcon(booking.location_type)}</span>
-                    <span className="text-gray-500">{formatTime(booking.scheduled_at)}</span>
-                    <span className="text-gray-600 truncate">{booking.attendee_name}</span>
-                    <span className="text-gray-300">·</span>
-                    <span className="text-gray-400 truncate">{booking.meeting_type_name}</span>
+                    <span className="text-gray-400 dark:text-gray-500 flex-shrink-0">{getLocationIcon(booking.location_type)}</span>
+                    <span className="text-gray-500 dark:text-gray-400">{formatTime(booking.scheduled_at)}</span>
+                    <span className="text-gray-600 dark:text-gray-300 truncate">{booking.attendee_name}</span>
+                    <span className="text-gray-300 dark:text-gray-600">·</span>
+                    <span className="text-gray-400 dark:text-gray-500 truncate">{booking.meeting_type_name}</span>
                     {booking.organizer_name && (
                       <>
-                        <span className="text-gray-300">·</span>
-                        <span className="text-gray-400 truncate">{booking.organizer_name}</span>
+                        <span className="text-gray-300 dark:text-gray-600">·</span>
+                        <span className="text-gray-400 dark:text-gray-500 truncate">{booking.organizer_name}</span>
                       </>
                     )}
                   </div>
@@ -200,19 +200,19 @@ function InvitationsSection() {
   const tabData = activeTab === 'client' ? data?.client : data?.candidate
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <SectionHeader title="Invitations" icon={Mail} viewAllLink="/dashboard/invitations">
         <TimeFilterSelect value={timeFilter} onChange={handleTimeFilterChange} showAll={false} />
       </SectionHeader>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-3 border-b border-gray-100">
+      <div className="flex gap-1 mb-3 border-b border-gray-100 dark:border-gray-800">
         <button
           onClick={() => setActiveTab('candidate')}
           className={`px-3 py-1.5 text-[12px] font-medium border-b-2 -mb-px ${
             activeTab === 'candidate'
-              ? 'text-gray-900 border-gray-900'
-              : 'text-gray-500 border-transparent hover:text-gray-700'
+              ? 'text-gray-900 dark:text-gray-100 border-gray-900 dark:border-gray-100'
+              : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
           Candidates ({data?.candidate.pending_count || 0})
@@ -221,8 +221,8 @@ function InvitationsSection() {
           onClick={() => setActiveTab('client')}
           className={`px-3 py-1.5 text-[12px] font-medium border-b-2 -mb-px ${
             activeTab === 'client'
-              ? 'text-gray-900 border-gray-900'
-              : 'text-gray-500 border-transparent hover:text-gray-700'
+              ? 'text-gray-900 dark:text-gray-100 border-gray-900 dark:border-gray-100'
+              : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
           Clients ({data?.client.pending_count || 0})
@@ -245,14 +245,14 @@ function InvitationsSection() {
                 {tabData.pending.slice(0, 5).map((inv) => (
                   <div key={inv.token} className="flex items-center justify-between py-1.5">
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] text-gray-900 truncate">
+                      <p className="text-[13px] text-gray-900 dark:text-gray-100 truncate">
                         {inv.name || inv.email}
                       </p>
                       {inv.name && (
-                        <p className="text-[11px] text-gray-400 truncate">{inv.email}</p>
+                        <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{inv.email}</p>
                       )}
                     </div>
-                    <div className="text-[11px] text-gray-400">{formatDate(inv.created_at)}</div>
+                    <div className="text-[11px] text-gray-400 dark:text-gray-500">{formatDate(inv.created_at)}</div>
                   </div>
                 ))}
               </div>
@@ -272,10 +272,10 @@ function InvitationsSection() {
                     className="flex items-center justify-between py-1.5 opacity-75"
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
-                      <p className="text-[13px] text-gray-600 truncate">{inv.name || inv.email}</p>
+                      <CheckCircle className="w-3 h-3 text-green-500 dark:text-green-400 flex-shrink-0" />
+                      <p className="text-[13px] text-gray-600 dark:text-gray-300 truncate">{inv.name || inv.email}</p>
                     </div>
-                    <div className="text-[11px] text-gray-400">
+                    <div className="text-[11px] text-gray-400 dark:text-gray-500">
                       {inv.used_at && formatDate(inv.used_at)}
                     </div>
                   </div>
@@ -314,7 +314,7 @@ function NewApplicationsSection() {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <SectionHeader
         title="New Applications"
         icon={FileText}
@@ -333,27 +333,27 @@ function NewApplicationsSection() {
           {applications.map((app) => (
             <div
               key={app.id}
-              className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-md transition-colors"
+              className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors"
             >
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <Users className="w-4 h-4 text-blue-600" />
+              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center flex-shrink-0">
+                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex-1 min-w-0">
                 <Link
                   to={`/dashboard/candidates/${app.candidate_id}`}
-                  className="text-[13px] font-medium text-gray-900 hover:text-blue-600 truncate block"
+                  className="text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 truncate block"
                 >
                   {app.candidate_name}
                 </Link>
-                <p className="text-[11px] text-gray-500 truncate">
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
                   Applied for{' '}
-                  <Link to={`/dashboard/jobs/${app.job_id}`} className="hover:text-blue-600">
+                  <Link to={`/dashboard/jobs/${app.job_id}`} className="hover:text-blue-600 dark:hover:text-blue-400">
                     {app.job_title}
                   </Link>
                   {app.company_name && <span> · {app.company_name}</span>}
                 </p>
               </div>
-              <div className="text-[11px] text-gray-400">{formatDate(app.applied_at)}</div>
+              <div className="text-[11px] text-gray-400 dark:text-gray-500">{formatDate(app.applied_at)}</div>
             </div>
           ))}
         </div>
@@ -373,19 +373,19 @@ export default function RecruiterDashboard() {
     <div className="space-y-6">
       {/* Welcome */}
       <div>
-        <h1 className="text-[22px] font-semibold text-gray-900">Dashboard</h1>
-        <p className="text-[14px] text-gray-500 mt-1">
+        <h1 className="text-[22px] font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
+        <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-1">
           Your recruitment overview for today
         </p>
       </div>
 
       {/* Verification Notice */}
       {!user?.is_verified && (
-        <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-md flex items-center justify-between">
-          <p className="text-[13px] text-amber-800">
+        <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md flex items-center justify-between">
+          <p className="text-[13px] text-amber-800 dark:text-amber-200">
             Please verify your email to access all features
           </p>
-          <button className="text-[13px] font-medium text-amber-800 hover:underline">
+          <button className="text-[13px] font-medium text-amber-800 dark:text-amber-200 hover:underline">
             Resend email
           </button>
         </div>

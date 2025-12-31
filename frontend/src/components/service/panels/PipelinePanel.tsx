@@ -86,14 +86,14 @@ export function PipelinePanel({
   if (isLoadingApp || isLoadingStages) {
     return (
       <div className="h-full flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500" />
       </div>
     )
   }
 
   if (appError || !application) {
     return (
-      <div className="h-full flex items-center justify-center text-red-600">
+      <div className="h-full flex items-center justify-center text-red-600 dark:text-red-400">
         {appError || 'Failed to load application'}
       </div>
     )

@@ -16,9 +16,9 @@ export function OnboardingStageDistributionChart({
 }: OnboardingStageDistributionProps) {
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="h-6 w-48 bg-gray-100 rounded animate-pulse mb-4" />
-        <div className="h-[300px] bg-gray-50 rounded animate-pulse" />
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div className="h-6 w-48 bg-gray-100 dark:bg-gray-700 rounded animate-pulse mb-4" />
+        <div className="h-[300px] bg-gray-50 dark:bg-gray-800 rounded animate-pulse" />
       </div>
     )
   }
@@ -26,13 +26,13 @@ export function OnboardingStageDistributionChart({
   const entityLabel = entityType === 'company' ? 'Companies' : 'Candidates'
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <h3 className="text-[14px] font-medium text-gray-900 mb-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+      <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-4">
         {title || `${entityLabel} by Stage`}
       </h3>
 
       {data.length === 0 ? (
-        <div className="h-[300px] flex items-center justify-center text-gray-500 text-[13px]">
+        <div className="h-[300px] flex items-center justify-center text-gray-500 dark:text-gray-400 text-[13px]">
           No data available
         </div>
       ) : (
@@ -80,7 +80,7 @@ export function OnboardingStageDistributionChart({
               className="w-3 h-3 rounded"
               style={{ backgroundColor: stage.stage_color }}
             />
-            <span className="text-[11px] text-gray-600">
+            <span className="text-[11px] text-gray-600 dark:text-gray-400">
               {stage.stage_name}: {stage.count}
             </span>
           </div>

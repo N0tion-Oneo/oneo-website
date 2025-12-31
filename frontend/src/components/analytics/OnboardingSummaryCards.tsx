@@ -58,10 +58,10 @@ export function OnboardingSummaryCards({
         {cards.map((_, index) => (
           <div
             key={index}
-            className="bg-white border border-gray-200 rounded-lg p-4"
+            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
           >
-            <div className="h-4 w-24 bg-gray-100 rounded animate-pulse mb-2" />
-            <div className="h-8 w-16 bg-gray-100 rounded animate-pulse" />
+            <div className="h-4 w-24 bg-gray-100 dark:bg-gray-700 rounded animate-pulse mb-2" />
+            <div className="h-8 w-16 bg-gray-100 dark:bg-gray-700 rounded animate-pulse" />
           </div>
         ))}
       </div>
@@ -73,12 +73,12 @@ export function OnboardingSummaryCards({
       {cards.map((card) => (
         <div
           key={card.title}
-          className="bg-white border border-gray-200 rounded-lg p-4"
+          className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[12px] text-gray-500 mb-1">{card.title}</p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-[12px] text-gray-500 dark:text-gray-400 mb-1">{card.title}</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                 {card.value}
               </p>
             </div>

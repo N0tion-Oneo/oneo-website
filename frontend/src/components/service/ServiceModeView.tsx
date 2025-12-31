@@ -1,18 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
   X,
-  User,
-  CheckSquare,
-  Clock,
-  Calendar,
   Maximize2,
   Minimize2,
   ChevronDown,
   Building2,
   Briefcase,
-  Users,
-  FileText,
-  Send,
+  User,
 } from 'lucide-react'
 import { useServiceCenter } from '@/hooks'
 import type { OnboardingEntityType } from '@/types'
@@ -25,6 +19,15 @@ import { ContactsPanel } from './panels/ContactsPanel'
 import { BillingPanel } from './panels/BillingPanel'
 import { ApplicationsPanel } from './panels/ApplicationsPanel'
 import { InvitationsPanel } from './panels/InvitationsPanel'
+import ApplicationDrawer from '@/components/applications/ApplicationDrawer'
+import {
+  getEntityPanelOptions,
+  getDefaultEntityPanels,
+  getPanelIcon,
+  type EntityPanelType,
+  type Panel,
+  type PanelOption,
+} from './panelConfig'
 
 interface ServiceModeViewProps {
   entityType: OnboardingEntityType
@@ -33,99 +36,6 @@ interface ServiceModeViewProps {
   onClose: () => void
 }
 
-// All available panel types
-type PanelType =
-  | 'profile'
-  | 'tasks'
-  | 'timeline'
-  | 'meetings'
-  // Company-specific
-  | 'jobs'
-  | 'contacts'
-  | 'billing'
-  // Candidate-specific
-  | 'applications'
-  // Lead-specific
-  | 'invitations'
-
-interface Panel {
-  id: string
-  type: PanelType
-  title: string
-}
-
-interface PanelOption {
-  type: PanelType
-  label: string
-  icon: React.ReactNode
-}
-
-// Common panels available for all entity types
-const COMMON_PANELS: PanelOption[] = [
-  { type: 'profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
-  { type: 'tasks', label: 'Tasks & Follow-ups', icon: <CheckSquare className="w-4 h-4" /> },
-  { type: 'timeline', label: 'Timeline', icon: <Clock className="w-4 h-4" /> },
-  { type: 'meetings', label: 'Meetings', icon: <Calendar className="w-4 h-4" /> },
-]
-
-// Entity-specific panels
-const COMPANY_PANELS: PanelOption[] = [
-  { type: 'jobs', label: 'Jobs', icon: <Briefcase className="w-4 h-4" /> },
-  { type: 'contacts', label: 'Contacts', icon: <Users className="w-4 h-4" /> },
-  { type: 'billing', label: 'Billing', icon: <FileText className="w-4 h-4" /> },
-]
-
-const CANDIDATE_PANELS: PanelOption[] = [
-  { type: 'applications', label: 'Applications', icon: <Briefcase className="w-4 h-4" /> },
-]
-
-const LEAD_PANELS: PanelOption[] = [
-  { type: 'invitations', label: 'Invitations', icon: <Send className="w-4 h-4" /> },
-]
-
-// Get panel options based on entity type
-function getPanelOptions(entityType: OnboardingEntityType): PanelOption[] {
-  switch (entityType) {
-    case 'company':
-      return [...COMMON_PANELS, ...COMPANY_PANELS]
-    case 'candidate':
-      return [...COMMON_PANELS, ...CANDIDATE_PANELS]
-    case 'lead':
-      return [...COMMON_PANELS, ...LEAD_PANELS]
-    default:
-      return COMMON_PANELS
-  }
-}
-
-// Get default panels based on entity type
-function getDefaultPanels(entityType: OnboardingEntityType): Panel[] {
-  switch (entityType) {
-    case 'company':
-      return [
-        { id: '1', type: 'profile', title: 'Profile' },
-        { id: '2', type: 'jobs', title: 'Jobs' },
-        { id: '3', type: 'timeline', title: 'Timeline' },
-      ]
-    case 'candidate':
-      return [
-        { id: '1', type: 'profile', title: 'Profile' },
-        { id: '2', type: 'applications', title: 'Applications' },
-        { id: '3', type: 'timeline', title: 'Timeline' },
-      ]
-    case 'lead':
-      return [
-        { id: '1', type: 'profile', title: 'Profile' },
-        { id: '2', type: 'tasks', title: 'Tasks & Follow-ups' },
-        { id: '3', type: 'timeline', title: 'Timeline' },
-      ]
-    default:
-      return [
-        { id: '1', type: 'profile', title: 'Profile' },
-        { id: '2', type: 'tasks', title: 'Tasks & Follow-ups' },
-        { id: '3', type: 'timeline', title: 'Timeline' },
-      ]
-  }
-}
 
 const entityTypeLabels: Record<OnboardingEntityType, string> = {
   company: 'Company',
@@ -218,14 +128,15 @@ export default function ServiceModeView({
   onClose,
 }: ServiceModeViewProps) {
   // Get panel options for this entity type
-  const panelOptions = useMemo(() => getPanelOptions(entityType), [entityType])
+  const panelOptions = useMemo(() => getEntityPanelOptions(entityType), [entityType])
 
-  const [panels, setPanels] = useState<Panel[]>(() => getDefaultPanels(entityType))
+  const [panels, setPanels] = useState<Panel[]>(() => getDefaultEntityPanels(entityType))
   const [maximizedPanel, setMaximizedPanel] = useState<string | null>(null)
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null)
 
   const { data, isLoading, error, refetch } = useServiceCenter(entityType, entityId)
 
-  const handlePanelTypeChange = (panelId: string, newType: PanelType) => {
+  const handlePanelTypeChange = (panelId: string, newType: EntityPanelType) => {
     setPanels((prev) =>
       prev.map((p) =>
         p.id === panelId
@@ -341,6 +252,7 @@ export default function ServiceModeView({
         return (
           <ApplicationsPanel
             candidateId={entityId}
+            onApplicationClick={(appId) => setSelectedApplicationId(appId)}
           />
         )
       // Lead-specific panels
@@ -354,10 +266,6 @@ export default function ServiceModeView({
       default:
         return null
     }
-  }
-
-  const getPanelIcon = (type: PanelType) => {
-    return panelOptions.find((o) => o.type === type)?.icon || <User className="w-4 h-4" />
   }
 
   return (
@@ -451,6 +359,13 @@ export default function ServiceModeView({
           ))
         )}
       </div>
+
+      {/* Application Drawer for viewing application details inline */}
+      <ApplicationDrawer
+        applicationId={selectedApplicationId}
+        isOpen={!!selectedApplicationId}
+        onClose={() => setSelectedApplicationId(null)}
+      />
     </div>
   )
 }

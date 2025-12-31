@@ -62,15 +62,15 @@ export function DateRangePicker({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 text-[13px] bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 text-[13px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       >
-        <Calendar className="w-4 h-4 text-gray-500" />
-        <span className="text-gray-700">
+        <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+        <span className="text-gray-700 dark:text-gray-200">
           {preset === 'custom'
             ? `${formatDisplayDate(startDate)} - ${formatDisplayDate(endDate)}`
             : currentPresetLabel}
         </span>
-        <ChevronDown className="w-4 h-4 text-gray-400" />
+        <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />
       </button>
 
       {isOpen && (
@@ -82,17 +82,17 @@ export function DateRangePicker({
           />
 
           {/* Dropdown */}
-          <div className="absolute right-0 mt-1 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+          <div className="absolute right-0 mt-1 w-72 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20">
             {/* Preset options */}
-            <div className="p-2 border-b border-gray-100">
+            <div className="p-2 border-b border-gray-100 dark:border-gray-700">
               {PRESETS.map((presetOption) => (
                 <button
                   key={presetOption.value}
                   onClick={() => handlePresetClick(presetOption.value)}
                   className={`w-full text-left px-3 py-1.5 text-[13px] rounded-md transition-colors ${
                     preset === presetOption.value
-                      ? 'bg-gray-100 text-gray-900 font-medium'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                   }`}
                 >
                   {presetOption.label}
@@ -105,30 +105,30 @@ export function DateRangePicker({
               <div className="p-3">
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-[11px] font-medium text-gray-500 mb-1">
+                    <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">
                       Start Date
                     </label>
                     <input
                       type="date"
                       value={tempStartDate}
                       onChange={(e) => setTempStartDate(e.target.value)}
-                      className="w-full px-2 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                      className="w-full px-2 py-1.5 text-[13px] border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-gray-500 mb-1">
+                    <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1">
                       End Date
                     </label>
                     <input
                       type="date"
                       value={tempEndDate}
                       onChange={(e) => setTempEndDate(e.target.value)}
-                      className="w-full px-2 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                      className="w-full px-2 py-1.5 text-[13px] border border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600"
                     />
                   </div>
                   <button
                     onClick={handleApplyCustom}
-                    className="w-full px-3 py-1.5 text-[13px] font-medium text-white bg-gray-900 rounded-md hover:bg-gray-800 transition-colors"
+                    className="w-full px-3 py-1.5 text-[13px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
                   >
                     Apply
                   </button>

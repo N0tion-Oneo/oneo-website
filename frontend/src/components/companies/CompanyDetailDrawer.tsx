@@ -3,55 +3,30 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import {
-  Building2,
-  Briefcase,
-  Users,
-  FileText,
-  Globe,
-  Linkedin,
-  MapPin,
-  Calendar,
-  ExternalLink,
-  Edit,
-  Plus,
-  Target,
-  Handshake,
-  CreditCard,
-  CheckSquare,
-} from 'lucide-react'
+import { Building2, Target, Handshake } from 'lucide-react'
 import { FocusMode } from '@/components/service'
-import { DrawerWithPanels, type PanelOption } from '@/components/common'
+import { DrawerWithPanels, badgeStyles } from '@/components/common'
 import {
   JobsPanel,
   ContactsPanel,
   TasksPanel,
   TimelinePanel,
+  BillingPanel,
 } from '@/components/service/panels'
+import { EntityProfilePanel } from '@/components/service/panels/EntityProfilePanel'
 import { useCompanyById, useTasks } from '@/hooks'
+import { SubscriptionDrawer } from '@/components/subscriptions'
+import {
+  getEntityPanelOptions,
+  type EntityPanelType,
+} from '@/components/service/panelConfig'
 import type { AssignedUser } from '@/types'
 import { AssignedSelect } from '@/components/forms'
-import { SubscriptionDrawer } from '@/components/subscriptions'
 import api from '@/services/api'
-
-// =============================================================================
-// Types
-// =============================================================================
-
-type PanelType = 'overview' | 'jobs' | 'contacts' | 'billing' | 'tasks' | 'timeline'
 
 // =============================================================================
 // Helper Functions
 // =============================================================================
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-ZA', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
 
 function getServiceTypeBadge(serviceType: string | null) {
   switch (serviceType) {
@@ -62,21 +37,6 @@ function getServiceTypeBadge(serviceType: string | null) {
     default:
       return { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-400 dark:text-gray-500', label: 'Not Set', icon: null }
   }
-}
-
-function getCompanySizeLabel(size: string | null): string {
-  if (!size) return 'Not specified'
-  return size.replace('_', '-')
-}
-
-function getRemotePolicyLabel(policy: string | null): string {
-  if (!policy) return 'Not specified'
-  const labels: Record<string, string> = {
-    remote: 'Fully Remote',
-    hybrid: 'Hybrid',
-    office: 'Office Only',
-  }
-  return labels[policy] || policy
 }
 
 // =============================================================================
@@ -95,7 +55,7 @@ export default function CompanyDetailDrawer({
   onRefresh,
 }: CompanyDetailDrawerProps) {
   const { company, isLoading, refetch } = useCompanyById(companyId)
-  const [activePanel, setActivePanel] = useState<PanelType>('overview')
+  const [activePanel, setActivePanel] = useState<EntityPanelType>('profile')
   const [showSubscriptionDrawer, setShowSubscriptionDrawer] = useState(false)
   const [showServiceMode, setShowServiceMode] = useState(false)
 
@@ -106,8 +66,13 @@ export default function CompanyDetailDrawer({
 
   // Reset panel when drawer opens
   useEffect(() => {
-    setActivePanel('overview')
+    setActivePanel('profile')
   }, [companyId])
+
+  // Get available panels from shared config (filter out meetings - not implemented in drawer)
+  const availablePanels = getEntityPanelOptions('company').filter(
+    (panel) => panel.type !== 'meetings'
+  )
 
   const handleAssignedChange = async (assignedTo: AssignedUser[]) => {
     try {
@@ -127,18 +92,6 @@ export default function CompanyDetailDrawer({
     onRefresh?.()
   }
 
-  // Build available panels
-  const buildAvailablePanels = (): PanelOption[] => {
-    return [
-      { type: 'overview', label: 'Company Overview', icon: <Building2 className="w-4 h-4" /> },
-      { type: 'jobs', label: 'Jobs', icon: <Briefcase className="w-4 h-4" /> },
-      { type: 'contacts', label: 'Contacts', icon: <Users className="w-4 h-4" /> },
-      { type: 'billing', label: 'Billing', icon: <FileText className="w-4 h-4" /> },
-      { type: 'tasks', label: 'Tasks', icon: <CheckSquare className="w-4 h-4" /> },
-      { type: 'timeline', label: 'Timeline', icon: <Calendar className="w-4 h-4" /> },
-    ]
-  }
-
   // Render panel content
   const renderPanel = (panelType: string) => {
     if (!company) {
@@ -150,150 +103,13 @@ export default function CompanyDetailDrawer({
     }
 
     switch (panelType) {
-      case 'overview':
+      case 'profile':
         return (
-          <div className="h-full overflow-y-auto p-4 space-y-6">
-            {/* Quick Actions */}
-            <div className="flex flex-wrap gap-2">
-              <Link
-                to={`/dashboard/admin/companies/${company.id}`}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200"
-              >
-                <Edit className="w-4 h-4" />
-                Edit Company
-              </Link>
-              {company.is_published && (
-                <Link
-                  to={`/companies/${company.slug}`}
-                  target="_blank"
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  View Public Profile
-                </Link>
-              )}
-              <Link
-                to={`/dashboard/admin/jobs/new?company=${company.id}`}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800"
-              >
-                <Plus className="w-4 h-4" />
-                Create Job
-              </Link>
-            </div>
-
-            {/* Assigned To */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Assigned To</h3>
-              <AssignedSelect
-                selected={company.assigned_to || []}
-                onChange={handleAssignedChange}
-                placeholder="Assign recruiters..."
-              />
-            </div>
-
-            {/* Basic Info */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Company Info</h3>
-              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
-                {company.tagline && (
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Tagline</p>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">{company.tagline}</p>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Industry</p>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">
-                      {company.industry?.name || 'Not specified'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Company Size</p>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">
-                      {getCompanySizeLabel(company.company_size)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Founded</p>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">
-                      {company.founded_year || 'Not specified'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Remote Policy</p>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">
-                      {getRemotePolicyLabel(company.remote_work_policy)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Location */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Location</h3>
-              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">
-                      {company.headquarters_location || 'Not specified'}
-                    </p>
-                    {company.locations && company.locations.length > 0 && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        +{company.locations.length} other location
-                        {company.locations.length !== 1 ? 's' : ''}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Links */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Links</h3>
-              <div className="space-y-2">
-                {company.website_url && (
-                  <a
-                    href={company.website_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                    {company.website_url}
-                    <ExternalLink className="w-3 h-3 ml-auto text-gray-400 dark:text-gray-500" />
-                  </a>
-                )}
-                {company.linkedin_url && (
-                  <a
-                    href={company.linkedin_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    <Linkedin className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                    LinkedIn Profile
-                    <ExternalLink className="w-3 h-3 ml-auto text-gray-400 dark:text-gray-500" />
-                  </a>
-                )}
-                {!company.website_url && !company.linkedin_url && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">No links added</p>
-                )}
-              </div>
-            </div>
-
-            {/* Dates */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Timeline</h3>
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <Calendar className="w-4 h-4" />
-                Created {formatDate(company.created_at)}
-              </div>
-            </div>
-          </div>
+          <EntityProfilePanel
+            entityType="company"
+            entityId={companyId}
+            entity={company as unknown as Record<string, unknown>}
+          />
         )
 
       case 'jobs':
@@ -304,118 +120,10 @@ export default function CompanyDetailDrawer({
 
       case 'billing':
         return (
-          <div className="h-full overflow-y-auto p-4 space-y-4">
-            {/* Subscription Management Button */}
-            <button
-              onClick={() => setShowSubscriptionDrawer(true)}
-              className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg hover:from-purple-100 hover:to-blue-100 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <CreditCard className="w-5 h-5 text-purple-600" />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Manage Subscription</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    View invoices, pricing, and subscription details
-                  </p>
-                </div>
-              </div>
-              <ExternalLink className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-            </button>
-
-            {/* Legal Info */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Legal Information</h3>
-              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Legal Name</p>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">
-                      {company.legal_name || 'Not specified'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Registration Number</p>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">
-                      {company.registration_number || 'Not specified'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">VAT Number</p>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">
-                      {company.vat_number || 'Not specified'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Billing Address */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Billing Address</h3>
-              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                {company.billing_address ? (
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-900 dark:text-gray-100">{company.billing_address}</p>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">
-                      {[company.billing_city, company.billing_postal_code]
-                        .filter(Boolean)
-                        .join(', ')}
-                    </p>
-                    {company.billing_country && (
-                      <p className="text-sm text-gray-900 dark:text-gray-100">{company.billing_country.name}</p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">No billing address specified</p>
-                )}
-              </div>
-            </div>
-
-            {/* Billing Contact */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Billing Contact</h3>
-              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                {company.billing_contact_name ||
-                company.billing_contact_email ||
-                company.billing_contact_phone ? (
-                  <div className="space-y-2">
-                    {company.billing_contact_name && (
-                      <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Name</p>
-                        <p className="text-sm text-gray-900 dark:text-gray-100">{company.billing_contact_name}</p>
-                      </div>
-                    )}
-                    {company.billing_contact_email && (
-                      <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
-                        <a
-                          href={`mailto:${company.billing_contact_email}`}
-                          className="text-sm text-blue-600 hover:underline"
-                        >
-                          {company.billing_contact_email}
-                        </a>
-                      </div>
-                    )}
-                    {company.billing_contact_phone && (
-                      <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Phone</p>
-                        <a
-                          href={`tel:${company.billing_contact_phone}`}
-                          className="text-sm text-blue-600 hover:underline"
-                        >
-                          {company.billing_contact_phone}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">No billing contact specified</p>
-                )}
-              </div>
-            </div>
-          </div>
+          <BillingPanel
+            companyId={companyId}
+            entity={company as unknown as Record<string, unknown>}
+          />
         )
 
       case 'tasks':
@@ -445,27 +153,39 @@ export default function CompanyDetailDrawer({
   const statusBadge = company ? (
     <div className="flex items-center gap-2">
       <span
-        className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded ${serviceTypeBadge?.bg} ${serviceTypeBadge?.text}`}
+        className={`${badgeStyles.base} ${serviceTypeBadge?.bg} ${serviceTypeBadge?.text}`}
       >
         {ServiceTypeIcon && <ServiceTypeIcon className="w-3 h-3" />}
         {serviceTypeBadge?.label}
       </span>
       <span
-        className={`px-2 py-0.5 text-[11px] font-medium rounded ${company.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}
+        className={`${badgeStyles.base} ${company.is_published ? badgeStyles.green : badgeStyles.gray}`}
       >
         {company.is_published ? 'Published' : 'Draft'}
       </span>
     </div>
   ) : undefined
 
-  // Header with logo
-  const headerExtra = company?.logo ? (
-    <img src={company.logo} alt={company.name} className="w-8 h-8 rounded-lg object-cover" />
+  // Avatar/Logo for header
+  const avatar = company?.logo ? (
+    <img src={company.logo} alt={company.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
   ) : (
-    <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-      <Building2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+    <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+      <Building2 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
     </div>
   )
+
+  // Header with assigned selector
+  const headerExtra = company ? (
+    <div className="w-40">
+      <AssignedSelect
+        selected={company.assigned_to || []}
+        onChange={handleAssignedChange}
+        placeholder="Assign..."
+        compact
+      />
+    </div>
+  ) : undefined
 
   // Service Mode
   if (showServiceMode && company) {
@@ -491,14 +211,15 @@ export default function CompanyDetailDrawer({
         title={company?.name || 'Company Details'}
         subtitle={company?.tagline || undefined}
         isLoading={isLoading}
+        avatar={avatar}
         statusBadge={statusBadge}
         headerExtra={headerExtra}
         focusModeLabel="Service Mode"
         onEnterFocusMode={() => setShowServiceMode(true)}
-        availablePanels={buildAvailablePanels()}
-        defaultPanel="overview"
+        availablePanels={availablePanels}
+        defaultPanel="profile"
         activePanel={activePanel}
-        onPanelChange={(panel) => setActivePanel(panel as PanelType)}
+        onPanelChange={(panel) => setActivePanel(panel as EntityPanelType)}
         renderPanel={renderPanel}
       />
 

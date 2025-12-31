@@ -71,30 +71,30 @@ export function StatCard({
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 animate-pulse">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 animate-pulse">
         <div className="flex items-center justify-between">
-          <div className="h-4 bg-gray-200 rounded w-24" />
-          {Icon && <div className="w-8 h-8 bg-gray-200 rounded-full" />}
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24" />
+          {Icon && <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full" />}
         </div>
-        <div className="mt-2 h-8 bg-gray-200 rounded w-16" />
-        <div className="mt-1 h-3 bg-gray-200 rounded w-20" />
+        <div className="mt-2 h-8 bg-gray-200 dark:bg-gray-700 rounded w-16" />
+        <div className="mt-1 h-3 bg-gray-200 dark:bg-gray-700 rounded w-20" />
       </div>
     )
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] font-medium text-gray-500 uppercase tracking-wide">
+        <p className="text-[12px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
           {title}
         </p>
         {Icon && (
-          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-            <Icon className="w-4 h-4 text-gray-600" />
+          <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+            <Icon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
           </div>
         )}
       </div>
-      <p className="mt-2 text-2xl font-semibold text-gray-900">
+      <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">
         {formatValue(value)}
       </p>
       {(subtitle || trend) && (
@@ -105,11 +105,11 @@ export function StatCard({
             >
               {getTrendIcon()}
               {Math.abs(trend.value)}%
-              {trend.label && <span className="text-gray-500 ml-1">{trend.label}</span>}
+              {trend.label && <span className="text-gray-500 dark:text-gray-400 ml-1">{trend.label}</span>}
             </span>
           )}
           {subtitle && (
-            <span className="text-[11px] text-gray-500">{subtitle}</span>
+            <span className="text-[11px] text-gray-500 dark:text-gray-400">{subtitle}</span>
           )}
         </div>
       )}

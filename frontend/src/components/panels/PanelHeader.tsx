@@ -27,11 +27,11 @@ export function PanelHeader<T extends string = string>({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
+    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
       <div className="relative">
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+          className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
         >
           {icon}
           {title}
@@ -44,7 +44,7 @@ export function PanelHeader<T extends string = string>({
               className="fixed inset-0 z-10"
               onClick={() => setIsDropdownOpen(false)}
             />
-            <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+            <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 z-20 py-1">
               {panelOptions.map((option) => (
                 <button
                   key={option.type}
@@ -52,7 +52,7 @@ export function PanelHeader<T extends string = string>({
                     onChangePanel(option.type)
                     setIsDropdownOpen(false)
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   {option.icon}
                   {option.label}
@@ -66,7 +66,7 @@ export function PanelHeader<T extends string = string>({
       {onMaximize && (
         <button
           onClick={onMaximize}
-          className="p-1 text-gray-400 hover:text-gray-600 rounded"
+          className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded"
           title={isMaximized ? 'Restore' : 'Maximize'}
         >
           {isMaximized ? (

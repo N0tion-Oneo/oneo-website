@@ -17,14 +17,14 @@ const STAGE_COLORS: Record<string, string> = {
 export function FunnelChart({ funnel, conversionRates, loading = false }: FunnelChartProps) {
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="h-4 bg-gray-200 rounded w-32 mb-6 animate-pulse" />
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-6 animate-pulse" />
         <div className="space-y-4">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="flex items-center gap-4 animate-pulse">
-              <div className="w-24 h-4 bg-gray-200 rounded" />
-              <div className="flex-1 h-8 bg-gray-100 rounded" />
-              <div className="w-16 h-4 bg-gray-200 rounded" />
+              <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div className="flex-1 h-8 bg-gray-100 dark:bg-gray-800 rounded" />
+              <div className="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
             </div>
           ))}
         </div>
@@ -35,8 +35,8 @@ export function FunnelChart({ funnel, conversionRates, loading = false }: Funnel
   const maxCount = Math.max(...funnel.map((s) => s.count), 1)
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <h3 className="text-[14px] font-medium text-gray-900 mb-6">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+      <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100 mb-6">
         Pipeline Funnel
       </h3>
 
@@ -50,14 +50,14 @@ export function FunnelChart({ funnel, conversionRates, loading = false }: Funnel
             <div key={stage.stage} className="flex items-center gap-4">
               {/* Stage name */}
               <div className="w-24 text-right">
-                <span className="text-[12px] font-medium text-gray-700">
+                <span className="text-[12px] font-medium text-gray-700 dark:text-gray-300">
                   {stage.stage}
                 </span>
               </div>
 
               {/* Bar */}
               <div className="flex-1 relative h-8">
-                <div className="absolute inset-0 bg-gray-100 rounded" />
+                <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 rounded" />
                 <div
                   className={`absolute inset-y-0 left-0 ${color} rounded transition-all duration-500`}
                   style={{ width: `${Math.max(widthPercent, 2)}%` }}
@@ -71,7 +71,7 @@ export function FunnelChart({ funnel, conversionRates, loading = false }: Funnel
 
               {/* Percentage */}
               <div className="w-16 text-right">
-                <span className="text-[12px] text-gray-500">
+                <span className="text-[12px] text-gray-500 dark:text-gray-400">
                   {stage.percentage.toFixed(1)}%
                 </span>
               </div>
@@ -79,7 +79,7 @@ export function FunnelChart({ funnel, conversionRates, loading = false }: Funnel
               {/* Conversion arrow (except last) */}
               {index < funnel.length - 1 && (
                 <div className="w-16 text-right">
-                  <span className="text-[11px] text-gray-400">
+                  <span className="text-[11px] text-gray-400 dark:text-gray-500">
                     ↓ {getConversionRate(stage.stage, conversionRates)}%
                   </span>
                 </div>
@@ -91,10 +91,10 @@ export function FunnelChart({ funnel, conversionRates, loading = false }: Funnel
       </div>
 
       {/* Conversion rates summary */}
-      <div className="mt-6 pt-4 border-t border-gray-100">
+      <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
         <div className="flex items-center justify-between">
-          <span className="text-[12px] text-gray-500">Overall Conversion Rate</span>
-          <span className="text-[14px] font-semibold text-gray-900">
+          <span className="text-[12px] text-gray-500 dark:text-gray-400">Overall Conversion Rate</span>
+          <span className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
             {conversionRates.overall.toFixed(1)}%
           </span>
         </div>

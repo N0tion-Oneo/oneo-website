@@ -67,43 +67,43 @@ const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; colo
     label: 'Applied',
     icon: <FileText className="w-3.5 h-3.5" />,
     color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
+    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
   },
   [ApplicationStatus.SHORTLISTED]: {
     label: 'Shortlisted',
     icon: <Users className="w-3.5 h-3.5" />,
     color: 'text-purple-600',
-    bgColor: 'bg-purple-100',
+    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
   },
   [ApplicationStatus.IN_PROGRESS]: {
     label: 'In Progress',
     icon: <Play className="w-3.5 h-3.5" />,
     color: 'text-amber-600',
-    bgColor: 'bg-amber-100',
+    bgColor: 'bg-amber-100 dark:bg-amber-900/30',
   },
   [ApplicationStatus.OFFER_MADE]: {
     label: 'Offer Made',
     icon: <Gift className="w-3.5 h-3.5" />,
     color: 'text-green-600',
-    bgColor: 'bg-green-100',
+    bgColor: 'bg-green-100 dark:bg-green-900/30',
   },
   [ApplicationStatus.OFFER_ACCEPTED]: {
     label: 'Hired',
     icon: <CheckCircle className="w-3.5 h-3.5" />,
     color: 'text-emerald-600',
-    bgColor: 'bg-emerald-100',
+    bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
   },
   [ApplicationStatus.REJECTED]: {
     label: 'Rejected',
     icon: <Ban className="w-3.5 h-3.5" />,
     color: 'text-red-600',
-    bgColor: 'bg-red-100',
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
   },
   [ApplicationStatus.OFFER_DECLINED]: {
     label: 'Offer Declined',
     icon: <X className="w-3.5 h-3.5" />,
     color: 'text-orange-600',
-    bgColor: 'bg-orange-100',
+    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
   },
 }
 
@@ -166,7 +166,7 @@ function ApplicationAnswersSection({
 
     // No answer provided
     if (!answer) {
-      return <span className="text-xs text-gray-400 italic">Not answered</span>
+      return <span className="text-xs text-gray-400 dark:text-gray-500 italic">Not answered</span>
     }
 
     // Handle file answers
@@ -177,7 +177,7 @@ function ApplicationAnswersSection({
             href={answer_file}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800"
+            className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
           >
             <Paperclip className="w-3.5 h-3.5" />
             View file
@@ -190,14 +190,14 @@ function ApplicationAnswersSection({
             href={answer_text}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800"
+            className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
           >
             <Link className="w-3.5 h-3.5" />
             {answer_text.length > 40 ? answer_text.substring(0, 40) + '...' : answer_text}
           </a>
         )
       }
-      return <span className="text-xs text-gray-400 italic">No file uploaded</span>
+      return <span className="text-xs text-gray-400 dark:text-gray-500 italic">No file uploaded</span>
     }
 
     // Handle external links
@@ -208,34 +208,34 @@ function ApplicationAnswersSection({
             href={answer_text}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800"
+            className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             {answer_text.length > 40 ? answer_text.substring(0, 40) + '...' : answer_text}
           </a>
         )
       }
-      return <span className="text-xs text-gray-400 italic">No link provided</span>
+      return <span className="text-xs text-gray-400 dark:text-gray-500 italic">No link provided</span>
     }
 
     // Handle multi-select (comma-separated values displayed as tags)
     if (question.question_type === QuestionType.MULTI_SELECT && answer_text) {
       const values = answer_text.split(',').filter(Boolean)
       if (values.length === 0) {
-        return <span className="text-xs text-gray-400 italic">No selection</span>
+        return <span className="text-xs text-gray-400 dark:text-gray-500 italic">No selection</span>
       }
       return (
         <div className="flex flex-wrap gap-1">
           {values.slice(0, 3).map((value, idx) => (
             <span
               key={idx}
-              className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-gray-600 bg-gray-100 rounded"
+              className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded"
             >
               {value.trim()}
             </span>
           ))}
           {values.length > 3 && (
-            <span className="text-[10px] text-gray-500">+{values.length - 3} more</span>
+            <span className="text-[10px] text-gray-500 dark:text-gray-400">+{values.length - 3} more</span>
           )}
         </div>
       )
@@ -244,7 +244,7 @@ function ApplicationAnswersSection({
     // Handle select (single value)
     if (question.question_type === QuestionType.SELECT && answer_text) {
       return (
-        <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-gray-600 bg-gray-100 rounded">
+        <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded">
           {answer_text}
         </span>
       )
@@ -255,22 +255,22 @@ function ApplicationAnswersSection({
       const truncated = answer_text.length > 100
         ? answer_text.substring(0, 100) + '...'
         : answer_text
-      return <p className="text-xs text-gray-700">{truncated}</p>
+      return <p className="text-xs text-gray-700 dark:text-gray-300">{truncated}</p>
     }
 
-    return <span className="text-xs text-gray-400 italic">No answer</span>
+    return <span className="text-xs text-gray-400 dark:text-gray-500 italic">No answer</span>
   }
 
   return (
     <div className="space-y-3">
       {/* Covering Statement */}
       {coveringStatement && (
-        <div className="bg-white border border-gray-200 rounded-lg p-3">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-2">
-            <MessageSquare className="w-3.5 h-3.5 text-gray-400" />
-            <span className="text-xs font-medium text-gray-700">Cover Letter / Statement</span>
+            <MessageSquare className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Cover Letter / Statement</span>
           </div>
-          <p className="text-xs text-gray-600 whitespace-pre-wrap">
+          <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
             {coveringStatement.length > 300
               ? coveringStatement.substring(0, 300) + '...'
               : coveringStatement}
@@ -280,11 +280,11 @@ function ApplicationAnswersSection({
 
       {/* Application Questions & Answers */}
       {sortedQuestions.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-3">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-3">
-            <FileText className="w-3.5 h-3.5 text-gray-400" />
-            <span className="text-xs font-medium text-gray-700">Application Questions</span>
-            <span className="text-[10px] text-gray-400">({sortedQuestions.length})</span>
+            <FileText className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Application Questions</span>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500">({sortedQuestions.length})</span>
           </div>
           <div className="space-y-3">
             {sortedQuestions.map((question) => {
@@ -293,9 +293,9 @@ function ApplicationAnswersSection({
               return (
                 <div
                   key={question.id}
-                  className={`border-l-2 pl-3 ${hasAnswer ? 'border-green-200' : 'border-gray-100'}`}
+                  className={`border-l-2 pl-3 ${hasAnswer ? 'border-green-200 dark:border-green-800' : 'border-gray-100 dark:border-gray-700'}`}
                 >
-                  <p className="text-xs font-medium text-gray-800 mb-1">
+                  <p className="text-xs font-medium text-gray-800 dark:text-gray-200 mb-1">
                     {question.question_text}
                     {question.is_required && (
                       <span className="text-red-500 ml-0.5">*</span>
@@ -338,7 +338,7 @@ function TimelineItem({
 
       <div className="flex items-start gap-3">
         <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-          isCancelled ? 'bg-gray-100' : 'bg-green-100'
+          isCancelled ? 'bg-gray-100 dark:bg-gray-800' : 'bg-green-100 dark:bg-green-900/50'
         }`}>
           {isCancelled ? (
             <X className="w-3.5 h-3.5 text-gray-400" />
@@ -353,19 +353,19 @@ function TimelineItem({
             onClick={onExpand}
           >
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-sm font-medium ${isCancelled ? 'text-gray-400' : 'text-gray-900'}`}>
+              <span className={`text-sm font-medium ${isCancelled ? 'text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}>
                 {label}
               </span>
               {date && (
-                <span className="text-xs text-gray-500">{formatDate(date)}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{formatDate(date)}</span>
               )}
               {isCancelled && (
-                <span className="text-xs text-gray-400">(Cancelled)</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">(Cancelled)</span>
               )}
             </div>
 
             {onExpand && (
-              <button className="p-1 text-gray-400 hover:text-gray-600 rounded">
+              <button className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded">
                 {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
             )}
@@ -432,8 +432,8 @@ function InterviewStageCard({
           isCurrent
             ? 'bg-amber-100 ring-2 ring-amber-400'
             : isCancelled
-              ? 'bg-gray-100'
-              : 'bg-green-100'
+              ? 'bg-gray-100 dark:bg-gray-800'
+              : 'bg-green-100 dark:bg-green-900/50'
         }`}>
           {isCurrent ? (
             <Play className="w-3 h-3 text-amber-600" />
@@ -446,28 +446,28 @@ function InterviewStageCard({
 
         <div className="flex-1 min-w-0 pb-4">
           <div
-            className={`bg-white border rounded-lg overflow-hidden transition-colors ${
+            className={`bg-white dark:bg-gray-900 border rounded-lg overflow-hidden transition-colors ${
               isCurrent
-                ? 'border-amber-200 shadow-sm'
+                ? 'border-amber-200 dark:border-amber-700 shadow-sm'
                 : isCancelled
-                  ? 'border-gray-200 opacity-60'
-                  : 'border-gray-200 hover:border-gray-300 cursor-pointer'
+                  ? 'border-gray-200 dark:border-gray-700 opacity-60'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer'
             }`}
             onClick={!isCurrent ? onToggle : undefined}
           >
             {/* Header */}
-            <div className={`p-3 ${isCurrent ? 'bg-amber-50' : ''}`}>
+            <div className={`p-3 ${isCurrent ? 'bg-amber-50 dark:bg-amber-900/20' : ''}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   {/* Title row */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-gray-900">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                       {instance.stage_template.name}
                     </span>
                     <StageTypeBadge stageType={instance.stage_template.stage_type} size="sm" />
                     {isCurrent && (
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        isScheduled ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                        isScheduled ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                       }`}>
                         {StageInstanceStatusLabels[instance.status]}
                       </span>
@@ -477,16 +477,16 @@ function InterviewStageCard({
                   {/* Date and time */}
                   {!isCancelled && (scheduledInfo || completedInfo) && (
                     <div className="flex items-center gap-3 mt-1.5">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                      <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+                        <Calendar className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
                         <span>{(completedInfo || scheduledInfo)?.date}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                        <Clock className="w-3.5 h-3.5 text-gray-400" />
+                      <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+                        <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
                         <span>{(completedInfo || scheduledInfo)?.time}</span>
                       </div>
                       {instance.duration_minutes && (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           ({instance.duration_minutes} min)
                         </span>
                       )}
@@ -498,10 +498,10 @@ function InterviewStageCard({
                     <div className="flex items-center gap-4 mt-2">
                       {interviewer && (
                         <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-medium text-gray-600">
+                          <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-medium text-gray-600 dark:text-gray-300">
                             {getInitials(interviewer.first_name, interviewer.last_name)}
                           </div>
-                          <span className="text-xs text-gray-600">
+                          <span className="text-xs text-gray-600 dark:text-gray-400">
                             {interviewer.first_name} {interviewer.last_name}
                           </span>
                         </div>
@@ -510,7 +510,7 @@ function InterviewStageCard({
                       {hasScore && (
                         <div className="flex items-center gap-1">
                           <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                          <span className="text-xs font-medium text-gray-700">
+                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                             {instance.score}/10
                           </span>
                         </div>
@@ -526,7 +526,7 @@ function InterviewStageCard({
                           href={instance.meeting_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800"
+                          className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                         >
                           <Video className="w-3.5 h-3.5" />
                           Join Meeting
@@ -534,8 +534,8 @@ function InterviewStageCard({
                         </a>
                       )}
                       {instance.location && (
-                        <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                          <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                        <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+                          <MapPin className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
                           <span>{instance.location}</span>
                         </div>
                       )}
@@ -550,7 +550,7 @@ function InterviewStageCard({
                       e.stopPropagation()
                       onToggle()
                     }}
-                    className="p-1 text-gray-400 hover:text-gray-600 rounded flex-shrink-0"
+                    className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded flex-shrink-0"
                   >
                     {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
@@ -560,7 +560,7 @@ function InterviewStageCard({
 
             {/* Actions for current stage */}
             {isCurrent && isRecruiterView && (
-              <div className="px-3 py-2 bg-gray-50 border-t border-gray-100 flex flex-wrap gap-2">
+              <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-800 flex flex-wrap gap-2">
                 {isNotStarted && config.isAssessment && onAssignAssessment && (
                   <button
                     onClick={() => onAssignAssessment(instance)}
@@ -573,7 +573,7 @@ function InterviewStageCard({
                 {isNotStarted && config.requiresScheduling && onSchedule && (
                   <button
                     onClick={() => onSchedule(instance)}
-                    className="px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded hover:bg-gray-800"
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded hover:bg-gray-800 dark:hover:bg-gray-200"
                   >
                     Schedule Interview
                   </button>
@@ -582,7 +582,7 @@ function InterviewStageCard({
                 {isScheduled && onReschedule && (
                   <button
                     onClick={() => onReschedule(instance)}
-                    className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded hover:bg-gray-50"
+                    className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     Reschedule
                   </button>
@@ -591,7 +591,7 @@ function InterviewStageCard({
                 {isScheduled && onCancel && (
                   <button
                     onClick={() => onCancel(instance)}
-                    className="px-3 py-1.5 text-xs font-medium text-red-600 bg-white border border-red-200 rounded hover:bg-red-50"
+                    className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     Cancel
                   </button>
@@ -610,7 +610,7 @@ function InterviewStageCard({
 
             {/* Feedback section - always show for current, expandable for completed */}
             {(isCurrent || isExpanded) && !isCancelled && (
-              <div className="px-3 py-3 border-t border-gray-100">
+              <div className="px-3 py-3 border-t border-gray-100 dark:border-gray-800">
                 <FeedbackThread
                   applicationId={applicationId}
                   stageInstanceId={instance.id}
@@ -693,8 +693,8 @@ export default function FullPipelineTimeline({
   return (
     <div className="space-y-1">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-        <span className="text-sm font-medium text-gray-900">Pipeline History</span>
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-gray-800">
+        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Pipeline History</span>
         <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_CONFIG[applicationStatus]?.bgColor} ${STATUS_CONFIG[applicationStatus]?.color}`}>
           {STATUS_CONFIG[applicationStatus]?.label}
         </span>
@@ -719,7 +719,7 @@ export default function FullPipelineTimeline({
             />
 
             {/* Feedback Thread */}
-            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
               <FeedbackThread
                 applicationId={applicationId}
                 stageType={StageFeedbackType.APPLIED}
@@ -748,7 +748,7 @@ export default function FullPipelineTimeline({
               />
 
               {/* Feedback Thread */}
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                 <FeedbackThread
                   applicationId={applicationId}
                   stageType={StageFeedbackType.SHORTLISTED}
@@ -805,14 +805,14 @@ export default function FullPipelineTimeline({
           <div className="relative">
             <div className="absolute left-3 -top-3 w-0.5 h-3 bg-emerald-300" />
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 ring-2 ring-emerald-400 flex items-center justify-center">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/50 ring-2 ring-emerald-400 flex items-center justify-center">
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-                  <span className="text-sm font-semibold text-emerald-800">Hired</span>
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                  <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">Hired</span>
                   {offerAcceptedAt && (
-                    <span className="text-xs text-emerald-600 ml-2">{formatDate(offerAcceptedAt)}</span>
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400 ml-2">{formatDate(offerAcceptedAt)}</span>
                   )}
                 </div>
               </div>
@@ -825,19 +825,19 @@ export default function FullPipelineTimeline({
           <div className="relative">
             <div className="absolute left-3 -top-3 w-0.5 h-3 bg-red-200" />
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
                 <Ban className="w-3.5 h-3.5 text-red-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <span className="text-sm font-medium text-red-800">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                  <span className="text-sm font-medium text-red-800 dark:text-red-200">
                     {isOfferDeclined ? 'Offer Declined' : 'Rejected'}
                   </span>
                   {rejectedAt && (
-                    <span className="text-xs text-red-600 ml-2">{formatDate(rejectedAt)}</span>
+                    <span className="text-xs text-red-600 dark:text-red-400 ml-2">{formatDate(rejectedAt)}</span>
                   )}
                   {rejectionReason && (
-                    <p className="text-xs text-red-600 mt-1">{rejectionReason}</p>
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">{rejectionReason}</p>
                   )}
                 </div>
               </div>

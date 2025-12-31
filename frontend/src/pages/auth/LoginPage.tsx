@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { usePublicBranding } from '@/hooks';
 import { AxiosError } from 'axios';
 
@@ -17,12 +18,14 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const { login } = useAuth();
   const { branding } = usePublicBranding();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const companyName = branding?.company_name || '';
+  const logoUrl = isDark && branding?.logo_dark_url ? branding.logo_dark_url : branding?.logo_url;
 
   const from = (location.state as { from?: Location })?.from?.pathname || '/dashboard';
 
@@ -53,9 +56,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
       <header className="p-6">
         <Link to="/" className="flex items-center">
-          {branding?.logo_url ? (
+          {logoUrl ? (
             <img
-              src={branding.logo_url}
+              src={logoUrl}
               alt={companyName}
               className="h-8 w-auto"
             />

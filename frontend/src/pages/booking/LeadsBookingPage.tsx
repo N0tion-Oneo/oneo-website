@@ -18,6 +18,7 @@ import {
   useCreatePublicBooking,
   usePublicBranding,
 } from '@/hooks'
+import { useTheme } from '@/contexts/ThemeContext'
 import type { RecruiterMeetingLocationType } from '@/types'
 import SlotPicker from '@/components/booking/SlotPicker'
 
@@ -56,6 +57,8 @@ export default function LeadsBookingPage() {
 
   // Get branding for logo
   const { branding } = usePublicBranding()
+  const { isDark } = useTheme()
+  const logoUrl = isDark && branding?.logo_dark_url ? branding.logo_dark_url : branding?.logo_url
 
   const { availability, isLoading, error } = usePublicAvailability(
     bookingSlug || '',
@@ -283,8 +286,8 @@ export default function LeadsBookingPage() {
         {/* Mobile Header */}
         <div className="lg:hidden flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-4">
           <div className="flex items-center gap-3 mb-4">
-            {branding?.logo_url ? (
-              <img src={branding.logo_url} alt={branding.company_name} className="h-6" />
+            {logoUrl ? (
+              <img src={logoUrl} alt={branding?.company_name} className="h-6" />
             ) : (
               <>
                 <div className="w-8 h-8 bg-gray-900 dark:bg-gray-100 rounded-lg flex items-center justify-center">

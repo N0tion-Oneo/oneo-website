@@ -46,7 +46,7 @@ export default function FeedList({
     return (
       <div className="text-center py-12">
         <div className="text-4xl mb-3">📭</div>
-        <p className="text-[14px] text-gray-500">{emptyMessage}</p>
+        <p className="text-[14px] text-gray-500 dark:text-gray-400">{emptyMessage}</p>
       </div>
     )
   }
@@ -64,7 +64,7 @@ export default function FeedList({
 
       {isLoading && (
         <div className="py-6 text-center">
-          <div className="inline-block w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+          <div className="inline-block w-5 h-5 border-2 border-gray-300 dark:border-gray-600 border-t-gray-600 dark:border-t-gray-300 rounded-full animate-spin" />
         </div>
       )}
 
@@ -72,7 +72,7 @@ export default function FeedList({
         <div className="text-center py-3">
           <button
             onClick={onLoadMore}
-            className="text-[13px] text-gray-500 hover:text-gray-700"
+            className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
           >
             Load more
           </button>

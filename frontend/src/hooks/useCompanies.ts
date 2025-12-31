@@ -577,8 +577,11 @@ interface UseAllCompaniesOptions {
 interface PaginatedCompaniesResponse {
   results: AdminCompanyListItem[]
   count: number
-  next: string | null
-  previous: string | null
+  total_pages?: number
+  page?: number
+  page_size?: number
+  next: string | boolean | null
+  previous: string | boolean | null
 }
 
 interface UseAllCompaniesReturn {

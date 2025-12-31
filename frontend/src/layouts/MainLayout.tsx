@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/utils/cn';
 import { usePublicBranding } from '@/hooks';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -10,6 +11,11 @@ interface MainLayoutProps {
 
 function Navbar() {
   const { branding } = usePublicBranding();
+  const { isDark } = useTheme();
+
+  // Use dark logo for navbar (dark background) or when in dark mode
+  // The navbar has bg-primary which is dark, so prefer dark logo if available
+  const logoUrl = branding?.logo_dark_url || branding?.logo_url;
 
   return (
     <nav className="bg-primary text-white shadow-md">
@@ -17,10 +23,10 @@ function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            {branding?.logo_url ? (
+            {logoUrl ? (
               <img
-                src={branding.logo_url}
-                alt={branding.company_name || 'Logo'}
+                src={logoUrl}
+                alt={branding?.company_name || 'Logo'}
                 className="h-8 w-auto"
               />
             ) : (
@@ -75,16 +81,19 @@ function Footer() {
   const currentYear = new Date().getFullYear();
   const { branding } = usePublicBranding();
 
+  // Use dark logo for footer (dark background)
+  const logoUrl = branding?.logo_dark_url || branding?.logo_url;
+
   return (
     <footer className="bg-primary text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1">
-            {branding?.logo_url ? (
+            {logoUrl ? (
               <img
-                src={branding.logo_url}
-                alt={branding.company_name || 'Logo'}
+                src={logoUrl}
+                alt={branding?.company_name || 'Logo'}
                 className="h-8 w-auto mb-4"
               />
             ) : (
