@@ -244,6 +244,17 @@ export {
   useOnboardingFunnel,
   useOnboardingTrends,
   useOnboardingBottlenecks,
+  // Task Analytics
+  useTaskAnalyticsOverview,
+  useTaskAnalyticsTrends,
+  useTaskAnalyticsByAssignee,
+  useTaskAnalyticsBottlenecks,
+} from './useAnalytics'
+export type {
+  TaskAnalyticsOverviewResponse,
+  TaskAnalyticsTrendsResponse,
+  TaskAnalyticsByAssigneeResponse,
+  TaskAnalyticsBottlenecksResponse,
 } from './useAnalytics'
 
 // Optimistic Update hooks
@@ -251,17 +262,14 @@ export { useOptimisticUpdate, useAssignedUpdate } from './useOptimisticUpdate'
 
 // Recruiter Dashboard hooks
 export {
-  useDashboardSettings,
   useTodaysBookings,
   useTodaysInterviews,
   useInvitationsSummary,
   useNewApplications,
   usePipelineOverview,
   useRecentActivity,
-  useCandidatesAttention,
 } from './useRecruiterDashboard'
 export type {
-  DashboardSettings,
   TodaysBooking,
   TodaysInterview,
   InvitationItem,
@@ -270,8 +278,6 @@ export type {
   JobPipeline,
   PipelineOverview,
   ActivityItem,
-  CandidateAttentionItem,
-  CandidatesNeedingAttention,
   TimeFilter,
 } from './useRecruiterDashboard'
 
@@ -495,7 +501,10 @@ export {
   useCompleteTask,
   useMyTasks,
   useOverdueTasks,
+  useTaskActivities,
+  useTaskNotes,
 } from './useTasks'
+export type { TaskActivity, TaskNote } from './useTasks'
 
 // Timeline hooks (Service Center - Aggregate View)
 export {
@@ -504,3 +513,48 @@ export {
   useLogTimelineCall,
   useServiceCenter,
 } from './useTimeline'
+
+// Bottleneck hooks (Configurable Bottleneck Detection)
+export {
+  // Rule hooks
+  useBottleneckRules,
+  useBottleneckRulesByEntity,
+  useBottleneckRule,
+  useCreateBottleneckRule,
+  useUpdateBottleneckRule,
+  useQuickUpdateBottleneckRule,
+  useDeleteBottleneckRule,
+  useRunBottleneckRule,
+  usePreviewBottleneckRule,
+  // Detection hooks
+  useBottleneckDetections,
+  useResolveDetection,
+  // Analytics hooks
+  useBottleneckAnalytics,
+  // Model introspection hooks
+  useBottleneckModels,
+  useBottleneckModelFields,
+  useAvailableStages,
+  // Helper functions
+  getThresholdFromRule,
+} from './useBottlenecks'
+export type {
+  BottleneckEntityType,
+  BottleneckType,
+  DetectionConfig,
+  FilterCondition,
+  NotificationConfig,
+  TaskConfig,
+  BottleneckRule,
+  BottleneckRuleCreateInput,
+  BottleneckRuleUpdateInput,
+  BottleneckQuickUpdateInput,
+  BottleneckDetection,
+  BottleneckAnalyticsSummary,
+  EntityTypeOption,
+  BottleneckTypeOption,
+  ModelField,
+  OnboardingStage,
+  RuleExecutionResult,
+  RulePreviewResult,
+} from './useBottlenecks'

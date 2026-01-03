@@ -292,3 +292,162 @@ export function useOnboardingBottlenecks({ entityType }: { entityType: Onboardin
     staleTime: 5 * 60 * 1000,
   })
 }
+
+// =============================================
+// Task Analytics Hooks
+// =============================================
+
+interface TaskAnalyticsParams {
+  startDate: string
+  endDate: string
+}
+
+interface TaskTrendsParams extends TaskAnalyticsParams {
+  metric?: 'created' | 'completed'
+  granularity?: 'day' | 'week' | 'month'
+}
+
+export interface TaskAnalyticsOverviewResponse {
+  period: {
+    start_date: string
+    end_date: string
+  }
+  summary: {
+    total_created: number
+    completed: number
+    completion_rate: number
+    avg_completion_time_days: number | null
+    on_time_completion_rate: number | null
+    overdue_count: number
+  }
+  by_status: Array<{ status: string; count: number }>
+  by_priority: Array<{ priority: string; count: number }>
+  by_entity_type: Array<{ entity_type: string; count: number }>
+}
+
+export interface TaskAnalyticsTrendsResponse {
+  period: {
+    start_date: string
+    end_date: string
+  }
+  metric: string
+  granularity: string
+  data: Array<{ date: string; count: number }>
+}
+
+export interface TaskAnalyticsByAssigneeResponse {
+  period: {
+    start_date: string
+    end_date: string
+  }
+  assignees: Array<{
+    assigned_to: number
+    assignee_name: string
+    total: number
+    completed: number
+    pending: number
+    in_progress: number
+    completion_rate: number
+  }>
+}
+
+export interface TaskAnalyticsBottlenecksResponse {
+  most_overdue: Array<{
+    id: string
+    title: string
+    entity_type: string
+    assigned_to_name: string | null
+    due_date: string
+    days_overdue: number
+    priority: string
+  }>
+  stale_tasks: Array<{
+    id: string
+    title: string
+    entity_type: string
+    assigned_to_name: string | null
+    created_at: string
+    days_pending: number
+    priority: string
+  }>
+  assignee_bottlenecks: Array<{
+    assigned_to: number
+    assignee_name: string
+    overdue_count: number
+  }>
+}
+
+// Fetch task analytics overview
+export function useTaskAnalyticsOverview({ startDate, endDate }: TaskAnalyticsParams) {
+  return useQuery({
+    queryKey: ['task-analytics', 'overview', startDate, endDate],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        start_date: startDate,
+        end_date: endDate,
+      })
+      const response = await api.get<TaskAnalyticsOverviewResponse>(
+        `/analytics/tasks/overview/?${params.toString()}`
+      )
+      return response.data
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+// Fetch task trends
+export function useTaskAnalyticsTrends({
+  startDate,
+  endDate,
+  metric = 'created',
+  granularity = 'day',
+}: TaskTrendsParams) {
+  return useQuery({
+    queryKey: ['task-analytics', 'trends', startDate, endDate, metric, granularity],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        start_date: startDate,
+        end_date: endDate,
+        metric,
+        granularity,
+      })
+      const response = await api.get<TaskAnalyticsTrendsResponse>(
+        `/analytics/tasks/trends/?${params.toString()}`
+      )
+      return response.data
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+// Fetch task analytics by assignee
+export function useTaskAnalyticsByAssignee({ startDate, endDate }: TaskAnalyticsParams) {
+  return useQuery({
+    queryKey: ['task-analytics', 'by-assignee', startDate, endDate],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        start_date: startDate,
+        end_date: endDate,
+      })
+      const response = await api.get<TaskAnalyticsByAssigneeResponse>(
+        `/analytics/tasks/by-assignee/?${params.toString()}`
+      )
+      return response.data
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+// Fetch task bottlenecks
+export function useTaskAnalyticsBottlenecks() {
+  return useQuery({
+    queryKey: ['task-analytics', 'bottlenecks'],
+    queryFn: async () => {
+      const response = await api.get<TaskAnalyticsBottlenecksResponse>(
+        `/analytics/tasks/bottlenecks/`
+      )
+      return response.data
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}

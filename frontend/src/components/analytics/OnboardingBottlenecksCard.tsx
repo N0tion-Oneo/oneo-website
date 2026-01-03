@@ -1,11 +1,14 @@
 import { AlertTriangle } from 'lucide-react'
 import type { OnboardingBottleneck } from '@/types'
+import { useBottleneckRulesByEntity } from '@/hooks/useBottlenecks'
+import { ThresholdBadge } from '@/components/bottlenecks'
 
 interface OnboardingBottlenecksCardProps {
   bottlenecks: OnboardingBottleneck[]
   loading?: boolean
   staleThresholdDays?: number
   entityType: 'company' | 'candidate'
+  showConfigureButton?: boolean
 }
 
 export function OnboardingBottlenecksCard({
@@ -13,7 +16,19 @@ export function OnboardingBottlenecksCard({
   loading,
   staleThresholdDays = 7,
   entityType,
+  showConfigureButton = false,
 }: OnboardingBottlenecksCardProps) {
+  // Fetch bottleneck rules for this entity type to get configurable threshold
+  const { rules, refetch: refetchRules } = useBottleneckRulesByEntity(entityType)
+
+  // Find the stage duration rule for this entity type
+  const stageDurationRule = rules.find(
+    (r) => r.detection_config.type === 'stage_duration' && r.is_active
+  )
+
+  // Use the rule threshold if available, otherwise fall back to prop
+  const effectiveThreshold = stageDurationRule?.detection_config.threshold_days ?? staleThresholdDays
+
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
@@ -34,14 +49,19 @@ export function OnboardingBottlenecksCard({
 
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-      <div className="flex items-center gap-2 mb-1">
-        <AlertTriangle className="w-4 h-4 text-amber-500" />
-        <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100">
-          Onboarding Bottlenecks
-        </h3>
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-amber-500" />
+          <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100">
+            Onboarding Bottlenecks
+          </h3>
+        </div>
+        {showConfigureButton && stageDurationRule && (
+          <ThresholdBadge rule={stageDurationRule} onUpdated={refetchRules} />
+        )}
       </div>
       <p className="text-[12px] text-gray-500 dark:text-gray-400 mb-4">
-        Stages where {entityLabel} have been stuck for over {staleThresholdDays} days
+        Stages where {entityLabel} have been stuck for over {effectiveThreshold} days
       </p>
 
       {significantBottlenecks.length === 0 ? (

@@ -86,7 +86,7 @@ export default function LeadsPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [showFilters, setShowFilters] = useState(false)
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'created_at', desc: true }])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [showCreateLeadModal, setShowCreateLeadModal] = useState(false)
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(() => {
@@ -210,6 +210,7 @@ export default function LeadsPage() {
         id: 'select',
         size: 40,
         enableResizing: false,
+        enableSorting: false,
         header: ({ table }) => (
           <input
             type="checkbox"
@@ -233,6 +234,7 @@ export default function LeadsPage() {
       columnHelper.accessor('assigned_to', {
         header: 'Assigned',
         size: 160,
+        enableSorting: false,
         cell: ({ row }) => {
           const lead = row.original
           const assignedUsers = (lead.assigned_to || []) as AssignedUser[]
@@ -282,6 +284,7 @@ export default function LeadsPage() {
       columnHelper.accessor('email', {
         header: 'Contact',
         size: 200,
+        enableSorting: false,
         cell: ({ row }) => (
           <div className="space-y-0.5">
             <div className="flex items-center gap-1.5">
@@ -307,6 +310,7 @@ export default function LeadsPage() {
       columnHelper.accessor('source', {
         header: 'Source',
         size: 100,
+        enableSorting: false,
         cell: ({ getValue }) => (
           <span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded ${getSourceColor(getValue())}`}>
             {getSourceLabel(getValue())}
@@ -317,6 +321,7 @@ export default function LeadsPage() {
       columnHelper.accessor('onboarding_stage', {
         header: 'Stage',
         size: 120,
+        enableSorting: false,
         cell: ({ getValue }) => {
           const stage = getValue()
           if (!stage) return <span className="text-[12px] text-gray-400">-</span>
@@ -355,6 +360,7 @@ export default function LeadsPage() {
     pageCount: totalPages,
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    enableSorting: true,
   })
 
   return (

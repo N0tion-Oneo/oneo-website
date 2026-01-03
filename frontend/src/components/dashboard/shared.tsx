@@ -15,13 +15,17 @@ import {
   Star,
   Send,
   UserCheck,
+  Building2,
+  ClipboardList,
+  Zap,
 } from 'lucide-react'
 import {
   usePipelineOverview,
   useTodaysInterviews,
-  useCandidatesAttention,
   useRecentActivity,
 } from '@/hooks'
+import { useBottleneckDetections, type BottleneckEntityType, type BottleneckDetection, type DetectionSeverity } from '@/hooks/useBottlenecks'
+import { formatDistanceToNow } from 'date-fns'
 
 // =============================================================================
 // Helper Components
@@ -278,117 +282,214 @@ export function PipelineOverviewSection() {
 }
 
 // =============================================================================
-// Candidates Needing Attention Section
+// Bottlenecks Attention Section
 // =============================================================================
 
-export function CandidatesAttentionSection() {
-  const [activeTab, setActiveTab] = useState<'not_contacted' | 'stuck' | 'prep'>('not_contacted')
-  const { data, isLoading } = useCandidatesAttention()
+const ENTITY_TYPE_CONFIG: Record<BottleneckEntityType, { label: string; icon: React.ElementType; color: string; linkPrefix: string }> = {
+  candidate: { label: 'Candidates', icon: Users, color: 'text-blue-600 dark:text-blue-400', linkPrefix: '/dashboard/admin/candidates' },
+  application: { label: 'Applications', icon: Briefcase, color: 'text-purple-600 dark:text-purple-400', linkPrefix: '/dashboard/applications' },
+  task: { label: 'Tasks', icon: ClipboardList, color: 'text-orange-600 dark:text-orange-400', linkPrefix: '/dashboard/tasks' },
+  lead: { label: 'Leads', icon: Zap, color: 'text-amber-600 dark:text-amber-400', linkPrefix: '/dashboard/leads' },
+  company: { label: 'Companies', icon: Building2, color: 'text-green-600 dark:text-green-400', linkPrefix: '/dashboard/companies' },
+  stage_instance: { label: 'Interviews', icon: Calendar, color: 'text-red-600 dark:text-red-400', linkPrefix: '/dashboard/applications' },
+}
 
-  const tabs = [
-    {
-      key: 'not_contacted' as const,
-      label: 'No Contact',
-      count: data?.not_contacted_count || 0,
-      color: 'text-red-600 dark:text-red-400',
-    },
-    {
-      key: 'stuck' as const,
-      label: 'Stuck',
-      count: data?.stuck_in_stage_count || 0,
-      color: 'text-amber-600 dark:text-amber-400',
-    },
-    {
-      key: 'prep' as const,
-      label: 'Interview Prep',
-      count: data?.needs_interview_prep_count || 0,
-      color: 'text-blue-600 dark:text-blue-400',
-    },
-  ]
+const SEVERITY_CONFIG: Record<DetectionSeverity, { label: string; color: string; bgColor: string; borderColor: string }> = {
+  critical: {
+    label: 'Critical',
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'bg-red-50 dark:bg-red-900/20',
+    borderColor: 'border-red-200 dark:border-red-800',
+  },
+  warning: {
+    label: 'Warning',
+    color: 'text-amber-600 dark:text-amber-400',
+    bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    borderColor: 'border-amber-200 dark:border-amber-800',
+  },
+}
 
-  const getItems = () => {
-    if (!data) return []
-    switch (activeTab) {
-      case 'not_contacted':
-        return data.not_contacted
-      case 'stuck':
-        return data.stuck_in_stage
-      case 'prep':
-        return data.needs_interview_prep
+type SeverityFilter = DetectionSeverity | 'all'
+
+export function BottlenecksAttentionSection() {
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>('all')
+  const [entityFilter, setEntityFilter] = useState<BottleneckEntityType | 'all'>('all')
+  const { detections, count, severityCounts, isLoading } = useBottleneckDetections({ is_resolved: false, pageSize: 50 })
+
+  // Use API counts for accurate totals
+  const criticalCount = severityCounts.critical
+  const warningCount = severityCounts.warning
+  const totalCount = count
+
+  // Filter by severity first
+  const severityFilteredDetections = severityFilter === 'all'
+    ? detections
+    : detections.filter(d => d.severity === severityFilter)
+
+  // Group filtered detections by entity type
+  const countsByType = severityFilteredDetections.reduce((acc, d) => {
+    acc[d.entity_type] = (acc[d.entity_type] || 0) + 1
+    return acc
+  }, {} as Record<BottleneckEntityType, number>)
+
+  // Get entity types that have detections
+  const activeTypes = (Object.keys(countsByType) as BottleneckEntityType[]).filter(t => countsByType[t] > 0)
+
+  // Filter by entity type
+  const filteredDetections = entityFilter === 'all'
+    ? severityFilteredDetections
+    : severityFilteredDetections.filter(d => d.entity_type === entityFilter)
+
+  // Sort by severity (critical first) then by date
+  // Note: API already returns sorted by severity, but we sort again for client-side filtered results
+  const sortedDetections = [...filteredDetections].sort((a, b) => {
+    if (a.severity !== b.severity) {
+      return a.severity === 'critical' ? -1 : 1
     }
-  }
+    return new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()
+  })
 
-  const items = getItems()
+  // Get link for entity
+  const getEntityLink = (detection: BottleneckDetection) => {
+    const config = ENTITY_TYPE_CONFIG[detection.entity_type]
+    if (detection.entity_type === 'stage_instance') {
+      // For stage instances, link to the application
+      const appId = detection.detection_data?.application_id
+      return appId ? `${config.linkPrefix}/${appId}` : config.linkPrefix
+    }
+    return `${config.linkPrefix}/${detection.entity_id}`
+  }
 
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <SectionHeader
-        title="Needs Attention"
+        title="Bottlenecks"
         icon={AlertCircle}
-        viewAllLink="/dashboard/admin/candidates"
+        count={totalCount}
+        viewAllLink="/dashboard/bottlenecks"
       />
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-3 border-b border-gray-100 dark:border-gray-800">
-        {tabs.map((tab) => (
+      {/* Severity Tabs */}
+      {totalCount > 0 && (
+        <div className="flex gap-2 mb-3">
           <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-3 py-1.5 text-[12px] font-medium border-b-2 -mb-px ${
-              activeTab === tab.key
-                ? `${tab.color} border-current`
+            onClick={() => { setSeverityFilter('all'); setEntityFilter('all') }}
+            className={`px-3 py-1.5 text-[12px] font-medium rounded-md transition-colors ${
+              severityFilter === 'all'
+                ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+          >
+            All ({totalCount})
+          </button>
+          {criticalCount > 0 && (
+            <button
+              onClick={() => { setSeverityFilter('critical'); setEntityFilter('all') }}
+              className={`px-3 py-1.5 text-[12px] font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                severityFilter === 'critical'
+                  ? 'bg-red-600 dark:bg-red-500 text-white'
+                  : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-current" />
+              Critical ({criticalCount})
+            </button>
+          )}
+          {warningCount > 0 && (
+            <button
+              onClick={() => { setSeverityFilter('warning'); setEntityFilter('all') }}
+              className={`px-3 py-1.5 text-[12px] font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                severityFilter === 'warning'
+                  ? 'bg-amber-500 dark:bg-amber-500 text-white'
+                  : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-current" />
+              Warning ({warningCount})
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Entity Type Tabs */}
+      {activeTypes.length > 1 && (
+        <div className="flex gap-1 mb-3 border-b border-gray-100 dark:border-gray-800 overflow-x-auto">
+          <button
+            onClick={() => setEntityFilter('all')}
+            className={`px-3 py-1.5 text-[12px] font-medium border-b-2 -mb-px whitespace-nowrap ${
+              entityFilter === 'all'
+                ? 'text-gray-900 dark:text-gray-100 border-current'
                 : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
-            {tab.label} ({tab.count})
+            All ({severityFilteredDetections.length})
           </button>
-        ))}
-      </div>
+          {activeTypes.map((entityType) => {
+            const config = ENTITY_TYPE_CONFIG[entityType]
+            return (
+              <button
+                key={entityType}
+                onClick={() => setEntityFilter(entityType)}
+                className={`px-3 py-1.5 text-[12px] font-medium border-b-2 -mb-px whitespace-nowrap ${
+                  entityFilter === entityType
+                    ? `${config.color} border-current`
+                    : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                {config.label} ({countsByType[entityType]})
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {isLoading ? (
         <LoadingState />
-      ) : items.length === 0 ? (
-        <EmptyState message="No candidates need attention" />
+      ) : sortedDetections.length === 0 ? (
+        <EmptyState message="No bottlenecks detected" />
       ) : (
-        <div className="space-y-2">
-          {items.map((candidate) => (
-            <div
-              key={candidate.id}
-              className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-            >
-              <div className="flex-1 min-w-0">
-                <Link
-                  to={`/dashboard/admin/candidates/${candidate.id}`}
-                  className="text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400"
-                >
-                  {candidate.name}
-                </Link>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                  {activeTab === 'not_contacted' && (
-                    <>Last contact {candidate.days_since_contact} days ago</>
-                  )}
-                  {activeTab === 'stuck' && (
-                    <>
-                      In{' '}
-                      <span
-                        className="px-1 py-0.5 rounded text-[10px]"
-                        style={{ backgroundColor: `${candidate.stage_color}20`, color: candidate.stage_color }}
+        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+          {sortedDetections.slice(0, 10).map((detection) => {
+            const config = ENTITY_TYPE_CONFIG[detection.entity_type]
+            const severityConfig = SEVERITY_CONFIG[detection.severity]
+            const Icon = config.icon
+            return (
+              <div
+                key={detection.id}
+                className={`flex items-center justify-between p-2 rounded-md border ${severityConfig.bgColor} ${severityConfig.borderColor}`}
+              >
+                <div className="flex items-start gap-2 flex-1 min-w-0">
+                  <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${config.color}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Link
+                        to={getEntityLink(detection)}
+                        className="text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 truncate"
                       >
-                        {candidate.stage}
-                      </span>{' '}
-                      for {candidate.days_in_stage} days
-                    </>
-                  )}
-                  {activeTab === 'prep' && (
-                    <>
-                      {candidate.stage_name} for {candidate.job_title} in {candidate.days_until} days
-                    </>
-                  )}
-                </p>
+                        {detection.entity_name}
+                      </Link>
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${severityConfig.color} ${severityConfig.bgColor}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${detection.severity === 'critical' ? 'bg-red-500' : 'bg-amber-500'}`} />
+                        {severityConfig.label}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                      {detection.rule_name} · {formatDistanceToNow(new Date(detection.detected_at), { addSuffix: true })}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
               </div>
-              <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
-            </div>
-          ))}
+            )
+          })}
+          {sortedDetections.length > 10 && (
+            <Link
+              to="/dashboard/bottlenecks"
+              className="block text-center text-[12px] text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 py-2"
+            >
+              +{sortedDetections.length - 10} more
+            </Link>
+          )}
         </div>
       )}
     </div>

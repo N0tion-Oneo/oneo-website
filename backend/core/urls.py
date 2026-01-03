@@ -15,7 +15,13 @@ urlpatterns = [
     # Onboarding history
     path('onboarding-history/<str:entity_type>/<int:entity_id>/', views.get_onboarding_history, name='get_onboarding_history'),
 
-    # Onboarding analytics
+    # Task Analytics API (must come BEFORE onboarding analytics to avoid URL conflict)
+    path('analytics/tasks/overview/', task_views.task_analytics_overview, name='task_analytics_overview'),
+    path('analytics/tasks/trends/', task_views.task_analytics_trends, name='task_analytics_trends'),
+    path('analytics/tasks/by-assignee/', task_views.task_analytics_by_assignee, name='task_analytics_by_assignee'),
+    path('analytics/tasks/bottlenecks/', task_views.task_analytics_bottlenecks, name='task_analytics_bottlenecks'),
+
+    # Onboarding analytics (generic entity_type patterns must come AFTER specific patterns)
     path('analytics/<str:entity_type>/overview/', views.onboarding_overview, name='onboarding_overview'),
     path('analytics/<str:entity_type>/time-in-stage/', views.onboarding_time_in_stage, name='onboarding_time_in_stage'),
     path('analytics/<str:entity_type>/funnel/', views.onboarding_funnel, name='onboarding_funnel'),
@@ -23,14 +29,12 @@ urlpatterns = [
     path('analytics/<str:entity_type>/bottlenecks/', views.onboarding_bottlenecks, name='onboarding_bottlenecks'),
 
     # Recruiter/Admin Dashboard
-    path('dashboard/settings/', views.dashboard_settings, name='dashboard_settings'),
     path('dashboard/todays-bookings/', views.todays_bookings, name='todays_bookings'),
     path('dashboard/todays-interviews/', views.todays_interviews, name='todays_interviews'),
     path('dashboard/invitations/', views.invitations_summary, name='invitations_summary'),
     path('dashboard/new-applications/', views.new_applications, name='new_applications'),
     path('dashboard/pipeline/', views.pipeline_overview, name='pipeline_overview'),
     path('dashboard/recent-activity/', views.recent_activity, name='recent_activity'),
-    path('dashboard/candidates-attention/', views.candidates_needing_attention, name='candidates_needing_attention'),
 
     # Client Dashboard
     path('client-dashboard/active-jobs/', views.client_active_jobs, name='client_active_jobs'),
@@ -45,10 +49,13 @@ urlpatterns = [
 
     # Tasks API
     path('tasks/', task_views.task_list_create, name='task_list_create'),
-    path('tasks/<uuid:task_id>/', task_views.task_detail, name='task_detail'),
-    path('tasks/<uuid:task_id>/complete/', task_views.task_complete, name='task_complete'),
     path('tasks/my-tasks/', task_views.my_tasks, name='my_tasks'),
     path('tasks/overdue/', task_views.overdue_tasks, name='overdue_tasks'),
+    path('tasks/<uuid:task_id>/', task_views.task_detail, name='task_detail'),
+    path('tasks/<uuid:task_id>/complete/', task_views.task_complete, name='task_complete'),
+    path('tasks/<uuid:task_id>/activities/', task_views.task_activities, name='task_activities'),
+    path('tasks/<uuid:task_id>/notes/', task_views.task_notes, name='task_notes'),
+    path('tasks/<uuid:task_id>/notes/<uuid:note_id>/', task_views.task_note_delete, name='task_note_delete'),
 
     # Timeline API (aggregate)
     path('timeline/<str:entity_type>/<str:entity_id>/', service_center_views.timeline_list, name='timeline_list'),

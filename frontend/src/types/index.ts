@@ -2599,6 +2599,13 @@ export const TaskStatusLabels: Record<TaskStatus, string> = {
   [TaskStatus.CANCELLED]: 'Cancelled',
 }
 
+export interface TaskBottleneckDetection {
+  id: string
+  rule_name: string
+  severity: 'warning' | 'critical'
+  detected_at: string
+}
+
 export interface Task {
   id: string
   entity_type: EntityType
@@ -2618,6 +2625,7 @@ export interface Task {
   is_overdue: boolean
   created_at: string
   updated_at: string
+  bottleneck_detection: TaskBottleneckDetection | null
 }
 
 export interface TaskCreateInput {

@@ -118,7 +118,7 @@ export default function AdminApplicationsPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [showFilters, setShowFilters] = useState(false)
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'applied_at', desc: true }])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(
     applicationIdFromUrl || null
@@ -615,6 +615,7 @@ export default function AdminApplicationsPage() {
         id: 'select',
         size: 40,
         enableResizing: false,
+        enableSorting: false,
         header: ({ table }) => (
           <input
             type="checkbox"
@@ -638,6 +639,7 @@ export default function AdminApplicationsPage() {
       columnHelper.accessor('assigned_recruiters', {
         header: 'Assigned',
         size: 140,
+        enableSorting: false,
         cell: ({ row }) => {
           const app = row.original
           const assignedUsers = app.assigned_recruiters || []
@@ -707,6 +709,7 @@ export default function AdminApplicationsPage() {
       columnHelper.accessor('current_stage_name', {
         header: 'Stage',
         size: 140,
+        enableSorting: false,
         cell: ({ row }) => {
           const app = row.original
           const stageName = app.current_stage_name || 'Applied'
@@ -745,6 +748,7 @@ export default function AdminApplicationsPage() {
       columnHelper.accessor('last_status_change', {
         header: 'Time in Stage',
         size: 100,
+        enableSorting: false,
         cell: ({ getValue }) => (
           <span className="text-[12px] text-gray-500 dark:text-gray-400">{formatTimeInStage(getValue())}</span>
         ),
@@ -753,6 +757,7 @@ export default function AdminApplicationsPage() {
       columnHelper.accessor('current_stage_instance', {
         header: 'Next Interview',
         size: 130,
+        enableSorting: false,
         cell: ({ getValue }) => {
           const instance = getValue()
           if (!instance?.scheduled_at) {
@@ -771,6 +776,7 @@ export default function AdminApplicationsPage() {
         header: '',
         size: 50,
         enableResizing: false,
+        enableSorting: false,
         cell: ({ row }) => {
           const app = row.original
           return (
@@ -854,6 +860,7 @@ export default function AdminApplicationsPage() {
     pageCount: totalPages,
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    enableSorting: true,
   })
 
   // Get selected applications

@@ -94,7 +94,7 @@ export default function AdminCompaniesPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [showFilters, setShowFilters] = useState(false)
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'created_at', desc: true }])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [openActionsMenu, setOpenActionsMenu] = useState<string | null>(null)
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null)
@@ -206,6 +206,7 @@ export default function AdminCompaniesPage() {
         id: 'select',
         size: 40,
         enableResizing: false,
+        enableSorting: false,
         header: ({ table }) => (
           <input
             type="checkbox"
@@ -229,6 +230,7 @@ export default function AdminCompaniesPage() {
       columnHelper.accessor('assigned_to', {
         header: 'Assigned',
         size: 160,
+        enableSorting: false,
         cell: ({ row }) => {
           const company = row.original
           const assignedUsers = company.assigned_to || []
@@ -285,6 +287,7 @@ export default function AdminCompaniesPage() {
       columnHelper.accessor('industry', {
         header: 'Industry',
         size: 140,
+        enableSorting: false,
         cell: ({ getValue }) => {
           const industry = getValue()
           return (
@@ -298,6 +301,7 @@ export default function AdminCompaniesPage() {
       columnHelper.accessor('company_size', {
         header: 'Size',
         size: 100,
+        enableSorting: false,
         cell: ({ getValue }) => {
           const size = getValue()
           return (
@@ -311,6 +315,7 @@ export default function AdminCompaniesPage() {
       columnHelper.accessor('headquarters_location', {
         header: 'Location',
         size: 140,
+        enableSorting: false,
         cell: ({ getValue }) => (
           <span className="text-[12px] text-gray-600 dark:text-gray-400 truncate block max-w-[120px]">
             {getValue() || '-'}
@@ -365,6 +370,7 @@ export default function AdminCompaniesPage() {
       columnHelper.accessor('is_published', {
         header: 'Status',
         size: 100,
+        enableSorting: false,
         cell: ({ getValue }) => {
           const badge = getStatusBadge(getValue())
           return (
@@ -378,6 +384,7 @@ export default function AdminCompaniesPage() {
       columnHelper.accessor('service_type', {
         header: 'Package',
         size: 120,
+        enableSorting: false,
         cell: ({ getValue }) => {
           const serviceType = getValue()
           const badge = getServiceTypeBadge(serviceType)
@@ -405,6 +412,7 @@ export default function AdminCompaniesPage() {
         header: '',
         size: 50,
         enableResizing: false,
+        enableSorting: false,
         cell: ({ row }) => {
           const company = row.original
           return (
@@ -512,6 +520,7 @@ export default function AdminCompaniesPage() {
     pageCount: totalPages,
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    enableSorting: true,
   })
 
   // Get selected companies

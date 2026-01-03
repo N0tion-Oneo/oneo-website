@@ -17,7 +17,6 @@ export { default as PlatformTeamPage } from './PlatformTeamPage';
 export { default as PlatformCompanyPage } from './PlatformCompanyPage';
 export { default as AdminSkillsTechnologiesPage } from './AdminSkillsTechnologiesPage';
 export { default as OnboardingStagesSettingsPage } from './OnboardingStagesSettingsPage';
-export { default as DashboardSettingsPage } from './DashboardSettingsPage';
 export { default as ApplicationsPage } from './ApplicationsPage';
 // JobApplicationsPage is deprecated - use AdminApplicationsPage with ?job= param instead
 // Notification pages are now integrated into AutomationRulesPage
@@ -49,3 +48,9 @@ export { default as SubscriptionsPage } from './SubscriptionsPage';
 export { default as AutomationRulesPage } from './AutomationRulesPage';
 export { default as RuleEditorPage } from './RuleEditorPage';
 export { default as WorkflowEditorPage } from './WorkflowEditorPage';
+
+// Tasks
+export { default as TasksPage } from './TasksPage';
+
+// Bottleneck Rules
+export { default as BottleneckRulesPage } from './BottleneckRulesPage';

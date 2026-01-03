@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, Outlet } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { User, Calendar, ChevronLeft, ChevronRight, Wrench, Palette, UserPlus, Users, Briefcase, CalendarClock, ListChecks, Settings, Building2, Link as LinkIcon, Zap } from 'lucide-react'
+import { User, Calendar, ChevronLeft, ChevronRight, Wrench, Palette, UserPlus, Users, Briefcase, CalendarClock, ListChecks, Settings, Building2, Link as LinkIcon, Zap, AlertTriangle } from 'lucide-react'
 
 interface SettingsNavItem {
   name: string
@@ -103,14 +103,14 @@ export default function SettingsLayout() {
               ...(isAdmin
                 ? [
                     {
-                      name: 'Dashboard Settings',
-                      href: '/dashboard/settings/dashboard',
-                      icon: <Settings className="w-4 h-4" />,
-                    },
-                    {
                       name: 'Automations',
                       href: '/dashboard/settings/automations',
                       icon: <Zap className="w-4 h-4" />,
+                    },
+                    {
+                      name: 'Bottleneck Rules',
+                      href: '/dashboard/settings/bottlenecks',
+                      icon: <AlertTriangle className="w-4 h-4" />,
                     },
                   ]
                 : []),

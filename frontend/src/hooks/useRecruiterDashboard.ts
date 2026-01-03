@@ -5,13 +5,6 @@ import api from '@/services/api'
 // Types
 // =============================================================================
 
-export interface DashboardSettings {
-  days_without_contact: number
-  days_stuck_in_stage: number
-  days_before_interview_prep: number
-  updated_at: string
-}
-
 export interface TodaysBooking {
   id: string
   scheduled_at: string
@@ -118,89 +111,7 @@ export interface ActivityItem {
   created_at: string
 }
 
-export interface CandidateAttentionItem {
-  id: number
-  name: string
-  email: string | null
-  last_contact?: string
-  days_since_contact?: number
-  stage?: string | null
-  stage_color?: string
-  in_stage_since?: string
-  days_in_stage?: number
-  interview_id?: string
-  interview_at?: string
-  days_until?: number
-  job_title?: string | null
-  stage_name?: string
-  company_name?: string | null
-}
-
-export interface CandidatesNeedingAttention {
-  not_contacted: CandidateAttentionItem[]
-  not_contacted_count: number
-  stuck_in_stage: CandidateAttentionItem[]
-  stuck_in_stage_count: number
-  needs_interview_prep: CandidateAttentionItem[]
-  needs_interview_prep_count: number
-  thresholds: {
-    days_without_contact: number
-    days_stuck_in_stage: number
-    days_before_interview_prep: number
-  }
-}
-
 export type TimeFilter = '24h' | '7d' | '30d' | 'all'
-
-// =============================================================================
-// Dashboard Settings Hook
-// =============================================================================
-
-interface UseDashboardSettingsReturn {
-  settings: DashboardSettings | null
-  isLoading: boolean
-  error: string | null
-  updateSettings: (data: Partial<DashboardSettings>) => Promise<void>
-  isUpdating: boolean
-}
-
-export function useDashboardSettings(): UseDashboardSettingsReturn {
-  const [settings, setSettings] = useState<DashboardSettings | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        setIsLoading(true)
-        const response = await api.get('/dashboard/settings/')
-        setSettings(response.data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load settings')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchSettings()
-  }, [])
-
-  const updateSettings = useCallback(async (data: Partial<DashboardSettings>) => {
-    try {
-      setIsUpdating(true)
-      setError(null)
-      const response = await api.patch('/dashboard/settings/', data)
-      setSettings(response.data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update settings')
-      throw err
-    } finally {
-      setIsUpdating(false)
-    }
-  }, [])
-
-  return { settings, isLoading, error, updateSettings, isUpdating }
-}
 
 // =============================================================================
 // Today's Bookings Hook
@@ -434,40 +345,4 @@ export function useRecentActivity(limit: number = 10): UseRecentActivityReturn {
   }, [fetchActivity])
 
   return { activities, isLoading, error, refetch: fetchActivity }
-}
-
-// =============================================================================
-// Candidates Needing Attention Hook
-// =============================================================================
-
-interface UseCandidatesAttentionReturn {
-  data: CandidatesNeedingAttention | null
-  isLoading: boolean
-  error: string | null
-  refetch: () => Promise<void>
-}
-
-export function useCandidatesAttention(): UseCandidatesAttentionReturn {
-  const [data, setData] = useState<CandidatesNeedingAttention | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchData = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      const response = await api.get('/dashboard/candidates-attention/')
-      setData(response.data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, isLoading, error, refetch: fetchData }
 }

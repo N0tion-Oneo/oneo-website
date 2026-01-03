@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'subscriptions',
     'integrations',
     'automations',
+    'bottlenecks',
 ]
 
 MIDDLEWARE = [
@@ -385,6 +386,14 @@ CELERY_BEAT_SCHEDULE = {
     'process-scheduled-automation-triggers': {
         'task': 'automations.process_scheduled_triggers',
         'schedule': 60 * 5,  # Every 5 minutes - process scheduled automation rules
+    },
+    'run-bottleneck-detection-scan': {
+        'task': 'bottlenecks.run_detection_scan',
+        'schedule': 60 * 5,  # Every 5 minutes - checks which rules are due based on their individual schedules
+    },
+    'resolve-stale-bottleneck-detections': {
+        'task': 'bottlenecks.resolve_stale_detections',
+        'schedule': 60 * 60 * 24,  # Daily - auto-resolve old detections
     },
 }
 

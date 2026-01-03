@@ -85,6 +85,8 @@ export interface StageDuration {
 export interface Bottleneck {
   stage_name: string
   applications_stuck: number
+  stale_count?: number
+  stale_percentage?: number
 }
 
 export interface TimeMetricsResponse {

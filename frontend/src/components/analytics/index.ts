@@ -12,5 +12,11 @@ export { OnboardingBottlenecksCard } from './OnboardingBottlenecksCard'
 export { OnboardingFunnelChart } from './OnboardingFunnelChart'
 export { OnboardingSummaryCards } from './OnboardingSummaryCards'
 
+// Task Analytics
+export { TaskSummaryCards } from './TaskSummaryCards'
+export { TasksByAssigneeTable } from './TasksByAssigneeTable'
+export { TaskBottlenecksCard } from './TaskBottlenecksCard'
+export { TaskDistributionChart } from './TaskDistributionChart'
+
 // Google Analytics
 export { default as GoogleAnalytics, analytics, trackEvent, trackPageView, initGA } from './GoogleAnalytics'

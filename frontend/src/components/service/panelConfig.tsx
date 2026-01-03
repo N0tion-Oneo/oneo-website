@@ -12,6 +12,8 @@ import {
   Zap,
   CreditCard,
   Activity,
+  MessageSquare,
+  Link,
 } from 'lucide-react'
 import type { OnboardingEntityType } from '@/types'
 
@@ -42,7 +44,13 @@ export type ApplicationPanelType =
   | 'tasks'
   | 'timeline'
 
-export type PanelType = EntityPanelType | ApplicationPanelType
+export type TaskPanelType =
+  | 'details'
+  | 'entity'
+  | 'activity'
+  | 'notes'
+
+export type PanelType = EntityPanelType | ApplicationPanelType | TaskPanelType
 
 export interface PanelOption {
   type: PanelType
@@ -101,6 +109,17 @@ export const APPLICATION_PANELS: PanelOption[] = [
 ]
 
 // =============================================================================
+// Task Panel Configuration
+// =============================================================================
+
+export const TASK_PANELS: PanelOption[] = [
+  { type: 'details', label: 'Details', icon: <FileText className="w-4 h-4" /> },
+  { type: 'entity', label: 'Linked Entity', icon: <Link className="w-4 h-4" /> },
+  { type: 'activity', label: 'Activity', icon: <Activity className="w-4 h-4" /> },
+  { type: 'notes', label: 'Notes', icon: <MessageSquare className="w-4 h-4" /> },
+]
+
+// =============================================================================
 // Panel Getters
 // =============================================================================
 
@@ -119,6 +138,10 @@ export function getEntityPanelOptions(entityType: OnboardingEntityType): PanelOp
 
 export function getApplicationPanelOptions(): PanelOption[] {
   return APPLICATION_PANELS
+}
+
+export function getTaskPanelOptions(): PanelOption[] {
+  return TASK_PANELS
 }
 
 // =============================================================================
@@ -167,7 +190,7 @@ export function getDefaultApplicationPanels(): Panel[] {
 // =============================================================================
 
 export function getPanelIcon(type: PanelType): React.ReactNode {
-  const allPanels = [...COMMON_ENTITY_PANELS, ...COMPANY_PANELS, ...CANDIDATE_PANELS, ...LEAD_PANELS, ...APPLICATION_PANELS]
+  const allPanels = [...COMMON_ENTITY_PANELS, ...COMPANY_PANELS, ...CANDIDATE_PANELS, ...LEAD_PANELS, ...APPLICATION_PANELS, ...TASK_PANELS]
   return allPanels.find((p) => p.type === type)?.icon || <User className="w-4 h-4" />
 }
 
@@ -177,6 +200,6 @@ export function getPanelLabel(type: PanelType, isApplicationContext = false): st
     if (panel) return panel.label
   }
 
-  const allPanels = [...COMMON_ENTITY_PANELS, ...COMPANY_PANELS, ...CANDIDATE_PANELS, ...LEAD_PANELS]
+  const allPanels = [...COMMON_ENTITY_PANELS, ...COMPANY_PANELS, ...CANDIDATE_PANELS, ...LEAD_PANELS, ...TASK_PANELS]
   return allPanels.find((p) => p.type === type)?.label || type
 }

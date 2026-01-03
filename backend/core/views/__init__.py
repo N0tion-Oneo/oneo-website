@@ -20,14 +20,12 @@ from core.views.analytics import (
 
 # Export dashboard views (recruiter/admin)
 from core.views.dashboard import (
-    dashboard_settings,
     todays_bookings,
     todays_interviews,
     invitations_summary,
     new_applications,
     pipeline_overview,
     recent_activity,
-    candidates_needing_attention,
 )
 
 # Export client dashboard views

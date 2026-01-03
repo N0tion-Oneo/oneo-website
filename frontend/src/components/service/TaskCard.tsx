@@ -8,6 +8,7 @@ import {
   User,
   Trash2,
   Edit,
+  Zap,
 } from 'lucide-react'
 import type { Task, TaskPriority } from '@/types'
 import { TaskPriorityLabels, TaskStatusLabels } from '@/types'
@@ -100,6 +101,17 @@ export function TaskCard({
             <Circle className="w-4 h-4 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500" />
           )}
         </button>
+        {task.bottleneck_detection && (
+          <span title={task.bottleneck_detection.rule_name}>
+            <Zap
+              className={`w-3 h-3 flex-shrink-0 ${
+                task.bottleneck_detection.severity === 'critical'
+                  ? 'text-red-500'
+                  : 'text-amber-500'
+              }`}
+            />
+          </span>
+        )}
         <span
           className={`text-sm flex-1 truncate ${
             isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'
@@ -196,6 +208,21 @@ export function TaskCard({
 
           {/* Meta */}
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+            {/* Bottleneck detection badge */}
+            {task.bottleneck_detection && (
+              <span
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded ${
+                  task.bottleneck_detection.severity === 'critical'
+                    ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                    : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                }`}
+                title={`Auto-created by: ${task.bottleneck_detection.rule_name}`}
+              >
+                <Zap className="w-3 h-3" />
+                {task.bottleneck_detection.rule_name}
+              </span>
+            )}
+
             {/* Priority badge */}
             <span className={`px-1.5 py-0.5 rounded ${priorityColors[task.priority]}`}>
               {TaskPriorityLabels[task.priority]}

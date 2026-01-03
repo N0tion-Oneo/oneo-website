@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Script to start the Django backend server
+# Script to start the Django backend server with Celery
 
-echo "🚀 Starting Oneo Backend (Django)..."
+echo "🚀 Starting Oneo Backend (Django + Celery)..."
 echo ""
 
 # Get the script's directory and project root
@@ -42,31 +42,46 @@ if [ ! -f ".env" ]; then
     fi
 fi
 
-# Check database connection
-echo "🔍 Checking database connection..."
-python manage.py check --database default 2>/dev/null
-if [ $? -ne 0 ]; then
-    echo "⚠️  Warning: Database connection issues detected."
-    echo "Make sure PostgreSQL is running and credentials in .env are correct."
-fi
+# Note: Database checks and migrations are skipped in this script
+# Run manually if needed: python manage.py migrate
 
-# Run migrations if needed
-echo "📊 Checking for pending migrations..."
-python manage.py migrate --check 2>/dev/null
-if [ $? -ne 0 ]; then
-    echo "⚠️  Pending migrations detected. Running migrations..."
-    python manage.py migrate
-fi
+# Cleanup function to kill background processes
+cleanup() {
+    echo ""
+    echo "🛑 Shutting down..."
+    echo "   Stopping Celery worker..."
+    pkill -f "celery -A config" 2>/dev/null
+    sleep 1
+    echo "✅ Shutdown complete"
+    exit 0
+}
+
+# Trap signals to cleanup on exit
+trap cleanup SIGINT SIGTERM EXIT
+
+# Start Celery worker with beat scheduler in background
+echo ""
+echo "🔄 Starting Celery worker with beat scheduler..."
+celery -A config worker -B -l warning --concurrency=2 --without-heartbeat &
+CELERY_PID=$!
+
+# Wait for Celery to initialize
+sleep 3
+echo "✅ Celery started (PID: $CELERY_PID)"
 
 # Start the development server
 echo ""
 echo "✨ Starting Django development server..."
-echo "📍 Backend will be available at: http://localhost:8000"
-echo "📍 Admin panel: http://localhost:8000/admin/"
-echo "📍 API docs: http://localhost:8000/api/docs/"
 echo ""
-echo "Press Ctrl+C to stop the server"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📍 Backend:    http://localhost:8000"
+echo "📍 Admin:      http://localhost:8000/admin/"
+echo "📍 API docs:   http://localhost:8000/api/docs/"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "🔄 Celery is running background tasks (automations, bottleneck detection)"
+echo ""
+echo "Press Ctrl+C to stop all services"
 echo ""
 
 python manage.py runserver

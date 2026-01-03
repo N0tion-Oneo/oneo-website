@@ -483,8 +483,22 @@ def list_all_candidates(request):
 
     # Ordering
     ordering = request.query_params.get('ordering', '-created_at')
-    valid_orderings = ['created_at', '-created_at', 'profile_completeness', '-profile_completeness',
-                       'years_of_experience', '-years_of_experience', 'user__first_name', '-user__first_name']
+    valid_orderings = [
+        'created_at', '-created_at',
+        'updated_at', '-updated_at',
+        'profile_completeness', '-profile_completeness',
+        'years_of_experience', '-years_of_experience',
+        'user__first_name', '-user__first_name',
+        'professional_title', '-professional_title',
+        'headline', '-headline',
+        'seniority', '-seniority',
+        'city', '-city',
+        'work_preference', '-work_preference',
+        'willing_to_relocate', '-willing_to_relocate',
+        'notice_period_days', '-notice_period_days',
+        'has_resume', '-has_resume',
+        'visibility', '-visibility',
+    ]
     if ordering in valid_orderings:
         candidates = candidates.order_by(ordering)
     else:
@@ -606,8 +620,22 @@ def list_company_candidates(request):
 
     # Ordering
     ordering = request.query_params.get('ordering', '-created_at')
-    valid_orderings = ['created_at', '-created_at', 'profile_completeness', '-profile_completeness',
-                       'years_of_experience', '-years_of_experience', 'user__first_name', '-user__first_name']
+    valid_orderings = [
+        'created_at', '-created_at',
+        'updated_at', '-updated_at',
+        'profile_completeness', '-profile_completeness',
+        'years_of_experience', '-years_of_experience',
+        'user__first_name', '-user__first_name',
+        'professional_title', '-professional_title',
+        'headline', '-headline',
+        'seniority', '-seniority',
+        'city', '-city',
+        'work_preference', '-work_preference',
+        'willing_to_relocate', '-willing_to_relocate',
+        'notice_period_days', '-notice_period_days',
+        'has_resume', '-has_resume',
+        'visibility', '-visibility',
+    ]
     if ordering in valid_orderings:
         candidates = candidates.order_by(ordering)
     else:

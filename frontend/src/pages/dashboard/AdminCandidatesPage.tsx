@@ -155,7 +155,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [showFilters, setShowFilters] = useState(false)
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'created_at', desc: true }])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [previewCandidate, setPreviewCandidate] = useState<CandidateAdminListItem | null>(null)
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({})
@@ -170,9 +170,19 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
     // Map column IDs to API field names
     const fieldMap: Record<string, string> = {
       full_name: 'user__first_name',
-      created_at: 'created_at',
-      profile_completeness: 'profile_completeness',
+      professional_title: 'professional_title',
+      headline: 'headline',
+      seniority: 'seniority',
       years_of_experience: 'years_of_experience',
+      location: 'city',
+      work_preference: 'work_preference',
+      willing_to_relocate: 'willing_to_relocate',
+      notice_period_days: 'notice_period_days',
+      has_resume: 'has_resume',
+      profile_completeness: 'profile_completeness',
+      created_at: 'created_at',
+      updated_at: 'updated_at',
+      visibility: 'visibility',
     }
     const field = fieldMap[sort.id] || sort.id
     return sort.desc ? `-${field}` : field
@@ -311,6 +321,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           id: 'select',
           size: 40,
           enableResizing: false,
+          enableSorting: false,
           header: ({ table }) => (
             <input
               type="checkbox"
@@ -338,6 +349,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           columnHelper.accessor('assigned_to', {
             header: 'Assigned',
             size: 160,
+            enableSorting: false,
             cell: ({ row }) => {
               const candidate = row.original
               const assignedUsers = candidate.assigned_to || []
@@ -386,6 +398,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         columnHelper.accessor('phone', {
         header: 'Phone',
         size: 120,
+        enableSorting: false,
         cell: ({ getValue }) => (
           <span className="text-[12px] text-gray-600 dark:text-gray-400">{getValue() || '-'}</span>
         ),
@@ -457,6 +470,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
       columnHelper.accessor('preferred_locations', {
         header: 'Preferred Locations',
         size: 150,
+        enableSorting: false,
         cell: ({ getValue }) => {
           const locs = getValue() || []
           return (
@@ -472,6 +486,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
           id: 'salary',
           header: 'Salary Exp.',
           size: 130,
+          enableSorting: false,
           cell: ({ getValue }) => (
             <span className="text-[12px] text-gray-600 dark:text-gray-400">{getValue()}</span>
           ),
@@ -500,6 +515,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
       columnHelper.accessor('industries', {
         header: 'Industries',
         size: 180,
+        enableSorting: false,
         cell: ({ getValue }) => {
           const industries = getValue() || []
           if (industries.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
@@ -530,6 +546,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
             id: 'roles',
             header: 'Roles',
             size: 280,
+            enableSorting: false,
             cell: ({ getValue }) => {
               const experiences = getValue() || []
               if (experiences.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
@@ -576,6 +593,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
               id: 'experience_duration',
               header: 'Duration',
               size: 90,
+              enableSorting: false,
               cell: ({ getValue }) => {
                 const data = getValue()
                 if (!data) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
@@ -601,6 +619,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
               id: 'exp_technologies',
               header: 'Technologies',
               size: 1000,
+              enableSorting: false,
               cell: ({ getValue }) => {
                 const techs = getValue()
                 if (techs.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
@@ -628,6 +647,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
               id: 'exp_skills',
               header: 'Skills',
               size: 1000,
+              enableSorting: false,
               cell: ({ getValue }) => {
                 const skills = getValue()
                 if (skills.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
@@ -654,6 +674,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
       columnHelper.accessor('education', {
         header: 'Education',
         size: 280,
+        enableSorting: false,
         cell: ({ getValue }) => {
           const education = getValue() || []
           if (education.length === 0) return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
@@ -745,6 +766,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
         header: '',
         size: 50,
         enableResizing: false,
+        enableSorting: false,
         cell: ({ row }) => {
           const candidate = row.original
           return (
@@ -864,6 +886,7 @@ export default function AdminCandidatesPage({ mode = 'admin' }: AdminCandidatesP
     enableRowSelection: true,
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
+    enableSorting: true, // Enable sorting globally
   })
 
   // Get selected candidates

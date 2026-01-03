@@ -232,3 +232,90 @@ class Task(models.Model):
         if self.due_date and self.status not in [TaskStatus.COMPLETED, TaskStatus.CANCELLED]:
             return self.due_date < timezone.now().date()
         return False
+
+
+class TaskActivityType(models.TextChoices):
+    """Types of task activities that are logged."""
+    CREATED = 'created', 'Task Created'
+    STATUS_CHANGED = 'status_changed', 'Status Changed'
+    PRIORITY_CHANGED = 'priority_changed', 'Priority Changed'
+    ASSIGNED = 'assigned', 'Assigned'
+    REASSIGNED = 'reassigned', 'Reassigned'
+    DUE_DATE_CHANGED = 'due_date_changed', 'Due Date Changed'
+    COMPLETED = 'completed', 'Completed'
+    REOPENED = 'reopened', 'Reopened'
+    NOTE_ADDED = 'note_added', 'Note Added'
+    UPDATED = 'updated', 'Updated'
+
+
+class TaskActivity(models.Model):
+    """
+    Activity log for tasks. Tracks all changes and events for analytics
+    and audit purposes.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name='activities',
+    )
+    activity_type = models.CharField(
+        max_length=30,
+        choices=TaskActivityType.choices,
+    )
+
+    # Change details (JSON for flexibility)
+    old_value = models.JSONField(null=True, blank=True)
+    new_value = models.JSONField(null=True, blank=True)
+    description = models.TextField(blank=True)
+
+    # Who made the change
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='task_activities',
+    )
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'task_activities'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['task', '-created_at']),
+            models.Index(fields=['activity_type', '-created_at']),
+            models.Index(fields=['performed_by', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.get_activity_type_display()} - {self.task.title}"
+
+
+class TaskNote(models.Model):
+    """
+    Notes/comments on tasks for collaboration and context.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name='notes',
+    )
+    content = models.TextField()
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='task_notes',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'task_notes'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Note on {self.task.title}"

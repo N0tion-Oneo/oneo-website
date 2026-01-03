@@ -24,7 +24,7 @@ import {
   TodaysInterviewsSection,
   PipelineOverviewSection,
   RecentActivitySection,
-  CandidatesAttentionSection,
+  BottlenecksAttentionSection,
 } from './shared'
 import { DashboardFeedWidget } from '@/components/feed'
 
@@ -403,7 +403,7 @@ export default function RecruiterDashboard() {
 
         {/* Right Column - Sidebar */}
         <div className="space-y-6">
-          <CandidatesAttentionSection />
+          <BottlenecksAttentionSection />
           <InvitationsSection />
           <DashboardFeedWidget limit={5} />
           <RecentActivitySection />

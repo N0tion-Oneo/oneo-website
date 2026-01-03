@@ -7,7 +7,6 @@ Provides data for the recruiter dashboard including:
 - New applications
 - Pipeline overview
 - Recent activity
-- Candidates needing attention
 """
 from datetime import timedelta
 from django.db.models import Count, Q, F, Max
@@ -17,8 +16,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from core.models import DashboardSettings
-from core.serializers import DashboardSettingsSerializer
 from users.models import UserRole
 
 
@@ -37,43 +34,6 @@ def get_time_filter(time_filter: str):
 def is_admin_or_recruiter(user):
     """Check if user is admin or recruiter."""
     return user.role in [UserRole.ADMIN, UserRole.RECRUITER]
-
-
-# =============================================================================
-# Dashboard Settings API
-# =============================================================================
-
-@api_view(['GET', 'PATCH'])
-@permission_classes([IsAuthenticated])
-def dashboard_settings(request):
-    """
-    GET: Retrieve dashboard settings.
-    PATCH: Update dashboard settings (admin only).
-    """
-    if not is_admin_or_recruiter(request.user):
-        return Response(
-            {'error': 'Only recruiters and admins can access dashboard settings'},
-            status=status.HTTP_403_FORBIDDEN
-        )
-
-    settings = DashboardSettings.get_settings()
-
-    if request.method == 'GET':
-        serializer = DashboardSettingsSerializer(settings)
-        return Response(serializer.data)
-
-    # PATCH - admin only
-    if request.user.role != UserRole.ADMIN:
-        return Response(
-            {'error': 'Only admins can update dashboard settings'},
-            status=status.HTTP_403_FORBIDDEN
-        )
-
-    serializer = DashboardSettingsSerializer(settings, data=request.data, partial=True)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # =============================================================================
@@ -610,168 +570,4 @@ def recent_activity(request):
 
     return Response({
         'activities': activities[:limit],
-    })
-
-
-# =============================================================================
-# Candidates Needing Attention
-# =============================================================================
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def candidates_needing_attention(request):
-    """
-    Get candidates that need attention based on configurable thresholds:
-    - Not contacted in X days
-    - Stuck in stage for X days
-    - Interview prep needed (within X days)
-    Works for admins, recruiters, and clients.
-    """
-    from candidates.models import CandidateProfile, CandidateActivity
-    from jobs.models import ApplicationStageInstance, StageInstanceStatus, Application
-
-    user = request.user
-    settings = DashboardSettings.get_settings()
-    now = timezone.now()
-
-    # Get candidates based on role
-    if user.role == UserRole.ADMIN:
-        candidates = CandidateProfile.objects.all()
-    elif user.role == UserRole.CLIENT:
-        # Client users see candidates who applied to their company's jobs
-        membership = user.company_memberships.select_related('company').first()
-        if not membership:
-            return Response({
-                'not_contacted': [],
-                'not_contacted_count': 0,
-                'stuck_in_stage': [],
-                'stuck_in_stage_count': 0,
-                'needs_interview_prep': [],
-                'needs_interview_prep_count': 0,
-                'thresholds': {
-                    'days_without_contact': settings.days_without_contact,
-                    'days_stuck_in_stage': settings.days_stuck_in_stage,
-                    'days_before_interview_prep': settings.days_before_interview_prep,
-                },
-            })
-        # Get candidate IDs from applications to this company's jobs
-        candidate_ids = Application.objects.filter(
-            job__company=membership.company
-        ).values_list('candidate_id', flat=True).distinct()
-        candidates = CandidateProfile.objects.filter(id__in=candidate_ids)
-    else:
-        # Recruiters see assigned candidates
-        candidates = CandidateProfile.objects.filter(assigned_to=user)
-
-    candidates = candidates.select_related('user', 'onboarding_stage')
-
-    # 1. Not contacted in X days
-    contact_threshold = now - timedelta(days=settings.days_without_contact)
-    not_contacted = []
-
-    for candidate in candidates:
-        # Check last activity (any type of interaction)
-        last_activity = CandidateActivity.objects.filter(
-            candidate=candidate
-        ).order_by('-created_at').first()
-
-        last_contact = last_activity.created_at if last_activity else candidate.created_at
-
-        if last_contact < contact_threshold:
-            not_contacted.append({
-                'id': candidate.id,
-                'name': candidate.user.full_name if candidate.user else 'Unknown',
-                'email': candidate.user.email if candidate.user else None,
-                'last_contact': last_contact.isoformat(),
-                'days_since_contact': (now - last_contact).days,
-                'stage': candidate.onboarding_stage.name if candidate.onboarding_stage else None,
-            })
-
-    # 2. Stuck in stage for X days
-    # Using OnboardingHistory to find candidates who haven't changed stage
-    from core.models import OnboardingHistory
-
-    stuck_threshold = now - timedelta(days=settings.days_stuck_in_stage)
-    stuck_in_stage = []
-
-    for candidate in candidates:
-        if not candidate.onboarding_stage:
-            continue
-
-        # Get last stage change
-        last_change = OnboardingHistory.objects.filter(
-            entity_type='candidate',
-            entity_id=candidate.id,
-        ).order_by('-created_at').first()
-
-        stage_since = last_change.created_at if last_change else candidate.created_at
-
-        if stage_since < stuck_threshold and not candidate.onboarding_stage.is_terminal:
-            stuck_in_stage.append({
-                'id': candidate.id,
-                'name': candidate.user.full_name if candidate.user else 'Unknown',
-                'email': candidate.user.email if candidate.user else None,
-                'stage': candidate.onboarding_stage.name,
-                'stage_color': candidate.onboarding_stage.color,
-                'in_stage_since': stage_since.isoformat(),
-                'days_in_stage': (now - stage_since).days,
-            })
-
-    # 3. Upcoming interviews needing prep
-    prep_threshold = now + timedelta(days=settings.days_before_interview_prep)
-    needs_prep = []
-
-    upcoming_interviews = ApplicationStageInstance.objects.filter(
-        scheduled_at__gte=now,
-        scheduled_at__lte=prep_threshold,
-        status=StageInstanceStatus.SCHEDULED,
-    ).select_related(
-        'application__candidate__user',
-        'application__job__company',
-        'stage_template',
-    )
-
-    if user.role == UserRole.CLIENT:
-        # Client users see interviews for their company's jobs
-        membership = user.company_memberships.select_related('company').first()
-        if membership:
-            upcoming_interviews = upcoming_interviews.filter(
-                application__job__company=membership.company
-            )
-        else:
-            upcoming_interviews = upcoming_interviews.none()
-    elif user.role == UserRole.RECRUITER:
-        upcoming_interviews = upcoming_interviews.filter(
-            Q(interviewer=user) |
-            Q(application__job__assigned_recruiters=user)
-        ).distinct()
-    # Admins see all
-
-    for interview in upcoming_interviews:
-        candidate = interview.application.candidate
-        if candidate:
-            needs_prep.append({
-                'id': candidate.id,
-                'name': candidate.user.full_name if candidate.user else 'Unknown',
-                'email': candidate.user.email if candidate.user else None,
-                'interview_id': str(interview.id),
-                'interview_at': interview.scheduled_at.isoformat(),
-                'days_until': (interview.scheduled_at - now).days,
-                'job_title': interview.application.job.title if interview.application.job else None,
-                'stage_name': interview.stage_template.name if interview.stage_template else 'Interview',
-                'company_name': interview.application.job.company.name if interview.application.job and interview.application.job.company else None,
-            })
-
-    return Response({
-        'not_contacted': not_contacted[:10],
-        'not_contacted_count': len(not_contacted),
-        'stuck_in_stage': stuck_in_stage[:10],
-        'stuck_in_stage_count': len(stuck_in_stage),
-        'needs_interview_prep': needs_prep[:10],
-        'needs_interview_prep_count': len(needs_prep),
-        'thresholds': {
-            'days_without_contact': settings.days_without_contact,
-            'days_stuck_in_stage': settings.days_stuck_in_stage,
-            'days_before_interview_prep': settings.days_before_interview_prep,
-        },
     })

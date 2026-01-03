@@ -1,11 +1,14 @@
 import { Clock, AlertTriangle } from 'lucide-react'
 import type { TimeToHireStats, Bottleneck } from '@/types'
+import { useBottleneckRulesByEntity } from '@/hooks/useBottlenecks'
+import { ThresholdBadge } from '@/components/bottlenecks'
 
 interface TimeMetricsCardProps {
   timeToHire: TimeToHireStats
   timeToShortlistDays: number | null
   bottlenecks: Bottleneck[]
   loading?: boolean
+  showConfigureButton?: boolean
 }
 
 export function TimeMetricsCard({
@@ -13,7 +16,15 @@ export function TimeMetricsCard({
   timeToShortlistDays,
   bottlenecks,
   loading = false,
+  showConfigureButton = false,
 }: TimeMetricsCardProps) {
+  // Fetch application bottleneck rules
+  const { rules, refetch: refetchRules } = useBottleneckRulesByEntity('application')
+
+  // Find the stage duration rule for applications
+  const applicationStageDurationRule = rules.find(
+    (r) => r.detection_config.type === 'stage_duration' && r.is_active
+  )
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
@@ -92,24 +103,44 @@ export function TimeMetricsCard({
       {/* Bottlenecks */}
       {bottlenecks.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <span className="text-[12px] font-medium text-gray-700 dark:text-gray-300">
-              Bottlenecks
-            </span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              <span className="text-[12px] font-medium text-gray-700 dark:text-gray-300">
+                Bottlenecks
+              </span>
+            </div>
+            {showConfigureButton && applicationStageDurationRule && (
+              <ThresholdBadge rule={applicationStageDurationRule} onUpdated={refetchRules} />
+            )}
           </div>
           <div className="space-y-2">
             {bottlenecks.map((bottleneck, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded"
+                className="p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded"
               >
-                <span className="text-[12px] text-gray-700 dark:text-gray-300">
-                  {bottleneck.stage_name}
-                </span>
-                <span className="text-[12px] font-medium text-amber-700 dark:text-amber-400">
-                  {bottleneck.applications_stuck} stuck
-                </span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[12px] text-gray-700 dark:text-gray-300">
+                    {bottleneck.stage_name}
+                  </span>
+                  <span className="text-[12px] font-medium text-amber-700 dark:text-amber-400">
+                    {bottleneck.stale_count ?? bottleneck.applications_stuck} stale
+                    {bottleneck.stale_percentage !== undefined && (
+                      <span className="ml-1 text-[11px] opacity-75">
+                        ({bottleneck.stale_percentage}%)
+                      </span>
+                    )}
+                  </span>
+                </div>
+                {bottleneck.stale_count !== undefined && bottleneck.applications_stuck > 0 && (
+                  <div className="h-1 bg-amber-100 dark:bg-amber-900/30 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-amber-500 rounded-full transition-all duration-500"
+                      style={{ width: `${bottleneck.stale_percentage ?? 0}%` }}
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>

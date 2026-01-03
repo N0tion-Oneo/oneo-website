@@ -6,6 +6,9 @@ from .models import (
     Task,
     TaskPriority,
     TaskStatus,
+    TaskActivity,
+    TaskActivityType,
+    TaskNote,
 )
 
 
@@ -160,6 +163,7 @@ class TaskSerializer(serializers.ModelSerializer):
     created_by_name = serializers.SerializerMethodField()
     stage_template_name = serializers.SerializerMethodField()
     is_overdue = serializers.BooleanField(read_only=True)
+    bottleneck_detection = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -182,6 +186,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'is_overdue',
             'created_at',
             'updated_at',
+            'bottleneck_detection',
         ]
         read_only_fields = ['id', 'completed_at', 'created_by', 'created_at', 'updated_at']
 
@@ -198,6 +203,18 @@ class TaskSerializer(serializers.ModelSerializer):
     def get_stage_template_name(self, obj):
         if obj.stage_template:
             return obj.stage_template.name
+        return None
+
+    def get_bottleneck_detection(self, obj):
+        """Get bottleneck detection info if this task was auto-created."""
+        detection = obj.bottleneck_detections.select_related('rule').first()
+        if detection:
+            return {
+                'id': str(detection.id),
+                'rule_name': detection.rule.name,
+                'severity': detection.severity,
+                'detected_at': detection.detected_at.isoformat(),
+            }
         return None
 
 
@@ -246,7 +263,78 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
             validated_data['completed_at'] = timezone.now()
         elif new_status and new_status != TaskStatus.COMPLETED:
             validated_data['completed_at'] = None
+
+        # Set current user for activity logging
+        if 'request' in self.context:
+            instance._current_user = self.context['request'].user
+
         return super().update(instance, validated_data)
+
+
+class TaskActivitySerializer(serializers.ModelSerializer):
+    """Serializer for TaskActivity model."""
+    performed_by_name = serializers.SerializerMethodField()
+    activity_type_display = serializers.CharField(source='get_activity_type_display', read_only=True)
+
+    class Meta:
+        model = TaskActivity
+        fields = [
+            'id',
+            'task',
+            'activity_type',
+            'activity_type_display',
+            'old_value',
+            'new_value',
+            'description',
+            'performed_by',
+            'performed_by_name',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'created_at']
+
+    def get_performed_by_name(self, obj):
+        if obj.performed_by:
+            return obj.performed_by.get_full_name() or obj.performed_by.email
+        return None
+
+
+class TaskNoteSerializer(serializers.ModelSerializer):
+    """Serializer for TaskNote model."""
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TaskNote
+        fields = [
+            'id',
+            'task',
+            'content',
+            'created_by',
+            'created_by_name',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return obj.created_by.get_full_name() or obj.created_by.email
+        return None
+
+    def create(self, validated_data):
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class TaskNoteCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating TaskNote."""
+
+    class Meta:
+        model = TaskNote
+        fields = ['task', 'content']
+
+    def create(self, validated_data):
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
 
 
 # ============================================================================

@@ -1,25 +1,27 @@
-import { useState, useEffect } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { X, Loader2, Search, Building2, Users, FileText, UserCircle } from 'lucide-react'
 import type { Task, EntityType } from '@/types'
 import { TaskPriority, TaskPriorityLabels } from '@/types'
-import { useCreateTask, useUpdateTask, useStaffUsers } from '@/hooks'
+import { useCreateTask, useUpdateTask, useStaffUsers, useAllCompanies, useAllCandidates, useLeads } from '@/hooks'
 
 interface AddTaskDrawerProps {
   isOpen: boolean
   onClose: () => void
-  entityType: EntityType
-  entityId: string
+  entityType?: EntityType
+  entityId?: string
   task?: Task | null
   onSuccess: () => void
+  standaloneMode?: boolean // When true, shows entity picker
 }
 
 export function AddTaskDrawer({
   isOpen,
   onClose,
-  entityType,
-  entityId,
+  entityType: propEntityType,
+  entityId: propEntityId,
   task,
   onSuccess,
+  standaloneMode = false,
 }: AddTaskDrawerProps) {
   const isEditing = !!task
 
@@ -30,12 +32,63 @@ export function AddTaskDrawer({
   const [dueDate, setDueDate] = useState('')
   const [assignedTo, setAssignedTo] = useState('')
 
+  // Entity picker state (for standalone mode)
+  const [selectedEntityType, setSelectedEntityType] = useState<EntityType | ''>('')
+  const [selectedEntityId, setSelectedEntityId] = useState<string>('')
+  const [selectedEntityName, setSelectedEntityName] = useState<string>('')
+  const [entitySearchQuery, setEntitySearchQuery] = useState('')
+  const [showEntityDropdown, setShowEntityDropdown] = useState(false)
+
+  // Derived values
+  const entityType = standaloneMode ? (selectedEntityType as EntityType) : propEntityType
+  const entityId = standaloneMode ? selectedEntityId : propEntityId
+
   // Hooks
   const { createTask, isCreating } = useCreateTask()
   const { updateTask, isUpdating } = useUpdateTask()
   const { staffUsers, isLoading: isLoadingStaff } = useStaffUsers()
 
+  // Entity data hooks for standalone mode
+  const { companies } = useAllCompanies({ page_size: 50 })
+  const { candidates } = useAllCandidates({ page_size: 50 })
+  const { leads } = useLeads()
+
   const isSubmitting = isCreating || isUpdating
+
+  // Get entity options based on selected type
+  const getEntityOptions = useCallback(() => {
+    if (!selectedEntityType) return []
+
+    const query = entitySearchQuery.toLowerCase()
+
+    switch (selectedEntityType) {
+      case 'lead':
+        return (leads || [])
+          .filter((l) => !query || l.name?.toLowerCase().includes(query) || l.email?.toLowerCase().includes(query))
+          .slice(0, 20)
+          .map((l) => ({ id: l.id.toString(), name: l.name || l.email || `Lead #${l.id}` }))
+
+      case 'company':
+        return (companies || [])
+          .filter((c) => !query || c.name?.toLowerCase().includes(query))
+          .slice(0, 20)
+          .map((c) => ({ id: c.id.toString(), name: c.name }))
+
+      case 'candidate':
+        return (candidates || [])
+          .filter((c) => !query || c.full_name?.toLowerCase().includes(query) || c.email?.toLowerCase().includes(query))
+          .slice(0, 20)
+          .map((c) => ({ id: c.id.toString(), name: c.full_name || c.email || `Candidate #${c.id}` }))
+
+      case 'application':
+        // Applications are typically linked via the existing flow, not standalone
+        // For now, return empty - applications should be created from the application context
+        return []
+
+      default:
+        return []
+    }
+  }, [selectedEntityType, entitySearchQuery, leads, companies, candidates])
 
   // Reset form when drawer opens/closes or task changes
   useEffect(() => {
@@ -46,19 +99,30 @@ export function AddTaskDrawer({
         setPriority(task.priority)
         setDueDate(task.due_date || '')
         setAssignedTo(task.assigned_to?.toString() || '')
+        if (standaloneMode) {
+          setSelectedEntityType(task.entity_type)
+          setSelectedEntityId(task.entity_id)
+        }
       } else {
         setTitle('')
         setDescription('')
         setPriority(TaskPriority.MEDIUM)
         setDueDate('')
         setAssignedTo('')
+        if (standaloneMode) {
+          setSelectedEntityType('')
+          setSelectedEntityId('')
+          setSelectedEntityName('')
+          setEntitySearchQuery('')
+        }
       }
     }
-  }, [isOpen, task])
+  }, [isOpen, task, standaloneMode])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
+    if (standaloneMode && (!entityType || !entityId)) return
 
     try {
       if (isEditing && task) {
@@ -71,6 +135,7 @@ export function AddTaskDrawer({
         })
       } else {
         if (!assignedTo) return // assignedTo is required for new tasks
+        if (!entityType || !entityId) return
         await createTask({
           entity_type: entityType,
           entity_id: entityId,
@@ -85,6 +150,22 @@ export function AddTaskDrawer({
     } catch (error) {
       console.error('Failed to save task:', error)
     }
+  }
+
+  const handleSelectEntity = (id: string, name: string) => {
+    setSelectedEntityId(id)
+    setSelectedEntityName(name)
+    setShowEntityDropdown(false)
+    setEntitySearchQuery('')
+  }
+
+  const entityOptions = getEntityOptions()
+
+  const entityTypeIcons: Record<EntityType, React.ReactNode> = {
+    lead: <UserCircle className="w-4 h-4" />,
+    company: <Building2 className="w-4 h-4" />,
+    candidate: <Users className="w-4 h-4" />,
+    application: <FileText className="w-4 h-4" />,
   }
 
   if (!isOpen) return null
@@ -115,6 +196,111 @@ export function AddTaskDrawer({
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {/* Entity Picker (standalone mode only) */}
+            {standaloneMode && !isEditing && (
+              <>
+                {/* Entity Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Entity Type <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(['lead', 'company', 'candidate', 'application'] as EntityType[]).map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          setSelectedEntityType(type)
+                          setSelectedEntityId('')
+                          setSelectedEntityName('')
+                          setEntitySearchQuery('')
+                        }}
+                        className={`flex flex-col items-center gap-1 p-3 rounded-lg border transition-colors ${
+                          selectedEntityType === type
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 text-gray-600 dark:text-gray-400'
+                        }`}
+                      >
+                        {entityTypeIcons[type]}
+                        <span className="text-[11px] capitalize">{type}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Entity Search & Selection */}
+                {selectedEntityType && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Select {selectedEntityType.charAt(0).toUpperCase() + selectedEntityType.slice(1)}{' '}
+                      <span className="text-red-500">*</span>
+                    </label>
+
+                    {selectedEntityId ? (
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          {entityTypeIcons[selectedEntityType]}
+                          <span className="text-sm text-gray-900 dark:text-gray-100">{selectedEntityName}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedEntityId('')
+                            setSelectedEntityName('')
+                          }}
+                          className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                        >
+                          Change
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input
+                            type="text"
+                            value={entitySearchQuery}
+                            onChange={(e) => {
+                              setEntitySearchQuery(e.target.value)
+                              setShowEntityDropdown(true)
+                            }}
+                            onFocus={() => setShowEntityDropdown(true)}
+                            placeholder={`Search ${selectedEntityType}s...`}
+                            className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+
+                        {showEntityDropdown && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setShowEntityDropdown(false)} />
+                            <div className="absolute z-20 w-full mt-1 max-h-48 overflow-y-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+                              {entityOptions.length === 0 ? (
+                                <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+                                  {entitySearchQuery ? 'No results found' : 'Start typing to search...'}
+                                </div>
+                              ) : (
+                                entityOptions.map((option) => (
+                                  <button
+                                    key={option.id}
+                                    type="button"
+                                    onClick={() => handleSelectEntity(option.id, option.name)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                  >
+                                    {entityTypeIcons[selectedEntityType]}
+                                    {option.name}
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
             {/* Title */}
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -213,7 +399,11 @@ export function AddTaskDrawer({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || !title.trim()}
+              disabled={
+                isSubmitting ||
+                !title.trim() ||
+                (standaloneMode && !isEditing && (!selectedEntityType || !selectedEntityId))
+              }
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}

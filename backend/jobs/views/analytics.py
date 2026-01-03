@@ -472,25 +472,54 @@ def time_metrics(request):
     ]
 
     # Identify bottlenecks (stages with most applications currently stuck)
-    # This looks at current state, not just the date range
-    from django.db.models import Count as DbCount
+    # Calculate actual time in stage using ActivityLog for accuracy
+    now = timezone.now()
+    stale_threshold = now - timedelta(days=7)
 
-    bottleneck_data = applications.filter(
+    bottleneck_apps = applications.filter(
         current_stage__isnull=False,
         status=ApplicationStatus.IN_PROGRESS,
-    ).values(
-        'current_stage__name',
-    ).annotate(
-        stuck_count=DbCount('id'),
-    ).order_by('-stuck_count')[:5]
+    ).select_related('current_stage')
 
-    bottlenecks = [
+    # Group by stage and calculate stale counts
+    stage_bottlenecks = {}
+    for app in bottleneck_apps:
+        stage_name = app.current_stage.name if app.current_stage else 'Unknown'
+
+        if stage_name not in stage_bottlenecks:
+            stage_bottlenecks[stage_name] = {
+                'total': 0,
+                'stale': 0,
+            }
+
+        stage_bottlenecks[stage_name]['total'] += 1
+
+        # Check when this application entered its current stage using ActivityLog
+        last_stage_change = ActivityLog.objects.filter(
+            application=app,
+            activity_type=ActivityType.STAGE_CHANGED,
+        ).order_by('-created_at').first()
+
+        if last_stage_change:
+            if last_stage_change.created_at < stale_threshold:
+                stage_bottlenecks[stage_name]['stale'] += 1
+        else:
+            # No stage change history - use stage_entered_at or applied_at
+            stage_entered = getattr(app, 'stage_entered_at', None)
+            check_date = stage_entered or app.applied_at
+            if check_date and check_date < stale_threshold:
+                stage_bottlenecks[stage_name]['stale'] += 1
+
+    # Sort by stale count and build response
+    bottlenecks = sorted([
         {
-            'stage_name': b['current_stage__name'],
-            'applications_stuck': b['stuck_count'],
+            'stage_name': stage_name,
+            'applications_stuck': data['total'],
+            'stale_count': data['stale'],
+            'stale_percentage': round(data['stale'] / data['total'] * 100, 1) if data['total'] > 0 else 0,
         }
-        for b in bottleneck_data
-    ]
+        for stage_name, data in stage_bottlenecks.items()
+    ], key=lambda x: x['stale_count'], reverse=True)[:5]
 
     return Response({
         'period': {

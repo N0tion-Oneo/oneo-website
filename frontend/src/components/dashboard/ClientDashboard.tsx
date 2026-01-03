@@ -22,7 +22,7 @@ import {
   LoadingState,
   TodaysInterviewsSection,
   PipelineOverviewSection,
-  CandidatesAttentionSection,
+  BottlenecksAttentionSection,
   RecentActivitySection,
 } from './shared'
 import { DashboardFeedWidget } from '@/components/feed'
@@ -365,7 +365,7 @@ export default function ClientDashboard() {
 
         {/* Right Column - Sidebar */}
         <div className="space-y-6">
-          <CandidatesAttentionSection />
+          <BottlenecksAttentionSection />
           <PendingOffersSection />
           <HiringMetricsSection />
           <DashboardFeedWidget limit={5} />

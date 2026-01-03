@@ -34,7 +34,6 @@ import {
   PlatformCompanyPage,
   AdminSkillsTechnologiesPage,
   OnboardingStagesSettingsPage,
-  DashboardSettingsPage,
   BrandingSettingsPage,
   HomePage,
   CandidatesDirectoryPage,
@@ -58,6 +57,8 @@ import {
   SubscriptionsPage,
   WorkflowEditorPage,
   AutomationRulesPage,
+  TasksPage,
+  BottleneckRulesPage,
   // CMS Dashboard Pages
   CMSOverviewPage,
   CMSPagesListPage,
@@ -200,6 +201,7 @@ function App() {
             <Route path="integrations" element={<IntegrationsPage />} />
             <Route path="invitations" element={<InvitationsPage />} />
             <Route path="automations" element={<AutomationRulesPage />} />
+            <Route path="bottlenecks" element={<BottleneckRulesPage />} />
             {/* Old notification routes redirect to automations */}
             <Route path="notifications" element={<Navigate to="/dashboard/settings/automations" replace />} />
             <Route path="notifications/*" element={<Navigate to="/dashboard/settings/automations" replace />} />
@@ -208,7 +210,6 @@ function App() {
             <Route path="branding" element={<BrandingSettingsPage />} />
             <Route path="platform-company" element={<PlatformCompanyPage />} />
             <Route path="team" element={<PlatformTeamPage />} />
-            <Route path="dashboard" element={<DashboardSettingsPage />} />
           </Route>
           {/* Admin/Recruiter routes */}
           <Route path="admin/companies" element={<AdminCompaniesPage />} />
@@ -220,6 +221,7 @@ function App() {
           <Route path="admin/jobs/new" element={<AdminNewJobPage />} />
           <Route path="admin/analytics" element={<AnalyticsPage />} />
           <Route path="admin/subscriptions" element={<SubscriptionsPage />} />
+          <Route path="admin/tasks" element={<TasksPage />} />
           {/* Redirect old automations routes to settings */}
           <Route path="admin/automations" element={<Navigate to="/dashboard/settings/automations" replace />} />
           <Route path="admin/automations/*" element={<Navigate to="/dashboard/settings/automations" replace />} />

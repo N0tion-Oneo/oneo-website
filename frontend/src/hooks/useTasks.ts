@@ -326,3 +326,149 @@ export function useOverdueTasks(myOnly = false): UseTasksReturn {
 
   return { tasks, isLoading, error, refetch: fetchTasks }
 }
+
+// =============================================================================
+// Task Activity Types
+// =============================================================================
+
+export interface TaskActivity {
+  id: string
+  task: string
+  activity_type: string
+  activity_type_display: string
+  old_value: Record<string, unknown> | null
+  new_value: Record<string, unknown> | null
+  description: string
+  performed_by: number | null
+  performed_by_name: string | null
+  created_at: string
+}
+
+export interface TaskNote {
+  id: string
+  task: string
+  content: string
+  created_by: number | null
+  created_by_name: string | null
+  created_at: string
+  updated_at: string
+}
+
+// =============================================================================
+// useTaskActivities
+// =============================================================================
+
+import api from '@/services/api'
+
+interface UseTaskActivitiesReturn {
+  activities: TaskActivity[]
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export function useTaskActivities(taskId: string | undefined): UseTaskActivitiesReturn {
+  const [activities, setActivities] = useState<TaskActivity[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchActivities = useCallback(async () => {
+    if (!taskId) {
+      setActivities([])
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await api.get<TaskActivity[]>(`/tasks/${taskId}/activities/`)
+      setActivities(response.data)
+    } catch (err) {
+      console.error('Error fetching task activities:', err)
+      setError('Failed to fetch activities')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [taskId])
+
+  useEffect(() => {
+    fetchActivities()
+  }, [fetchActivities])
+
+  return { activities, isLoading, error, refetch: fetchActivities }
+}
+
+// =============================================================================
+// useTaskNotes
+// =============================================================================
+
+interface UseTaskNotesReturn {
+  notes: TaskNote[]
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+  addNote: (content: string) => Promise<TaskNote>
+  deleteNote: (noteId: string) => Promise<void>
+  isAdding: boolean
+  isDeleting: boolean
+}
+
+export function useTaskNotes(taskId: string | undefined): UseTaskNotesReturn {
+  const [notes, setNotes] = useState<TaskNote[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isAdding, setIsAdding] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const fetchNotes = useCallback(async () => {
+    if (!taskId) {
+      setNotes([])
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await api.get<TaskNote[]>(`/tasks/${taskId}/notes/`)
+      setNotes(response.data)
+    } catch (err) {
+      console.error('Error fetching task notes:', err)
+      setError('Failed to fetch notes')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [taskId])
+
+  useEffect(() => {
+    fetchNotes()
+  }, [fetchNotes])
+
+  const addNote = useCallback(async (content: string): Promise<TaskNote> => {
+    if (!taskId) throw new Error('No task ID')
+
+    setIsAdding(true)
+    try {
+      const response = await api.post<TaskNote>(`/tasks/${taskId}/notes/`, { content })
+      setNotes(prev => [response.data, ...prev])
+      return response.data
+    } finally {
+      setIsAdding(false)
+    }
+  }, [taskId])
+
+  const deleteNote = useCallback(async (noteId: string): Promise<void> => {
+    if (!taskId) throw new Error('No task ID')
+
+    setIsDeleting(true)
+    try {
+      await api.delete(`/tasks/${taskId}/notes/${noteId}/`)
+      setNotes(prev => prev.filter(n => n.id !== noteId))
+    } finally {
+      setIsDeleting(false)
+    }
+  }, [taskId])
+
+  return { notes, isLoading, error, refetch: fetchNotes, addNote, deleteNote, isAdding, isDeleting }
+}

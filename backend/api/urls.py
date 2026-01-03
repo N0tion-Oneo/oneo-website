@@ -49,4 +49,7 @@ urlpatterns = [
 
     # Automations endpoints (webhooks, workflows)
     path('webhooks/', include('automations.urls')),
+
+    # Bottlenecks endpoints (configurable bottleneck detection)
+    path('bottlenecks/', include('bottlenecks.urls')),
 ]

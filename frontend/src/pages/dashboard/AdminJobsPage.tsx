@@ -63,7 +63,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [showFilters, setShowFilters] = useState(false)
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'created_at', desc: true }])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [openActionsMenu, setOpenActionsMenu] = useState<string | null>(null)
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null)
@@ -249,6 +249,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
           id: 'select',
           size: 40,
           enableResizing: false,
+          enableSorting: false,
           header: ({ table }) => (
             <input
               type="checkbox"
@@ -276,6 +277,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
           columnHelper.accessor('assigned_recruiters', {
             header: 'Assigned',
             size: 140,
+            enableSorting: false,
             cell: ({ row }) => {
               const job = row.original
               const recruiters = job.assigned_recruiters || []
@@ -326,6 +328,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
         baseColumns.push(columnHelper.accessor('company', {
           header: 'Company',
           size: 160,
+          enableSorting: false,
           cell: ({ getValue }) => {
             const companyData = getValue()
             return (
@@ -354,6 +357,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
       baseColumns.push(columnHelper.accessor('seniority', {
         header: 'Seniority',
         size: 90,
+        enableSorting: false,
         cell: ({ getValue }) => (
           <span className="text-[12px] text-gray-600 dark:text-gray-400 capitalize">
             {getValue()?.replace('_', ' ') || '-'}
@@ -365,6 +369,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
       baseColumns.push(columnHelper.accessor('work_mode', {
         header: 'Work Mode',
         size: 90,
+        enableSorting: false,
         cell: ({ getValue }) => (
           <span className="text-[12px] text-gray-600 dark:text-gray-400 capitalize">
             {getValue() || '-'}
@@ -376,6 +381,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
       baseColumns.push(columnHelper.accessor('status', {
         header: 'Status',
         size: 100,
+        enableSorting: false,
         cell: ({ getValue }) => {
           const status = getValue()
           const badge = getStatusBadge(status)
@@ -422,6 +428,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
         header: '',
         size: 50,
         enableResizing: false,
+        enableSorting: false,
         cell: ({ row }) => {
           const job = row.original
           return (
@@ -562,6 +569,7 @@ export default function AdminJobsPage({ mode = 'admin' }: AdminJobsPageProps) {
     pageCount: totalPages,
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    enableSorting: true,
   })
 
   // Get selected jobs

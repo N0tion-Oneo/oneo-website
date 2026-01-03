@@ -18,6 +18,11 @@ import {
   useOnboardingFunnel,
   useOnboardingTrends,
   useOnboardingBottlenecks,
+  // Task Analytics
+  useTaskAnalyticsOverview,
+  useTaskAnalyticsTrends,
+  useTaskAnalyticsByAssignee,
+  useTaskAnalyticsBottlenecks,
 } from '@/hooks'
 import {
   StatCard,
@@ -31,9 +36,14 @@ import {
   OnboardingBottlenecksCard,
   OnboardingFunnelChart,
   OnboardingSummaryCards,
+  // Task Analytics
+  TaskSummaryCards,
+  TasksByAssigneeTable,
+  TaskBottlenecksCard,
+  TaskDistributionChart,
 } from '@/components/analytics'
 
-type TabType = 'overview' | 'recruiters' | 'pipeline' | 'time' | 'candidates' | 'companies'
+type TabType = 'overview' | 'recruiters' | 'pipeline' | 'time' | 'candidates' | 'companies' | 'tasks'
 
 export function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
@@ -141,6 +151,36 @@ export function AnalyticsPage() {
     entityType: 'company',
   })
 
+  // Task Analytics
+  const { data: taskOverview, isLoading: taskOverviewLoading, error: taskOverviewError } = useTaskAnalyticsOverview({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+  })
+
+  const { data: taskTrendsCreated, isLoading: taskTrendsCreatedLoading } = useTaskAnalyticsTrends({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+    metric: 'created',
+  })
+
+  const { data: taskTrendsCompleted, isLoading: taskTrendsCompletedLoading } = useTaskAnalyticsTrends({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+    metric: 'completed',
+  })
+
+  const { data: taskByAssignee, isLoading: taskByAssigneeLoading } = useTaskAnalyticsByAssignee({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+  })
+
+  const { data: taskBottlenecks, isLoading: taskBottlenecksLoading } = useTaskAnalyticsBottlenecks()
+
+  // Debug logging for task analytics
+  if (activeTab === 'tasks' && taskOverviewError) {
+    console.error('Task analytics error:', taskOverviewError)
+  }
+
   const tabs: { id: TabType; label: string }[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'recruiters', label: 'Recruiters' },
@@ -148,6 +188,7 @@ export function AnalyticsPage() {
     { id: 'time', label: 'Time Metrics' },
     { id: 'candidates', label: 'Candidate Onboarding' },
     { id: 'companies', label: 'Company Onboarding' },
+    { id: 'tasks', label: 'Tasks' },
   ]
 
   return (
@@ -472,6 +513,82 @@ export function AnalyticsPage() {
               title="New Companies Over Time"
               color="#F59E0B"
             />
+          </div>
+        )}
+
+        {activeTab === 'tasks' && (
+          <div className="space-y-6">
+            {/* Error display */}
+            {taskOverviewError && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <p className="text-[14px] font-medium text-red-700 dark:text-red-300">
+                  Failed to load task analytics
+                </p>
+                <p className="text-[12px] text-red-600 dark:text-red-400 mt-1">
+                  {(taskOverviewError as Error)?.message || 'Unknown error occurred'}
+                </p>
+              </div>
+            )}
+
+            {/* Summary Cards */}
+            <TaskSummaryCards
+              totalCreated={taskOverview?.summary.total_created ?? 0}
+              completed={taskOverview?.summary.completed ?? 0}
+              completionRate={taskOverview?.summary.completion_rate ?? 0}
+              avgCompletionTimeDays={taskOverview?.summary.avg_completion_time_days ?? null}
+              onTimeCompletionRate={taskOverview?.summary.on_time_completion_rate ?? null}
+              overdueCount={taskOverview?.summary.overdue_count ?? 0}
+              loading={taskOverviewLoading}
+            />
+
+            {/* Distribution Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <TaskDistributionChart
+                data={taskOverview?.by_status || []}
+                type="status"
+                loading={taskOverviewLoading}
+              />
+              <TaskDistributionChart
+                data={taskOverview?.by_priority || []}
+                type="priority"
+                loading={taskOverviewLoading}
+              />
+              <TaskDistributionChart
+                data={taskOverview?.by_entity_type || []}
+                type="entity_type"
+                loading={taskOverviewLoading}
+              />
+            </div>
+
+            {/* Trends Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <TrendChart
+                data={taskTrendsCreated?.data || []}
+                loading={taskTrendsCreatedLoading}
+                title="Tasks Created Over Time"
+                color="#3B82F6"
+              />
+              <TrendChart
+                data={taskTrendsCompleted?.data || []}
+                loading={taskTrendsCompletedLoading}
+                title="Tasks Completed Over Time"
+                color="#10B981"
+              />
+            </div>
+
+            {/* Assignees & Bottlenecks Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <TasksByAssigneeTable
+                assignees={taskByAssignee?.assignees || []}
+                loading={taskByAssigneeLoading}
+              />
+              <TaskBottlenecksCard
+                mostOverdue={taskBottlenecks?.most_overdue || []}
+                staleTasks={taskBottlenecks?.stale_tasks || []}
+                assigneeBottlenecks={taskBottlenecks?.assignee_bottlenecks || []}
+                loading={taskBottlenecksLoading}
+              />
+            </div>
           </div>
         )}
       </div>
