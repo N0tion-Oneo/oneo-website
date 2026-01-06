@@ -1,6 +1,35 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import api, { getMediaUrl } from '@/services/api'
 import type { BrandingSettings, BrandingSettingsUpdate, PublicBranding } from '@/types'
+
+// ============================================================================
+// Query Keys
+// ============================================================================
+
+export const brandingKeys = {
+  all: ['branding'] as const,
+  public: () => [...brandingKeys.all, 'public'] as const,
+  settings: () => [...brandingKeys.all, 'settings'] as const,
+  platformCompany: () => [...brandingKeys.all, 'platformCompany'] as const,
+}
+
+// ============================================================================
+// API Functions
+// ============================================================================
+
+async function fetchPublicBranding(): Promise<PublicBranding> {
+  const response = await api.get<PublicBranding>('/branding/public/')
+  const data = response.data
+
+  // Convert relative media URLs to absolute URLs
+  return {
+    ...data,
+    logo_url: getMediaUrl(data.logo_url),
+    logo_dark_url: getMediaUrl(data.logo_dark_url),
+    favicon_url: getMediaUrl(data.favicon_url),
+  }
+}
 
 // ============================================================================
 // Branding Settings Hook (Admin)
@@ -142,7 +171,7 @@ export function useResetBranding(): UseResetBrandingReturn {
 }
 
 // ============================================================================
-// Public Branding Hook (No Auth Required)
+// Public Branding Hook (No Auth Required) - Uses React Query for caching
 // ============================================================================
 
 interface UsePublicBrandingReturn {
@@ -151,38 +180,24 @@ interface UsePublicBrandingReturn {
   error: string | null
 }
 
+/**
+ * Hook to fetch public branding settings.
+ * Uses React Query with staleTime to prevent duplicate API calls.
+ * The data is cached and shared across all components that use this hook.
+ */
 export function usePublicBranding(): UsePublicBrandingReturn {
-  const [branding, setBranding] = useState<PublicBranding | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, isLoading, error } = useQuery({
+    queryKey: brandingKeys.public(),
+    queryFn: fetchPublicBranding,
+    staleTime: 5 * 60 * 1000, // 5 minutes - branding rarely changes
+    gcTime: 30 * 60 * 1000, // 30 minutes cache
+  })
 
-  useEffect(() => {
-    const fetchBranding = async () => {
-      try {
-        const response = await api.get<PublicBranding>('/branding/public/')
-        const data = response.data
-
-        // Convert relative media URLs to absolute URLs
-        const transformedBranding: PublicBranding = {
-          ...data,
-          logo_url: getMediaUrl(data.logo_url),
-          logo_dark_url: getMediaUrl(data.logo_dark_url),
-          favicon_url: getMediaUrl(data.favicon_url),
-        }
-
-        setBranding(transformedBranding)
-      } catch (err) {
-        setError('Failed to load branding')
-        console.error('Error fetching public branding:', err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchBranding()
-  }, [])
-
-  return { branding, isLoading, error }
+  return {
+    branding: data ?? null,
+    isLoading,
+    error: error ? 'Failed to load branding' : null,
+  }
 }
 
 // ============================================================================
@@ -192,81 +207,76 @@ export function usePublicBranding(): UsePublicBrandingReturn {
 /**
  * Hook that fetches branding settings and injects them as CSS custom properties.
  * This allows the entire app to use dynamic branding colors and fonts.
+ *
+ * Uses the same React Query cache as usePublicBranding to avoid duplicate API calls.
  */
 export function useBrandingCSS(): { isLoading: boolean; error: string | null } {
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // Use the same cached query as usePublicBranding
+  const { data: branding, isLoading, error } = useQuery({
+    queryKey: brandingKeys.public(),
+    queryFn: fetchPublicBranding,
+    staleTime: 5 * 60 * 1000, // 5 minutes - branding rarely changes
+    gcTime: 30 * 60 * 1000, // 30 minutes cache
+  })
 
+  // Inject CSS variables when branding data changes
   useEffect(() => {
-    const injectBrandingCSS = async () => {
-      try {
-        const response = await api.get<PublicBranding>('/branding/public/')
-        const branding = response.data
+    if (!branding) return
 
-        // Get the document root element
-        const root = document.documentElement
+    // Get the document root element
+    const root = document.documentElement
 
-        // Inject font family
-        if (branding.font_family) {
-          root.style.setProperty('--font-family-sans', `'${branding.font_family}', system-ui, -apple-system, sans-serif`)
-        }
-
-        // Inject primary colors
-        if (branding.primary_color) {
-          root.style.setProperty('--color-primary', branding.primary_color)
-        }
-        if (branding.primary_color_dark) {
-          root.style.setProperty('--color-primary-dark', branding.primary_color_dark)
-        }
-        if (branding.primary_color_light) {
-          root.style.setProperty('--color-primary-light', branding.primary_color_light)
-        }
-
-        // Inject secondary colors
-        if (branding.secondary_color) {
-          root.style.setProperty('--color-secondary', branding.secondary_color)
-        }
-        if (branding.secondary_color_dark) {
-          root.style.setProperty('--color-secondary-dark', branding.secondary_color_dark)
-        }
-        if (branding.secondary_color_light) {
-          root.style.setProperty('--color-secondary-light', branding.secondary_color_light)
-        }
-
-        // Inject accent colors
-        if (branding.accent_color) {
-          root.style.setProperty('--color-accent', branding.accent_color)
-        }
-        if (branding.accent_color_dark) {
-          root.style.setProperty('--color-accent-dark', branding.accent_color_dark)
-        }
-        if (branding.accent_color_light) {
-          root.style.setProperty('--color-accent-light', branding.accent_color_light)
-        }
-
-        // Inject status colors
-        if (branding.success_color) {
-          root.style.setProperty('--color-success', branding.success_color)
-        }
-        if (branding.warning_color) {
-          root.style.setProperty('--color-warning', branding.warning_color)
-        }
-        if (branding.error_color) {
-          root.style.setProperty('--color-error', branding.error_color)
-        }
-
-      } catch (err) {
-        setError('Failed to load branding CSS')
-        console.error('Error injecting branding CSS:', err)
-      } finally {
-        setIsLoading(false)
-      }
+    // Inject font family
+    if (branding.font_family) {
+      root.style.setProperty('--font-family-sans', `'${branding.font_family}', system-ui, -apple-system, sans-serif`)
     }
 
-    injectBrandingCSS()
-  }, [])
+    // Inject primary colors
+    if (branding.primary_color) {
+      root.style.setProperty('--color-primary', branding.primary_color)
+    }
+    if (branding.primary_color_dark) {
+      root.style.setProperty('--color-primary-dark', branding.primary_color_dark)
+    }
+    if (branding.primary_color_light) {
+      root.style.setProperty('--color-primary-light', branding.primary_color_light)
+    }
 
-  return { isLoading, error }
+    // Inject secondary colors
+    if (branding.secondary_color) {
+      root.style.setProperty('--color-secondary', branding.secondary_color)
+    }
+    if (branding.secondary_color_dark) {
+      root.style.setProperty('--color-secondary-dark', branding.secondary_color_dark)
+    }
+    if (branding.secondary_color_light) {
+      root.style.setProperty('--color-secondary-light', branding.secondary_color_light)
+    }
+
+    // Inject accent colors
+    if (branding.accent_color) {
+      root.style.setProperty('--color-accent', branding.accent_color)
+    }
+    if (branding.accent_color_dark) {
+      root.style.setProperty('--color-accent-dark', branding.accent_color_dark)
+    }
+    if (branding.accent_color_light) {
+      root.style.setProperty('--color-accent-light', branding.accent_color_light)
+    }
+
+    // Inject status colors
+    if (branding.success_color) {
+      root.style.setProperty('--color-success', branding.success_color)
+    }
+    if (branding.warning_color) {
+      root.style.setProperty('--color-warning', branding.warning_color)
+    }
+    if (branding.error_color) {
+      root.style.setProperty('--color-error', branding.error_color)
+    }
+  }, [branding])
+
+  return { isLoading, error: error ? 'Failed to load branding CSS' : null }
 }
 
 // ============================================================================

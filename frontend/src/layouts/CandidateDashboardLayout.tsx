@@ -326,7 +326,10 @@ export default function CandidateDashboardLayout() {
                 <img
                   src={logoUrl}
                   alt={branding?.company_name || 'Logo'}
-                  className="h-7 w-auto"
+                  className="h-7 max-w-[120px] object-contain"
+                  width={120}
+                  height={28}
+                  fetchPriority="high"
                 />
               ) : (
                 <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">

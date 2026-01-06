@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   getTasks,
   getTask,
@@ -18,7 +19,21 @@ import type {
 } from '@/types'
 
 // =============================================================================
-// useTasks - List tasks with optional filters
+// Query Keys - Centralized for cache invalidation
+// =============================================================================
+
+export const taskKeys = {
+  all: ['tasks'] as const,
+  list: (params?: TaskListParams) => [...taskKeys.all, 'list', params] as const,
+  myTasks: (includeCompleted?: boolean) => [...taskKeys.all, 'myTasks', { includeCompleted }] as const,
+  overdue: (myOnly?: boolean) => [...taskKeys.all, 'overdue', { myOnly }] as const,
+  detail: (id: string) => [...taskKeys.all, 'detail', id] as const,
+  entity: (entityType: EntityType, entityId: string) =>
+    [...taskKeys.all, 'entity', entityType, entityId] as const,
+}
+
+// =============================================================================
+// useTasks - List tasks with optional filters (React Query)
 // =============================================================================
 
 interface UseTasksReturn {
@@ -28,69 +43,54 @@ interface UseTasksReturn {
   refetch: () => Promise<void>
 }
 
+/**
+ * Hook to fetch tasks list with optional filters.
+ * Uses React Query with shared caching - all components using this hook
+ * with the same params share the same cached data.
+ */
 export function useTasks(params?: TaskListParams): UseTasksReturn {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: taskKeys.list(params),
+    queryFn: () => getTasks(params),
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+  })
 
-  const fetchTasks = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const data = await getTasks(params)
-      setTasks(data)
-    } catch (err) {
-      console.error('Error fetching tasks:', err)
-      setError('Failed to fetch tasks')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [params?.entity_type, params?.entity_id, params?.status, params?.assigned_to, params?.priority])
-
-  useEffect(() => {
-    fetchTasks()
-  }, [fetchTasks])
-
-  return { tasks, isLoading, error, refetch: fetchTasks }
+  return {
+    tasks: data ?? [],
+    isLoading,
+    error: error ? 'Failed to fetch tasks' : null,
+    refetch: async () => { await refetch() },
+  }
 }
 
 // =============================================================================
-// useEntityTasks - Tasks for a specific entity
+// useEntityTasks - Tasks for a specific entity (React Query)
 // =============================================================================
 
+/**
+ * Hook to fetch tasks for a specific entity.
+ * Uses React Query with shared caching - all components using this hook
+ * with the same entity share the same cached data.
+ */
 export function useEntityTasks(
   entityType: EntityType | undefined,
   entityId: string | undefined
 ): UseTasksReturn {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: taskKeys.entity(entityType!, entityId!),
+    queryFn: () => getTasks({ entity_type: entityType!, entity_id: entityId! }),
+    enabled: !!entityType && !!entityId,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+  })
 
-  const fetchTasks = useCallback(async () => {
-    if (!entityType || !entityId) {
-      setTasks([])
-      setIsLoading(false)
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-    try {
-      const data = await getTasks({ entity_type: entityType, entity_id: entityId })
-      setTasks(data)
-    } catch (err) {
-      console.error('Error fetching entity tasks:', err)
-      setError('Failed to fetch tasks')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [entityType, entityId])
-
-  useEffect(() => {
-    fetchTasks()
-  }, [fetchTasks])
-
-  return { tasks, isLoading, error, refetch: fetchTasks }
+  return {
+    tasks: data ?? [],
+    isLoading,
+    error: error ? 'Failed to fetch tasks' : null,
+    refetch: async () => { await refetch() },
+  }
 }
 
 // =============================================================================
@@ -268,63 +268,51 @@ export function useCompleteTask(): UseCompleteTaskReturn {
 }
 
 // =============================================================================
-// useMyTasks - Current user's tasks
+// useMyTasks - Current user's tasks (React Query)
 // =============================================================================
 
+/**
+ * Hook to fetch current user's tasks.
+ * Uses React Query with shared caching.
+ */
 export function useMyTasks(includeCompleted = false): UseTasksReturn {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: taskKeys.myTasks(includeCompleted),
+    queryFn: () => getMyTasks(includeCompleted),
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+  })
 
-  const fetchTasks = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const data = await getMyTasks(includeCompleted)
-      setTasks(data)
-    } catch (err) {
-      console.error('Error fetching my tasks:', err)
-      setError('Failed to fetch tasks')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [includeCompleted])
-
-  useEffect(() => {
-    fetchTasks()
-  }, [fetchTasks])
-
-  return { tasks, isLoading, error, refetch: fetchTasks }
+  return {
+    tasks: data ?? [],
+    isLoading,
+    error: error ? 'Failed to fetch tasks' : null,
+    refetch: async () => { await refetch() },
+  }
 }
 
 // =============================================================================
-// useOverdueTasks
+// useOverdueTasks (React Query)
 // =============================================================================
 
+/**
+ * Hook to fetch overdue tasks.
+ * Uses React Query with shared caching.
+ */
 export function useOverdueTasks(myOnly = false): UseTasksReturn {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: taskKeys.overdue(myOnly),
+    queryFn: () => getOverdueTasks(myOnly),
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+  })
 
-  const fetchTasks = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const data = await getOverdueTasks(myOnly)
-      setTasks(data)
-    } catch (err) {
-      console.error('Error fetching overdue tasks:', err)
-      setError('Failed to fetch overdue tasks')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [myOnly])
-
-  useEffect(() => {
-    fetchTasks()
-  }, [fetchTasks])
-
-  return { tasks, isLoading, error, refetch: fetchTasks }
+  return {
+    tasks: data ?? [],
+    isLoading,
+    error: error ? 'Failed to fetch overdue tasks' : null,
+    refetch: async () => { await refetch() },
+  }
 }
 
 // =============================================================================

@@ -27,7 +27,9 @@ function Navbar() {
               <img
                 src={logoUrl}
                 alt={branding?.company_name || 'Logo'}
-                className="h-8 w-auto"
+                className="h-8 max-w-[140px] object-contain"
+                width={140}
+                height={32}
               />
             ) : (
               <span className="text-2xl font-bold">{branding?.company_name || ''}</span>
@@ -94,7 +96,9 @@ function Footer() {
               <img
                 src={logoUrl}
                 alt={branding?.company_name || 'Logo'}
-                className="h-8 w-auto mb-4"
+                className="h-8 max-w-[140px] object-contain mb-4"
+                width={140}
+                height={32}
               />
             ) : (
               <h3 className="text-2xl font-bold mb-4">{branding?.company_name || ''}</h3>

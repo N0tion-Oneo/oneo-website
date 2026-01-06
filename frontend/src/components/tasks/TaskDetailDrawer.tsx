@@ -321,20 +321,22 @@ export function TaskDetailDrawer({
     }
   }
 
+  const availablePanels = getTaskPanelOptions()
+
+  // Panel customization - allows users to show/hide/reorder panels
+  // NOTE: This hook must be called before any early returns to satisfy Rules of Hooks
+  const panelPrefs = useDrawerPanelPreferences({
+    drawerKey: 'task',
+    availablePanels: availablePanels.map((p) => p.type),
+    defaultPanels: ['details', 'entity', 'activity', 'notes'],
+  })
+
   if (!task) return null
 
   const dueDateInfo = formatDueDate(task.due_date)
   const isCompleted = task.status === 'completed'
   const isCancelled = task.status === 'cancelled'
   const entityPreview = getEntityPreview()
-  const availablePanels = getTaskPanelOptions()
-
-  // Panel customization - allows users to show/hide/reorder panels
-  const panelPrefs = useDrawerPanelPreferences({
-    drawerKey: 'task',
-    availablePanels: availablePanels.map((p) => p.type),
-    defaultPanels: ['details', 'entity', 'activity', 'notes'],
-  })
 
   // Status badge with dropdown
   const renderStatusBadge = () => {

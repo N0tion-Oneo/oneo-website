@@ -7,7 +7,6 @@ import {
   updateOnboardingStage,
   deleteOnboardingStage,
   reorderOnboardingStages,
-  getStageIntegrations,
 } from '@/services/api'
 import {
   Plus,
@@ -24,7 +23,6 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { StageIntegrationBadges, StageIntegrationsDrawer } from '@/components/onboarding'
-import type { StageIntegration } from '@/types'
 
 type TabType = 'lead' | 'company' | 'candidate'
 
@@ -192,29 +190,28 @@ interface DeleteConfirmModalProps {
   isOpen: boolean
   onClose: () => void
   stage: OnboardingStage | null
-  integrationData: StageIntegration | null
   onConfirm: () => Promise<void>
 }
 
-function DeleteConfirmModal({ isOpen, onClose, stage, integrationData, onConfirm }: DeleteConfirmModalProps) {
+function DeleteConfirmModal({ isOpen, onClose, stage, onConfirm }: DeleteConfirmModalProps) {
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
 
   if (!isOpen || !stage) return null
 
-  // Calculate blockers
+  // Calculate blockers from inline integration data
   const blockers: string[] = []
-  if (integrationData) {
-    if (integrationData.meeting_types.length > 0) {
-      blockers.push(`${integrationData.meeting_types.length} meeting type(s)`)
-    }
-    if (integrationData.wizard_step) {
-      blockers.push(`wizard step "${integrationData.wizard_step}"`)
-    }
+  if (stage.meeting_types && stage.meeting_types.length > 0) {
+    blockers.push(`${stage.meeting_types.length} meeting type(s)`)
+  }
+  if (stage.wizard_step) {
+    blockers.push(`wizard step "${stage.wizard_step}"`)
+  }
+  if (stage.entity_counts) {
     const entityCount =
-      integrationData.entity_counts.companies +
-      integrationData.entity_counts.leads +
-      integrationData.entity_counts.candidates
+      stage.entity_counts.companies +
+      stage.entity_counts.leads +
+      stage.entity_counts.candidates
     if (entityCount > 0) {
       blockers.push(`${entityCount} entit${entityCount !== 1 ? 'ies' : 'y'}`)
     }
@@ -329,22 +326,6 @@ export default function OnboardingStagesSettingsPage() {
   // Integration drawer state
   const [integrationDrawerOpen, setIntegrationDrawerOpen] = useState(false)
   const [integrationStage, setIntegrationStage] = useState<OnboardingStage | null>(null)
-  const [integrationData, setIntegrationData] = useState<Record<number, StageIntegration>>({})
-
-  // Fetch integration data for all stages
-  const fetchIntegrationData = async (stageList: OnboardingStage[]) => {
-    const data: Record<number, StageIntegration> = {}
-    await Promise.all(
-      stageList.map(async (stage) => {
-        try {
-          data[stage.id] = await getStageIntegrations(stage.id)
-        } catch {
-          // Leave undefined if fetch fails
-        }
-      })
-    )
-    setIntegrationData((prev) => ({ ...prev, ...data }))
-  }
 
   // Permission check
   if (user?.role !== UserRole.ADMIN && user?.role !== UserRole.RECRUITER) {
@@ -355,14 +336,13 @@ export default function OnboardingStagesSettingsPage() {
     )
   }
 
-  // Fetch lead stages
+  // Fetch lead stages (with integration data inline)
   const fetchLeadStages = async () => {
     setLeadLoading(true)
     setLeadError('')
     try {
-      const data = await getOnboardingStages({ entity_type: 'lead' })
+      const data = await getOnboardingStages({ entity_type: 'lead', include_integrations: true })
       setLeadStages(data)
-      fetchIntegrationData(data)
     } catch {
       setLeadError('Failed to load lead stages')
     } finally {
@@ -370,14 +350,13 @@ export default function OnboardingStagesSettingsPage() {
     }
   }
 
-  // Fetch company stages
+  // Fetch company stages (with integration data inline)
   const fetchCompanyStages = async () => {
     setCompanyLoading(true)
     setCompanyError('')
     try {
-      const data = await getOnboardingStages({ entity_type: 'company' })
+      const data = await getOnboardingStages({ entity_type: 'company', include_integrations: true })
       setCompanyStages(data)
-      fetchIntegrationData(data)
     } catch {
       setCompanyError('Failed to load company stages')
     } finally {
@@ -385,14 +364,13 @@ export default function OnboardingStagesSettingsPage() {
     }
   }
 
-  // Fetch candidate stages
+  // Fetch candidate stages (with integration data inline)
   const fetchCandidateStages = async () => {
     setCandidateLoading(true)
     setCandidateError('')
     try {
-      const data = await getOnboardingStages({ entity_type: 'candidate' })
+      const data = await getOnboardingStages({ entity_type: 'candidate', include_integrations: true })
       setCandidateStages(data)
-      fetchIntegrationData(data)
     } catch {
       setCandidateError('Failed to load candidate stages')
     } finally {
@@ -481,6 +459,7 @@ export default function OnboardingStagesSettingsPage() {
     if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
       const newStages = [...stages]
       const [removed] = newStages.splice(draggedIndex, 1)
+      if (!removed) return
       newStages.splice(dragOverIndex, 0, removed)
 
       // Update local state immediately
@@ -625,12 +604,12 @@ export default function OnboardingStagesSettingsPage() {
                       </span>
                     )}
                     <StageIntegrationBadges
-                      meetingTypesCount={integrationData[stage.id]?.meeting_types?.length || 0}
-                      wizardStep={integrationData[stage.id]?.wizard_step || null}
+                      meetingTypesCount={stage.meeting_types?.length || 0}
+                      wizardStep={stage.wizard_step || null}
                       entityCount={
-                        (integrationData[stage.id]?.entity_counts?.companies || 0) +
-                        (integrationData[stage.id]?.entity_counts?.leads || 0) +
-                        (integrationData[stage.id]?.entity_counts?.candidates || 0)
+                        (stage.entity_counts?.companies || 0) +
+                        (stage.entity_counts?.leads || 0) +
+                        (stage.entity_counts?.candidates || 0)
                       }
                       onClick={() => handleViewIntegrations(stage)}
                     />
@@ -678,7 +657,6 @@ export default function OnboardingStagesSettingsPage() {
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         stage={selectedStage}
-        integrationData={selectedStage ? integrationData[selectedStage.id] || null : null}
         onConfirm={handleConfirmDelete}
       />
 

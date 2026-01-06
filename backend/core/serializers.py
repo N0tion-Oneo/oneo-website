@@ -32,6 +32,99 @@ class OnboardingStageSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
 
 
+# Wizard step to stage slug mapping (must match companies/views.py)
+STEP_TO_STAGE_SLUG = {
+    'contract': 'onboarding-contract',
+    'profile': 'onboarding-profile',
+    'billing': 'onboarding-billing',
+    'team': 'onboarding-team',
+    'booking': 'onboarding-call-booked',
+}
+STAGE_SLUG_TO_STEP = {v: k for k, v in STEP_TO_STAGE_SLUG.items()}
+
+
+class OnboardingStageWithIntegrationsSerializer(serializers.ModelSerializer):
+    """
+    Serializer for OnboardingStage with inline integration data.
+    Eliminates N+1 API calls by including meeting_types, wizard_step, and entity_counts.
+    """
+    meeting_types = serializers.SerializerMethodField()
+    wizard_step = serializers.SerializerMethodField()
+    entity_counts = serializers.SerializerMethodField()
+    total_integrations = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OnboardingStage
+        fields = [
+            'id',
+            'name',
+            'slug',
+            'entity_type',
+            'order',
+            'color',
+            'is_terminal',
+            'is_active',
+            'created_at',
+            'updated_at',
+            # Integration fields
+            'meeting_types',
+            'wizard_step',
+            'entity_counts',
+            'total_integrations',
+        ]
+        read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
+
+    def get_meeting_types(self, obj):
+        """Get meeting types that advance to this stage (prefetched)."""
+        meeting_types = []
+
+        # Unauthenticated target (prefetched)
+        unauthenticated = getattr(obj, '_prefetched_meeting_types_unauthenticated', None)
+        if unauthenticated is None:
+            unauthenticated = obj.meeting_types_unauthenticated.filter(is_active=True)
+        for mt in unauthenticated:
+            if mt.is_active:
+                meeting_types.append({
+                    'id': mt.id,
+                    'name': mt.name,
+                    'slug': mt.slug,
+                    'type': 'unauthenticated',
+                })
+
+        # Authenticated target (prefetched)
+        authenticated = getattr(obj, '_prefetched_meeting_types_authenticated', None)
+        if authenticated is None:
+            authenticated = obj.meeting_types_authenticated.filter(is_active=True)
+        for mt in authenticated:
+            if mt.is_active:
+                meeting_types.append({
+                    'id': mt.id,
+                    'name': mt.name,
+                    'slug': mt.slug,
+                    'type': 'authenticated',
+                })
+
+        return meeting_types
+
+    def get_wizard_step(self, obj):
+        """Get the wizard step mapped to this stage (if any)."""
+        return STAGE_SLUG_TO_STEP.get(obj.slug)
+
+    def get_entity_counts(self, obj):
+        """Get entity counts (from annotations if available)."""
+        return {
+            'companies': getattr(obj, 'company_count', 0) or 0,
+            'leads': getattr(obj, 'lead_count', 0) or 0,
+            'candidates': getattr(obj, 'candidate_count', 0) or 0,
+        }
+
+    def get_total_integrations(self, obj):
+        """Calculate total integrations for badge display."""
+        meeting_types = self.get_meeting_types(obj)
+        wizard_step = self.get_wizard_step(obj)
+        return len(meeting_types) + (1 if wizard_step else 0)
+
+
 class OnboardingStageCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating OnboardingStage."""
 

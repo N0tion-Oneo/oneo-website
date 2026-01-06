@@ -2506,6 +2506,15 @@ export interface OnboardingStage {
   is_active: boolean
   created_at: string
   updated_at: string
+  // Optional integration fields (included when include_integrations=true)
+  meeting_types?: StageIntegrationMeetingType[]
+  wizard_step?: string | null
+  entity_counts?: {
+    companies: number
+    leads: number
+    candidates: number
+  }
+  total_integrations?: number
 }
 
 export interface OnboardingStageMinimal {

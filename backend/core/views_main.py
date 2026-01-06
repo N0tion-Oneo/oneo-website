@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -9,6 +10,7 @@ from users.models import UserRole
 from .models import OnboardingStage, OnboardingHistory
 from .serializers import (
     OnboardingStageSerializer,
+    OnboardingStageWithIntegrationsSerializer,
     OnboardingStageCreateSerializer,
     OnboardingStageUpdateSerializer,
     OnboardingStageReorderSerializer,
@@ -41,8 +43,9 @@ def list_onboarding_stages(request):
     List all onboarding stages, filterable by entity_type.
 
     Query params:
-    - entity_type: 'company' or 'candidate' (optional)
+    - entity_type: 'company', 'candidate', or 'lead' (optional)
     - include_inactive: 'true' to include inactive stages (default: false)
+    - include_integrations: 'true' to include integration data inline (default: false)
     """
     if not is_staff_user(request.user):
         return Response(
@@ -52,6 +55,7 @@ def list_onboarding_stages(request):
 
     entity_type = request.query_params.get('entity_type')
     include_inactive = request.query_params.get('include_inactive', 'false').lower() == 'true'
+    include_integrations = request.query_params.get('include_integrations', 'false').lower() == 'true'
 
     stages = OnboardingStage.objects.all()
 
@@ -61,9 +65,40 @@ def list_onboarding_stages(request):
     if not include_inactive:
         stages = stages.filter(is_active=True)
 
+    # If including integrations, add prefetch and annotations for efficiency
+    if include_integrations:
+        from scheduling.models import MeetingType
+
+        # Prefetch meeting types (both unauthenticated and authenticated targets)
+        stages = stages.prefetch_related(
+            Prefetch(
+                'meeting_types_unauthenticated',
+                queryset=MeetingType.objects.filter(is_active=True),
+                to_attr='_prefetched_meeting_types_unauthenticated'
+            ),
+            Prefetch(
+                'meeting_types_authenticated',
+                queryset=MeetingType.objects.filter(is_active=True),
+                to_attr='_prefetched_meeting_types_authenticated'
+            ),
+        )
+
+        # Annotate entity counts - each related_name is unique to one entity type
+        # so we count all related objects (no filter needed)
+        stages = stages.annotate(
+            company_count=Count('companies', distinct=True),
+            lead_count=Count('leads', distinct=True),
+            candidate_count=Count('candidates', distinct=True),
+        )
+
     stages = stages.order_by('entity_type', 'order')
 
-    serializer = OnboardingStageSerializer(stages, many=True)
+    # Use appropriate serializer based on include_integrations flag
+    if include_integrations:
+        serializer = OnboardingStageWithIntegrationsSerializer(stages, many=True)
+    else:
+        serializer = OnboardingStageSerializer(stages, many=True)
+
     return Response(serializer.data)
 
 

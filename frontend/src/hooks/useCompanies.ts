@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import api from '@/services/api'
 import type {
   Company,
@@ -10,6 +11,25 @@ import type {
   Country,
   City,
 } from '@/types'
+
+// ============================================================================
+// Query Keys - Centralized for cache invalidation
+// ============================================================================
+
+export const companyKeys = {
+  all: ['companies'] as const,
+  countries: () => [...companyKeys.all, 'countries'] as const,
+  cities: (countryId?: number | null) => [...companyKeys.all, 'cities', countryId] as const,
+}
+
+// ============================================================================
+// API Functions
+// ============================================================================
+
+async function fetchCountries(): Promise<Country[]> {
+  const response = await api.get<Country[]>('/companies/countries/')
+  return response.data
+}
 
 // ============================================================================
 // Companies List Hook (Public Directory)
@@ -487,27 +507,24 @@ interface UseCountriesReturn {
   error: string | null
 }
 
+/**
+ * Hook to fetch countries list.
+ * Uses React Query with long staleTime since countries rarely change.
+ * The data is cached and shared across all components that use this hook.
+ */
 export function useCountries(): UseCountriesReturn {
-  const [countries, setCountries] = useState<Country[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, isLoading, error } = useQuery({
+    queryKey: companyKeys.countries(),
+    queryFn: fetchCountries,
+    staleTime: 60 * 60 * 1000, // 1 hour - countries don't change
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours cache
+  })
 
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const response = await api.get<Country[]>('/companies/countries/')
-        setCountries(response.data)
-      } catch (err) {
-        setError('Failed to load countries')
-        console.error('Error fetching countries:', err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchCountries()
-  }, [])
-
-  return { countries, isLoading, error }
+  return {
+    countries: data ?? [],
+    isLoading,
+    error: error ? 'Failed to load countries' : null,
+  }
 }
 
 // ============================================================================
@@ -524,37 +541,29 @@ interface UseCitiesReturn {
   error: string | null
 }
 
+/**
+ * Hook to fetch cities for a given country.
+ * Uses React Query with caching per country ID.
+ */
 export function useCities(options: UseCitiesOptions = {}): UseCitiesReturn {
-  const [cities, setCities] = useState<City[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { data, isLoading, error } = useQuery({
+    queryKey: companyKeys.cities(options.countryId),
+    queryFn: async () => {
+      if (!options.countryId) return []
+      const url = `/companies/countries/${options.countryId}/cities/`
+      const response = await api.get<City[]>(url)
+      return response.data
+    },
+    enabled: !!options.countryId, // Only fetch when countryId is provided
+    staleTime: 60 * 60 * 1000, // 1 hour - cities don't change often
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours cache
+  })
 
-  useEffect(() => {
-    // Only fetch cities when a country is selected
-    if (!options.countryId) {
-      setCities([])
-      setIsLoading(false)
-      return
-    }
-
-    const fetchCities = async () => {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const url = `/companies/countries/${options.countryId}/cities/`
-        const response = await api.get<City[]>(url)
-        setCities(response.data)
-      } catch (err) {
-        setError('Failed to load cities')
-        console.error('Error fetching cities:', err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchCities()
-  }, [options.countryId])
-
-  return { cities, isLoading, error }
+  return {
+    cities: data ?? [],
+    isLoading,
+    error: error ? 'Failed to load cities' : null,
+  }
 }
 
 // ============================================================================

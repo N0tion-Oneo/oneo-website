@@ -1,9 +1,50 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import api from '@/services/api'
 import type { Notification } from '@/types'
 
 // ============================================================================
-// Notifications List Hook
+// Query Keys - Centralized for cache invalidation
+// ============================================================================
+
+export const notificationKeys = {
+  all: ['notifications'] as const,
+  list: (options?: { unreadOnly?: boolean; limit?: number }) =>
+    [...notificationKeys.all, 'list', options] as const,
+  unreadCount: () => [...notificationKeys.all, 'unreadCount'] as const,
+  detail: (id: string) => [...notificationKeys.all, 'detail', id] as const,
+}
+
+// ============================================================================
+// API Functions
+// ============================================================================
+
+async function fetchUnreadCount(): Promise<number> {
+  const response = await api.get<{ unread_count: number }>('/notifications/unread-count/')
+  return response.data.unread_count
+}
+
+interface NotificationsResponse {
+  notifications: Notification[]
+  unread_count: number
+}
+
+async function fetchNotifications(
+  limit: number,
+  offset: number,
+  unreadOnly?: boolean
+): Promise<NotificationsResponse> {
+  const params = new URLSearchParams()
+  if (unreadOnly) params.append('unread_only', 'true')
+  params.append('limit', String(limit))
+  params.append('offset', String(offset))
+
+  const response = await api.get<NotificationsResponse>(`/notifications/?${params.toString()}`)
+  return response.data
+}
+
+// ============================================================================
+// Notifications List Hook - Uses React Query for shared caching
 // ============================================================================
 
 interface UseNotificationsOptions {
@@ -20,73 +61,59 @@ interface UseNotificationsReturn {
   loadMore: () => Promise<void>
 }
 
+/**
+ * Hook to fetch notifications list with pagination.
+ * Uses React Query's useInfiniteQuery for shared caching - all components
+ * using this hook with the same options share the same cached data,
+ * preventing duplicate API calls.
+ */
 export function useNotifications(options: UseNotificationsOptions = {}): UseNotificationsReturn {
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [offset, setOffset] = useState(0)
-  const [hasMore, setHasMore] = useState(true)
   const limit = options.limit || 20
 
-  const fetchNotifications = useCallback(
-    async (reset = true) => {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const currentOffset = reset ? 0 : offset
-        const params = new URLSearchParams()
-        if (options.unreadOnly) params.append('unread_only', 'true')
-        params.append('limit', String(limit))
-        params.append('offset', String(currentOffset))
-
-        const response = await api.get<{ notifications: Notification[]; unread_count: number }>(
-          `/notifications/?${params.toString()}`
-        )
-
-        const notificationsList = response.data.notifications || []
-
-        if (reset) {
-          setNotifications(notificationsList)
-          setOffset(limit)
-        } else {
-          setNotifications((prev) => [...prev, ...notificationsList])
-          setOffset(currentOffset + limit)
-        }
-        setHasMore(notificationsList.length === limit)
-      } catch (err) {
-        setError('Failed to load notifications')
-        console.error('Error fetching notifications:', err)
-      } finally {
-        setIsLoading(false)
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: notificationKeys.list({ unreadOnly: options.unreadOnly, limit }),
+    queryFn: async ({ pageParam = 0 }) => {
+      const result = await fetchNotifications(limit, pageParam, options.unreadOnly)
+      return {
+        notifications: result.notifications || [],
+        nextOffset: pageParam + limit,
       }
     },
-    [options.unreadOnly, limit, offset]
-  )
+    getNextPageParam: (lastPage) => {
+      // If we got fewer items than the limit, there are no more pages
+      if (lastPage.notifications.length < limit) {
+        return undefined
+      }
+      return lastPage.nextOffset
+    },
+    initialPageParam: 0,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+  })
 
-  const loadMore = useCallback(async () => {
-    if (!isLoading && hasMore) {
-      await fetchNotifications(false)
-    }
-  }, [fetchNotifications, isLoading, hasMore])
-
-  useEffect(() => {
-    fetchNotifications(true)
-    // Only refetch when unreadOnly changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options.unreadOnly])
+  // Flatten all pages into a single notifications array
+  const notifications = data?.pages.flatMap((page) => page.notifications) ?? []
 
   return {
     notifications,
-    isLoading,
-    error,
-    refetch: () => fetchNotifications(true),
-    hasMore,
-    loadMore,
+    isLoading: isLoading || isFetchingNextPage,
+    error: error ? 'Failed to load notifications' : null,
+    refetch: async () => { await refetch() },
+    hasMore: hasNextPage ?? false,
+    loadMore: async () => { await fetchNextPage() },
   }
 }
 
 // ============================================================================
-// Unread Count Hook
+// Unread Count Hook - Uses React Query for shared caching
 // ============================================================================
 
 interface UseUnreadCountReturn {
@@ -96,34 +123,29 @@ interface UseUnreadCountReturn {
   refetch: () => Promise<void>
 }
 
+/**
+ * Hook to fetch notification unread count.
+ * Uses React Query with shared caching - all components using this hook
+ * share the same cached data, preventing duplicate API calls.
+ */
 export function useUnreadCount(): UseUnreadCountReturn {
-  const [count, setCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: notificationKeys.unreadCount(),
+    queryFn: fetchUnreadCount,
+    staleTime: 30 * 1000, // 30 seconds - matches previous polling interval
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+  })
 
-  const fetchCount = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const response = await api.get<{ unread_count: number }>('/notifications/unread-count/')
-      setCount(response.data.unread_count)
-    } catch (err) {
-      setError('Failed to load unread count')
-      console.error('Error fetching unread count:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchCount()
-  }, [fetchCount])
-
-  return { count, isLoading, error, refetch: fetchCount }
+  return {
+    count: data ?? 0,
+    isLoading,
+    error: error ? 'Failed to load unread count' : null,
+    refetch: async () => { await refetch() },
+  }
 }
 
 // ============================================================================
-// Unread Count with Polling Hook
+// Unread Count with Polling Hook - Uses React Query refetchInterval
 // ============================================================================
 
 interface UseUnreadCountPollingOptions {
@@ -131,45 +153,32 @@ interface UseUnreadCountPollingOptions {
   enabled?: boolean
 }
 
+/**
+ * Hook to fetch notification unread count with polling.
+ * Uses React Query with refetchInterval for automatic polling.
+ * All components share the same cached data and polling interval,
+ * preventing duplicate API calls even with multiple instances.
+ */
 export function useUnreadCountPolling(
   options: UseUnreadCountPollingOptions = {}
 ): UseUnreadCountReturn {
   const { intervalMs = 30000, enabled = true } = options
-  const [count, setCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  const fetchCount = useCallback(async () => {
-    try {
-      const response = await api.get<{ unread_count: number }>('/notifications/unread-count/')
-      setCount(response.data.unread_count)
-      setError(null)
-    } catch (err) {
-      setError('Failed to load unread count')
-      console.error('Error fetching unread count:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: notificationKeys.unreadCount(),
+    queryFn: fetchUnreadCount,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchInterval: enabled ? intervalMs : false,
+    refetchIntervalInBackground: false, // Don't poll when tab is not focused
+  })
 
-  useEffect(() => {
-    if (!enabled) return
-
-    // Initial fetch
-    fetchCount()
-
-    // Set up polling
-    intervalRef.current = setInterval(fetchCount, intervalMs)
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-      }
-    }
-  }, [fetchCount, intervalMs, enabled])
-
-  return { count, isLoading, error, refetch: fetchCount }
+  return {
+    count: data ?? 0,
+    isLoading,
+    error: error ? 'Failed to load unread count' : null,
+    refetch: async () => { await refetch() },
+  }
 }
 
 // ============================================================================

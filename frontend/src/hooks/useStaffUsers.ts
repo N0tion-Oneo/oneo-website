@@ -1,6 +1,27 @@
 import { useState, useCallback, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import api from '@/services/api'
 import type { StaffUser } from '@/types'
+
+// ============================================================================
+// Query Keys - Centralized for cache invalidation
+// ============================================================================
+
+export const staffKeys = {
+  all: ['staff'] as const,
+  list: () => [...staffKeys.all, 'list'] as const,
+  profiles: (includeArchived?: boolean) => [...staffKeys.all, 'profiles', { includeArchived }] as const,
+  profile: (userId: string) => [...staffKeys.all, 'profile', userId] as const,
+}
+
+// ============================================================================
+// API Functions
+// ============================================================================
+
+async function fetchStaffUsers(): Promise<StaffUser[]> {
+  const response = await api.get('/staff/')
+  return response.data
+}
 
 interface UseStaffUsersReturn {
   staffUsers: StaffUser[]
@@ -76,35 +97,24 @@ interface UseUpdateStaffUserReturn {
   error: string | null
 }
 
+/**
+ * Hook to fetch staff users list.
+ * Uses React Query with staleTime to prevent duplicate API calls.
+ * The data is cached and shared across all components that use this hook.
+ */
 export function useStaffUsers(): UseStaffUsersReturn {
-  const [staffUsers, setStaffUsers] = useState<StaffUser[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchStaffUsers = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      const response = await api.get('/staff/')
-      setStaffUsers(response.data)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load staff users'
-      setError(message)
-      console.error('Error fetching staff users:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchStaffUsers()
-  }, [fetchStaffUsers])
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: staffKeys.list(),
+    queryFn: fetchStaffUsers,
+    staleTime: 2 * 60 * 1000, // 2 minutes - staff list doesn't change often
+    gcTime: 10 * 60 * 1000, // 10 minutes cache
+  })
 
   return {
-    staffUsers,
+    staffUsers: data ?? [],
     isLoading,
-    error,
-    refetch: fetchStaffUsers,
+    error: error ? (error instanceof Error ? error.message : 'Failed to load staff users') : null,
+    refetch: async () => { await refetch() },
   }
 }
 

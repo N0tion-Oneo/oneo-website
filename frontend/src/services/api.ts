@@ -352,6 +352,7 @@ import type { OnboardingStage, OnboardingStageInput, OnboardingStageUpdateInput,
 export const getOnboardingStages = async (params?: {
   entity_type?: OnboardingEntityType;
   include_inactive?: boolean;
+  include_integrations?: boolean;
 }): Promise<OnboardingStage[]> => {
   const response = await api.get('/onboarding-stages/', { params });
   return response.data;
