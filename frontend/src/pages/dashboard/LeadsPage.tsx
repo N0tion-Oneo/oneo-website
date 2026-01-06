@@ -61,22 +61,22 @@ const getSourceLabel = (source: string) => {
 
 const getSourceColor = (source: string) => {
   const colors: Record<string, string> = {
-    inbound: 'bg-green-100 text-green-700',
-    referral: 'bg-purple-100 text-purple-700',
-    linkedin: 'bg-blue-100 text-blue-700',
-    cold_outreach: 'bg-orange-100 text-orange-700',
-    event: 'bg-pink-100 text-pink-700',
-    website: 'bg-cyan-100 text-cyan-700',
-    other: 'bg-gray-100 text-gray-700',
+    inbound: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    referral: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
+    linkedin: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+    cold_outreach: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
+    event: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400',
+    website: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400',
+    other: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
   }
-  return colors[source] || 'bg-gray-100 text-gray-700'
+  return colors[source] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
 }
 
 const columnHelper = createColumnHelper<Lead>()
 
 export default function LeadsPage() {
   const { user } = useAuth()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const [viewMode, setViewMode] = useState<ViewMode>('table')
   const [filters, setFilters] = useState<LeadFilters>(() => {
     // Initialize filters from URL params
@@ -216,7 +216,7 @@ export default function LeadsPage() {
             type="checkbox"
             checked={table.getIsAllPageRowsSelected()}
             onChange={table.getToggleAllPageRowsSelectedHandler()}
-            className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:focus:ring-gray-400"
           />
         ),
         cell: ({ row }) => (
@@ -225,7 +225,7 @@ export default function LeadsPage() {
               type="checkbox"
               checked={row.getIsSelected()}
               onChange={row.getToggleSelectedHandler()}
-              className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:focus:ring-gray-400"
             />
           </div>
         ),
@@ -257,13 +257,13 @@ export default function LeadsPage() {
         enableSorting: true,
         cell: ({ row }) => (
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 flex-shrink-0">
+            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0">
               <Users className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <p className="text-[13px] font-medium text-gray-900 truncate">{row.original.name}</p>
+              <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">{row.original.name}</p>
               {row.original.job_title && (
-                <p className="text-[11px] text-gray-500 truncate max-w-[200px]">{row.original.job_title}</p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate max-w-[200px]">{row.original.job_title}</p>
               )}
             </div>
           </div>
@@ -275,7 +275,7 @@ export default function LeadsPage() {
         size: 160,
         enableSorting: true,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600">
+          <span className="text-[12px] text-gray-600 dark:text-gray-400">
             {getValue() || '-'}
           </span>
         ),
@@ -288,19 +288,19 @@ export default function LeadsPage() {
         cell: ({ row }) => (
           <div className="space-y-0.5">
             <div className="flex items-center gap-1.5">
-              <Mail className="w-3 h-3 text-gray-400" />
+              <Mail className="w-3 h-3 text-gray-400 dark:text-gray-500" />
               <a
                 href={`mailto:${row.original.email}`}
                 onClick={(e) => e.stopPropagation()}
-                className="text-[12px] text-blue-600 hover:underline truncate"
+                className="text-[12px] text-blue-600 dark:text-blue-400 hover:underline truncate"
               >
                 {row.original.email}
               </a>
             </div>
             {row.original.phone && (
               <div className="flex items-center gap-1.5">
-                <Phone className="w-3 h-3 text-gray-400" />
-                <span className="text-[12px] text-gray-500">{row.original.phone}</span>
+                <Phone className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                <span className="text-[12px] text-gray-500 dark:text-gray-400">{row.original.phone}</span>
               </div>
             )}
           </div>
@@ -324,7 +324,7 @@ export default function LeadsPage() {
         enableSorting: false,
         cell: ({ getValue }) => {
           const stage = getValue()
-          if (!stage) return <span className="text-[12px] text-gray-400">-</span>
+          if (!stage) return <span className="text-[12px] text-gray-400 dark:text-gray-500">-</span>
           return (
             <span
               className="inline-flex px-2 py-0.5 text-[11px] font-medium rounded"
@@ -341,7 +341,7 @@ export default function LeadsPage() {
         size: 100,
         enableSorting: true,
         cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-500">{formatDate(getValue())}</span>
+          <span className="text-[12px] text-gray-500 dark:text-gray-400">{formatDate(getValue())}</span>
         ),
       }),
     ],

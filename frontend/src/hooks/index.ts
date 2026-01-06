@@ -50,6 +50,9 @@ export type {
   LeadFilters,
 } from './useLeads'
 
+// Entity Actions hook (declarative action rail system)
+export { useEntityActions } from './useEntityActions'
+
 // Client Invitation hooks
 export { useInvitations, useCreateInvitation, useCancelInvitation, useResendInvitation } from './useInvitations'
 export type { ClientInvitation, CreateInvitationResponse, CreateInvitationData } from './useInvitations'
@@ -558,3 +561,6 @@ export type {
   RuleExecutionResult,
   RulePreviewResult,
 } from './useBottlenecks'
+
+// Drawer Panel Preferences hooks
+export { useDrawerPanelPreferences } from './useDrawerPanelPreferences'

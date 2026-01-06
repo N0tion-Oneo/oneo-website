@@ -3,12 +3,10 @@
  * Uses DrawerWithPanels for a unified panel-based interface
  */
 
-import { useState, useEffect, useRef, ReactNode } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
 import {
   X,
   Send,
-  Trophy,
-  XCircle,
   CheckCircle,
   AlertCircle,
   ChevronDown,
@@ -23,12 +21,15 @@ import {
   Copy,
   Check,
   Mail,
-  Trash2,
   User,
 } from 'lucide-react'
-import { DrawerWithPanels, ActionRail, ActionRailButton, stageDropdownStyles, zIndexLayers } from '@/components/common'
+import { DrawerWithPanels, EntityActionRail } from '@/components/common'
+import { useEntityActions } from '@/hooks/useEntityActions'
+import { useDrawerPanelPreferences } from '@/hooks'
+import type { ActionHandlers } from '@/components/service/actionConfig'
 import { FocusMode } from '@/components/service'
 import { EntityProfilePanel } from '@/components/service/panels/EntityProfilePanel'
+import { TimelinePanel } from '@/components/service/panels/TimelinePanel'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   useLead,
@@ -40,7 +41,6 @@ import {
 } from '@/hooks/useLeads'
 import { getOnboardingStages } from '@/services/api'
 import type { OnboardingStage, AssignedUser } from '@/types'
-import { AssignedSelect } from '@/components/forms'
 import { useCreateInvitation } from '@/hooks/useInvitations'
 import { useUpdateLead } from '@/hooks/useLeads'
 import api from '@/services/api'
@@ -256,16 +256,23 @@ export default function LeadDrawer({
   const [stages, setStages] = useState<OnboardingStage[]>([])
   const [activePanel, setActivePanel] = useState<EntityPanelType>('profile')
 
-  // Get available panels from shared config (filter out meetings and tasks - not implemented in lead drawer)
+  // Get available panels from shared config (filter out tasks - leads use timeline for task-like activities)
   const availablePanels = getEntityPanelOptions('lead').filter(
-    (panel) => panel.type !== 'meetings' && panel.type !== 'tasks' && panel.type !== 'timeline'
+    (panel) => panel.type !== 'tasks'
   )
+
+  // Panel customization - allows users to show/hide/reorder panels
+  const panelPrefs = useDrawerPanelPreferences({
+    drawerKey: 'lead',
+    availablePanels: availablePanels.map((p) => p.type),
+    defaultPanels: ['profile', 'timeline', 'invitations'],
+  })
+
   const [bookings, setBookings] = useState<LeadBooking[]>([])
   const [bookingsLoading, setBookingsLoading] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showConvertConfirm, setShowConvertConfirm] = useState(false)
   const [showServiceMode, setShowServiceMode] = useState(false)
-  const [isStageDropdownOpen, setIsStageDropdownOpen] = useState(false)
   const [showAddActivityModal, setShowAddActivityModal] = useState(false)
   const [activityType, setActivityType] = useState<'note_added' | 'call_logged' | 'email_sent'>('note_added')
   const [activityContent, setActivityContent] = useState('')
@@ -278,21 +285,6 @@ export default function LeadDrawer({
   const [csuitePlacementFee, setCsuitePlacementFee] = useState('')
   const [createdInvitationUrl, setCreatedInvitationUrl] = useState<string | null>(null)
   const [copiedInviteUrl, setCopiedInviteUrl] = useState(false)
-
-  const stageDropdownRef = useRef<HTMLDivElement>(null)
-
-  // Close stage dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (stageDropdownRef.current && !stageDropdownRef.current.contains(event.target as Node)) {
-        setIsStageDropdownOpen(false)
-      }
-    }
-    if (isStageDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isStageDropdownOpen])
 
   // Fetch lead stages
   useEffect(() => {
@@ -312,11 +304,10 @@ export default function LeadDrawer({
     }
   }, [lead?.id])
 
-  const handleStageChange = async (stageId: number) => {
+  const handleStageChange = async (stageId: string | number) => {
     if (!lead) return
     try {
-      await updateStage(lead.id, stageId)
-      setIsStageDropdownOpen(false)
+      await updateStage(lead.id, stageId as number)
       refetch()
       onRefresh?.()
     } catch (err) {
@@ -471,122 +462,33 @@ export default function LeadDrawer({
     return panel
   })
 
-  // Render action rail
-  const renderActionRail = (): ReactNode => {
-    if (!lead) return null
-    const isTerminal = lead.onboarding_stage?.slug === 'won' || lead.onboarding_stage?.slug === 'lost'
-
-    // Build flat array of buttons
-    const buttons: ReactNode[] = []
-
-    if (user?.booking_slug) {
-      buttons.push(
-        <ActionRailButton
-          key="meeting"
-          icon={<Video className="w-4 h-4" />}
-          label="Schedule Meeting"
-          description="Book a video call"
-          onClick={() => window.open(`/meet/${user.booking_slug}?name=${encodeURIComponent(lead.name)}&email=${encodeURIComponent(lead.email)}&phone=${encodeURIComponent(lead.phone || '')}&company=${encodeURIComponent(lead.company_name)}`, '_blank')}
-          variant="info"
-        />
-      )
-    }
-
-    if (!isTerminal) {
-      buttons.push(
-        <ActionRailButton
-          key="invite"
-          icon={<Send className="w-4 h-4" />}
-          label="Send Invitation"
-          description="Invite to client portal"
-          onClick={() => setShowConvertConfirm(true)}
-          variant="success"
-        />,
-        <ActionRailButton
-          key="won"
-          icon={<Trophy className="w-4 h-4" />}
-          label="Mark Won"
-          description="Close as successful"
-          onClick={handleMarkWon}
-          disabled={isUpdatingStage}
-          variant="success"
-        />,
-        <ActionRailButton
-          key="lost"
-          icon={<XCircle className="w-4 h-4" />}
-          label="Mark Lost"
-          description="Close as unsuccessful"
-          onClick={handleMarkLost}
-          disabled={isUpdatingStage}
-          variant="warning"
-        />
-      )
-    }
-
-    if (!lead.is_converted) {
-      buttons.push(
-        <ActionRailButton
-          key="delete"
-          icon={<Trash2 className="w-4 h-4" />}
-          label="Delete Lead"
-          description="Remove permanently"
-          onClick={() => setShowDeleteConfirm(true)}
-          variant="danger"
-        />
-      )
-    }
-
-    return <ActionRail>{buttons}</ActionRail>
+  // Action handlers for the action rail
+  const actionHandlers: ActionHandlers = {
+    'schedule-meeting': () => {
+      if (lead && user?.booking_slug) {
+        window.open(
+          `/meet/${user.booking_slug}?name=${encodeURIComponent(lead.name)}&email=${encodeURIComponent(lead.email)}&phone=${encodeURIComponent(lead.phone || '')}&company=${encodeURIComponent(lead.company_name)}`,
+          '_blank'
+        )
+      }
+    },
+    'send-invitation': () => setShowConvertConfirm(true),
+    'add-activity': () => setShowAddActivityModal(true),
+    'convert-to-company': () => setShowConvertConfirm(true),
+    'mark-won': handleMarkWon,
+    'mark-lost': handleMarkLost,
+    'delete': () => setShowDeleteConfirm(true),
   }
 
-  // Render status badge with stage dropdown
+  // Get resolved actions using the declarative config
+  const actions = useEntityActions('lead', lead as unknown as Record<string, unknown>, actionHandlers)
+
+  // Render status badges (source and converted)
   const renderStatusBadge = (): ReactNode => {
     if (!lead) return null
-    const isWon = lead.onboarding_stage?.slug === 'won'
-    const isLost = lead.onboarding_stage?.slug === 'lost'
 
     return (
       <>
-        {/* Stage Dropdown */}
-        <div className="relative" ref={stageDropdownRef}>
-          <button
-            onClick={() => setIsStageDropdownOpen(!isStageDropdownOpen)}
-            disabled={isUpdatingStage}
-            className={`${stageDropdownStyles.trigger} ${isUpdatingStage ? stageDropdownStyles.triggerDisabled : ''}`}
-            style={lead.onboarding_stage ? {
-              backgroundColor: `${lead.onboarding_stage.color}20`,
-              color: lead.onboarding_stage.color,
-            } : undefined}
-          >
-            {isWon && <Trophy className="w-3.5 h-3.5" />}
-            {isLost && <XCircle className="w-3.5 h-3.5" />}
-            {lead.onboarding_stage?.name || 'No Stage'}
-            <ChevronDown className="w-3.5 h-3.5" />
-          </button>
-
-          {isStageDropdownOpen && (
-            <div className={stageDropdownStyles.dropdown} style={{ zIndex: zIndexLayers.stageDropdown }}>
-              {stages.map((stage) => {
-                const isActive = lead.onboarding_stage?.id === stage.id
-                return (
-                  <button
-                    key={stage.id}
-                    onClick={() => handleStageChange(stage.id)}
-                    disabled={isActive}
-                    className={`${stageDropdownStyles.menuItem} ${isActive ? stageDropdownStyles.menuItemActive : ''}`}
-                  >
-                    <span
-                      className={stageDropdownStyles.stageDot}
-                      style={{ backgroundColor: stage.color }}
-                    />
-                    {stage.name}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
         {/* Source Badge */}
         <span className={`px-2 py-1 text-[11px] font-medium rounded ${getSourceBadgeColor(lead.source)}`}>
           {getSourceLabel(lead.source)}
@@ -613,6 +515,7 @@ export default function LeadDrawer({
             entityType="lead"
             entityId={leadId}
             entity={lead as unknown as Record<string, unknown>}
+            hideHeader
             onToggleRead={handleToggleRead}
             onToggleReplied={handleToggleReplied}
             onSaveNotes={handleSaveNotes}
@@ -624,6 +527,18 @@ export default function LeadDrawer({
 
       case 'invitations':
         return <InvitationsPanel lead={lead} onSendInvitation={() => setShowConvertConfirm(true)} />
+
+      case 'timeline':
+        return (
+          <TimelinePanel
+            entityType="lead"
+            entityId={leadId}
+            onRefresh={() => {
+              refetch()
+              refetchActivities()
+            }}
+          />
+        )
 
       default:
         return null
@@ -667,35 +582,61 @@ export default function LeadDrawer({
     </div>
   )
 
-  // Header with assigned selector
-  const headerExtra = (
-    <div className="w-40">
-      <AssignedSelect
-        selected={(lead.assigned_to as unknown as AssignedUser[]) || []}
-        onChange={handleAssignedChange}
-        placeholder="Assign..."
-        compact
-      />
-    </div>
-  )
+  // Map stages for the action rail
+  const stageOptions = stages.map((s) => ({
+    id: s.id,
+    name: s.name,
+    color: s.color,
+    slug: s.slug,
+  }))
+
+  const currentStage = lead.onboarding_stage
+    ? {
+        id: lead.onboarding_stage.id,
+        name: lead.onboarding_stage.name,
+        color: lead.onboarding_stage.color,
+        slug: lead.onboarding_stage.slug,
+      }
+    : null
 
   return (
     <DrawerWithPanels
       isOpen={true}
       onClose={onClose}
+      entityType="Lead"
       title={lead.name}
       subtitle={`${lead.company_name}${lead.job_title ? ` · ${lead.job_title}` : ''}`}
       isLoading={false}
       avatar={avatar}
       statusBadge={renderStatusBadge()}
-      headerExtra={headerExtra}
       focusModeLabel="Service Mode"
       onEnterFocusMode={() => setShowServiceMode(true)}
-      actionRail={renderActionRail()}
+      actionRail={
+        <EntityActionRail
+          actions={actions}
+          assignedTo={(lead.assigned_to as unknown as AssignedUser[]) || []}
+          onAssignedChange={handleAssignedChange}
+          currentStage={currentStage}
+          stages={stageOptions}
+          onStageChange={handleStageChange}
+          isUpdatingStage={isUpdatingStage}
+        />
+      }
       availablePanels={panelsWithCounts}
       defaultPanel="profile"
       activePanel={activePanel}
       onPanelChange={(panel) => setActivePanel(panel as EntityPanelType)}
+      panelCustomization={{
+        visiblePanels: panelPrefs.visiblePanels,
+        hiddenPanels: panelPrefs.hiddenPanels,
+        onAddPanel: panelPrefs.addPanel,
+        onRemovePanel: panelPrefs.removePanel,
+        onMovePanel: panelPrefs.movePanel,
+        canRemovePanel: panelPrefs.canRemovePanel,
+        canAddPanel: panelPrefs.canAddPanel,
+        onResetToDefaults: panelPrefs.resetToDefaults,
+        isCustomized: panelPrefs.isCustomized,
+      }}
       renderPanel={renderPanel}
       modals={
         <>

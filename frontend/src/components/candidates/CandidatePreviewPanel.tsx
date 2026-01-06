@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { CandidateAdminListItem, ProfileSuggestionFieldType, AssignedUser } from '@/types'
 import { FocusMode } from '@/components/service'
-import { DrawerWithPanels, badgeStyles } from '@/components/common'
+import { DrawerWithPanels, EntityActionRail, badgeStyles } from '@/components/common'
 import { TasksPanel, TimelinePanel, ApplicationsPanel } from '@/components/service/panels'
 import api from '@/services/api'
-import { useAdminSuggestions, useTasks } from '@/hooks'
+import { useAdminSuggestions, useTasks, useEntityActions, useDrawerPanelPreferences } from '@/hooks'
+import type { ActionHandlers } from '@/components/service/actionConfig'
 import { EntityProfilePanel } from '@/components/service/panels/EntityProfilePanel'
 import CandidateActivityTab from './CandidateActivityTab'
 import AddToJobModal from './AddToJobModal'
 import ApplicationDrawer from '@/components/applications/ApplicationDrawer'
 import { SuggestionsPanel } from '@/components/suggestions'
-import { AssignedSelect } from '@/components/forms'
 import {
   getEntityPanelOptions,
   type EntityPanelType,
@@ -117,15 +117,43 @@ export default function CandidatePreviewPanel({
     }
   }
 
+  // Action handlers for the action rail
+  const actionHandlers: ActionHandlers = {
+    'view-full-profile': () => {
+      if (candidate) {
+        window.open(`/dashboard/admin/candidates/${candidate.slug || candidate.id}`, '_blank')
+      }
+    },
+    'add-to-job': () => setShowAddToJobModal(true),
+    'add-activity': () => setActivePanel('timeline'),
+    'add-note': () => setActivePanel('timeline'),
+    'service-mode': () => setShowServiceMode(true),
+  }
+
+  // Get resolved actions using the declarative config
+  const actions = useEntityActions(
+    'candidate',
+    candidate as unknown as Record<string, unknown>,
+    actionHandlers,
+    { extraContext: { isAdminMode: !isClientMode } }
+  )
+
   // Get available panels from shared config
-  // Filter out admin-only panels in client mode
+  // Filter to client-allowed panels in client mode
   const availablePanels = getEntityPanelOptions('candidate').filter((panel) => {
     if (isClientMode) {
       // Client mode only shows profile and applications
       return panel.type === 'profile' || panel.type === 'applications'
     }
-    // Admin mode shows all except meetings (not implemented in drawer)
-    return panel.type !== 'meetings'
+    // Admin mode shows all panels
+    return true
+  })
+
+  // Panel customization - allows users to show/hide/reorder panels (admin mode only)
+  const panelPrefs = useDrawerPanelPreferences({
+    drawerKey: 'candidate',
+    availablePanels: availablePanels.map((p) => p.type),
+    defaultPanels: isClientMode ? ['profile', 'applications'] : ['profile', 'applications', 'tasks', 'timeline'],
   })
 
   // Render panel content
@@ -145,6 +173,7 @@ export default function CandidatePreviewPanel({
             entityType="candidate"
             entityId={String(candidate.id)}
             entity={candidate as unknown as Record<string, unknown>}
+            hideHeader
           />
         )
 
@@ -211,18 +240,6 @@ export default function CandidatePreviewPanel({
     </div>
   ) : undefined
 
-  // Header with assigned selector (admin only)
-  const headerExtra = !isClientMode && candidate ? (
-    <div className="w-40">
-      <AssignedSelect
-        selected={candidate.assigned_to || []}
-        onChange={handleAssignedChange}
-        placeholder="Assign..."
-        compact
-      />
-    </div>
-  ) : undefined
-
   // Service Mode
   if (showServiceMode && candidate && !isClientMode) {
     return (
@@ -244,18 +261,36 @@ export default function CandidatePreviewPanel({
       <DrawerWithPanels
         isOpen={!!candidate}
         onClose={onClose}
+        entityType="Candidate"
         title={candidate?.full_name || 'Candidate Details'}
         subtitle={candidate?.headline || undefined}
         isLoading={false}
         avatar={avatar}
         statusBadge={statusBadge}
-        headerExtra={headerExtra}
         focusModeLabel="Service Mode"
         onEnterFocusMode={isClientMode ? undefined : () => setShowServiceMode(true)}
+        actionRail={
+          <EntityActionRail
+            actions={actions}
+            assignedTo={!isClientMode && candidate ? candidate.assigned_to || [] : undefined}
+            onAssignedChange={!isClientMode ? handleAssignedChange : undefined}
+          />
+        }
         availablePanels={availablePanels}
         defaultPanel="profile"
         activePanel={activePanel}
         onPanelChange={(panel) => setActivePanel(panel as EntityPanelType)}
+        panelCustomization={!isClientMode ? {
+          visiblePanels: panelPrefs.visiblePanels,
+          hiddenPanels: panelPrefs.hiddenPanels,
+          onAddPanel: panelPrefs.addPanel,
+          onRemovePanel: panelPrefs.removePanel,
+          onMovePanel: panelPrefs.movePanel,
+          canRemovePanel: panelPrefs.canRemovePanel,
+          canAddPanel: panelPrefs.canAddPanel,
+          onResetToDefaults: panelPrefs.resetToDefaults,
+          isCustomized: panelPrefs.isCustomized,
+        } : undefined}
         renderPanel={renderPanel}
       />
 

@@ -18,6 +18,8 @@ class CandidateActivityType(models.TextChoices):
     EXPERIENCE_UPDATED = 'experience_updated', 'Experience Updated'
     EDUCATION_ADDED = 'education_added', 'Education Added'
     EDUCATION_UPDATED = 'education_updated', 'Education Updated'
+    NOTE_ADDED = 'note_added', 'Note Added'
+    CALL_LOGGED = 'call_logged', 'Call Logged'
 
 
 class Seniority(models.TextChoices):

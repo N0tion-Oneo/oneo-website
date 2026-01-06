@@ -1,27 +1,25 @@
-import { useState, useEffect, useRef } from 'react'
-import {
-  ChevronDown,
-  CheckCircle,
-  Calendar,
-  FileText,
-  Gift,
-  XCircle,
-  Maximize2,
-} from 'lucide-react'
+import { useState, useEffect } from 'react'
 import {
   useApplication,
   useRecordApplicationView,
   useTasks,
   useShortlistApplication,
-  useMoveToStage,
   useStageInstances,
+  useStageTemplates,
+  useMoveToStage,
+  useEntityActions,
+  useDrawerPanelPreferences,
 } from '@/hooks'
-import { DrawerWithPanels, stageDropdownStyles, zIndexLayers } from '@/components/common'
+import { useAuth } from '@/contexts/AuthContext'
+import { UserRole } from '@/types'
+import { DrawerWithPanels, EntityActionRail, type StageOption } from '@/components/common'
+import type { ActionHandlers } from '@/components/service/actionConfig'
 import { EntityProfilePanel } from '@/components/service/panels/EntityProfilePanel'
 import ActivityTimeline from './ActivityTimeline'
 import { FocusMode } from '@/components/service'
 import {
   AnswersPanel,
+  EvaluationsPanel,
   TasksPanel,
   TimelinePanel,
   PipelinePanel,
@@ -32,9 +30,8 @@ import {
   getApplicationPanelOptions,
   type ApplicationPanelType,
 } from '@/components/service/panelConfig'
-import { ApplicationStatus } from '@/types'
-import type { Application, AssignedUser, ApplicationStageInstance } from '@/types'
-import { AssignedSelect } from '@/components/forms'
+import { ApplicationStatus, StageTypeConfig } from '@/types'
+import type { Application, AssignedUser, ApplicationStageInstance, StageType } from '@/types'
 import ScheduleInterviewModal from './ScheduleInterviewModal'
 import AssignAssessmentModal from './AssignAssessmentModal'
 import api from '@/services/api'
@@ -54,15 +51,6 @@ interface ApplicationDrawerProps {
 // Helper Functions
 // =============================================================================
 
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
 const getStatusColor = (status: ApplicationStatus) => {
   const colors = {
@@ -75,6 +63,44 @@ const getStatusColor = (status: ApplicationStatus) => {
     [ApplicationStatus.REJECTED]: 'bg-red-100 text-red-700',
   }
   return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+}
+
+// Hex colors for the stage selector in action rail
+const STATUS_COLORS: Record<ApplicationStatus, string> = {
+  [ApplicationStatus.APPLIED]: '#6B7280',
+  [ApplicationStatus.SHORTLISTED]: '#2563EB',
+  [ApplicationStatus.IN_PROGRESS]: '#D97706',
+  [ApplicationStatus.OFFER_MADE]: '#7C3AED',
+  [ApplicationStatus.OFFER_ACCEPTED]: '#059669',
+  [ApplicationStatus.OFFER_DECLINED]: '#EA580C',
+  [ApplicationStatus.REJECTED]: '#DC2626',
+}
+
+const STATUS_LABELS: Record<ApplicationStatus, string> = {
+  [ApplicationStatus.APPLIED]: 'Applied',
+  [ApplicationStatus.SHORTLISTED]: 'Shortlisted',
+  [ApplicationStatus.IN_PROGRESS]: 'In Progress',
+  [ApplicationStatus.OFFER_MADE]: 'Offer Made',
+  [ApplicationStatus.OFFER_ACCEPTED]: 'Offer Accepted',
+  [ApplicationStatus.OFFER_DECLINED]: 'Offer Declined',
+  [ApplicationStatus.REJECTED]: 'Rejected',
+}
+
+// Pipeline stage colors (gradient from amber to green)
+const STAGE_COLORS = [
+  '#F59E0B', // amber-500
+  '#EAB308', // yellow-500
+  '#84CC16', // lime-500
+  '#22C55E', // green-500
+  '#10B981', // emerald-500
+  '#14B8A6', // teal-500
+]
+
+// Get color for a pipeline stage based on its order
+const getStageColor = (order: number, total: number): string => {
+  if (total <= 1) return STAGE_COLORS[0] ?? '#F59E0B'
+  const index = Math.min(Math.floor((order - 1) / (total - 1) * (STAGE_COLORS.length - 1)), STAGE_COLORS.length - 1)
+  return STAGE_COLORS[index] ?? '#F59E0B'
 }
 
 const getKanbanColumnName = (application: Application): string => {
@@ -110,8 +136,9 @@ export default function ApplicationDrawer({
 }: ApplicationDrawerProps) {
   const [activePanel, setActivePanel] = useState<ApplicationPanelType>('profile')
   const [isInterviewMode, setIsInterviewMode] = useState(false)
-  const [isStageDropdownOpen, setIsStageDropdownOpen] = useState(false)
-  const stageDropdownRef = useRef<HTMLDivElement>(null)
+
+  const { user } = useAuth()
+  const isStaffUser = user?.role === UserRole.RECRUITER || user?.role === UserRole.ADMIN
 
   const { application, isLoading, refetch } = useApplication(applicationId || '')
 
@@ -122,10 +149,14 @@ export default function ApplicationDrawer({
   )
 
   // Stage instances for the application
-  const { instances: stageInstances, refetch: refetchStages } = useStageInstances(applicationId || '')
+  const { refetch: refetchStages } = useStageInstances(applicationId || '')
+
+  // Fetch pipeline stage templates for the job
+  const jobId = application?.job?.id ? String(application.job.id) : ''
+  const { templates: stageTemplates } = useStageTemplates(jobId)
 
   // Stage action hooks
-  const { shortlist, isLoading: isShortlisting } = useShortlistApplication()
+  const { shortlist } = useShortlistApplication()
   const { moveToStage, isLoading: isMovingStage } = useMoveToStage()
 
   // Modal state
@@ -137,12 +168,6 @@ export default function ApplicationDrawer({
     instance: ApplicationStageInstance
   } | null>(null)
 
-  // Pending modal to open after stage move completes
-  const [pendingStageModal, setPendingStageModal] = useState<{
-    stageOrder: number
-    isAssessment: boolean
-  } | null>(null)
-
   // Record application view (debounced)
   useRecordApplicationView(isOpen ? applicationId : null)
 
@@ -150,37 +175,8 @@ export default function ApplicationDrawer({
     if (isOpen && applicationId) {
       refetch()
       setActivePanel('profile')
-      setIsStageDropdownOpen(false)
     }
   }, [isOpen, applicationId, refetch])
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (stageDropdownRef.current && !stageDropdownRef.current.contains(event.target as Node)) {
-        setIsStageDropdownOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  // Open modal after stage move completes and stage instance is created
-  useEffect(() => {
-    if (pendingStageModal && stageInstances && stageInstances.length > 0) {
-      const newInstance = stageInstances.find(
-        (inst) => inst.stage_template?.order === pendingStageModal.stageOrder
-      )
-      if (newInstance) {
-        if (pendingStageModal.isAssessment) {
-          setAssessmentModal({ instance: newInstance })
-        } else {
-          setScheduleModal({ instance: newInstance, mode: 'schedule' })
-        }
-        setPendingStageModal(null)
-      }
-    }
-  }, [pendingStageModal, stageInstances])
 
   // Handle refresh and notify parent
   const handleRefresh = () => {
@@ -195,23 +191,8 @@ export default function ApplicationDrawer({
     try {
       await shortlist(applicationId)
       handleRefresh()
-      setIsStageDropdownOpen(false)
     } catch (error) {
       console.error('Failed to shortlist:', error)
-    }
-  }
-
-  const handleMoveToStage = async (stageOrder: number, isAssessment: boolean) => {
-    if (!applicationId) return
-    try {
-      await moveToStage(applicationId, { stage_order: stageOrder })
-      // Set pending modal to open after stage instances refresh
-      setPendingStageModal({ stageOrder, isAssessment })
-      handleRefresh()
-      setIsStageDropdownOpen(false)
-    } catch (error) {
-      console.error('Failed to move to stage:', error)
-      setPendingStageModal(null)
     }
   }
 
@@ -239,12 +220,152 @@ export default function ApplicationDrawer({
     }
   }
 
+  // Handle status/stage change
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const handleStageOrStatusChange = async (stageId: string | number) => {
+    if (!applicationId) return
+
+    // Check if this is a pipeline stage (starts with 'stage-')
+    if (typeof stageId === 'string' && stageId.startsWith('stage-')) {
+      const stageOrder = parseInt(stageId.replace('stage-', ''), 10)
+      setIsUpdatingStatus(true)
+      try {
+        await moveToStage(applicationId, { stage_order: stageOrder })
+
+        // Fetch stage instances to check if scheduling/assignment is needed
+        const instancesResponse = await api.get<ApplicationStageInstance[]>(
+          `/jobs/applications/${applicationId}/stages/`
+        )
+        const instances = instancesResponse.data
+        const stageInstance = instances.find(
+          (inst) => inst.stage_template.order === stageOrder
+        )
+
+        // Open appropriate modal based on stage type
+        if (stageInstance && stageInstance.status === 'not_started') {
+          const stageType = stageInstance.stage_template.stage_type as StageType
+          const stageConfig = StageTypeConfig[stageType]
+
+          if (stageConfig?.requiresScheduling) {
+            // Open schedule modal for interviews
+            setScheduleModal({
+              instance: stageInstance,
+              mode: 'schedule',
+            })
+          } else if (stageConfig?.isAssessment) {
+            // Open assessment modal for take-home assessments
+            setAssessmentModal({
+              instance: stageInstance,
+            })
+          }
+        }
+
+        handleRefresh()
+      } catch (err) {
+        console.error('Failed to move to stage:', err)
+      } finally {
+        setIsUpdatingStatus(false)
+      }
+    } else {
+      // This is a status change
+      setIsUpdatingStatus(true)
+      try {
+        await api.patch(`/jobs/applications/${applicationId}/`, {
+          status: stageId,
+        })
+        refetch()
+        onUpdate?.()
+      } catch (err) {
+        console.error('Failed to update status:', err)
+      } finally {
+        setIsUpdatingStatus(false)
+      }
+    }
+  }
+
+  // Build stage options: statuses + pipeline stages
+  const buildStageOptions = (): StageOption[] => {
+    const options: StageOption[] = [
+      { id: ApplicationStatus.APPLIED, name: 'Applied', color: STATUS_COLORS[ApplicationStatus.APPLIED] },
+      { id: ApplicationStatus.SHORTLISTED, name: 'Shortlisted', color: STATUS_COLORS[ApplicationStatus.SHORTLISTED] },
+    ]
+
+    // Add pipeline stages if available
+    if (stageTemplates && stageTemplates.length > 0) {
+      const sortedTemplates = [...stageTemplates].sort((a, b) => a.order - b.order)
+      sortedTemplates.forEach((template) => {
+        options.push({
+          id: `stage-${template.order}`,
+          name: template.name,
+          color: getStageColor(template.order, sortedTemplates.length),
+        })
+      })
+    }
+
+    // Add terminal statuses
+    options.push(
+      { id: ApplicationStatus.OFFER_MADE, name: 'Offer Made', color: STATUS_COLORS[ApplicationStatus.OFFER_MADE] },
+      { id: ApplicationStatus.OFFER_ACCEPTED, name: 'Accepted', color: STATUS_COLORS[ApplicationStatus.OFFER_ACCEPTED] },
+      { id: ApplicationStatus.OFFER_DECLINED, name: 'Declined', color: STATUS_COLORS[ApplicationStatus.OFFER_DECLINED] },
+      { id: ApplicationStatus.REJECTED, name: 'Rejected', color: STATUS_COLORS[ApplicationStatus.REJECTED] }
+    )
+
+    return options
+  }
+
+  // Get current stage for the selector
+  const getCurrentStage = (): StageOption | null => {
+    if (!application) return null
+
+    if (application.status === ApplicationStatus.IN_PROGRESS) {
+      // Show the current pipeline stage
+      const stageName = application.current_stage_name || `Stage ${application.current_stage_order}`
+      const totalStages = stageTemplates?.length || 1
+      return {
+        id: `stage-${application.current_stage_order}`,
+        name: stageName,
+        color: getStageColor(application.current_stage_order, totalStages),
+      }
+    }
+
+    // Show the status
+    return {
+      id: application.status,
+      name: STATUS_LABELS[application.status] || application.status,
+      color: STATUS_COLORS[application.status] || '#6B7280',
+    }
+  }
+
+  // Action handlers for the action rail
+  const actionHandlers: ActionHandlers = {
+    'shortlist': handleShortlist,
+    'schedule-interview': () => setActivePanel('pipeline'),
+    'add-feedback': () => setActivePanel('pipeline'),
+    'make-offer': () => setActivePanel('actions'),
+    'reject': () => setActivePanel('actions'),
+    'interview-mode': () => setIsInterviewMode(true),
+  }
+
+  // Get resolved actions using the declarative config
+  const actions = useEntityActions(
+    'application',
+    application as unknown as Record<string, unknown>,
+    actionHandlers
+  )
+
   // Get available panels from shared config, with dynamic answer count
   const availablePanels = getApplicationPanelOptions().map((panel) => {
     if (panel.type === 'answers' && application?.answers?.length) {
       return { ...panel, count: application.answers.length }
     }
     return panel
+  })
+
+  // Panel customization - allows users to show/hide/reorder panels
+  const panelPrefs = useDrawerPanelPreferences({
+    drawerKey: 'application',
+    availablePanels: availablePanels.map((p) => p.type),
+    defaultPanels: ['profile', 'pipeline', 'answers', 'evaluations', 'tasks', 'timeline'],
   })
 
   // Render panel content - using same components as FocusMode
@@ -264,6 +385,8 @@ export default function ApplicationDrawer({
             entityType="candidate"
             entityId={String(application.candidate.id)}
             entity={application.candidate as unknown as Record<string, unknown>}
+            readOnly
+            hideHeader
           />
         )
 
@@ -273,6 +396,8 @@ export default function ApplicationDrawer({
             entityType="company"
             entityId={String(application.job.company.id)}
             entity={application.job.company as unknown as Record<string, unknown>}
+            readOnly
+            hideHeader
           />
         ) : (
           <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">
@@ -285,6 +410,16 @@ export default function ApplicationDrawer({
           <AnswersPanel
             answers={application.answers || []}
             isLoading={false}
+          />
+        )
+
+      case 'evaluations':
+        return (
+          <EvaluationsPanel
+            applicationId={applicationId}
+            jobId={application.job?.id || ''}
+            isRecruiterView={true}
+            onRefresh={handleRefresh}
           />
         )
 
@@ -333,8 +468,8 @@ export default function ApplicationDrawer({
       case 'timeline':
         return (
           <TimelinePanel
-            entityType="candidate"
-            entityId={candidateId}
+            entityType="application"
+            entityId={applicationId}
             onRefresh={handleRefresh}
           />
         )
@@ -344,168 +479,13 @@ export default function ApplicationDrawer({
     }
   }
 
-  // Get interview stages from application
-  const interviewStages = application?.interview_stages || []
-
-  // Stage dropdown component with actions
+  // Simple status badge for header (dropdown moved to action rail)
   const renderStatusBadge = () => {
     if (!application) return null
-
-    const status = application.status
-    const isProcessing = isShortlisting || isMovingStage
-
-    // Determine available actions based on status
-    const isTerminal = [ApplicationStatus.REJECTED, ApplicationStatus.OFFER_ACCEPTED, ApplicationStatus.OFFER_DECLINED].includes(status)
-    const canShortlist = status === ApplicationStatus.APPLIED
-    const canMoveToStages = !isTerminal // Can move to stages from any non-terminal status
-    const canMakeOffer = [ApplicationStatus.SHORTLISTED, ApplicationStatus.IN_PROGRESS].includes(status)
-    const canReject = !isTerminal
-
     return (
-      <div className="relative" ref={stageDropdownRef}>
-        <button
-          onClick={() => setIsStageDropdownOpen(!isStageDropdownOpen)}
-          disabled={isProcessing}
-          className={`${stageDropdownStyles.trigger} ${getStatusColor(status)} ${isProcessing ? stageDropdownStyles.triggerDisabled : ''}`}
-        >
-          {isProcessing ? 'Processing...' : getKanbanColumnName(application)}
-          <ChevronDown className="w-3.5 h-3.5" />
-        </button>
-
-        {isStageDropdownOpen && (
-          <div className={stageDropdownStyles.dropdown} style={{ zIndex: zIndexLayers.stageDropdown }}>
-            {/* Current Status */}
-            <div className={stageDropdownStyles.sectionHeader}>
-              Current Status
-            </div>
-            <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800">
-              <span className={`inline-flex items-center px-2 py-1 text-[11px] font-medium rounded ${getStatusColor(status)}`}>
-                {getKanbanColumnName(application)}
-              </span>
-            </div>
-
-            {/* Available Actions */}
-            {!isTerminal && (
-              <>
-                <div className="px-3 py-2 text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Actions
-                </div>
-
-                {/* Shortlist - only for Applied status */}
-                {canShortlist && (
-                  <button
-                    onClick={handleShortlist}
-                    disabled={isProcessing}
-                    className={stageDropdownStyles.menuItem}
-                  >
-                    <CheckCircle className="w-3.5 h-3.5 text-blue-600" />
-                    Shortlist Candidate
-                  </button>
-                )}
-
-                {/* Move to Interview Stages */}
-                {canMoveToStages && interviewStages.length > 0 && (
-                  <>
-                    <div className={stageDropdownStyles.sectionDivider}>
-                      <span className="px-3 text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                        Move to Stage
-                      </span>
-                    </div>
-                    {interviewStages.map((stage) => {
-                      // Find matching stage instance by order
-                      const stageInstance = stageInstances?.find(
-                        (inst) => inst.stage_template?.order === stage.order
-                      )
-                      const isCurrentStage = application.current_stage_order === stage.order
-                      // Detect stage type by presence of assessment fields
-                      const isAssessment = !!(stage.assessment_url || stage.assessment_name)
-                      const isInterview = !isAssessment
-
-                      return (
-                        <button
-                          key={stage.order}
-                          onClick={() => {
-                            if (isCurrentStage && stageInstance) {
-                              // Already on this stage - offer to schedule/assign
-                              if (isInterview) {
-                                setScheduleModal({ instance: stageInstance, mode: 'schedule' })
-                                setIsStageDropdownOpen(false)
-                              } else if (isAssessment) {
-                                setAssessmentModal({ instance: stageInstance })
-                                setIsStageDropdownOpen(false)
-                              }
-                            } else {
-                              // Move to stage and open appropriate modal after
-                              handleMoveToStage(stage.order, isAssessment)
-                            }
-                          }}
-                          disabled={isProcessing}
-                          className={`${stageDropdownStyles.menuItem} justify-between ${
-                            isCurrentStage ? stageDropdownStyles.menuItemActive : ''
-                          }`}
-                        >
-                          <span className="flex items-center gap-2">
-                            {isInterview && <Calendar className="w-3.5 h-3.5 text-purple-500" />}
-                            {isAssessment && <FileText className="w-3.5 h-3.5 text-orange-500" />}
-                            {stage.name}
-                          </span>
-                          {isCurrentStage && (
-                            <span className={stageDropdownStyles.currentBadge}>
-                              Current
-                            </span>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </>
-                )}
-
-                {/* Make Offer */}
-                {canMakeOffer && (
-                  <button
-                    onClick={() => {
-                      setActivePanel('actions')
-                      setIsStageDropdownOpen(false)
-                    }}
-                    className={`${stageDropdownStyles.menuItem} ${stageDropdownStyles.sectionDivider}`}
-                  >
-                    <Gift className="w-3.5 h-3.5 text-purple-600" />
-                    Make Offer...
-                  </button>
-                )}
-
-                {/* Reject */}
-                {canReject && (
-                  <button
-                    onClick={() => {
-                      setActivePanel('actions')
-                      setIsStageDropdownOpen(false)
-                    }}
-                    className={stageDropdownStyles.menuItem}
-                  >
-                    <XCircle className="w-3.5 h-3.5 text-red-600" />
-                    Reject Application...
-                  </button>
-                )}
-              </>
-            )}
-
-            {/* Full Interview Mode */}
-            <div className={stageDropdownStyles.sectionDivider}>
-              <button
-                onClick={() => {
-                  setIsStageDropdownOpen(false)
-                  setIsInterviewMode(true)
-                }}
-                className={stageDropdownStyles.menuItem}
-              >
-                <Maximize2 className="w-3.5 h-3.5 text-gray-400" />
-                Open Full Interview Mode
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <span className={`inline-flex items-center px-2 py-1 text-[11px] font-medium rounded ${getStatusColor(application.status)}`}>
+        {getKanbanColumnName(application)}
+      </span>
     )
   }
 
@@ -518,18 +498,6 @@ export default function ApplicationDrawer({
         .join('')
         .toUpperCase()
         .slice(0, 2) || '?'}
-    </div>
-  ) : undefined
-
-  // Header with assigned selector
-  const headerExtra = application ? (
-    <div className="w-40">
-      <AssignedSelect
-        selected={(application.assigned_recruiters as unknown as AssignedUser[]) || []}
-        onChange={handleAssignedChange}
-        placeholder="Assign..."
-        compact
-      />
     </div>
   ) : undefined
 
@@ -557,18 +525,40 @@ export default function ApplicationDrawer({
       <DrawerWithPanels
         isOpen={isOpen}
         onClose={onClose}
+        entityType="Application"
         title={application?.candidate?.full_name || 'Application'}
-        subtitle={application ? `Applied ${formatDate(application.applied_at)}` : undefined}
+        subtitle={application ? `for ${application.job?.title || 'Unknown Job'}${application.job?.company?.name ? ` at ${application.job.company.name}` : ''}` : undefined}
         isLoading={isLoading}
         avatar={avatar}
         statusBadge={renderStatusBadge()}
-        headerExtra={headerExtra}
         focusModeLabel="Interview Mode"
         onEnterFocusMode={() => setIsInterviewMode(true)}
+        actionRail={
+          <EntityActionRail
+            actions={actions}
+            assignedTo={isStaffUser && application ? (application.assigned_recruiters as unknown as AssignedUser[]) || [] : undefined}
+            onAssignedChange={isStaffUser ? handleAssignedChange : undefined}
+            currentStage={getCurrentStage()}
+            stages={buildStageOptions()}
+            onStageChange={handleStageOrStatusChange}
+            isUpdatingStage={isUpdatingStatus || isMovingStage}
+          />
+        }
         availablePanels={availablePanels}
         defaultPanel="profile"
         activePanel={activePanel}
         onPanelChange={(panel) => setActivePanel(panel as ApplicationPanelType)}
+        panelCustomization={{
+          visiblePanels: panelPrefs.visiblePanels,
+          hiddenPanels: panelPrefs.hiddenPanels,
+          onAddPanel: panelPrefs.addPanel,
+          onRemovePanel: panelPrefs.removePanel,
+          onMovePanel: panelPrefs.movePanel,
+          canRemovePanel: panelPrefs.canRemovePanel,
+          canAddPanel: panelPrefs.canAddPanel,
+          onResetToDefaults: panelPrefs.resetToDefaults,
+          isCustomized: panelPrefs.isCustomized,
+        }}
         renderPanel={renderPanel}
       />
 

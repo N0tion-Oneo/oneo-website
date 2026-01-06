@@ -408,6 +408,70 @@ class CompanyInvitation(models.Model):
         return self.status == InvitationStatus.PENDING and not self.is_expired
 
 
+class CompanyActivityType(models.TextChoices):
+    """Types of activities that can be logged for a company."""
+    NOTE_ADDED = 'note_added', 'Note Added'
+    CALL_LOGGED = 'call_logged', 'Call Logged'
+    EMAIL_SENT = 'email_sent', 'Email Sent'
+    MEETING_SCHEDULED = 'meeting_scheduled', 'Meeting Scheduled'
+    MEETING_COMPLETED = 'meeting_completed', 'Meeting Completed'
+    MEETING_CANCELLED = 'meeting_cancelled', 'Meeting Cancelled'
+    ASSIGNED = 'assigned', 'Assigned'
+    STATUS_CHANGED = 'status_changed', 'Status Changed'
+
+
+class CompanyActivity(models.Model):
+    """
+    Activity log for companies - tracks all interactions and notes.
+    Similar to LeadActivity but for client companies.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Core relation
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name='activities',
+    )
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='company_activities',
+        help_text='User who performed this action',
+    )
+
+    # Activity details
+    activity_type = models.CharField(
+        max_length=30,
+        choices=CompanyActivityType.choices,
+    )
+
+    # For notes
+    content = models.TextField(
+        blank=True,
+        help_text='Note content or activity description',
+    )
+
+    # Additional metadata (JSON field for flexible storage)
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Additional activity-specific data',
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'company_activities'
+        ordering = ['-created_at']
+        verbose_name_plural = 'Company activities'
+
+    def __str__(self):
+        return f"{self.company.name} - {self.get_activity_type_display()}"
+
+
 class TermsAcceptanceContext(models.TextChoices):
     COMPANY_CREATION = 'company_creation', 'Company Creation'
     SERVICE_TYPE_CHANGE = 'service_type_change', 'Service Type Change'

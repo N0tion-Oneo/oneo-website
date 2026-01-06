@@ -20,7 +20,9 @@ import {
   Users,
   AlertCircle,
   Flag,
+  Eye,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { StageIntegrationBadges, StageIntegrationsDrawer } from '@/components/onboarding'
 import type { StageIntegration } from '@/types'
 
@@ -548,7 +550,16 @@ export default function OnboardingStagesSettingsPage() {
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end gap-3 mb-4">
+        {activeTab === 'company' && (
+          <Link
+            to="/dashboard?preview-onboarding=true"
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            <Eye className="w-4 h-4" />
+            Preview Wizard
+          </Link>
+        )}
         <button
           onClick={handleCreate}
           className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-md hover:bg-gray-800 dark:hover:bg-gray-200"

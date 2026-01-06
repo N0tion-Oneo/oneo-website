@@ -5,7 +5,6 @@ import {
   Minimize2,
   ChevronDown,
   Building2,
-  Briefcase,
   User,
 } from 'lucide-react'
 import { useServiceCenter } from '@/hooks'
@@ -15,10 +14,12 @@ import { TasksPanel } from './panels/TasksPanel'
 import { TimelinePanel } from './panels/TimelinePanel'
 import { MeetingsPanel } from './panels/MeetingsPanel'
 import { JobsPanel } from './panels/JobsPanel'
-import { ContactsPanel } from './panels/ContactsPanel'
+import { TeamPanel } from './panels/TeamPanel'
 import { BillingPanel } from './panels/BillingPanel'
 import { ApplicationsPanel } from './panels/ApplicationsPanel'
 import { InvitationsPanel } from './panels/InvitationsPanel'
+import { CompanyDetailsPanel } from './panels/CompanyDetailsPanel'
+import { CompanyCulturePanel } from './panels/CompanyCulturePanel'
 import ApplicationDrawer from '@/components/applications/ApplicationDrawer'
 import {
   getEntityPanelOptions,
@@ -61,7 +62,7 @@ function PanelHeader({
   title: string
   icon: React.ReactNode
   panelOptions: PanelOption[]
-  onChangePanel: (type: PanelType) => void
+  onChangePanel: (type: EntityPanelType) => void
   onMaximize?: () => void
   isMaximized?: boolean
 }) {
@@ -90,7 +91,7 @@ function PanelHeader({
                 <button
                   key={option.type}
                   onClick={() => {
-                    onChangePanel(option.type)
+                    onChangePanel(option.type as EntityPanelType)
                     setIsDropdownOpen(false)
                   }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -226,6 +227,22 @@ export default function ServiceModeView({
           />
         )
       // Company-specific panels
+      case 'details':
+        return (
+          <CompanyDetailsPanel
+            companyId={entityId}
+            entity={data?.entity}
+            onRefresh={refetch}
+          />
+        )
+      case 'culture':
+        return (
+          <CompanyCulturePanel
+            companyId={entityId}
+            entity={data?.entity}
+            onRefresh={refetch}
+          />
+        )
       case 'jobs':
         return (
           <JobsPanel
@@ -233,9 +250,9 @@ export default function ServiceModeView({
             entity={data?.entity}
           />
         )
-      case 'contacts':
+      case 'team':
         return (
-          <ContactsPanel
+          <TeamPanel
             companyId={entityId}
             entity={data?.entity}
           />

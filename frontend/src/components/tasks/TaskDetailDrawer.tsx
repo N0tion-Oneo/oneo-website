@@ -32,6 +32,7 @@ import {
   useLead,
   useCompanyById,
   useApplication,
+  useDrawerPanelPreferences,
 } from '@/hooks'
 import { format, isPast, parseISO, formatDistanceToNow, addDays } from 'date-fns'
 import { DrawerWithPanels } from '@/components/common'
@@ -327,6 +328,13 @@ export function TaskDetailDrawer({
   const isCancelled = task.status === 'cancelled'
   const entityPreview = getEntityPreview()
   const availablePanels = getTaskPanelOptions()
+
+  // Panel customization - allows users to show/hide/reorder panels
+  const panelPrefs = useDrawerPanelPreferences({
+    drawerKey: 'task',
+    availablePanels: availablePanels.map((p) => p.type),
+    defaultPanels: ['details', 'entity', 'activity', 'notes'],
+  })
 
   // Status badge with dropdown
   const renderStatusBadge = () => {
@@ -846,14 +854,26 @@ export function TaskDetailDrawer({
     <DrawerWithPanels
       isOpen={isOpen}
       onClose={onClose}
+      entityType="Task"
       title={task.title}
-      subtitle={`${entityTypeLabels[task.entity_type]} task`}
+      subtitle={entityPreview && 'name' in entityPreview ? `for ${entityPreview.name}` : `${entityTypeLabels[task.entity_type]} task`}
       avatar={avatar}
       statusBadge={renderStatusBadge()}
       availablePanels={availablePanels}
       defaultPanel="details"
       activePanel={activePanel}
       onPanelChange={(panel) => setActivePanel(panel as TaskPanelType)}
+      panelCustomization={{
+        visiblePanels: panelPrefs.visiblePanels,
+        hiddenPanels: panelPrefs.hiddenPanels,
+        onAddPanel: panelPrefs.addPanel,
+        onRemovePanel: panelPrefs.removePanel,
+        onMovePanel: panelPrefs.movePanel,
+        canRemovePanel: panelPrefs.canRemovePanel,
+        canAddPanel: panelPrefs.canAddPanel,
+        onResetToDefaults: panelPrefs.resetToDefaults,
+        isCustomized: panelPrefs.isCustomized,
+      }}
       renderPanel={renderPanel}
       actionBar={renderActionBar()}
       modals={modals}

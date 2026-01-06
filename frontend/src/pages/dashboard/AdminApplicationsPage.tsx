@@ -609,240 +609,252 @@ export default function AdminApplicationsPage() {
 
   // Define columns with TanStack Table
   const columns = useMemo<ColumnDef<ApplicationListItem, any>[]>(
-    () => [
-      // Selection checkbox - PINNED LEFT
-      {
-        id: 'select',
-        size: 40,
-        enableResizing: false,
-        enableSorting: false,
-        header: ({ table }) => (
-          <input
-            type="checkbox"
-            checked={table.getIsAllPageRowsSelected()}
-            onChange={table.getToggleAllPageRowsSelectedHandler()}
-            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:bg-gray-800"
-          />
-        ),
-        cell: ({ row }) => (
-          <div onClick={(e) => e.stopPropagation()}>
+    () => {
+      const baseColumns: ColumnDef<ApplicationListItem, any>[] = [
+        // Selection checkbox - PINNED LEFT
+        {
+          id: 'select',
+          size: 40,
+          enableResizing: false,
+          enableSorting: false,
+          header: ({ table }) => (
             <input
               type="checkbox"
-              checked={row.getIsSelected()}
-              onChange={row.getToggleSelectedHandler()}
+              checked={table.getIsAllPageRowsSelected()}
+              onChange={table.getToggleAllPageRowsSelectedHandler()}
               className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:bg-gray-800"
             />
-          </div>
-        ),
-      },
-      // Assigned Recruiters - PINNED LEFT
-      columnHelper.accessor('assigned_recruiters', {
-        header: 'Assigned',
-        size: 140,
-        enableSorting: false,
-        cell: ({ row }) => {
-          const app = row.original
-          const assignedUsers = app.assigned_recruiters || []
-          return (
+          ),
+          cell: ({ row }) => (
             <div onClick={(e) => e.stopPropagation()}>
-              <AssignedSelect
-                selected={assignedUsers}
-                onChange={(users) => handleAssignedChange(app.id, users)}
-                compact
-                placeholder="Assign"
+              <input
+                type="checkbox"
+                checked={row.getIsSelected()}
+                onChange={row.getToggleSelectedHandler()}
+                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:bg-gray-800"
               />
             </div>
-          )
+          ),
         },
-      }),
+      ]
+
+      // Admin/Recruiter only: Assigned Recruiters column
+      if (!isClient) {
+        baseColumns.push(
+          columnHelper.accessor('assigned_recruiters', {
+            header: 'Assigned',
+            size: 140,
+            enableSorting: false,
+            cell: ({ row }) => {
+              const app = row.original
+              const assignedUsers = app.assigned_recruiters || []
+              return (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <AssignedSelect
+                    selected={assignedUsers}
+                    onChange={(users) => handleAssignedChange(app.id, users)}
+                    compact
+                    placeholder="Assign"
+                  />
+                </div>
+              )
+            },
+          })
+        )
+      }
+
       // Candidate - PINNED LEFT
-      columnHelper.accessor('candidate_name', {
-        header: 'Candidate',
-        size: 200,
-        enableSorting: true,
-        cell: ({ row }) => {
-          const app = row.original
-          return (
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-                <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400">
-                  {app.candidate_name?.split(' ').map(n => n[0]).join('') || '--'}
-                </span>
+      baseColumns.push(
+        columnHelper.accessor('candidate_name', {
+          header: 'Candidate',
+          size: 200,
+          enableSorting: true,
+          cell: ({ row }) => {
+            const app = row.original
+            return (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400">
+                    {app.candidate_name?.split(' ').map(n => n[0]).join('') || '--'}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
+                    {app.candidate_name || 'No name'}
+                  </p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                    {app.candidate_email}
+                  </p>
+                </div>
               </div>
+            )
+          },
+        }),
+        // Job Title
+        columnHelper.accessor('job_title', {
+          header: 'Job',
+          size: 200,
+          enableSorting: true,
+          cell: ({ row }) => {
+            const app = row.original
+            return (
               <div className="min-w-0">
-                <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
-                  {app.candidate_name || 'No name'}
-                </p>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
-                  {app.candidate_email}
-                </p>
+                <Link
+                  to={`/jobs/${app.job_slug}`}
+                  className="text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 truncate block"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {app.job_title}
+                </Link>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Building2 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{app.company_name}</span>
+                </div>
               </div>
-            </div>
-          )
-        },
-      }),
-      // Job Title
-      columnHelper.accessor('job_title', {
-        header: 'Job',
-        size: 200,
-        enableSorting: true,
-        cell: ({ row }) => {
-          const app = row.original
-          return (
-            <div className="min-w-0">
-              <Link
-                to={`/jobs/${app.job_slug}`}
-                className="text-[13px] font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 truncate block"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {app.job_title}
-              </Link>
-              <div className="flex items-center gap-1 mt-0.5">
-                <Building2 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
-                <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{app.company_name}</span>
-              </div>
-            </div>
-          )
-        },
-      }),
-      // Stage
-      columnHelper.accessor('current_stage_name', {
-        header: 'Stage',
-        size: 140,
-        enableSorting: false,
-        cell: ({ row }) => {
-          const app = row.original
-          const stageName = app.current_stage_name || 'Applied'
-          return (
-            <span className="px-2 py-1 text-[11px] font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
-              {stageName}
-            </span>
-          )
-        },
-      }),
-      // Status
-      columnHelper.accessor('status', {
-        header: 'Status',
-        size: 120,
-        enableSorting: true,
-        cell: ({ getValue }) => {
-          const status = getValue() as ApplicationStatus
-          const colors = STATUS_COLORS[status] || { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-700 dark:text-gray-300' }
-          return (
-            <span className={`px-2 py-1 text-[11px] font-medium rounded ${colors.bg} ${colors.text}`}>
-              {STATUS_LABELS[status] || status}
-            </span>
-          )
-        },
-      }),
-      // Applied Date
-      columnHelper.accessor('applied_at', {
-        header: 'Applied',
-        size: 100,
-        enableSorting: true,
-        cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-600 dark:text-gray-400">{formatDate(getValue())}</span>
-        ),
-      }),
-      // Time in Stage
-      columnHelper.accessor('last_status_change', {
-        header: 'Time in Stage',
-        size: 100,
-        enableSorting: false,
-        cell: ({ getValue }) => (
-          <span className="text-[12px] text-gray-500 dark:text-gray-400">{formatTimeInStage(getValue())}</span>
-        ),
-      }),
-      // Next Interview (if scheduled)
-      columnHelper.accessor('current_stage_instance', {
-        header: 'Next Interview',
-        size: 130,
-        enableSorting: false,
-        cell: ({ getValue }) => {
-          const instance = getValue()
-          if (!instance?.scheduled_at) {
-            return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
-          }
-          return (
-            <span className="text-[12px] text-gray-600 dark:text-gray-400">
-              {formatDate(instance.scheduled_at)}
-            </span>
-          )
-        },
-      }),
-      // Actions
-      columnHelper.display({
-        id: 'actions',
-        header: '',
-        size: 50,
-        enableResizing: false,
-        enableSorting: false,
-        cell: ({ row }) => {
-          const app = row.original
-          return (
-            <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
-              <button
-                onClick={(e) => {
-                  if (openActionsMenu === app.id) {
-                    setOpenActionsMenu(null)
-                    setMenuPosition(null)
-                  } else {
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    setMenuPosition({ top: rect.bottom + 4, left: rect.right - 160 })
-                    setOpenActionsMenu(app.id)
-                  }
-                }}
-                className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded"
-              >
-                <MoreVertical className="w-4 h-4" />
-              </button>
-              {openActionsMenu === app.id && menuPosition && createPortal(
-                <>
-                  <div
-                    className="fixed inset-0 z-[9998]"
-                    onClick={() => {
+            )
+          },
+        }),
+        // Stage
+        columnHelper.accessor('current_stage_name', {
+          header: 'Stage',
+          size: 140,
+          enableSorting: false,
+          cell: ({ row }) => {
+            const app = row.original
+            const stageName = app.current_stage_name || 'Applied'
+            return (
+              <span className="px-2 py-1 text-[11px] font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
+                {stageName}
+              </span>
+            )
+          },
+        }),
+        // Status
+        columnHelper.accessor('status', {
+          header: 'Status',
+          size: 120,
+          enableSorting: true,
+          cell: ({ getValue }) => {
+            const status = getValue() as ApplicationStatus
+            const colors = STATUS_COLORS[status] || { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-700 dark:text-gray-300' }
+            return (
+              <span className={`px-2 py-1 text-[11px] font-medium rounded ${colors.bg} ${colors.text}`}>
+                {STATUS_LABELS[status] || status}
+              </span>
+            )
+          },
+        }),
+        // Applied Date
+        columnHelper.accessor('applied_at', {
+          header: 'Applied',
+          size: 100,
+          enableSorting: true,
+          cell: ({ getValue }) => (
+            <span className="text-[12px] text-gray-600 dark:text-gray-400">{formatDate(getValue())}</span>
+          ),
+        }),
+        // Time in Stage
+        columnHelper.accessor('last_status_change', {
+          header: 'Time in Stage',
+          size: 100,
+          enableSorting: false,
+          cell: ({ getValue }) => (
+            <span className="text-[12px] text-gray-500 dark:text-gray-400">{formatTimeInStage(getValue())}</span>
+          ),
+        }),
+        // Next Interview (if scheduled)
+        columnHelper.accessor('current_stage_instance', {
+          header: 'Next Interview',
+          size: 130,
+          enableSorting: false,
+          cell: ({ getValue }) => {
+            const instance = getValue()
+            if (!instance?.scheduled_at) {
+              return <span className="text-[11px] text-gray-400 dark:text-gray-500">-</span>
+            }
+            return (
+              <span className="text-[12px] text-gray-600 dark:text-gray-400">
+                {formatDate(instance.scheduled_at)}
+              </span>
+            )
+          },
+        }),
+        // Actions
+        columnHelper.display({
+          id: 'actions',
+          header: '',
+          size: 50,
+          enableResizing: false,
+          enableSorting: false,
+          cell: ({ row }) => {
+            const app = row.original
+            return (
+              <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={(e) => {
+                    if (openActionsMenu === app.id) {
                       setOpenActionsMenu(null)
                       setMenuPosition(null)
-                    }}
-                  />
-                  <div
-                    className="fixed w-40 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg dark:shadow-gray-900/20 z-[9999]"
-                    style={{ top: menuPosition.top, left: menuPosition.left }}
-                  >
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          setSelectedApplicationId(app.id)
-                          setOpenActionsMenu(null)
-                          setMenuPosition(null)
-                        }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-left"
-                      >
-                        <FileText className="w-4 h-4" />
-                        View Details
-                      </button>
-                      <Link
-                        to={`/jobs/${app.job_slug}`}
-                        className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                        onClick={() => {
-                          setOpenActionsMenu(null)
-                          setMenuPosition(null)
-                        }}
-                      >
-                        <Briefcase className="w-4 h-4" />
-                        View Job
-                      </Link>
+                    } else {
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      setMenuPosition({ top: rect.bottom + 4, left: rect.right - 160 })
+                      setOpenActionsMenu(app.id)
+                    }
+                  }}
+                  className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+                {openActionsMenu === app.id && menuPosition && createPortal(
+                  <>
+                    <div
+                      className="fixed inset-0 z-[9998]"
+                      onClick={() => {
+                        setOpenActionsMenu(null)
+                        setMenuPosition(null)
+                      }}
+                    />
+                    <div
+                      className="fixed w-40 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg dark:shadow-gray-900/20 z-[9999]"
+                      style={{ top: menuPosition.top, left: menuPosition.left }}
+                    >
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            setSelectedApplicationId(app.id)
+                            setOpenActionsMenu(null)
+                            setMenuPosition(null)
+                          }}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-left"
+                        >
+                          <FileText className="w-4 h-4" />
+                          View Details
+                        </button>
+                        <Link
+                          to={`/jobs/${app.job_slug}`}
+                          className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                          onClick={() => {
+                            setOpenActionsMenu(null)
+                            setMenuPosition(null)
+                          }}
+                        >
+                          <Briefcase className="w-4 h-4" />
+                          View Job
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                </>,
-                document.body
-              )}
-            </div>
-          )
-        },
-      }),
-    ],
-    [openActionsMenu, menuPosition, handleAssignedChange]
+                  </>,
+                  document.body
+                )}
+              </div>
+            )
+          },
+        })
+      )
+
+      return baseColumns
+    },
+    [openActionsMenu, menuPosition, handleAssignedChange, isClient]
   )
 
   const table = useReactTable({

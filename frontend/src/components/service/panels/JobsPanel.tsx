@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
-import { Briefcase, ExternalLink, Users, Clock } from 'lucide-react'
+import { Briefcase, ExternalLink, Users, Clock, Plus } from 'lucide-react'
 import { useAllJobs } from '@/hooks'
 
 interface JobsPanelProps {
   companyId: string
   entity?: Record<string, unknown>
+  onCreateJob?: () => void
 }
 
 function getJobStatusBadge(status: string) {
@@ -22,7 +23,7 @@ function getJobStatusBadge(status: string) {
   }
 }
 
-export function JobsPanel({ companyId }: JobsPanelProps) {
+export function JobsPanel({ companyId, onCreateJob }: JobsPanelProps) {
   const { jobs, isLoading } = useAllJobs({ company: companyId })
 
   if (isLoading) {
@@ -35,17 +36,53 @@ export function JobsPanel({ companyId }: JobsPanelProps) {
 
   if (!jobs || jobs.length === 0) {
     return (
-      <div className="h-full overflow-y-auto p-4">
-        <div className="text-center py-8">
-          <Briefcase className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-          <p className="text-gray-500 dark:text-gray-400 text-sm">No jobs found</p>
+      <div className="h-full flex flex-col">
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-gray-900 dark:text-gray-100">Jobs</h3>
+            {onCreateJob && (
+              <button
+                onClick={onCreateJob}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Job
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="text-center">
+            <Briefcase className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400 text-sm">No jobs found</p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">Create your first job posting</p>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-full overflow-y-auto p-4 space-y-3">
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium text-gray-900 dark:text-gray-100">Jobs</h3>
+          {onCreateJob && (
+            <button
+              onClick={onCreateJob}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Job
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Jobs List */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
       {jobs.map((job) => {
         const statusBadge = getJobStatusBadge(job.status)
         return (
@@ -97,6 +134,7 @@ export function JobsPanel({ companyId }: JobsPanelProps) {
           </div>
         )
       })}
+      </div>
     </div>
   )
 }

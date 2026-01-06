@@ -66,6 +66,8 @@ ACTIVITY_TYPE_MAP = {
     'experience_updated': 'profile_update',
     'education_added': 'profile_update',
     'education_updated': 'profile_update',
+    'note_added': 'note',
+    'call_logged': 'call',
 
     # StageFeedback and Task types
     'feedback': 'feedback',
@@ -106,6 +108,25 @@ def map_lead_activity(activity) -> dict:
             'original_type': activity.activity_type,
             'previous_stage': activity.previous_stage.name if activity.previous_stage else None,
             'new_stage': activity.new_stage.name if activity.new_stage else None,
+            'from_stage_color': activity.previous_stage.color if activity.previous_stage else None,
+            'to_stage_color': activity.new_stage.color if activity.new_stage else None,
+            **(activity.metadata or {}),
+        },
+        'created_at': activity.created_at,
+    }
+
+
+def map_company_activity(activity) -> dict:
+    """Map CompanyActivity to TimelineEntry format."""
+    return {
+        'id': str(activity.id),
+        'source': 'company_activity',
+        'activity_type': normalize_activity_type(activity.activity_type),
+        'title': activity.get_activity_type_display(),
+        'content': activity.content or '',
+        'performed_by': get_performer_dict(activity.performed_by),
+        'metadata': {
+            'original_type': activity.activity_type,
             **(activity.metadata or {}),
         },
         'created_at': activity.created_at,
@@ -127,8 +148,10 @@ def map_onboarding_history(history) -> dict:
         'metadata': {
             'from_stage_id': history.from_stage.id if history.from_stage else None,
             'from_stage_name': from_name,
+            'from_stage_color': history.from_stage.color if history.from_stage else None,
             'to_stage_id': history.to_stage.id if history.to_stage else None,
             'to_stage_name': to_name,
+            'to_stage_color': history.to_stage.color if history.to_stage else None,
         },
         'created_at': history.created_at,
     }
@@ -158,18 +181,22 @@ def map_activity_log(log) -> dict:
 
 def map_candidate_activity(activity) -> dict:
     """Map CandidateActivity to TimelineEntry format."""
+    metadata = activity.metadata or {}
+    # Extract content from metadata for note/call types
+    content = metadata.get('content', '') or metadata.get('notes', '')
+
     return {
         'id': str(activity.id),
         'source': 'candidate_activity',
         'activity_type': normalize_activity_type(activity.activity_type),
         'title': activity.get_activity_type_display(),
-        'content': '',
+        'content': content,
         'performed_by': get_performer_dict(activity.performed_by),
         'metadata': {
             'original_type': activity.activity_type,
             'job_id': str(activity.job.id) if activity.job else None,
             'job_title': activity.job.title if activity.job else None,
-            **(activity.metadata or {}),
+            **metadata,
         },
         'created_at': activity.created_at,
     }
@@ -333,7 +360,14 @@ def get_entity_timeline(entity_type: str, entity_id: str, limit: int = 50, sourc
                 entries.append(map_activity_log(log))
 
     elif entity_type == 'company':
-        available_sources = ['onboarding_history']
+        available_sources = ['company_activity', 'onboarding_history']
+
+        if sources is None or 'company_activity' in sources:
+            from companies.models import CompanyActivity
+            for activity in CompanyActivity.objects.filter(
+                company_id=entity_id
+            ).select_related('performed_by')[:limit]:
+                entries.append(map_company_activity(activity))
 
         if sources is None or 'onboarding_history' in sources:
             for history in OnboardingHistory.objects.filter(
@@ -373,6 +407,37 @@ def get_entity_timeline(entity_type: str, entity_id: str, limit: int = 50, sourc
             ).select_related('assigned_to', 'stage_template')[:limit]:
                 entries.append(map_task_completion(task))
 
+    elif entity_type == 'job':
+        # Job timeline aggregates from:
+        # - ActivityLog for all applications to this job
+        # - Task completions for the job
+        available_sources = ['activity_log', 'task']
+
+        if sources is None or 'activity_log' in sources:
+            from jobs.models import Application, ActivityLog
+            application_ids = Application.objects.filter(
+                job_id=entity_id
+            ).values_list('id', flat=True)
+            for log in ActivityLog.objects.filter(
+                application_id__in=application_ids
+            ).select_related('performed_by', 'application__job', 'application__candidate')[:limit]:
+                entry = map_activity_log(log)
+                # Add candidate info for job context
+                if log.application and log.application.candidate:
+                    candidate = log.application.candidate
+                    entry['metadata']['candidate_id'] = str(candidate.id)
+                    entry['metadata']['candidate_name'] = candidate.user.get_full_name() if candidate.user else 'Unknown'
+                entries.append(entry)
+
+        if sources is None or 'task' in sources:
+            from core.models import TaskStatus
+            for task in Task.objects.filter(
+                entity_type='job',
+                entity_id=str(entity_id),
+                status=TaskStatus.COMPLETED
+            ).select_related('assigned_to', 'stage_template')[:limit]:
+                entries.append(map_task_completion(task))
+
     # Sort all entries by timestamp
     entries.sort(key=lambda x: x['created_at'], reverse=True)
     return entries[:limit], available_sources
@@ -381,6 +446,47 @@ def get_entity_timeline(entity_type: str, entity_id: str, limit: int = 50, sourc
 # ============================================================================
 # API Views
 # ============================================================================
+
+def can_access_entity_timeline(user, entity_type, entity_id):
+    """
+    Check if a user can access an entity's timeline.
+    Staff users can access all timelines.
+    Clients can access application and job timelines for their company.
+    """
+    if is_staff_user(user):
+        return True
+
+    if user.role != UserRole.CLIENT:
+        return False
+
+    from companies.models import CompanyUser
+
+    # Clients can access application timelines for their company's jobs
+    if entity_type == 'application':
+        from jobs.models import Application
+        try:
+            application = Application.objects.select_related('job__company').get(id=entity_id)
+            return CompanyUser.objects.filter(
+                user=user,
+                company_id=application.job.company_id
+            ).exists()
+        except Application.DoesNotExist:
+            pass
+
+    # Clients can access job timelines for their company's jobs
+    if entity_type == 'job':
+        from jobs.models import Job
+        try:
+            job = Job.objects.get(id=entity_id)
+            return CompanyUser.objects.filter(
+                user=user,
+                company_id=job.company_id
+            ).exists()
+        except Job.DoesNotExist:
+            pass
+
+    return False
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -394,15 +500,15 @@ def timeline_list(request, entity_type, entity_id):
     - sources: Comma-separated list of sources to include
     - activity_types: Comma-separated normalized activity types to filter
     """
-    if not is_staff_user(request.user):
+    if not can_access_entity_timeline(request.user, entity_type, entity_id):
         return Response(
             {'error': 'Permission denied'},
             status=status.HTTP_403_FORBIDDEN
         )
 
-    if entity_type not in ['lead', 'company', 'candidate', 'application']:
+    if entity_type not in ['lead', 'company', 'candidate', 'application', 'job']:
         return Response(
-            {'error': 'Invalid entity_type. Must be lead, company, candidate, or application.'},
+            {'error': 'Invalid entity_type. Must be lead, company, candidate, application, or job.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -470,21 +576,26 @@ def timeline_add_note(request, entity_type, entity_id):
         return Response(map_lead_activity(activity), status=status.HTTP_201_CREATED)
 
     elif entity_type == 'candidate':
-        # For candidates, we need to add a note differently
-        # CandidateActivity doesn't have a NOTE type, so we'll create a custom activity
-        # Or we could use CandidateActivityNote attached to a profile view event
-        # For now, return an error and we can implement this properly later
-        return Response(
-            {'error': 'Candidate notes not yet implemented. Use application notes instead.'},
-            status=status.HTTP_501_NOT_IMPLEMENTED
+        from candidates.models import CandidateProfile, CandidateActivity, CandidateActivityType
+        candidate = get_object_or_404(CandidateProfile, id=entity_id)
+        activity = CandidateActivity.objects.create(
+            candidate=candidate,
+            activity_type=CandidateActivityType.NOTE_ADDED,
+            performed_by=request.user,
+            metadata={'content': content},
         )
+        return Response(map_candidate_activity(activity), status=status.HTTP_201_CREATED)
 
     elif entity_type == 'company':
-        # Companies don't have their own activity model yet
-        return Response(
-            {'error': 'Company notes not yet implemented.'},
-            status=status.HTTP_501_NOT_IMPLEMENTED
+        from companies.models import Company, CompanyActivity, CompanyActivityType
+        company = get_object_or_404(Company, id=entity_id)
+        activity = CompanyActivity.objects.create(
+            company=company,
+            activity_type=CompanyActivityType.NOTE_ADDED,
+            content=content,
+            performed_by=request.user,
         )
+        return Response(map_company_activity(activity), status=status.HTTP_201_CREATED)
 
     elif entity_type == 'application':
         # For applications, we create a StageFeedback with no specific stage
@@ -535,11 +646,28 @@ def timeline_log_call(request, entity_type, entity_id):
         )
         return Response(map_lead_activity(activity), status=status.HTTP_201_CREATED)
 
-    elif entity_type in ['candidate', 'company']:
-        return Response(
-            {'error': f'{entity_type.capitalize()} call logging not yet implemented.'},
-            status=status.HTTP_501_NOT_IMPLEMENTED
+    elif entity_type == 'candidate':
+        from candidates.models import CandidateProfile, CandidateActivity, CandidateActivityType
+        candidate = get_object_or_404(CandidateProfile, id=entity_id)
+        activity = CandidateActivity.objects.create(
+            candidate=candidate,
+            activity_type=CandidateActivityType.CALL_LOGGED,
+            performed_by=request.user,
+            metadata={'notes': notes, 'duration_minutes': duration} if duration else {'notes': notes},
         )
+        return Response(map_candidate_activity(activity), status=status.HTTP_201_CREATED)
+
+    elif entity_type == 'company':
+        from companies.models import Company, CompanyActivity, CompanyActivityType
+        company = get_object_or_404(Company, id=entity_id)
+        activity = CompanyActivity.objects.create(
+            company=company,
+            activity_type=CompanyActivityType.CALL_LOGGED,
+            content=notes,
+            performed_by=request.user,
+            metadata={'duration_minutes': duration} if duration else {},
+        )
+        return Response(map_company_activity(activity), status=status.HTTP_201_CREATED)
 
     elif entity_type == 'application':
         # For applications, create a StageFeedback as a call log
@@ -572,7 +700,7 @@ def service_center_data(request, entity_type, entity_id):
             status=status.HTTP_403_FORBIDDEN
         )
 
-    if entity_type not in ['lead', 'company', 'candidate', 'application']:
+    if entity_type not in ['lead', 'company', 'candidate', 'application', 'job']:
         return Response(
             {'error': 'Invalid entity_type'},
             status=status.HTTP_400_BAD_REQUEST
@@ -631,6 +759,23 @@ def service_center_data(request, entity_type, entity_id):
             scheduled_at__gte=now,
             status__in=['scheduled', 'in_progress']
         ).select_related('stage_template', 'interviewer').order_by('scheduled_at')[:5]
+        upcoming_meetings = ApplicationStageInstanceSerializer(stage_instances, many=True).data
+
+    elif entity_type == 'job':
+        from jobs.models import Job, Application, ApplicationStageInstance
+        from jobs.serializers import JobDetailSerializer, ApplicationStageInstanceSerializer
+        job = get_object_or_404(
+            Job.objects.select_related('company'),
+            id=entity_id
+        )
+        entity_data = JobDetailSerializer(job).data
+        # Get upcoming scheduled interviews for all applications to this job
+        application_ids = Application.objects.filter(job=job).values_list('id', flat=True)
+        stage_instances = ApplicationStageInstance.objects.filter(
+            application_id__in=application_ids,
+            scheduled_at__gte=now,
+            status__in=['scheduled', 'in_progress']
+        ).select_related('stage_template', 'interviewer', 'application__candidate__user').order_by('scheduled_at')[:5]
         upcoming_meetings = ApplicationStageInstanceSerializer(stage_instances, many=True).data
 
     # Get tasks for this entity

@@ -9,14 +9,21 @@ import {
   Plus,
   Loader2,
   ChevronRight,
+  User,
 } from 'lucide-react'
 import api from '@/services/api'
 import type { ApplicationListItem, ApplicationStatus } from '@/types'
 
 interface ApplicationsPanelProps {
-  candidateId: string | number
+  /** Show applications for a specific candidate (jobs they applied to) */
+  candidateId?: string | number
+  /** Show applications for a specific job (candidates who applied) */
+  jobId?: string
   mode?: 'admin' | 'client'
+  /** Callback for candidate view - add candidate to a job */
   onAddToJob?: () => void
+  /** Callback for job view - add a candidate to this job */
+  onAddCandidate?: () => void
   onApplicationClick?: (applicationId: string) => void
 }
 
@@ -30,23 +37,32 @@ const statusConfig: Record<ApplicationStatus, { label: string; color: string; ic
   rejected: { label: 'Rejected', color: 'bg-red-100 dark:bg-red-900/30 text-red-700', icon: XCircle },
 }
 
-export function ApplicationsPanel({ candidateId, mode = 'admin', onAddToJob, onApplicationClick }: ApplicationsPanelProps) {
+export function ApplicationsPanel({ candidateId, jobId, mode = 'admin', onAddToJob, onAddCandidate, onApplicationClick }: ApplicationsPanelProps) {
   const [applications, setApplications] = useState<ApplicationListItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Determine view mode based on which prop is provided
+  const viewMode = jobId ? 'job' : 'candidate'
+  const entityId = jobId || candidateId
+
   const fetchApplications = useCallback(async () => {
+    if (!entityId) return
+
     try {
       setIsLoading(true)
       setError(null)
-      const response = await api.get(`/admin/candidates/${candidateId}/applications/`)
+      const endpoint = viewMode === 'job'
+        ? `/jobs/${jobId}/applications/`
+        : `/admin/candidates/${candidateId}/applications/`
+      const response = await api.get(endpoint)
       setApplications(response.data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load applications')
     } finally {
       setIsLoading(false)
     }
-  }, [candidateId])
+  }, [viewMode, jobId, candidateId, entityId])
 
   useEffect(() => {
     fetchApplications()
@@ -84,6 +100,10 @@ export function ApplicationsPanel({ candidateId, mode = 'admin', onAddToJob, onA
     )
   }
 
+  // Determine add action based on view mode
+  const addAction = viewMode === 'job' ? onAddCandidate : onAddToJob
+  const addLabel = viewMode === 'job' ? 'Add Candidate' : 'Add to Job'
+
   return (
     <div className="h-full overflow-y-auto p-4 space-y-4">
       {/* Header with Add button (Admin only) */}
@@ -91,13 +111,13 @@ export function ApplicationsPanel({ candidateId, mode = 'admin', onAddToJob, onA
         <h3 className="text-[13px] font-medium text-gray-900 dark:text-gray-100">
           Applications ({applications.length})
         </h3>
-        {mode === 'admin' && onAddToJob && (
+        {mode === 'admin' && addAction && (
           <button
-            onClick={onAddToJob}
+            onClick={addAction}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            Add to Job
+            {addLabel}
           </button>
         )}
       </div>
@@ -105,15 +125,21 @@ export function ApplicationsPanel({ candidateId, mode = 'admin', onAddToJob, onA
       {/* Applications List */}
       {applications.length === 0 ? (
         <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <Briefcase className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-          <p className="text-[13px] text-gray-500 dark:text-gray-400">No applications yet</p>
-          {mode === 'admin' && onAddToJob && (
+          {viewMode === 'job' ? (
+            <User className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+          ) : (
+            <Briefcase className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+          )}
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">
+            {viewMode === 'job' ? 'No candidates have applied yet' : 'No applications yet'}
+          </p>
+          {mode === 'admin' && addAction && (
             <button
-              onClick={onAddToJob}
+              onClick={addAction}
               className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white dark:text-gray-900 bg-gray-900 dark:bg-gray-100 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add to a Job
+              {addLabel}
             </button>
           )}
         </div>
@@ -129,27 +155,52 @@ export function ApplicationsPanel({ candidateId, mode = 'admin', onAddToJob, onA
                 onClick={() => onApplicationClick?.(String(application.id))}
                 className="w-full flex items-center gap-3 px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all group text-left"
               >
-                {/* Company Logo */}
-                {application.company_logo ? (
-                  <img
-                    src={application.company_logo}
-                    alt={application.company_name}
-                    className="w-6 h-6 rounded object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
-                    <Building2 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                {/* Avatar/Logo based on view mode */}
+                {viewMode === 'job' ? (
+                  // Job view: Show candidate initials (no avatar in ApplicationListItem)
+                  <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                      {application.candidate_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U'}
+                    </span>
                   </div>
+                ) : (
+                  // Candidate view: Show company logo
+                  application.company_logo ? (
+                    <img
+                      src={application.company_logo}
+                      alt={application.company_name}
+                      className="w-6 h-6 rounded object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                    </div>
+                  )
                 )}
 
-                {/* Job Title & Company */}
+                {/* Title & Subtitle based on view mode */}
                 <div className="flex-1 min-w-0">
-                  <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate block">
-                    {application.job_title}
-                  </span>
-                  <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate block">
-                    {application.company_name}
-                  </span>
+                  {viewMode === 'job' ? (
+                    // Job view: Show candidate name and email
+                    <>
+                      <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate block">
+                        {application.candidate_name || 'Unknown Candidate'}
+                      </span>
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate block">
+                        {application.candidate_email}
+                      </span>
+                    </>
+                  ) : (
+                    // Candidate view: Show job title and company
+                    <>
+                      <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate block">
+                        {application.job_title}
+                      </span>
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate block">
+                        {application.company_name}
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 {/* Status */}

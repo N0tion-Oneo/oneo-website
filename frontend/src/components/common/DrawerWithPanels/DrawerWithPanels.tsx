@@ -10,8 +10,8 @@
  *   - Panel Content
  */
 
-import { useState, useEffect, ReactNode, Children, isValidElement, cloneElement } from 'react'
-import { X, Maximize2, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState, useEffect, useRef, ReactNode, Children, isValidElement, cloneElement } from 'react'
+import { X, Maximize2, Loader2, ChevronLeft, ChevronRight, Plus, GripVertical, RotateCcw } from 'lucide-react'
 
 // =============================================================================
 // Types
@@ -30,6 +30,7 @@ export interface DrawerWithPanelsProps {
   onClose: () => void
 
   // Header configuration
+  entityType?: string // Small label above the title (e.g., "Company", "Job", "Application")
   title: string
   subtitle?: string
   isLoading?: boolean
@@ -48,6 +49,28 @@ export interface DrawerWithPanelsProps {
   availablePanels: PanelOption[]
   defaultPanel: string
   onPanelChange?: (panelType: string) => void
+
+  // Panel customization (optional - enables drag/reorder/hide)
+  panelCustomization?: {
+    /** Currently visible panel types (in order) */
+    visiblePanels: string[]
+    /** Hidden panel types that can be added */
+    hiddenPanels: string[]
+    /** Callback when a panel is added */
+    onAddPanel: (panelType: string) => void
+    /** Callback when a panel is removed */
+    onRemovePanel: (panelType: string) => void
+    /** Callback when panels are reordered */
+    onMovePanel: (fromIndex: number, toIndex: number) => void
+    /** Whether panels can be removed (at least 1 must remain) */
+    canRemovePanel: boolean
+    /** Whether a panel can be added (not at max limit) */
+    canAddPanel?: boolean
+    /** Callback to reset to defaults */
+    onResetToDefaults: () => void
+    /** Whether current config differs from defaults */
+    isCustomized: boolean
+  }
 
   // Render function for panel content
   renderPanel: (panelType: string) => ReactNode
@@ -81,6 +104,7 @@ export interface DrawerWithPanelsProps {
 export default function DrawerWithPanels({
   isOpen,
   onClose,
+  entityType,
   title,
   subtitle,
   isLoading = false,
@@ -91,6 +115,7 @@ export default function DrawerWithPanels({
   availablePanels,
   defaultPanel,
   onPanelChange,
+  panelCustomization,
   renderPanel,
   modals,
   focusModeComponent,
@@ -103,8 +128,27 @@ export default function DrawerWithPanels({
   // Panel state (controlled or uncontrolled)
   const [internalPanel, setInternalPanel] = useState(defaultPanel)
   const [showFocusMode, setShowFocusMode] = useState(false)
+  const [showAddPanelMenu, setShowAddPanelMenu] = useState(false)
+  const [addMenuPosition, setAddMenuPosition] = useState({ top: 0, left: 0 })
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const addButtonRef = useRef<HTMLButtonElement>(null)
 
   const currentPanel = controlledPanel ?? internalPanel
+
+  // Determine which panels to show (filtered by customization if enabled)
+  const displayPanels = panelCustomization
+    ? availablePanels.filter((p) => panelCustomization.visiblePanels.includes(p.type))
+        .sort((a, b) =>
+          panelCustomization.visiblePanels.indexOf(a.type) -
+          panelCustomization.visiblePanels.indexOf(b.type)
+        )
+    : availablePanels
+
+  // Get hidden panels for the "Add Panel" menu
+  const hiddenPanelOptions = panelCustomization
+    ? availablePanels.filter((p) => panelCustomization.hiddenPanels.includes(p.type))
+    : []
 
   // Reset panel when drawer opens
   useEffect(() => {
@@ -132,7 +176,8 @@ export default function DrawerWithPanels({
     return focusModeComponent
   }
 
-  const widthClass = width === 'half' ? 'w-1/2 min-w-[640px]' : 'w-2/3 min-w-[800px]'
+  // Content width classes - the drawer will auto-size to fit action rail + content
+  const contentWidthClass = width === 'half' ? 'w-[50vw] min-w-[640px]' : 'w-[66.666vw] min-w-[800px]'
 
   return (
     <>
@@ -142,102 +187,210 @@ export default function DrawerWithPanels({
         onClick={onClose}
       />
 
-      {/* Action Rail (floating outside drawer on left edge) */}
-      {actionRail && (
-        <div
-          className="fixed z-[202] flex flex-col items-center gap-1 py-3 px-1.5 bg-white dark:bg-gray-800 shadow-lg dark:shadow-gray-900/50 rounded-l-xl border border-r-0 border-gray-200 dark:border-gray-700"
-          style={{
-            top: '50%',
-            transform: 'translateY(-50%)',
-            right: width === 'half' ? '50%' : '66.666%',
-          }}
-        >
-          {actionRail}
-        </div>
-      )}
-
       {/* Drawer */}
-      <div className={`fixed inset-y-0 right-0 ${widthClass} bg-white dark:bg-gray-900 shadow-xl dark:shadow-gray-900/50 z-[201] flex flex-col`}>
-          {/* Row 1: Main Header */}
-          <div className="flex items-center gap-4 px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-          {/* Left: Avatar + Title */}
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {/* Avatar/Logo */}
-            {avatar}
+      <div className="fixed inset-y-0 right-0 bg-white dark:bg-gray-900 shadow-xl dark:shadow-gray-900/50 z-[201] flex">
+        {/* Action Rail (inside drawer, left edge, full height) */}
+        {actionRail && (
+          <div className="flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+            {actionRail}
+          </div>
+        )}
 
-            {/* Title & Subtitle */}
-            <div className="min-w-0 flex-1">
-              <h2 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">
-                {isLoading ? 'Loading...' : title}
-              </h2>
-              {subtitle && (
-                <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate leading-tight mt-0.5">
-                  {subtitle}
-                </p>
-              )}
+        {/* Main Content - fixed width so drawer expands when rail expands */}
+        <div className={`${contentWidthClass} flex flex-col`}>
+          {/* Row 1: Main Header */}
+          <div className="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+            {/* Entity Type Label */}
+            {entityType && (
+              <span className="inline-block text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                {entityType}
+              </span>
+            )}
+
+            <div className="flex items-center gap-4">
+              {/* Left: Avatar + Title */}
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                {/* Avatar/Logo */}
+                {avatar}
+
+                {/* Title & Subtitle */}
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">
+                    {isLoading ? 'Loading...' : title}
+                  </h2>
+                  {subtitle && (
+                    <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate leading-tight mt-0.5">
+                      {subtitle}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+          {/* Right: Stage + Actions */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Status Badge / Stage Dropdown */}
+                {statusBadge}
+
+                {/* Extra header content (e.g., assigned selector) */}
+                {headerExtra}
+
+                {/* Focus Mode Button (icon only) */}
+                {onEnterFocusMode && (
+                  <button
+                    onClick={handleEnterFocusMode}
+                    className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+                    title={focusModeLabel}
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </button>
+                )}
+
+                {/* Close Button */}
+                <button
+                  onClick={onClose}
+                  className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+                  title="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Right: Stage + Actions */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Status Badge / Stage Dropdown */}
-            {statusBadge}
-
-            {/* Extra header content (e.g., assigned selector) */}
-            {headerExtra}
-
-            {/* Focus Mode Button (icon only) */}
-            {onEnterFocusMode && (
-              <button
-                onClick={handleEnterFocusMode}
-                className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                title={focusModeLabel}
-              >
-                <Maximize2 className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* Close Button */}
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-              title="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
         {/* Row 2: Panel Tabs */}
         <div className="flex items-center gap-1 px-5 py-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
-          {availablePanels.map((panel) => {
+          {displayPanels.map((panel, index) => {
             const isActive = panel.type === currentPanel
+            const isDragging = draggedIndex === index
+            const isDragOver = dragOverIndex === index && draggedIndex !== index
+
             return (
-              <button
+              <div
                 key={panel.type}
-                onClick={() => handlePanelChange(panel.type)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-md whitespace-nowrap transition-colors ${
-                  isActive
-                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
+                draggable={!!panelCustomization}
+                onDragStart={() => panelCustomization && setDraggedIndex(index)}
+                onDragEnd={() => {
+                  if (panelCustomization && draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+                    panelCustomization.onMovePanel(draggedIndex, dragOverIndex)
+                  }
+                  setDraggedIndex(null)
+                  setDragOverIndex(null)
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  if (panelCustomization) setDragOverIndex(index)
+                }}
+                onDragLeave={() => setDragOverIndex(null)}
+                className={`group flex items-center rounded-md transition-all ${
+                  isDragging ? 'opacity-50' : ''
+                } ${isDragOver ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
               >
-                <span className={isActive ? 'opacity-100' : 'opacity-70'}>{panel.icon}</span>
-                <span>{panel.label}</span>
-                {panel.count !== undefined && panel.count > 0 && (
-                  <span
-                    className={`px-1.5 py-0.5 text-[10px] font-medium rounded-full ${
-                      isActive
-                        ? 'bg-white/20 text-white dark:bg-gray-900/20 dark:text-gray-900'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                    }`}
-                  >
-                    {panel.count}
+                {/* Drag Handle (only when customization enabled) */}
+                {panelCustomization && (
+                  <span className="p-1 cursor-grab opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity">
+                    <GripVertical className="w-3 h-3 text-gray-400" />
                   </span>
                 )}
-              </button>
+
+                {/* Panel Tab Button */}
+                <button
+                  onClick={() => handlePanelChange(panel.type)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-md whitespace-nowrap transition-colors ${
+                    isActive
+                      ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <span className={isActive ? 'opacity-100' : 'opacity-70'}>{panel.icon}</span>
+                  <span>{panel.label}</span>
+                  {panel.count !== undefined && panel.count > 0 && (
+                    <span
+                      className={`px-1.5 py-0.5 text-[10px] font-medium rounded-full ${
+                        isActive
+                          ? 'bg-white/20 text-white dark:bg-gray-900/20 dark:text-gray-900'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                      }`}
+                    >
+                      {panel.count}
+                    </span>
+                  )}
+                </button>
+
+                {/* Remove Button (only when customization enabled and can remove) */}
+                {panelCustomization && panelCustomization.canRemovePanel && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      panelCustomization.onRemovePanel(panel.type)
+                      // If removing active panel, switch to first available
+                      if (panel.type === currentPanel && displayPanels.length > 1) {
+                        const nextPanel = displayPanels.find((p) => p.type !== panel.type)
+                        if (nextPanel) handlePanelChange(nextPanel.type)
+                      }
+                    }}
+                    className="p-1 opacity-0 group-hover:opacity-50 hover:!opacity-100 hover:text-red-500 transition-all"
+                    title="Hide panel"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
             )
           })}
+
+          {/* Add Panel Button (only when can add and there are hidden panels) */}
+          {panelCustomization && (panelCustomization.canAddPanel ?? hiddenPanelOptions.length > 0) && (
+            <button
+              ref={addButtonRef}
+              onClick={() => {
+                if (addButtonRef.current) {
+                  const rect = addButtonRef.current.getBoundingClientRect()
+                  setAddMenuPosition({ top: rect.bottom + 4, left: rect.left })
+                }
+                setShowAddPanelMenu(!showAddPanelMenu)
+              }}
+              className="flex-shrink-0 flex items-center gap-1 ml-1 px-2 py-1.5 text-[12px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+              title="Add panel"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {/* Add Panel Dropdown (rendered with fixed positioning to avoid clipping) */}
+          {showAddPanelMenu && panelCustomization && (
+            <>
+              <div className="fixed inset-0 z-[210]" onClick={() => setShowAddPanelMenu(false)} />
+              <div
+                className="fixed w-44 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/40 z-[211] py-1"
+                style={{ top: addMenuPosition.top, left: addMenuPosition.left }}
+              >
+                {hiddenPanelOptions.map((panel) => (
+                  <button
+                    key={panel.type}
+                    onClick={() => {
+                      panelCustomization.onAddPanel(panel.type)
+                      setShowAddPanelMenu(false)
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
+                    {panel.icon}
+                    {panel.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Reset Button (only when customized) */}
+          {panelCustomization && panelCustomization.isCustomized && (
+            <button
+              onClick={panelCustomization.onResetToDefaults}
+              className="ml-1 p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+              title="Reset to defaults"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Row 3: Action Bar (optional) */}
@@ -256,6 +409,7 @@ export default function DrawerWithPanels({
           ) : (
             renderPanel(currentPanel)
           )}
+        </div>
         </div>
       </div>
 

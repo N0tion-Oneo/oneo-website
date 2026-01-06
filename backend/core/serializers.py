@@ -356,10 +356,13 @@ class TimelineEntrySerializer(serializers.Serializer):
     id = serializers.CharField()
     source = serializers.ChoiceField(choices=[
         'lead_activity',
+        'company_activity',
         'onboarding_history',
         'activity_log',
         'candidate_activity',
         'booking',
+        'stage_feedback',
+        'task',
     ])
     activity_type = serializers.CharField()
     title = serializers.CharField()

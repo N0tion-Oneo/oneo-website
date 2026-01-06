@@ -10,19 +10,26 @@ import {
   User,
   Briefcase,
 } from 'lucide-react'
-import { useServiceCenter, useApplication } from '@/hooks'
+import { useServiceCenter, useApplication, useJobDetail, useTasks, useDrawerPanelPreferences } from '@/hooks'
 import type { OnboardingEntityType } from '@/types'
 import { EntityProfilePanel } from './panels/EntityProfilePanel'
 import { TasksPanel } from './panels/TasksPanel'
 import { TimelinePanel } from './panels/TimelinePanel'
 import { MeetingsPanel } from './panels/MeetingsPanel'
 import { JobsPanel } from './panels/JobsPanel'
-import { ContactsPanel } from './panels/ContactsPanel'
+import { TeamPanel } from './panels/TeamPanel'
 import { BillingPanel } from './panels/BillingPanel'
+import { SubscriptionsPanel } from './panels/SubscriptionsPanel'
 import { ApplicationsPanel } from './panels/ApplicationsPanel'
 import { InvitationsPanel } from './panels/InvitationsPanel'
+import { CompanyDetailsPanel } from './panels/CompanyDetailsPanel'
+import { CompanyCulturePanel } from './panels/CompanyCulturePanel'
 import { PipelinePanel } from './panels/PipelinePanel'
 import { JobDetailPanel } from './panels/JobDetailPanel'
+import { JobProfilePanel } from './panels/JobProfilePanel'
+import { JobPipelinePanel } from './panels/JobPipelinePanel'
+import { JobQuestionsPanel } from './panels/JobQuestionsPanel'
+import { JobScreeningPanel } from './panels/JobScreeningPanel'
 import { ActionsPanel } from './panels/ActionsPanel'
 import { AnswersPanel } from './panels/AnswersPanel'
 import ActivityTimeline from '@/components/applications/ActivityTimeline'
@@ -30,6 +37,7 @@ import ApplicationDrawer from '@/components/applications/ApplicationDrawer'
 import {
   getEntityPanelOptions,
   getApplicationPanelOptions,
+  getJobPanelOptions,
   getDefaultEntityPanels,
   getDefaultApplicationPanels,
   getPanelIcon,
@@ -38,10 +46,11 @@ import {
   type PanelOption,
 } from './panelConfig'
 
-// Focus mode can be either entity-based or application-based
+// Focus mode can be entity-based, application-based, or job-based
 type FocusModeTarget =
   | { mode: 'entity'; entityType: OnboardingEntityType; entityId: string; entityName?: string }
   | { mode: 'application'; applicationId: string }
+  | { mode: 'job'; jobId: string; jobName?: string }
 
 type FocusModeProps = FocusModeTarget & {
   onClose: () => void
@@ -55,14 +64,30 @@ function getPanelOptions(target: FocusModeTarget): PanelOption[] {
   if (target.mode === 'application') {
     return getApplicationPanelOptions()
   }
+  if (target.mode === 'job') {
+    return getJobPanelOptions()
+  }
   return getEntityPanelOptions(target.entityType)
 }
 
-function getDefaultPanels(target: FocusModeTarget): Panel[] {
+function getDefaultPanelTypes(target: FocusModeTarget): string[] {
   if (target.mode === 'application') {
-    return getDefaultApplicationPanels()
+    return getDefaultApplicationPanels().map((p) => p.type)
   }
-  return getDefaultEntityPanels(target.entityType)
+  if (target.mode === 'job') {
+    return ['details', 'applications', 'tasks']
+  }
+  return getDefaultEntityPanels(target.entityType).map((p) => p.type)
+}
+
+function getDrawerKey(target: FocusModeTarget): string {
+  if (target.mode === 'application') {
+    return 'application'
+  }
+  if (target.mode === 'job') {
+    return 'job'
+  }
+  return target.entityType
 }
 
 // =============================================================================
@@ -216,6 +241,7 @@ const entityTypeLabels: Record<string, string> = {
   candidate: 'Candidate',
   lead: 'Lead',
   application: 'Application',
+  job: 'Job',
 }
 
 const entityTypeIcons: Record<string, React.ReactNode> = {
@@ -223,6 +249,7 @@ const entityTypeIcons: Record<string, React.ReactNode> = {
   candidate: <User className="w-4 h-4" />,
   lead: <User className="w-4 h-4" />,
   application: <Briefcase className="w-4 h-4" />,
+  job: <Briefcase className="w-4 h-4" />,
 }
 
 // =============================================================================
@@ -235,12 +262,33 @@ export default function FocusMode(props: FocusModeProps) {
   // Extract target info - use the props directly as the target since it's already the right shape
   const target: FocusModeTarget = props
 
-  // Panel options and state
+  // Panel options from shared config
   const panelOptions = useMemo(() => getPanelOptions(target), [
     target.mode,
     target.mode === 'entity' ? target.entityType : undefined,
   ])
-  const [panels, setPanels] = useState<Panel[]>(() => getDefaultPanels(target))
+
+  // Shared panel preferences (synced with drawer)
+  const drawerKey = useMemo(() => getDrawerKey(target), [target])
+  const defaultPanelTypes = useMemo(() => getDefaultPanelTypes(target), [target])
+  const panelPrefs = useDrawerPanelPreferences({
+    drawerKey,
+    availablePanels: panelOptions.map((p) => p.type),
+    defaultPanels: defaultPanelTypes,
+  })
+
+  // Build panels array from preferences (matching drawer behavior)
+  const panels: Panel[] = useMemo(() => {
+    return panelPrefs.visiblePanels.map((type, index) => {
+      const option = panelOptions.find((p) => p.type === type)
+      return {
+        id: `panel-${index}`,
+        type: type as PanelType,
+        title: option?.label || type,
+      }
+    })
+  }, [panelPrefs.visiblePanels, panelOptions])
+
   const [maximizedPanel, setMaximizedPanel] = useState<string | null>(null)
   const [minimizedPanels, setMinimizedPanels] = useState<Set<string>>(new Set())
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null)
@@ -256,17 +304,30 @@ export default function FocusMode(props: FocusModeProps) {
     target.mode === 'application' ? target.applicationId : ''
   )
 
+  // Data fetching for job mode
+  const jobQuery = useJobDetail(target.mode === 'job' ? target.jobId : '')
+  const jobTasksQuery = useTasks(
+    target.mode === 'job' ? { entity_type: 'job', entity_id: target.jobId } : undefined
+  )
+
+  // Determine isLoading, error, refetch based on mode
   const isLoading = target.mode === 'entity'
     ? serviceCenterQuery.isLoading
-    : applicationQuery.isLoading
+    : target.mode === 'application'
+    ? applicationQuery.isLoading
+    : jobQuery.isLoading
 
   const error = target.mode === 'entity'
     ? serviceCenterQuery.error
-    : applicationQuery.error
+    : target.mode === 'application'
+    ? applicationQuery.error
+    : null
 
   const refetch = target.mode === 'entity'
     ? serviceCenterQuery.refetch
-    : applicationQuery.refetch
+    : target.mode === 'application'
+    ? applicationQuery.refetch
+    : jobQuery.refetch
 
   const data = target.mode === 'entity'
     ? serviceCenterQuery.data
@@ -276,16 +337,28 @@ export default function FocusMode(props: FocusModeProps) {
     ? applicationQuery.application
     : null
 
-  // Panel type change handler
+  const job = target.mode === 'job'
+    ? jobQuery.job
+    : null
+
+  // Panel type change handler - swaps one panel type for another in preferences
   const handlePanelTypeChange = useCallback((panelId: string, newType: PanelType) => {
-    setPanels((prev) =>
-      prev.map((p) =>
-        p.id === panelId
-          ? { ...p, type: newType, title: panelOptions.find((o) => o.type === newType)?.label || newType }
-          : p
-      )
-    )
-  }, [panelOptions])
+    const panel = panels.find((p) => p.id === panelId)
+    if (!panel) return
+
+    // Find the index of the current panel type
+    const currentIndex = panelPrefs.visiblePanels.indexOf(panel.type)
+    if (currentIndex === -1) return
+
+    // Remove the old panel type and add the new one at the same position
+    panelPrefs.removePanel(panel.type)
+    panelPrefs.addPanel(newType)
+    // Move the new panel to the correct position
+    const newIndex = panelPrefs.visiblePanels.length // It will be added at the end
+    if (newIndex !== currentIndex) {
+      panelPrefs.movePanel(newIndex, currentIndex)
+    }
+  }, [panels, panelPrefs])
 
   const toggleMaximize = (panelId: string) => {
     setMaximizedPanel((prev) => (prev === panelId ? null : panelId))
@@ -313,29 +386,25 @@ export default function FocusMode(props: FocusModeProps) {
 
   // Add a new panel
   const addPanel = useCallback(() => {
-    const firstOption = panelOptions[0]
-    if (!firstOption) return
-
-    // Find a panel type that isn't currently shown, or default to the first available
-    const currentTypes = panels.map((p) => p.type)
-    const availableOption = panelOptions.find((o) => !currentTypes.includes(o.type)) ?? firstOption
-
-    const newPanel: Panel = {
-      id: `panel-${Date.now()}`,
-      type: availableOption.type,
-      title: availableOption.label,
+    // Add the first hidden panel
+    const firstHidden = panelPrefs.hiddenPanels[0]
+    if (firstHidden) {
+      panelPrefs.addPanel(firstHidden)
     }
-    setPanels((prev) => [...prev, newPanel])
-  }, [panels, panelOptions])
+  }, [panelPrefs])
 
-  // Remove a panel
+  // Remove a panel by type
   const removePanel = useCallback((panelId: string) => {
-    setPanels((prev) => prev.filter((p) => p.id !== panelId))
+    // Find the panel type from the id
+    const panel = panels.find((p) => p.id === panelId)
+    if (panel && panelPrefs.canRemovePanel) {
+      panelPrefs.removePanel(panel.type)
+    }
     // If removing the maximized panel, exit maximize mode
     if (maximizedPanel === panelId) {
       setMaximizedPanel(null)
     }
-  }, [maximizedPanel])
+  }, [panels, panelPrefs, maximizedPanel])
 
   // Escape key to close
   useEffect(() => {
@@ -364,6 +433,15 @@ export default function FocusMode(props: FocusModeProps) {
         subtitle: jobTitle,
         status: application.status,
         type: 'application' as const,
+      }
+    }
+
+    if (target.mode === 'job' && job) {
+      return {
+        name: target.jobName || job.title || 'Unknown Job',
+        subtitle: job.company?.name,
+        status: job.status,
+        type: 'job' as const,
       }
     }
 
@@ -410,6 +488,7 @@ export default function FocusMode(props: FocusModeProps) {
               entityType="candidate"
               entityId={String(application.candidate.id)}
               entity={application.candidate as unknown as Record<string, unknown>}
+              readOnly
             />
           ) : null
         case 'company':
@@ -418,6 +497,7 @@ export default function FocusMode(props: FocusModeProps) {
               entityType="company"
               entityId={String(application.job.company.id)}
               entity={application.job.company as unknown as Record<string, unknown>}
+              readOnly
             />
           ) : (
             <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">
@@ -517,6 +597,23 @@ export default function FocusMode(props: FocusModeProps) {
               meetings={data.upcoming_meetings || []}
             />
           )
+        // Company-specific panels
+        case 'details':
+          return (
+            <CompanyDetailsPanel
+              companyId={target.entityId}
+              entity={data.entity}
+              onRefresh={refetch}
+            />
+          )
+        case 'culture':
+          return (
+            <CompanyCulturePanel
+              companyId={target.entityId}
+              entity={data.entity}
+              onRefresh={refetch}
+            />
+          )
         case 'jobs':
           return (
             <JobsPanel
@@ -524,9 +621,9 @@ export default function FocusMode(props: FocusModeProps) {
               entity={data.entity}
             />
           )
-        case 'contacts':
+        case 'team':
           return (
-            <ContactsPanel
+            <TeamPanel
               companyId={target.entityId}
               entity={data.entity}
             />
@@ -536,6 +633,14 @@ export default function FocusMode(props: FocusModeProps) {
             <BillingPanel
               companyId={target.entityId}
               entity={data.entity}
+            />
+          )
+        case 'subscriptions':
+          return (
+            <SubscriptionsPanel
+              companyId={target.entityId}
+              companyName={(data.entity as { name?: string })?.name}
+              onRefresh={refetch}
             />
           )
         case 'applications':
@@ -557,11 +662,76 @@ export default function FocusMode(props: FocusModeProps) {
       }
     }
 
+    // Job mode panels
+    if (target.mode === 'job' && job) {
+      switch (panel.type) {
+        case 'details':
+          return (
+            <JobProfilePanel
+              jobId={target.jobId}
+              entity={job}
+              onRefresh={refetch}
+            />
+          )
+        case 'pipeline':
+          return (
+            <JobPipelinePanel
+              jobId={target.jobId}
+              job={job}
+              onRefresh={refetch}
+            />
+          )
+        case 'questions':
+          return (
+            <JobQuestionsPanel
+              jobId={target.jobId}
+              job={job}
+              onRefresh={refetch}
+            />
+          )
+        case 'screening':
+          return (
+            <JobScreeningPanel
+              jobId={target.jobId}
+              job={job}
+              onRefresh={refetch}
+            />
+          )
+        case 'applications':
+          return (
+            <ApplicationsPanel
+              jobId={target.jobId}
+              mode="admin"
+              onApplicationClick={(appId) => setSelectedApplicationId(appId)}
+            />
+          )
+        case 'tasks':
+          return (
+            <TasksPanel
+              entityType="job"
+              entityId={target.jobId}
+              tasks={jobTasksQuery.tasks || []}
+              onRefresh={jobTasksQuery.refetch}
+            />
+          )
+        case 'timeline':
+          return (
+            <TimelinePanel
+              entityType="job"
+              entityId={target.jobId}
+              onRefresh={refetch}
+            />
+          )
+        default:
+          return null
+      }
+    }
+
     return null
   }
 
   // Mode label
-  const modeLabel = target.mode === 'application' ? 'Interview Mode' : 'Service Mode'
+  const modeLabel = target.mode === 'application' ? 'Interview Mode' : target.mode === 'job' ? 'Job Mode' : 'Service Mode'
 
   return (
     <div className="fixed inset-0 bg-white dark:bg-gray-900 z-[300] flex flex-col">

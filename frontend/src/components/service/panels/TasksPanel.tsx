@@ -1,5 +1,12 @@
+/**
+ * TasksPanel - Task management panel for entities
+ *
+ * Displays tasks with filtering, allows creating/editing tasks,
+ * and provides quick actions for completing/deleting tasks.
+ */
+
 import { useState } from 'react'
-import { Plus, Filter, CheckCircle2, Clock, AlertTriangle } from 'lucide-react'
+import { Plus, CheckCircle2, Clock, AlertTriangle, ListFilter } from 'lucide-react'
 import type { Task, EntityType } from '@/types'
 import { useCompleteTask, useDeleteTask } from '@/hooks'
 import { TaskCard } from '../TaskCard'
@@ -90,91 +97,95 @@ export function TasksPanel({ entityType, entityId, tasks, onRefresh }: TasksPane
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">Tasks</h3>
+    <div className="h-full overflow-y-auto p-4 space-y-4">
+      {/* Header with add button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-[14px] font-medium text-gray-900 dark:text-gray-100">
+            Tasks & Follow-ups
+          </h3>
+          <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5">
+            {activeTasks.length} active{overdueTasks.length > 0 && `, ${overdueTasks.length} overdue`}
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            setEditingTask(null)
+            setShowAddDrawer(true)
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Add Task
+        </button>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+        <FilterTab
+          active={filter === 'active'}
+          onClick={() => setFilter('active')}
+          icon={<Clock className="w-3.5 h-3.5" />}
+          label="Active"
+          count={activeTasks.length}
+        />
+        <FilterTab
+          active={filter === 'overdue'}
+          onClick={() => setFilter('overdue')}
+          icon={<AlertTriangle className="w-3.5 h-3.5" />}
+          label="Overdue"
+          count={overdueTasks.length}
+          variant="danger"
+        />
+        <FilterTab
+          active={filter === 'completed'}
+          onClick={() => setFilter('completed')}
+          icon={<CheckCircle2 className="w-3.5 h-3.5" />}
+          label="Done"
+          count={completedTasks.length}
+        />
+        <FilterTab
+          active={filter === 'all'}
+          onClick={() => setFilter('all')}
+          icon={<ListFilter className="w-3.5 h-3.5" />}
+          label="All"
+          count={tasks.length}
+        />
+      </div>
+
+      {/* Task list */}
+      {sortedTasks.length === 0 ? (
+        <div className="text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">
+            {filter === 'active' && 'No active tasks'}
+            {filter === 'completed' && 'No completed tasks'}
+            {filter === 'overdue' && 'No overdue tasks'}
+            {filter === 'all' && 'No tasks yet'}
+          </p>
           <button
             onClick={() => {
               setEditingTask(null)
               setShowAddDrawer(true)
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            Add Task
+            <Plus className="w-3.5 h-3.5" />
+            Create First Task
           </button>
         </div>
-
-        {/* Filter tabs */}
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-          <FilterTab
-            active={filter === 'active'}
-            onClick={() => setFilter('active')}
-            icon={<Clock className="w-3.5 h-3.5" />}
-            label="Active"
-            count={activeTasks.length}
-          />
-          <FilterTab
-            active={filter === 'overdue'}
-            onClick={() => setFilter('overdue')}
-            icon={<AlertTriangle className="w-3.5 h-3.5" />}
-            label="Overdue"
-            count={overdueTasks.length}
-            variant="danger"
-          />
-          <FilterTab
-            active={filter === 'completed'}
-            onClick={() => setFilter('completed')}
-            icon={<CheckCircle2 className="w-3.5 h-3.5" />}
-            label="Done"
-            count={completedTasks.length}
-          />
-          <FilterTab
-            active={filter === 'all'}
-            onClick={() => setFilter('all')}
-            icon={<Filter className="w-3.5 h-3.5" />}
-            label="All"
-            count={tasks.length}
-          />
+      ) : (
+        <div className="space-y-2">
+          {sortedTasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              onComplete={handleComplete}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
         </div>
-      </div>
-
-      {/* Task list */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {sortedTasks.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
-              {filter === 'active' && 'No active tasks'}
-              {filter === 'completed' && 'No completed tasks'}
-              {filter === 'overdue' && 'No overdue tasks'}
-              {filter === 'all' && 'No tasks yet'}
-            </p>
-            <button
-              onClick={() => {
-                setEditingTask(null)
-                setShowAddDrawer(true)
-              }}
-              className="mt-2 text-sm text-blue-600 hover:text-blue-700"
-            >
-              Create your first task
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {sortedTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onComplete={handleComplete}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Add/Edit Task Drawer */}
       <AddTaskDrawer
@@ -211,7 +222,7 @@ function FilterTab({
   return (
     <button
       onClick={onClick}
-      className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+      className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] font-medium rounded-md transition-colors ${
         active
           ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm dark:shadow-gray-900/20'
           : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
@@ -224,10 +235,10 @@ function FilterTab({
           className={`min-w-[1.25rem] px-1 py-0.5 rounded-full text-[10px] ${
             active
               ? variant === 'danger'
-                ? 'bg-red-100 text-red-700'
+                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
               : variant === 'danger'
-              ? 'bg-red-100 text-red-600'
+              ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
               : 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400'
           }`}
         >

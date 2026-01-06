@@ -2493,7 +2493,7 @@ export interface CandidateInvitation {
 export type OnboardingEntityType = 'lead' | 'company' | 'candidate'
 
 // EntityType extends OnboardingEntityType with additional types for Tasks, Timeline, etc.
-export type EntityType = OnboardingEntityType | 'application'
+export type EntityType = OnboardingEntityType | 'application' | 'job'
 
 export interface OnboardingStage {
   id: number
@@ -2655,6 +2655,7 @@ export interface TaskUpdateInput {
 
 export type TimelineSource =
   | 'lead_activity'
+  | 'company_activity'
   | 'onboarding_history'
   | 'activity_log'
   | 'candidate_activity'

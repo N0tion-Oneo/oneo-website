@@ -5,23 +5,26 @@
 import { useState, useEffect } from 'react'
 import { Building2, Target, Handshake } from 'lucide-react'
 import { FocusMode } from '@/components/service'
-import { DrawerWithPanels, badgeStyles } from '@/components/common'
+import JobDrawer from '@/components/jobs/JobDrawer'
+import { DrawerWithPanels, EntityActionRail, badgeStyles } from '@/components/common'
 import {
   JobsPanel,
-  ContactsPanel,
+  TeamPanel,
   TasksPanel,
   TimelinePanel,
-  BillingPanel,
+  SubscriptionsPanel,
+  CompanyDetailsPanel,
+  CompanyCulturePanel,
 } from '@/components/service/panels'
 import { EntityProfilePanel } from '@/components/service/panels/EntityProfilePanel'
-import { useCompanyById, useTasks } from '@/hooks'
+import { useCompanyById, useTasks, useEntityActions, useDrawerPanelPreferences } from '@/hooks'
+import type { ActionHandlers } from '@/components/service/actionConfig'
 import { SubscriptionDrawer } from '@/components/subscriptions'
 import {
   getEntityPanelOptions,
   type EntityPanelType,
 } from '@/components/service/panelConfig'
 import type { AssignedUser } from '@/types'
-import { AssignedSelect } from '@/components/forms'
 import api from '@/services/api'
 
 // =============================================================================
@@ -55,9 +58,11 @@ export default function CompanyDetailDrawer({
   onRefresh,
 }: CompanyDetailDrawerProps) {
   const { company, isLoading, refetch } = useCompanyById(companyId)
-  const [activePanel, setActivePanel] = useState<EntityPanelType>('profile')
+  const [activePanel, setActivePanel] = useState<EntityPanelType>('details')
   const [showSubscriptionDrawer, setShowSubscriptionDrawer] = useState(false)
   const [showServiceMode, setShowServiceMode] = useState(false)
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [showJobDrawer, setShowJobDrawer] = useState(false)
 
   // Tasks hook
   const { tasks, refetch: refetchTasks } = useTasks(
@@ -66,13 +71,36 @@ export default function CompanyDetailDrawer({
 
   // Reset panel when drawer opens
   useEffect(() => {
-    setActivePanel('profile')
+    setActivePanel('details')
   }, [companyId])
 
-  // Get available panels from shared config (filter out meetings - not implemented in drawer)
-  const availablePanels = getEntityPanelOptions('company').filter(
-    (panel) => panel.type !== 'meetings'
+  // Action handlers for the action rail
+  const actionHandlers: ActionHandlers = {
+    'edit-profile': () => {
+      setActivePanel('details')
+      // Details panel has its own edit mode
+    },
+    'add-job': () => setShowJobDrawer(true),
+    'add-activity': () => setActivePanel('timeline'),
+    'service-mode': () => setShowServiceMode(true),
+  }
+
+  // Get resolved actions using the declarative config
+  const actions = useEntityActions(
+    'company',
+    company as unknown as Record<string, unknown>,
+    actionHandlers
   )
+
+  // Get available panels from shared config
+  const availablePanels = getEntityPanelOptions('company')
+
+  // Panel customization - allows users to show/hide/reorder panels
+  const panelPrefs = useDrawerPanelPreferences({
+    drawerKey: 'company',
+    availablePanels: availablePanels.map((p) => p.type),
+    defaultPanels: ['details', 'jobs', 'team', 'tasks', 'timeline', 'subscriptions'],
+  })
 
   const handleAssignedChange = async (assignedTo: AssignedUser[]) => {
     try {
@@ -109,20 +137,53 @@ export default function CompanyDetailDrawer({
             entityType="company"
             entityId={companyId}
             entity={company as unknown as Record<string, unknown>}
+            hideHeader
+            isEditing={isEditingProfile}
+            onEditToggle={setIsEditingProfile}
+            onSaveProfile={async (data) => {
+              await api.patch(`/companies/${companyId}/detail/`, data)
+              refetch()
+              onRefresh?.()
+              setIsEditingProfile(false)
+            }}
+          />
+        )
+
+      case 'details':
+        return (
+          <CompanyDetailsPanel
+            companyId={companyId}
+            entity={company as unknown as Record<string, unknown>}
+            onRefresh={handleRefresh}
+          />
+        )
+
+      case 'culture':
+        return (
+          <CompanyCulturePanel
+            companyId={companyId}
+            entity={company as unknown as Record<string, unknown>}
+            onRefresh={handleRefresh}
           />
         )
 
       case 'jobs':
-        return <JobsPanel companyId={companyId} />
+        return <JobsPanel companyId={companyId} onCreateJob={() => setShowJobDrawer(true)} />
 
-      case 'contacts':
-        return <ContactsPanel companyId={companyId} />
-
-      case 'billing':
+      case 'team':
         return (
-          <BillingPanel
+          <TeamPanel
             companyId={companyId}
             entity={company as unknown as Record<string, unknown>}
+          />
+        )
+
+      case 'subscriptions':
+        return (
+          <SubscriptionsPanel
+            companyId={companyId}
+            companyName={company?.name}
+            onRefresh={handleRefresh}
           />
         )
 
@@ -175,18 +236,6 @@ export default function CompanyDetailDrawer({
     </div>
   )
 
-  // Header with assigned selector
-  const headerExtra = company ? (
-    <div className="w-40">
-      <AssignedSelect
-        selected={company.assigned_to || []}
-        onChange={handleAssignedChange}
-        placeholder="Assign..."
-        compact
-      />
-    </div>
-  ) : undefined
-
   // Service Mode
   if (showServiceMode && company) {
     return (
@@ -208,18 +257,36 @@ export default function CompanyDetailDrawer({
       <DrawerWithPanels
         isOpen={!!companyId}
         onClose={onClose}
+        entityType="Company"
         title={company?.name || 'Company Details'}
-        subtitle={company?.tagline || undefined}
+        subtitle={company?.tagline || company?.industry?.name || company?.headquarters_location || undefined}
         isLoading={isLoading}
         avatar={avatar}
         statusBadge={statusBadge}
-        headerExtra={headerExtra}
         focusModeLabel="Service Mode"
         onEnterFocusMode={() => setShowServiceMode(true)}
+        actionRail={
+          <EntityActionRail
+            actions={actions}
+            assignedTo={company?.assigned_to || []}
+            onAssignedChange={handleAssignedChange}
+          />
+        }
         availablePanels={availablePanels}
-        defaultPanel="profile"
+        defaultPanel="details"
         activePanel={activePanel}
         onPanelChange={(panel) => setActivePanel(panel as EntityPanelType)}
+        panelCustomization={{
+          visiblePanels: panelPrefs.visiblePanels,
+          hiddenPanels: panelPrefs.hiddenPanels,
+          onAddPanel: panelPrefs.addPanel,
+          onRemovePanel: panelPrefs.removePanel,
+          onMovePanel: panelPrefs.movePanel,
+          canRemovePanel: panelPrefs.canRemovePanel,
+          canAddPanel: panelPrefs.canAddPanel,
+          onResetToDefaults: panelPrefs.resetToDefaults,
+          isCustomized: panelPrefs.isCustomized,
+        }}
         renderPanel={renderPanel}
       />
 
@@ -255,6 +322,19 @@ export default function CompanyDetailDrawer({
           onRefresh={handleRefresh}
         />
       )}
+
+      {/* Job Creation Drawer */}
+      <JobDrawer
+        jobId={null}
+        isOpen={showJobDrawer}
+        onClose={() => setShowJobDrawer(false)}
+        companyId={companyId}
+        onSuccess={() => {
+          setShowJobDrawer(false)
+          handleRefresh()
+          setActivePanel('jobs')
+        }}
+      />
     </>
   )
 }

@@ -154,6 +154,130 @@ const formatChangeValue = (value: unknown): string => {
   return String(value)
 }
 
+// Generate contextual timeline label from entry data
+function getTimelineLabel(entry: TimelineEntryType): string {
+  const performer = entry.performed_by?.name || 'System'
+  const metadata = entry.metadata || {}
+  const activityType = entry.activity_type
+
+  // Stage name from various possible metadata fields
+  const stageName = (metadata.stage_name || metadata.new_stage || metadata.to_stage_name) as string | undefined
+  const fromStage = (metadata.old_stage || metadata.from_stage || metadata.from_stage_name || metadata.previous_stage) as string | undefined
+  const toStage = (metadata.new_stage || metadata.to_stage || metadata.to_stage_name) as string | undefined
+  const jobTitle = (metadata.job_title || metadata.application_job_title) as string | undefined
+
+  // Handle stage_change with specific actions
+  if (activityType === 'stage_change' && metadata.action) {
+    switch (metadata.action) {
+      case 'completed':
+        return `${performer} completed ${stageName || 'stage'}`
+      case 'reopened':
+        return `${performer} reopened ${stageName || 'stage'}`
+      case 'assessment_assigned':
+        return `${performer} assigned assessment for ${stageName || 'stage'}`
+      case 'assessment_submitted':
+        return `Candidate submitted ${stageName || 'assessment'}`
+    }
+  }
+
+  switch (activityType) {
+    // Application events
+    case 'application':
+      return jobTitle ? `${performer} applied for ${jobTitle}` : `${performer} submitted application`
+    case 'shortlist':
+      return jobTitle ? `${performer} shortlisted for ${jobTitle}` : `${performer} shortlisted candidate`
+    case 'stage_change':
+      if (fromStage && toStage) {
+        return `${performer} moved from ${fromStage} to ${toStage}`
+      } else if (toStage) {
+        return `${performer} moved to ${toStage}`
+      } else if (stageName) {
+        return `${performer} changed stage to ${stageName}`
+      }
+      return `${performer} changed stage`
+    case 'offer':
+      return `${performer} made an offer`
+    case 'offer_accepted':
+      return `${performer} accepted the offer`
+    case 'rejection':
+      return `${performer} rejected application`
+    case 'withdrawn':
+      return `${performer} withdrew application`
+
+    // Meeting/booking events
+    case 'meeting_scheduled':
+      return stageName ? `${performer} scheduled ${stageName}` : `${performer} scheduled a meeting`
+    case 'meeting_completed':
+      return stageName ? `${performer} completed ${stageName}` : `${performer} completed meeting`
+    case 'meeting_cancelled':
+      return stageName ? `${performer} cancelled ${stageName}` : `${performer} cancelled meeting`
+    case 'meeting_pending':
+      return stageName ? `${stageName} pending confirmation` : 'Meeting pending confirmation'
+
+    // Notes and calls
+    case 'note':
+      return `${performer} added a note`
+    case 'call':
+      return `${performer} logged a call`
+
+    // Invitations and conversions
+    case 'invitation':
+      return `${performer} sent an invitation`
+    case 'conversion':
+      return `${performer} converted lead to company`
+    case 'assignment':
+      return `${performer} updated assignment`
+    case 'created':
+      return `${performer} created record`
+
+    // Profile updates
+    case 'profile_update': {
+      const changes = metadata.changes as Array<{ label: string }> | undefined
+      if (changes && changes.length > 0) {
+        const labels = changes.slice(0, 2).map(c => c.label).join(', ')
+        return `${performer} updated ${labels}${changes.length > 2 ? ` +${changes.length - 2} more` : ''}`
+      }
+      return `${performer} updated profile`
+    }
+
+    // Documents
+    case 'document': {
+      const filename = metadata.filename as string | undefined
+      const expCount = metadata.experiences_count as number | undefined
+      if (expCount !== undefined) {
+        return filename ? `${performer} imported resume: ${filename}` : `${performer} imported resume data`
+      }
+      return filename ? `${performer} uploaded ${filename}` : `${performer} uploaded document`
+    }
+
+    // Views and logins (usually de-emphasized)
+    case 'view':
+      return `${performer} viewed`
+    case 'login':
+      return `${performer} logged in`
+
+    // Feedback
+    case 'feedback': {
+      const feedbackStage = metadata.stage_name as string | undefined
+      return feedbackStage ? `${performer} added feedback on ${feedbackStage}` : `${performer} added feedback`
+    }
+
+    // Task completion
+    case 'task_completed': {
+      const taskTitle = metadata.task_title as string | undefined
+      return taskTitle ? `${performer} completed task: ${taskTitle}` : `${performer} completed a task`
+    }
+
+    // Email
+    case 'email':
+      return `${performer} sent an email`
+
+    default:
+      // Fall back to the backend-provided title if we don't have a specific handler
+      return entry.title || activityType
+  }
+}
+
 // Get rich metadata display for entries with detailed info
 function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | null {
   const metadata = entry.metadata || {}
@@ -641,8 +765,6 @@ function getRichMetadataDisplay(entry: TimelineEntryType): React.ReactNode | nul
 export function TimelineEntry({ entry, isCompact = false }: TimelineEntryProps) {
   const Icon = activityIcons[entry.activity_type] || MessageSquare
   const iconColor = activityColors[entry.activity_type] || 'bg-gray-100 text-gray-600'
-  const sourceBadge = sourceBadgeColors[entry.source]
-  const sourceLabel = sourceLabels[entry.source]
 
   const formattedTime = formatDistanceToNow(parseISO(entry.created_at), { addSuffix: true })
   const fullDate = format(parseISO(entry.created_at), 'MMM d, yyyy h:mm a')
@@ -655,14 +777,19 @@ export function TimelineEntry({ entry, isCompact = false }: TimelineEntryProps) 
   const applicationJob = entry.metadata?.application_job_title as string | undefined
   const displayJobTitle = jobTitle || applicationJob
 
+  // Get stage colors from metadata for stage-specific styling
+  const fromStageColor = entry.metadata?.from_stage_color as string | undefined
+  const toStageColor = entry.metadata?.to_stage_color as string | undefined
+  const stageColor = entry.metadata?.stage_color as string | undefined
+
   if (isCompact) {
     return (
       <div className="flex items-start gap-2 py-2">
-        <div className={`p-1 rounded ${iconColor} flex-shrink-0`}>
+        <div className={`p-1 rounded-full ${iconColor} flex-shrink-0`}>
           <Icon className="w-3 h-3" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-700 dark:text-gray-300 truncate">{entry.title}</p>
+          <p className="text-xs text-gray-700 dark:text-gray-300 truncate">{getTimelineLabel(entry)}</p>
           <div className="flex items-center gap-2">
             <p className="text-xs text-gray-400 dark:text-gray-500">{formattedTime}</p>
             {displayJobTitle && (
@@ -676,34 +803,89 @@ export function TimelineEntry({ entry, isCompact = false }: TimelineEntryProps) 
     )
   }
 
+  // Render stage badges with actual stage colors when available
+  const renderStageBadges = () => {
+    if (entry.activity_type !== 'stage_change') return null
+
+    const fromStage = entry.metadata?.from_stage || entry.metadata?.old_stage || entry.metadata?.previous_stage || entry.metadata?.from_stage_name
+    const toStage = entry.metadata?.to_stage || entry.metadata?.new_stage || entry.metadata?.to_stage_name
+
+    if (!fromStage && !toStage) return null
+
+    // Default badge classes when no color is provided
+    const defaultFromBadge = 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
+    const defaultToBadge = 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+
+    return (
+      <div className="flex items-center gap-2 mt-1.5">
+        {fromStage && (
+          <span
+            className={`px-2 py-0.5 text-[11px] font-medium rounded ${!fromStageColor ? defaultFromBadge : ''}`}
+            style={fromStageColor ? {
+              backgroundColor: `${fromStageColor}20`,
+              color: fromStageColor,
+            } : undefined}
+          >
+            {String(fromStage)}
+          </span>
+        )}
+        {fromStage && toStage && (
+          <ArrowRight className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+        )}
+        {toStage && (
+          <span
+            className={`px-2 py-0.5 text-[11px] font-medium rounded ${!(toStageColor || stageColor) ? defaultToBadge : ''}`}
+            style={(toStageColor || stageColor) ? {
+              backgroundColor: `${toStageColor || stageColor}20`,
+              color: toStageColor || stageColor,
+            } : undefined}
+          >
+            {String(toStage)}
+          </span>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className="flex gap-3 py-3 border-b border-gray-100 dark:border-gray-800 last:border-0">
-      {/* Icon */}
-      <div className={`p-2 rounded-lg ${iconColor} flex-shrink-0 h-fit`}>
+    <div className="relative pl-10 py-3">
+      {/* Icon - circular like ActivityPanel */}
+      <div className={`absolute left-0 top-3 w-8 h-8 rounded-full flex items-center justify-center ${iconColor}`}>
         <Icon className="w-4 h-4" />
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
-        {/* Header */}
+      <div className="pb-1">
+        {/* Header with title and time inline */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-sm text-gray-900 dark:text-gray-100">{entry.title}</span>
-          <span className={`text-xs px-1.5 py-0.5 rounded ${sourceBadge}`}>{sourceLabel}</span>
-          {/* Job badge - show related job if from activity_log or has job context */}
-          {displayJobTitle && entry.source !== 'candidate_activity' && (
-            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 rounded">
-              {displayJobTitle}
-            </span>
-          )}
+          <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{getTimelineLabel(entry)}</span>
+          <span className="text-[12px] text-gray-400 dark:text-gray-500" title={fullDate}>
+            {formattedTime}
+          </span>
         </div>
 
+        {/* Performer - inline after title like ActivityPanel */}
+        {entry.performed_by && (
+          <p className="text-[12px] text-gray-500 dark:text-gray-400">by {entry.performed_by.name}</p>
+        )}
+
+        {/* Stage badges with colors - for stage_change type */}
+        {renderStageBadges()}
+
+        {/* Job badge - show related job if from activity_log or has job context */}
+        {displayJobTitle && entry.source !== 'candidate_activity' && (
+          <span className="inline-block mt-1.5 px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 rounded">
+            {displayJobTitle}
+          </span>
+        )}
+
         {/* Content */}
-        {entry.content && <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{entry.content}</p>}
+        {entry.content && <p className="mt-1 text-[13px] text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{entry.content}</p>}
 
-        {/* Rich metadata display */}
-        {richMetadata}
+        {/* Rich metadata display (for non-stage-change entries or additional stage details) */}
+        {entry.activity_type !== 'stage_change' && richMetadata}
 
-        {/* Simple metadata fallback (duration, meeting type - stage changes now handled in rich metadata) */}
+        {/* Simple metadata fallback (duration, meeting type) */}
         {!richMetadata && entry.metadata && Object.keys(entry.metadata).length > 0 && (
           <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-3">
             {Boolean(entry.metadata.duration_minutes) && (
@@ -718,25 +900,8 @@ export function TimelineEntry({ entry, isCompact = false }: TimelineEntryProps) 
                 {String(entry.metadata.meeting_type)}
               </span>
             )}
-            {/* Onboarding stage info */}
-            {entry.source === 'onboarding_history' && Boolean(entry.metadata.stage_name) && (
-              <span className="px-2 py-0.5 text-[11px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 rounded">
-                {String(entry.metadata.stage_name)}
-              </span>
-            )}
           </div>
         )}
-
-        {/* Footer */}
-        <div className="mt-2 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
-          <span title={fullDate}>{formattedTime}</span>
-          {entry.performed_by && (
-            <span className="flex items-center gap-1">
-              <User className="w-3 h-3" />
-              {entry.performed_by.name}
-            </span>
-          )}
-        </div>
       </div>
     </div>
   )

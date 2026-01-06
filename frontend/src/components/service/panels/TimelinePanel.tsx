@@ -33,11 +33,11 @@ const ALL_SOURCE_OPTIONS: { value: TimelineSource | 'all'; label: string; entity
   { value: 'all', label: 'All Sources' },
   { value: 'lead_activity', label: 'Lead Activity', entityTypes: ['lead'] },
   { value: 'onboarding_history', label: 'Onboarding', entityTypes: ['lead', 'company', 'candidate'] },
-  { value: 'activity_log', label: 'Application Events', entityTypes: ['candidate', 'application'] },
+  { value: 'activity_log', label: 'Application Events', entityTypes: ['candidate', 'application', 'job'] },
   { value: 'candidate_activity', label: 'Candidate Activity', entityTypes: ['candidate'] },
   { value: 'booking', label: 'Meetings', entityTypes: ['lead', 'candidate'] },
   { value: 'stage_feedback', label: 'Feedback', entityTypes: ['application'] },
-  { value: 'task', label: 'Completed Tasks', entityTypes: ['lead', 'company', 'candidate', 'application'] },
+  { value: 'task', label: 'Completed Tasks', entityTypes: ['lead', 'company', 'candidate', 'application', 'job'] },
 ]
 
 // Activity type labels for display
@@ -538,10 +538,15 @@ export function TimelinePanel({ entityType, entityId, onRefresh }: TimelinePanel
           </div>
         ) : (
           <>
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {filteredEntries.map((entry) => (
-                <TimelineEntry key={`${entry.source}-${entry.id}`} entry={entry} />
-              ))}
+            {/* Timeline with vertical connecting line */}
+            <div className="relative">
+              {/* Vertical timeline line */}
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700" />
+              <div className="space-y-0">
+                {filteredEntries.map((entry) => (
+                  <TimelineEntry key={`${entry.source}-${entry.id}`} entry={entry} />
+                ))}
+              </div>
             </div>
 
             {/* Load more */}
